@@ -1,0 +1,254 @@
+/**
+* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
+* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
+* at <https://github.com/readsoftware>.
+*
+* READ is free software: you can redistribute it and/or modify it under the terms of the
+* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+* or (at your option) any later version.
+*
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along with READ.
+* If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+* @author      Stephen White  <stephenawhite57@gmail.com>
+* @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
+* @link        https://github.com/readsoftware
+* @version     1.0
+* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @package     READ Research Environment for Ancient Documents
+*/
+@font-face {
+    font-family:    GandhariUnicodeSymbol;
+    src:    url("../../common/fonts/gusym.ttf");
+    }
+
+.resFontIconBtn {
+  display: inline-block;
+  height: 17px;
+  width: 18px;
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  font-size: 15px;
+  padding: 0px;
+  line-height: 0.3;
+  margin: 0px;
+  border: none;
+  color: black;
+  background-color: inherit;
+}
+
+.resFontIconBtn:hover {
+  color: orange !important;
+}
+
+#searchCurResourcePanel {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+#searchCatResourcePanel {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.resourcepanel {
+  display: none;
+}
+
+.showpublished #published, .showresearch #research, .showdictionary #dict,
+.showimage #image, .showbaseline #baseline, .showreference #reference{
+  display: block;
+}
+
+
+#resBtnBar {
+  margin-top: 3px;
+}
+
+.draghandle:hover {
+  cursor: grab!important;
+}
+
+body.textEditPage .draghandle {
+  display : inline-block;
+}
+
+.draghandle {
+  height: 20px;
+  width: 15px;
+  background-color: #648cc8;
+  float: right;
+}
+
+.dragresource {
+  border: 1px solid #a5a5a5;
+  height: 20px;
+  margin-left: 0px;
+  padding-left: 10px;
+  background-color: #c5c5c5;
+}
+
+.reportmenuitemlabellvl1 {
+  float: left;
+  width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reportmenuitemlabellvl2 {
+  float: left;
+  width: 92%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reportmenuitem {
+  border: 1px solid #a5a5a5;
+  min-height: 20px;
+  margin-left: 10px;
+  padding-left: 10px;
+  background-color: #e5e5e5;
+}
+
+button.res-report {
+  margin-right: 5px;
+}
+
+.resImageIconBtn {
+  max-height: 20px;
+  max-width: 20px;
+  vertical-align: text-bottom;
+  padding-right: 10px;
+}
+
+.medFontIconBtn {
+  display: inline-block;
+  height: 30px;
+  width: 31px;
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  font-size: 15px;
+  padding: 0.5px;
+  line-height: 0.3;
+  margin: 3px 5px 3px 0px;
+  border: 1px solid #656565;
+  background-color: #a5a5a5;
+}
+.med-begin.medFontIconBtn span:after{
+  content: "⏮";
+}
+.med-prevpage.medFontIconBtn span:after{
+  content: "⏪";
+}
+
+.med-prev.medFontIconBtn span:after{
+  content: "⏴";
+}
+
+.med-textpage {
+  margin: 3px 6px 3px 2px;
+  background-color: #656565;
+  color: white;
+}
+
+.med-textpage.medFontIconBtn span:after{
+  content: "📜";
+}
+
+.med-searchpage {
+  margin: 3px 6px 3px 1px;
+  background-color: #656565;
+  color: white;
+}
+
+.med-searchpage.medFontIconBtn span:after{
+  content: "☷";
+}
+
+.med-newsearchpage.medFontIconBtn span:after{
+  font-size: smaller;
+  content: "▶";
+}
+
+.med-next.medFontIconBtn span:after{
+  content: "⏵";
+}
+
+.med-nextpage.medFontIconBtn span:after{
+  content: "⏩";
+}
+
+.med-end.medFontIconBtn span:after{
+  content: "⏭";
+}
+
+.searchPage #searchPage {
+  display: inline-block;
+}
+
+#searchPage {
+  text-align: left;
+  display: none;
+  height: 100%;
+  position: fixed;
+  top:0;
+  left:265px;
+  right: 0px;
+}
+
+#searchNavPanel {
+ width:100%;
+ padding-top: 5px;
+}
+
+#searchCatalogInfoBar {
+ padding: 4px 4px 0px 4px;
+ border: 1px solid #656565;
+ color: white;
+ background-color: #4673af;
+ left: 20px;
+ right: 20px;
+}
+
+#searchCursorInfoBar {
+ width:96%;
+ padding: 4px 4px 0px 4px;
+ border: 1px solid #a5a5a5;
+ background-color: #648cc8;
+ color: white;
+}
+
+#searchInput {
+  height: 30px;
+  width: 96%;
+  padding: 4px 4px 0px 4px;
+  margin-top: 10px;
+  background-color: #fffbf0;
+}
+
+#searchNavBar {
+  border-top: 1px solid #a5a5a5;
+}
+.searchPanel {
+  border: none;
+}
+
+.searchNavBar {
+  padding-left: 5px;
+  padding-right: 5px;
+  display:none;
+}
+
+.textEditPage .searchNavBar, .searchPage .searchNavBar{
+  display:block;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+
+.gridContainer{
+  overflow-y:auto;
+}

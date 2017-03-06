@@ -1,0 +1,605 @@
+/**
+* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
+* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
+* at <https://github.com/readsoftware>.
+*
+* READ is free software: you can redistribute it and/or modify it under the terms of the
+* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+* or (at your option) any later version.
+*
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along with READ.
+* If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+* @author      Stephen White  <stephenawhite57@gmail.com>
+* @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
+* @link        https://github.com/readsoftware
+* @version     1.0
+* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @package     READ Research Environment for Ancient Documents
+*/
+.lemmaNavDiv, .editionNavDiv {
+  float: right;
+  width: 50px;
+  display: inline-block;
+  background-color: inherit;
+}
+.propDisplayElement {
+  height: 20px;
+}
+.propEditElement {
+  height: auto;
+  cursor: pointer;
+}
+.valueUI,.compUI,.descrUI, .posUI, .supUI, .refUI, .invUI, .transUI {
+  color : black;
+  background-color: inherit;
+}
+div.compUI .propDisplayUI {
+  display:block;
+}
+div.compUI.edit .propDisplayUI {
+  display:none;
+}
+div.compUI .propEditUI {
+  display:none;
+}
+div.compUI.edit .propEditUI {
+  display:table;
+}
+div.valueUI .propDisplayUI {
+  display:block;
+}
+div.valueUI.edit .propDisplayUI {
+  display:none;
+}
+div.valueUI .propEditUI {
+  display:none;
+}
+div.valueUI.edit .propEditUI {
+  display:table;
+}
+div.supUI .propDisplayUI {
+  display:block;
+}
+div.supUI.edit .propDisplayUI {
+  display:none;
+}
+div.supUI .propEditUI {
+  display:none;
+}
+div.supUI.edit .propEditUI {
+  display:table;
+}
+div.invUI .propDisplayUI {
+  display:block;
+}
+div.invUI.edit .propDisplayUI {
+  display:none;
+}
+div.invUI .propEditUI {
+  display:none;
+}
+div.invUI.edit .propEditUI {
+  display:table;
+}
+div.refUI .propDisplayUI {
+  display:block;
+}
+div.refUI.edit .propDisplayUI {
+  display:none;
+}
+div.refUI .propEditUI {
+  display:none;
+}
+div.refUI.edit .propEditUI {
+  display:table;
+}
+div.descrUI .propDisplayUI {
+  display:block;
+}
+div.descrUI.edit .propDisplayUI {
+  display:none;
+}
+div.descrUI .propEditUI {
+  display:none;
+}
+div.descrUI.edit .propEditUI {
+  display:table;
+}
+div.posUI .propDisplayUI {
+  display:block;
+}
+div.posUI.edit .propDisplayUI {
+  display:none;
+}
+div.posUI .posEditUI {
+  display:none;
+}
+div.posUI.edit .posEditUI {
+  display:block;
+}
+div.attestedUI .propDisplayUI {
+  display:block;
+}
+div.attestedUI.edit .propDisplayUI {
+  display:none;
+}
+div.attestedUI .infEditUI {
+  display:none;
+}
+div.attestedUI.edit .infEditUI {
+  display:block;
+}
+div.transUI .propDisplayUI {
+  display:block;
+}
+div.transUI.edit .propDisplayUI {
+  display:none;
+}
+div.transUI .propEditUI {
+  display:none;
+}
+div.transUI.edit .propEditUI {
+  display:table;
+}
+div.typeUI .propDisplayUI {
+  display:block;
+}
+div.typeUI.edit .propDisplayUI {
+  display:none;
+}
+div.typeUI .propEditUI {
+  display:none;
+}
+div.typeUI.edit .propEditUI {
+  display:block;
+}
+div.linkTypeUI .propDisplayUI {
+  display:block;
+}
+div.linkTypeUI.edit .propDisplayUI {
+  display:none;
+}
+div.linkTypeUI .propEditUI {
+  display:none;
+}
+div.linkTypeUI.edit .propEditUI {
+  display:block;
+}
+div.subTypeUI .propDisplayUI {
+  display:block;
+}
+div.subTypeUI.edit .propDisplayUI {
+  display:none;
+}
+div.subTypeUI .propEditUI {
+  display:none;
+}
+div.subTypeUI.edit .propEditUI {
+  display:block;
+}
+div.visUI .propDisplayUI {
+  display:block;
+}
+div.visUI.edit .propDisplayUI {
+  display:none;
+}
+div.visUI .propEditUI {
+  display:none;
+}
+div.visUI.edit .propEditUI {
+  display:block;
+}
+div.componentsUI .propDisplayUI {
+  display:block;
+}
+div.componentsUI.edit .propDisplayUI {
+  display:none;
+}
+div.componentsUI .propEditUI {
+  display:none;
+}
+div.componentsUI.edit .propEditUI {
+  display:block;
+}
+div.sandhiUI .sandhibtn {
+  display:block;
+}
+div.sandhiUI.edit .sandhibtn {
+  display:none;
+}
+div.sandhiUI .propEditUI {
+  display:none;
+}
+div.sandhiUI.edit .propEditUI {
+  display:block;
+}
+div.custTagUI .propDisplayUI {
+  display:block;
+}
+div.custTagUI.edit .propDisplayUI {
+  display:none;
+}
+div.custTagUI .propEditUI {
+  display:none;
+}
+div.custTagUI.edit .propEditUI {
+  display:block;
+}
+.med-flip span:after{
+  content: "◤";
+}
+.med-prevword span:after{
+  content: "◀";
+}
+.med-nextword span:after{
+  content: "▶";
+}
+.dirty .saveDiv{
+  background-color: green;
+}
+.saveDiv{
+  display: table-cell;
+  background-color: grey;
+  color:white;
+  font-size: smaller;
+  min-width: 40px;
+  height: 48px;
+}
+.lemmaNavButton, .editionNavButton{
+  padding-right: 10px;
+  display: inline-block;
+  background-color: inherit;
+}
+.lemmaNavButton > span, .editionNavButton > span {
+  background-color: inherit!important;
+  cursor: pointer;
+}
+div.descrUI .valueLabelDiv, div.posUI .valueLabelDiv, div.custTagUI .valueLabelDiv,
+div.transUI .valueLabelDiv, div.visUI .valueLabelDiv, div.typeUI .valueLabelDiv,
+div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLabelDiv{
+  color: blue;
+}
+.propFlipNavDiv{
+  display: inline-block;
+  cursor: pointer;
+  background-color: inherit;
+  vertical-align: top;
+}
+.valueLabelDiv.readonly{
+  cursor: default;
+  color: black!important;
+}
+.valueLabelDiv{
+  display: inline-block;
+  width: 60%;
+  cursor: pointer;
+  background-color: inherit;
+}
+.valueInputDiv{
+  display: table-cell;
+  width: 100%;
+  background-color: inherit;
+}
+.valueInput{
+  width: 100%;
+  height:40px;
+  font-size: medium;
+  background-color: inherit;
+  border: none;
+}
+.propertyVEContainer.lemmaVE,
+.propertyVEContainer.annoVE,
+.propertyVEContainer.imgVE,
+.propertyVEContainer.tagVE,
+.annoVEContainer,
+.imgVEContainer,
+.tagVEContainer,
+.attrVEContainer,
+.propertyVEContainer.entPropVE{
+  background-color: rgb(217,217,217);
+  height: 100%;
+}
+.propDisplayUI{
+  padding-top: 8px;
+  padding-left: 4px;
+}
+.propEditUI{
+  border: solid black 1px;
+  height:auto;
+  width: 96%;
+  margin-left: 5px;
+  text-align: center;
+  background-color: rgb(242,242,242);
+}
+.annoText{
+  padding-left: 4px;
+  margin-left: 5px;
+  border: solid black 1px;
+  height: 150px;
+  width: 94%;
+  background-color: rgb(242,242,242);
+}
+.radioUI{
+  width: 96%;
+  margin-left: 5px;
+}
+.radioGroupUI{
+  text-align: justify;
+  width: 96%;
+  margin-left: 5px;
+  background-color: rgb(242,242,242);
+  border: 1px solid darkgrey;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.radioGroupUI.TypeUI, .radioGroupUI.VisUI{
+  text-align: justify;
+  width: 99.1%;
+  margin-left: 0px;
+  background-color: rgb(242,242,242);
+  border: 1px solid darkgrey;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.radioGroupUI.annoSaveUI, .radioGroupUI.attrSaveUI{
+  text-align: justify;
+  width: 100%;
+  background-color: inherit;
+  border: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.showSubAdj .SubAdjectiveUI, .showSubNoun .SubNounUI,
+.showGramGender .GramGenderUI, .showSubNum .SubNumeralUI,
+.showClass .ClassUI, .showSubPron .SubPronUI {
+  display:flex;
+}
+.GramGenderUI, .SubNumeralUI, .ClassUI,
+.SubNounUI, .SubPronUI, .SubAdjectiveUI {
+  display:none;
+}
+.showSubVerb .SubVerbUI, .showTense .TenseUI, .showMood .MoodUI, .showNumber .NumberUI,
+.showPerson .PersonUI, .showV2ndConj .V2ndConjUI,
+.showGender .GenderUI, .showCase .CaseUI, .showAdjConj .A2ndConjUI {
+  display:flex;
+}
+.SubVerbUI, .TenseUI, .MoodUI, .NumberUI,
+.PersonUI,.V2ndConjUI,.GenderUI,.CaseUI,.A2ndConjUI {
+  display:none;
+}
+.buttonDiv{
+/*  display: inline-block;*/
+  background-color: rgb(217,217,217);
+  padding: 5px 10px;
+  margin: 10px 10px 5px 0px;
+  border: 1px solid darkgrey;
+  display: inline-flex;
+}
+.saveBtnDiv, .clearBtnDiv{
+/*  display: inline-block;*/
+  background-color: rgb(146,146,146);
+  color: white!important;
+  padding: 5px 10px;
+  margin: 10px 10px 5px 0px;
+  border: 1px solid darkgrey;
+  display: inline-flex;
+  cursor: pointer;
+}
+.annoSaveUI button, .attrSaveUI button{
+/*  display: inline-block;*/
+  background-color: rgb(146,146,146);
+  color: white!important;
+  padding: 5px 10px;
+  margin: 10px 10px 5px 0px;
+  border: 1px solid black;
+  display: inline-flex;
+  cursor: pointer;
+}
+.annotationentry {
+  margin: 5px;
+  display: inline-block;
+  overflow: auto;
+  width: 96%;
+}
+.altTransUI {
+  margin: 5px;
+  width: 96%;
+}
+.altTransUI .matchEntity{
+  display: block;
+  margin-top: 5px;
+  margin-left: 5px;
+  cursor: pointer;
+  color: blue;
+}
+.altTransUI .matchAttr{
+  display: inline-block;
+  font-size: smaller;
+  margin-top: 5px;
+  color: grey;
+}
+.altTransUI.readonly .matchEntity{
+  margin-top: 5px;
+  cursor: default;
+  color: black;
+}
+.annotation {
+  background-color: inherit !important;
+  font-size: 92%;
+}
+.modstamp {
+  background-color: inherit !important;
+  float: right;
+}
+.tagentry {
+  margin: 5px;
+  display: inline-block;
+  border: 1px solid grey;
+  background-color: rgb(194,194,194);
+  padding: 2px 1px 2px 4px;
+}
+.attrentry, .imageentry {
+  margin: 5px;
+  display: inline-block;
+  border: 1px solid grey;
+  background-color: rgb(194,194,194);
+  padding: 2px 1px 2px 4px;
+}
+.tag, .image, .attribution{
+  margin: 5px 2px;
+  background-color: inherit !important;
+}
+.removeanno {
+  margin: 0px 0px 0px 5px;
+  border: none;
+  background-color: rgb(194,194,194)!important;
+  cursor: pointer;
+}
+.removetag, .removeattr, .removeimg {
+  margin: 0px 0px 0px 5px;
+  background-color: rgb(216,216,216) !important;
+  cursor: pointer;
+}
+.autoScrollY {
+  overflow-y: auto;
+}
+.multiTagUI, .multiAttrUI {
+  margin: 7px;
+  max-height: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.linkSubTypeUI, .seqTypeUI, .seqSubTypeUI {
+  margin: 7px;
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.dirty .saveBtnDiv{
+  background-color: green;
+}
+.buttonDiv > span, .saveBtnDiv > span,
+.clearBtnDiv > span, .cancelBtnDiv > span{
+  background-color: inherit!important;
+  color: inherit!important;
+  font-size: medium;
+}
+.buttonDiv.selected{
+  background-color: green;
+  color: white!important;
+}
+.buttonDiv.selected.uncertain span:after{
+  content: "(?)";
+}
+.attestedUIHeader, .annoUIHeader, .imgUIHeader, .tagUIHeader,
+.attrUIHeader, .altTransUIHeader, .relUIHeader, .componentsUIHeader{
+  margin-top: 15px;
+  background-color: inherit;
+}
+.relUISection{
+  margin-top: 5px;
+  padding-left: 5px;
+  background-color: inherit;
+}
+.attestedUIHeader > span, .annoUIHeader > span, .imgUIHeader > span,
+.tagUIHeader > span, .altTransUIHeader > span, .relUIHeader > span,
+.attrUIHeader > span, .relUISection > span, .componentsUIHeader > span{
+  background-color: inherit!important;
+}
+.attestedentry,.componententry,.relationentry{
+  background-color: rgb(217,217,217);
+  text-align: justify;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+.component.locked{
+  cursor: default;
+}
+.attestedform, .attestedformloc, .component, .related{
+  background-color: inherit!important;
+  margin-top: 5px;
+  padding-right: 5px;
+  padding-left: 10px;
+  cursor: pointer;
+}
+.inflection{
+  background-color: inherit!important;
+  margin-top: 10px;
+  color: blue!important;
+  cursor: pointer;
+}
+.addButtonDiv{
+  background-color: inherit!important;
+  margin-top: 15px;
+  color: blue!important;
+  cursor: pointer;
+}
+span.unlink, div.sandhibtn{
+  background-color: inherit!important;
+  margin-top: 10px;
+  color: blue!important;
+  padding-right: 15px;
+  font-size: 98%;
+  cursor: pointer;
+}
+.annoHeader, .imgHeader, .taggingHeader, .attributionHeader{
+  font-size: large;
+  padding-left: 5px;
+}
+.annoUI{
+  width: 100%;
+}
+.addButton{
+  background-color: inherit!important;
+  color: blue!important;
+  cursor: pointer;
+  float: right;
+  padding-right: 10px;
+  font-size: 98%;
+}
+#btnupload{
+  background-color: rgb(146,146,146);
+  color: white !important;
+  padding: 5px 10px;
+  margin-right: 5px;
+  border: 1px solid black;
+  display: inline-flex;
+  cursor: pointer;
+}
+.imageupload {
+    display: inline-flex;
+    float: right;
+}
+#progressUI {
+    display: inline-block;
+    width: 100px;
+}
+#progressBar {
+    display: inline-flex;
+    max-width: 100px;
+    height: 15px;
+}
+#status {
+    display: inline-flex;
+    max-width: 100px;
+    text-align: center;
+}
+#thumb {
+    display: none;
+}
+img.thumb100 {
+  max-height: 50px;
+  max-width: 50px;
+  margin-left: 5px;
+  vertical-align: middle;
+}

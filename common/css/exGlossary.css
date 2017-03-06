@@ -1,0 +1,91 @@
+
+.entry {
+  padding-bottom: 15px;
+}
+span.homograph1:before {
+  content: "¹";
+}
+
+span.homograph2:before {
+  content: "²";
+}
+
+span.homograph3:before {
+  content: "³";
+}
+
+.lemmadef{
+  font-size: 12pt;
+  text-indent: -10px;
+  margin-left: 10px;
+  padding-bottom: 3px;
+}
+
+.lemma{
+  font-size: 12pt;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.etym {
+  font-size: 12pt;
+  font-style: italic;
+}
+.pos {
+  font-size: 12pt;
+}
+
+div.related{
+  margin-left: 30px;
+}
+div.links.also span.link.first:before{
+  content: "See also ";
+  color: green;
+}
+div.links span.link.first:before{
+  content: "See ";
+  color: green;
+}
+div.links span.link:not(.first):before{
+  content: ", ";
+  color: red;
+}
+span.pos:before{
+  content: ", ";
+  color: red;
+}
+span.etym:before{
+  content: ", ";
+  color: red;
+}
+span.gloss:before{
+  content: ", \"";
+  color: red;
+}
+span.gloss:after{
+  content: ".\"";
+  color: red;
+}
+span.inflection:before{
+  content: ", ";
+  color: red;
+}
+span.lineref:before{
+  content: ", ";
+  color: red;
+}
+.attestation {
+  padding-left: 30px;
+}
+.attestation span:last-child:after{
+  content: ".";
+  color: red;
+}
+.attestedform {
+  font-size: 12pt;
+  font-style: italic;
+}
+.link{
+  font-weight: bold;
+  font-style: italic;
+}

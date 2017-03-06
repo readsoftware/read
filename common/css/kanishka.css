@@ -1,0 +1,709 @@
+/**
+* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
+* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
+* at <https://github.com/readsoftware>.
+*
+* READ is free software: you can redistribute it and/or modify it under the terms of the
+* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+* or (at your option) any later version.
+*
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along with READ.
+* If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+* @author      Stephen White  <stephenawhite57@gmail.com>
+* @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
+* @link        https://github.com/readsoftware
+* @version     1.0
+* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @package     READ Research Environment for Ancient Documents
+*/
+@font-face {
+    font-family:    GandhariUnicodeSymbol;
+    src:    url("../fonts/gusym.ttf");
+    }
+
+body {
+  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";
+  font-size: 12pt;
+  height: 100%;
+}
+
+#frameContentPanel {
+  text-align: center;
+  display: inline-block;
+  height: 100%;
+  position: fixed;
+  top:0;
+  left:265px;
+  right: 0px;
+}
+
+#frameNavPanel {
+  width: 265px;
+  display: inline-block;
+  height: 100%;
+  position: fixed;
+  top:0;
+  left:0;
+}
+
+/**************************************Nav Panel************************************************/
+#navBar {
+  height: 100%;
+}
+
+.navExpandableHeader{
+  background-color: white;
+  border: none;
+}
+
+#catBtnContainer {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+}
+
+.textEditPage #catBtn, .searchPage #catBtn {
+  display: inline-block;
+}
+
+sup{
+  cursor: pointer;
+  padding-right: 1px;
+}
+
+#catBtn {
+  display: none;
+}
+
+#userHeader {
+  display: inline-block;
+  background-color: transparent;
+  margin-left: 10px;
+  vertical-align:text-bottom;
+}
+
+#userImgDiv {
+  display: inline-block;
+  background-color: white;
+  margin-top: 4pt;
+}
+
+#userNameDiv {
+  display: inline-block;
+  background-color: transparent;
+  height: 20px;
+  margin-top: 4pt;
+  margin-left: 10px;
+  vertical-align:text-bottom;
+  font-size: medium;
+}
+
+.smFontIconBtn {
+  display: inline-block;
+  height: inherit;
+  width: inherit;
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  text-align: left;
+  color: #2F5597;
+  margin: 0px;
+  cursor: pointer;
+}
+
+.smFontIconBtn .btnFontIcon {
+  display: inline-block;
+  height: inherit;
+  width: inherit;
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  font-size: 30pt;
+  padding-top: 0px;
+  margin-left: -5px;
+  line-height: 0.38;
+}
+
+#userBtnBar.showCatUI {
+  display: block;
+}
+
+#userBtnBar {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display:none;
+  width: 490px;
+  z-index: 1000;
+  background-color: #a5a5a5;
+}
+#userBtnText {
+  background-color: #2F5597;
+}
+#userBtnLexicon {
+  background-color: #4673af;
+}
+#userBtnReference {
+  background-color: rgba(100,140,200,1);
+}
+
+.toolNavBar {
+  margin-left: 5px;
+  width:100%;
+  display:none;
+  margin-top: 4px;
+}
+
+.textEditPage .toolNavBar, .searchPage .toolNavBar{
+  display:block;
+}
+
+#viewToolNavBar, #editToolNavBar, #layoutToolNavBar {
+  border-top: 1px solid #a5a5a5;
+}
+.editinfolabel {
+  display: block;
+}
+.editinfoname, .editinfovis, .editinfoattr {
+  font-size: small;
+  color: blueviolet;
+  display: block;
+  padding-left: 20px;
+}
+
+.toolPanelLabel {
+  margin-top: 5px;
+  color: #656565;
+  font-weight: 600;
+  letter-spacing: 0.5pt;
+  font-variant: small-caps;
+  display: inline-block;
+  vertical-align:text-bottom;
+}
+
+/*************Tool Button*******************/
+.searchPage #layoutBtnDiv, .textEditPage #columnBtnDiv {
+  display: none;
+}
+
+.textEditPage #layoutBtnDiv{
+  display: inline-block;
+}
+
+.searchPage #columnBtnDiv{
+  display: inline-block;
+}
+
+.toolbuttondiv {
+  max-width: 100px;
+  margin: 5px 20px 5px 5px;
+  font-size: medium;
+  display: inline-block;
+}
+
+.toolbutton.iconbutton {
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  font-size: 12pt;
+}
+
+.toolbutton.iconbutton:disabled {
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  color: #A0A0A0;
+}
+
+.toolbuttondiv .jqx-fill-state-normal {
+  border: 1px solid #656565;
+  background-color: #a5a5a5;
+  width: 100px;
+  font-size: inherit;
+  padding: 0px 1.5px;
+  -moz-box-sizing: none!important;
+  box-sizing: none!important;
+}
+.jqx-tree {
+  border: 1px solid #656565;
+  background-color: white;
+}
+.toolbutton {
+  border: 1px solid #656565;
+  background-color: #a5a5a5;
+  width: 100px;
+  padding: 3px;
+}
+.toolbutton:disabled {
+  border: 1px solid #a5a5a5;
+  background-color: #e5e5e5;
+}
+
+.toolbutton:disabled .toolbuttonlabel {
+  color: #A0A0A0;
+}
+
+.toolbuttonlabel {
+  font-size: smaller;
+  color: #2F5597;
+}
+
+.toolbutton.showUI {
+  border: 1px solid #656565;
+  background-color: #a5a5a5;
+}
+
+/*************View Toolbar Panel*******************/
+.searchVEViewTB {
+  display:none;
+}
+
+#viewToolBarPanel.showsearchVETB .searchVEViewTB {
+  display:block;
+}
+
+.pane1ViewTB {
+  display:none;
+}
+
+#viewToolBarPanel.showpane1TB .pane1ViewTB {
+  display:block;
+}
+
+.pane2ViewTB {
+  display:none;
+}
+
+#viewToolBarPanel.showpane2TB .pane2ViewTB {
+  display:block;
+}
+
+.pane3ViewTB {
+  display:none;
+}
+
+#viewToolBarPanel.showpane3TB .pane3ViewTB {
+  display:block;
+}
+
+/*************Edit Toolbar Panel*******************/
+
+.searchVEEditTB {
+  display:none;
+}
+
+#editToolBarPanel.showsearchVETB .searchVEEditTB {
+  display:block;
+}
+
+.pane1EditTB {
+  display:none;
+}
+
+#editToolBarPanel.showpane1TB .pane1EditTB {
+  display:block;
+}
+
+.pane2EditTB {
+  display:none;
+}
+
+#editToolBarPanel.showpane2TB .pane2EditTB {
+  display:block;
+}
+
+.pane3EditTB {
+  display:none;
+}
+
+#editToolBarPanel.showpane3TB .pane3EditTB {
+  display:block;
+}
+
+.panelMsgDiv {
+  vertical-align: middle;
+  text-align: center;
+}
+
+/*************Layout Toolbar Panel*******************/
+
+#layoutBtnBar.showLayoutUI {
+  display: block;
+}
+
+#layoutBtnBar {
+  position: absolute;
+  bottom: 15px;
+  left: 90px;
+  display:none;
+  width: 612px;
+  background-color: #a5a5a5;
+  max-height: 102px;
+}
+
+.layoutBtn {
+  width: 96px;
+  height: 96px;
+  padding: 3px;
+  display: inline-table;
+}
+
+.btnLayoutDiv {
+  display: block;
+  border: 1px solid white;
+  background-color: #648cc8;
+  text-align: center;
+  font-size: large;
+  color: white;
+}
+
+#V12 .btnLayoutDiv {
+  display: inline-block;
+  width: 44.7px;
+  height: 92px;
+}
+
+#H12 .btnLayoutDiv {
+  display: block;
+  width: 92px;
+  height: 45px;
+}
+
+#H123 .btnLayoutDiv {
+  display: block;
+  width: 92px;
+  height: 29px;
+}
+
+#V12H3 .btnLayoutDiv.inline {
+  display: inline-block;
+  height: 61px;
+  width: 44.7px;
+}
+
+#V12H3 .btnLayoutDiv {
+  display: block;
+  height: 29px;
+  width: 92px;
+}
+
+#H1V23 .btnLayoutDiv.inline {
+  display: inline-block;
+  height: 61px;
+  width: 44.7px;
+}
+
+#H1V23 .btnLayoutDiv {
+  display: block;
+  height: 29px;
+  width: 92px;
+}
+
+#H12V3 .btnLayoutDiv {
+  display: block;
+  height: 45px;
+  width: 61px;
+}
+
+#H12V3 .btnLayoutCtnr {
+  display: table-cell;
+  height: 92px;
+  width: 61px;
+}
+
+#H12V3 .btnLayoutDiv.fright {
+  display: inline-block;
+  height: 92px;
+  width: 29px;
+}
+
+/****************************************Login Form**********************************************/
+#userUIPanel {
+  text-align: center;
+  width: 265px;
+  height: 100%;
+}
+#signinForm .label-form,#userInfo .label-form{
+  font-size: 25px;
+  color: white;
+  margin-left: -25px;
+  padding-bottom: 30px;
+}
+#signinForm .label-input{
+  font-size: medium;
+  color: white;
+}
+#signinForm label{
+  font-size: medium;
+  color: white;
+}
+#signinForm .text-input{
+  height: 30px;
+  width: 200px;
+}
+
+.fontIcon_out{
+  color: gray;
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  font-size: 14pt;
+  line-height: 12pt;
+}
+
+.fontIcon_in{
+  color: #2F5597;
+  background-color: white;
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  font-size: 14pt;
+  line-height: 12pt;
+}
+
+#userName{
+  margin-bottom: 30px;
+}
+#userPassword{
+  margin-bottom: 10px;
+}
+#signinForm, #userInfo {
+    background-color: #2F5597;
+    text-align: left;
+    padding-top: 5px;
+    padding-left: 30px;
+    min-height: 95%;
+}
+#signinButton,#logoutButton, #settingsButton, #chgPasswordButton {
+  margin-top: 10px;
+  height: 40px;
+  width: 200px;
+}
+#signinHelpLink, #logoutLink, #chgPasswordLink, #userPreferencesDiv {
+  margin-top: 10px;
+  font-size: larger;
+  color: white;
+  cursor: pointer;
+}
+#workspaceLabel {
+  margin-top: 20px;
+  font-size: larger;
+  color: white;
+}
+#errorMsg {
+  color: red;
+  font-size: larger;
+  margin-top: 15px;
+}
+ #userPreferencesDiv.expanded:hover {
+  color: white;
+}
+#newAccountLink:hover,#signinHelpLink:hover
+#workspaceLabel:hover, #logoutLink:hover,
+#userPreferencesDiv.expanded .editorUI .propDisplayUI:hover,
+#userPreferencesDiv.expanded .defVisUI .propDisplayUI:hover,
+#chgPasswordLink:hover, #userPreferencesDiv:hover {
+  color: blue;
+}
+#newAccountLink {
+  font-size: larger;
+  color: white;
+  cursor: pointer;
+  position: fixed;
+  bottom: 25px;
+}
+
+.editorUI .propEditUI {
+  display:none;
+}
+#userPreferencesDiv.expanded .editorUI.edit .propEditUI {
+  display:block;
+}
+#userPreferencesDiv.expanded .editorUI .propDisplayUI {
+  display:block;
+}
+#userPreferencesDiv .editorUI .propDisplayUI,
+#userPreferencesDiv.expanded .editorUI.edit .propDisplayUI {
+  display:none;
+}
+
+.defVisUI .propEditUI {
+  display:none;
+}
+#userPreferencesDiv.expanded .defVisUI.edit .propEditUI {
+  display:block;
+}
+#userPreferencesDiv.expanded .defVisUI .propDisplayUI {
+  display:block;
+}
+#userPreferencesDiv .defVisUI .propDisplayUI,
+#userPreferencesDiv.expanded .defVisUI.edit .propDisplayUI {
+  display:none;
+}
+.loggedInLink{
+  font-size: medium;
+  color: blue;
+  cursor: pointer;
+}
+
+.defAttrUI .propEditUI {
+  display:none;
+}
+#userPreferencesDiv.expanded .defAttrUI.edit .propEditUI {
+  display:block;
+}
+#userPreferencesDiv.expanded .defAttrUI .propDisplayUI {
+  display:block;
+}
+#userPreferencesDiv .defAttrUI .propDisplayUI,
+#userPreferencesDiv.expanded .defAttrUI.edit .propDisplayUI {
+  display:none;
+}
+
+/*****************************************Loading Page*********************************************/
+.loadingPage #loadingPage {
+  display: inline-block;
+}
+
+#loadingPage {
+  width: 60%;
+  text-align: center;
+  display: none;
+  height: 100%;
+  position: fixed;
+  top:0;
+  left:20%;
+}
+
+/*****************************************Text Edit Page*********************************************/
+.textEditPage #textEditPage {
+  display: inline-block;
+}
+
+#textEditPage {
+  text-align: center;
+  height: 100%;
+  display: none;
+  position: fixed;
+  top:0;
+  left:265px;
+  right: 0px;
+}
+
+.editPlaceholder {
+  margin-top: 10%;
+  height: 60px;
+  background-color: #a5a5a5;
+  padding-top: 45px;
+  width: 300px;
+  margin-left: 30%;
+}
+
+#v1_2Splitter, #h1_2Splitter,
+#h1_23Splitter, #v12_h3Splitter,
+#h1_v23Splitter, #h12_v3Splitter {
+  display: none;
+}
+
+#v1_2Splitter.showUI, #h1_2Splitter.showUI,
+#h1_23Splitter.showUI, #v12_h3Splitter.showUI,
+#h1_v23Splitter.showUI, #h12_v3Splitter.showUI {
+  display: block;
+}
+
+/*****************************************Landing Page*********************************************/
+#rightPanel {
+  width: 25%;
+  height: 100%;
+  display: inline-block;
+  position: fixed;
+  top:0;
+  left:80%;
+}
+
+.landingPage #landingPage {
+  display: inline-block;
+}
+
+#landingPage {
+  width: 60%;
+  text-align: center;
+  display: none;
+  height: 100%;
+  position: fixed;
+  top:0;
+  left:265px;
+  right: 0px;
+}
+#landingPage > h1{
+  margin-top: 75px;
+  font-size: 48pt;
+  font-weight: 500;
+  margin-bottom: 24pt;
+}
+#landingPage > h2{
+  font-size: 24pt;
+  font-weight: 400;
+  font-variant:small-caps;
+  margin-bottom: 48pt;
+}
+/*********************************Landing Page Button Bar***********************************/
+.fontIconBtn {
+  width: 120px;
+  height: 120px;
+  text-align: center;
+  display: inline-block;
+  color: white;
+  margin: 20px;
+  cursor: pointer;
+  -webkit-box-shadow: 3px 3px 3px 1px rgba(0,0,0,0.5);
+  -moz-box-shadow: 3px 3px 3px 1px rgba(0,0,0,0.5);
+  box-shadow: 3px 3px 3px 1px rgba(0,0,0,0.5);
+}
+
+.fontIconBtn:hover {
+  transform: translateX(1px);
+  -webkit-box-shadow: 3px 3px 3px -1px rgba(0,0,0,0.5);
+  -moz-box-shadow: 3px 3px 3px -1px rgba(0,0,0,0.5);
+  box-shadow: 3px 3px 3px -1px rgba(0,0,0,0.5);
+  opacity:0.9;
+}
+#mainBtnText {
+  background-color: rgba(47,85,151,1);
+}
+#mainBtnLexicon {
+  background-color: rgba(70,115,175,1);
+}
+#mainBtnReference {
+  background-color: rgba(100,140,200,1);
+}
+#mainBtnLanding {
+  background-color: rgba(160,160,160,1);
+}
+.btnFontIcon {
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  font-size: 64pt;
+  line-height: 64pt;
+}
+.btnTitle {
+  float: right;
+  padding-top: 10px;
+  padding-right: 10px;
+}
+
+/***************************************Logo bar***********************************************/
+#mainFooter {
+  text-align: center;
+  position: fixed;
+  bottom: -1px;
+  width: inherit;
+}
+.logoLink {
+  text-align: center;
+  vertical-align: bottom;
+}
+a.logoLink > img {
+  width: 50px;
+  height: 50px;
+  margin: 10px;
+}
+/***************************iFrame Viewer************************/
+.iFrameViewer {
+  overflow:auto;
+  height:100%;
+  width: 100%;
+}

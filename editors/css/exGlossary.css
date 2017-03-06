@@ -1,0 +1,84 @@
+@font-face {
+    font-family:    GandhariUnicodeSymbol;
+    src:    url("/kanishka/common/fonts/gusym.ttf");
+    }
+
+.resFontIconBtn {
+  display: inline-block;
+  height: 17px;
+  width: 18px;
+  font-family: GandhariUnicodeSymbol,"Segoe UI Symbol";
+  font-size: 15px;
+  padding: 0px;
+  line-height: 0.3;
+  margin: 0px;
+  border: none;
+  color: black;
+  background-color: inherit;
+}
+
+.entry {
+  padding-bottom: 15px;
+}
+span.homograph1:before {
+  content: "¹";
+}
+
+span.homograph2:before {
+  content: "²";
+}
+
+span.homograph3:before {
+  content: "³";
+}
+
+.lemmadef{
+  font-size: 12pt;
+  text-indent: -10px;
+  margin-left: 10px;
+  padding-bottom: 3px;
+}
+
+.lemma{
+  font-size: 12pt;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.etym {
+  font-size: 12pt;
+  font-style: italic;
+}
+.pos {
+  font-size: 12pt;
+}
+
+span.link:before{
+  content: "see ";
+  color: green;
+}
+span.gloss:before{
+  content: "\"";
+}
+span.gloss:after{
+  content: ".\"";
+}
+span.inflection:after{
+  content: ",";
+  color: red;
+}
+span.lineref:after{
+  content: ".";
+  color: red;
+}
+.attestation {
+  padding-left: 30px;
+}
+.attestedform {
+  font-size: 12pt;
+  font-style: italic;
+}
+.link{
+  font-weight: bold;
+  font-style: italic;
+}

@@ -1,0 +1,27 @@
+.jqx-button-kanishka{
+  outline: none;
+  border: 1px solid transparent;
+  padding: 3px;
+  text-align: center;
+  vertical-align: middle;
+  margin: 0 0 0 0;
+  cursor: default;
+}
+button.jqx-button-kanishka,
+input[type=button].jqx-button-kanishka,
+input[type=submit].jqx-button-kanishka {
+  box-sizing: border-box !important;
+  -moz-box-sizing: border-box !important;
+}
+
+.toolbuttondiv .jqx-fill-state-normal{
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  -ms-touch-action: none;
+  font-family: Verdana,Arial,sans-serif;
+  font-style: normal;
+  font-size: 13px;
+  border-color:#aaa;
+  background: #efefef;
+}
+

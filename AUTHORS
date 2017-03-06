@@ -1,0 +1,36 @@
+This file is part of the Research Environment for Ancient Documents (READ).
+
+Contributors to the READ codebase (2013–2017) are:
+
+   Stephen White
+   Andrew Glass
+   Yang Li
+
+READ functionality has been designed (2013–2017) by the READ development team:
+
+   Stefan Baums
+   Andrew Glass
+   Ian McCrabb
+   Stephen White
+
+and the following individual contributors:
+
+   Arlo Griffiths
+   Andrea Schlosser
+
+Copyright in parts of the READ codebase is held by:
+
+   Stephen White
+   Andrew Glass
+   Ludwig‐Maximilians‐Universität München
+   Prakaś Foundation
+   University of Washington
+   University of Sydney
+
+For details please refer to the file <doc/git_log_2013-2017.txt> in this distribution, as well as to the Git commit log at <https://github.com/readsoftware>.
+
+READ is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with READ. If not, see <http://www.gnu.org/licenses/>.

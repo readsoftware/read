@@ -1,0 +1,221 @@
+<!--
+/**
+* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
+* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
+* at <https://github.com/readsoftware>.
+*
+* READ is free software: you can redistribute it and/or modify it under the terms of the
+* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+* or (at your option) any later version.
+*
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along with READ.
+* If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+* @author      Stephen White  <stephenawhite57@gmail.com>
+* @copyright   @see AUTHORS in repository root
+* @link        https://github.com/readsoftware
+* @version     1.0
+* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @package     READ Research Environment for Ancient Documents
+*/
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Expires" content="Fri, Jan 01 1900 00:00:00 GMT">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Lang" content="en">
+    <meta name="author" content="Stephen A White">
+    <meta name="generator" content="PhpED 6.0">
+    <meta name="description" content="Image editor for creating cropping and editing image entities.">
+    <meta name="keywords" content="crop image">
+    <meta name="creation-date" content="07/29/2013">
+    <title>Image Entity Editor</title>
+    <script>
+      var canvas, ctx,  cropServiceURL="http://localhost/kanishka/common/php/cropImagePoly.php?",
+          imgCrop, imgBaseURL, imgView, imgViewDiv, imgURL = "", cropPoly, centerX, centerY,
+          img = new Image();
+      var w=60, h=60, rotRadians=0,x=0, y=0, path, crossSize=10, transX=0,transY=0;
+      /*  for some reason with 45 degrees rot selecting a box at 415,122   60x60  is the same as cropImage with -45 degree rot and 600,300  60x60 */
+      function init() {
+        cropPoly=document.getElementById("cropPoly");
+        cropPoly.onblur=cropPolyChangeHandler;
+//        img=document.getElementById("myImage");
+        imgBaseURL=document.getElementById("imageURL");
+        imgBaseURL.onblur=checkURLChange;
+        imgBaseURL.value="http://localhost/Gandhari.org/images/inscriptions/266/CKI02662_1.PNG";
+        imgCrop=document.getElementById("imageCrop");
+        imgCrop.onblur=cropChangeHandler;
+        imgCrop.value="[[[622,120],[632,179],[616,214],[460,224],[381,232],[348,252],[305,245],[217,270],[85,310],[72,232],[332,164],[531,117]]]";
+        imgView=document.getElementById("imageViewer");
+        imgViewDiv = imgView.parentElement;
+        canvas=document.getElementById("myCanvas");
+        canvas.onclick = clickHandler;
+        canvas.width = 500;
+        canvas.height = 300;
+        centerX = Math.floor(canvas.width/2);
+        centerY = Math.floor(canvas.height/2);
+        ctx=canvas.getContext("2d");
+        cropChangeHandler();
+        imgURL = imgBaseURL.value + (imgCrop.value? "&polygons=" + imgCrop.value :"");
+        img.src = cropServiceURL + "trans=100&url=" + imgURL;
+        img.onload = imgLoaded;
+      }
+
+      function imgLoaded(e){
+        canvas.width = img.width;
+        canvas.height = img.height;
+        imgView.style.maxWidth = canvas.width;
+        imgView.style.maxHeight = canvas.height;
+        centerX = Math.floor(canvas.width/2);
+        centerY = Math.floor(canvas.height/2);
+        path=[[centerX,centerY]];
+        redraw();
+      }
+
+      function checkURLChange(e){
+        if (imgURL.indexOf(imgBaseURL.value) == -1) {
+          imgCrop.value = "";
+          reloadImage();
+        }
+      }
+
+      function reloadImage(){
+        var newURL = imgBaseURL.value + (imgCrop.value? "&polygons=" + imgCrop.value :"");
+        if (imgURL.trim() != newURL.trim()) {
+          img.src = cropServiceURL + "url=" + newURL;
+        }
+      }
+
+      function cropPolyChangeHandler(){
+        path = JSON.parse( cropPoly.value );
+        redraw();
+      }
+
+      function cropChangeHandler(){
+        var polygons,index;
+        try{
+          polygons = JSON.parse(imgCrop.value);
+        }catch(e){
+        }
+        if (polygons.constructor == Array && polygons.length > 0){
+          var bounds = [];
+          for(index in polygons) {
+            if (polygons[index].constructor != Array || polygons[index].length < 3) {
+              alert("invalid Image Cropping - must be array of one or more polygons,where a polygon is an array of 3 or more points. Please edit image cropping to see change.");
+              return;
+            }
+            temp = getBoundingRect(polygons[index]);
+            bounds = bounds.concat(temp);
+          }
+          bounds = getBoundingRect(bounds);
+          transX = bounds[0][0];
+          transY = bounds[0][1];
+        }else{
+          transX = transY = 0;
+        }
+        reloadImage();
+      }
+
+      function getTranslatedPoly(points,newOrigX, newOrigY) {
+        var poly = [];
+        var i;
+        for(i=0;i<points.length;i++){
+          poly.push([(points[i][0]+newOrigX), (points[i][1]+newOrigY)]);
+        }
+        return poly;
+      }
+
+      function getBoundingRect(points) {
+        x1 = y1 = 10000000;//upper left
+        x2 = y2 = 0; // lower
+        for(i=0;i<points.length;i++){
+          x1 = Math.min(x1,points[i][0]);
+          x2 = Math.max(x2,points[i][0]);
+          y1 = Math.min(y1,points[i][1]);
+          y2 = Math.max(y2,points[i][1]);
+        }
+        return [[x1,y1],[x2,y1],[x2,y2],[x1,y2]];
+      }
+
+      function clickHandler(e){
+        var px = e.clientX-e.currentTarget.offsetLeft + window.pageXOffset;
+        var py = e.clientY-e.currentTarget.offsetTop + window.pageYOffset;
+        if (e.ctrlKey) { //user wants reset start point
+          path = [[px,py]];
+        }else{
+          path.push([px,py]);
+        }
+        redraw();
+      }
+
+      function redraw(){
+        ctx.clearRect(0,0,img.width,img.height);
+        ctx.drawImage(img,0,0,img.width,img.height);
+        ctx.strokeStyle="red";
+        ctx.lineWidth = 2;
+        if (path.length <= 1){
+          imgView.src = "";
+          var x = (path[0] && path[0][0]) ? path[0][0] : centerX;
+          var y = (path[0] &&  path[0][1]) ? path[0][1] : centerY;
+          ctx.beginPath();
+          ctx.moveTo(x-crossSize,y);
+          ctx.lineTo(x+crossSize,y);
+          ctx.moveTo(x,y-crossSize);
+          ctx.lineTo(x,y+crossSize);
+          ctx.stroke();
+        }else{
+          var i;
+          ctx.beginPath();
+          ctx.moveTo(path[0][0],path[0][1]);
+          for (i=1; i < path.length; i++) {
+            ctx.lineTo(path[i][0],path[i][1]);
+          }
+          ctx.closePath();
+          ctx.stroke();
+        }
+        updateImageViewer();
+      }
+
+      function updateImageViewer(){
+        var points = JSON.stringify(path);
+        var URL;
+        if (path.length >= 3){
+          var transPoints = JSON.stringify(getTranslatedPoly(path,transX,transY));
+          URL = "http://localhost/kanishka/common/php/cropImagePoly.php?url=" + imgBaseURL.value +
+                  "&polygons=[" + transPoints + "]";
+          imgView.src = URL;
+          bounds = getBoundingRect(path);
+          imgViewDiv.width = bounds[1][0] - bounds[0][0];
+          imgViewDiv.height = bounds[3][1] - bounds[0][1];
+        }
+        cropPoly.value = points;
+      }
+
+    </script>
+
+  </head>
+  <body onload="init();" >
+    <div>
+      <div style="margin-bottom: 10px; max-width: 700px; min-height: 100px; min-width: 100px; vertical-align: top; background-color: lightgray">
+        <img style="padding : 10px;" id="imageViewer">
+      </div>
+      <div >
+        <label for="imageURL" style="margin-left: 22px;">Image URL : </label><input id="imageURL" type="text" style="width: 750px; margin-bottom: 5px;"><br/>
+        <label for="imageCrop" style="margin-left: 19px;">Image Crop : </label><input id="imageCrop" type="text" style="width: 750px; margin-bottom: 5px;"><br/>
+        <label for="cropPoly">Cropping Poly : </label><input id="cropPoly" type="text" style="width: 750px; height: 20px; margin-bottom: 5px;">
+        <div id="imageInstruction" style="margin-bottom: 10px; margin-top: 15px;">CTRL + Click to move start point. Then click to define cropping polygon</div>
+      </div>
+    </div>
+    <canvas id="myCanvas" width="300" height="300" style="border:1px solid #d3d3d3;">
+      Your browser does not support the HTML5 canvas tag.</canvas>
+
+  </body>
+</html>

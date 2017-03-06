@@ -1,0 +1,264 @@
+/**
+* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
+* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
+* at <https://github.com/readsoftware>.
+*
+* READ is free software: you can redistribute it and/or modify it under the terms of the
+* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+* or (at your option) any later version.
+*
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along with READ.
+* If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+* @author      Stephen White  <stephenawhite57@gmail.com>
+* @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
+* @link        https://github.com/readsoftware
+* @version     1.0
+* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @package     READ Research Environment for Ancient Documents
+*/
+#textEditPage .textDivHeader, #textEditPage h3 {
+  font-weight: bold;
+  padding-right: 15px;
+  margin-left: -20px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+div.modify .TCM {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+#textEditPage .TCM::selection{ background: transparent; color:#959595;}
+#textEditPage .TCM::-moz-selection{ background: transparent; color:#959595;}
+#textEditPage h3::selection{ background: transparent; color:black;}
+#textEditPage h3::-moz-selection{ background: transparent; color:black;}
+#textEditPage .textDivHeader::selection{ background: transparent; color:black;}
+#textEditPage .textDivHeader::-moz-selection{ background: transparent; color:black;}
+#textEditPage div.editContainer > div::selection{ background: transparent; color:black;}
+#textEditPage div.editContainer > div::-moz-selection{ background: transparent; color:black;}
+#textEditPage .linebreak::selection{ background: transparent; color:black;}
+#textEditPage .linebreak::-moz-selection{ background: transparent; color:black;}
+#textEditPage .selected::selection{ background: #648cc8; color:white}
+#textEditPage .selected::-moz-selection{ background: #648cc8; color:white}
+
+#textEditPage > span{
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.highlighted {
+  color: white !important;
+  background-color: #4673af !important;
+}
+
+div.selected span.wordTranslation {
+  background: #2F5597 !important;
+  color:white !important;
+}
+.toksep {
+  display: none;
+}
+
+div.editContainer.showTokenSep .toksep {
+  display: inline;
+}
+
+.selected {
+  color: white;
+  background-color: #2F5597;
+}
+
+#textEditPage .editContainer {
+  text-align: left;
+}
+
+#textEditPage .editContainer.hasFocus {
+  padding: 4px;
+  background-color: orange;
+}
+
+#textEditPage .tcmedit {
+  background-color: #e5e5e5;
+}
+
+#textEditPage span.tcmerror, #textEditPage span.tcmadd.tcmerror:not(.autoGen) {
+  background-color: #648cc8;
+  color: red !important;
+}
+
+#textEditPage span.autoGen {
+  background-color: #648cc8;
+  color: green !important;
+}
+
+span.grpGra, span.TCM {
+  padding-right: 1px;
+  display: inline-flex;
+}
+#textEditPage span.tcmadd:not(.autoGen) {
+  background-color: #648cc8;
+  color: #2F5597 !important;
+}
+
+.wordTranslation {
+  padding-right: 5px;
+}
+
+div.section {
+  padding-left: 10px;
+}
+
+div.section.level2,
+div.section.level3,
+div.section.level4,
+div.section.level5{
+  display: inline-block;
+  width: 95%;
+}
+
+div.section.Sentence{
+  display: inline;
+  width: 95%;
+  padding-left: 0px;
+  padding-right: 5px;
+}
+
+div.secHeader.level2{
+  display: inline-block;
+}
+
+div.secMarker{
+  display: inline-flex;
+  margin-right:10px;
+}
+div.itemBullet{
+  display: table-cell;
+  padding-right:10px;
+}
+div.itemWrapper{
+  display: table-cell;
+}
+div.itemWrapper > div.section{
+  padding-left: 0px;
+}
+div.prose.lastStructure {
+  margin-bottom: 15px;
+}
+
+#textEditPage .prose span.linelabel {
+  color: gray!important;
+}
+.Stanza .secTitle {
+  display: none;
+}
+.ednveContentDiv, .transVContentDiv {
+  padding-left: 30px;
+  overflow-y: auto;
+  max-width: 96%;
+  overflow-wrap: break-word;
+}
+.listDropdownButton {
+  position: relative;
+  margin-left: 3px;
+  margin-top: 5px;
+}
+.properyManager {
+  float:left;
+}
+.editionTitleDiv {
+  display: table-row;
+}
+.editionTitleDiv a {
+  display: table-cell;
+  cursor: pointer;
+}
+.wordListTitle {
+  padding-left: 30px;
+}
+.prose {
+  display: inline-flex;
+  justify-content: space-evenly;
+  word-break: keep-all;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-right: 1.5%;
+}
+
+#textEditPage .selected .textDivHeader,
+#textEditPage h3,
+#textEditPage .selected .linebreak,
+#textEditPage .selected .boundary,
+#textEditPage div.editContainer > div,
+#textEditPage span:not(.selected):not(.tcmedit) {
+  background-color: white;
+  color:black;
+  line-height: 1.4;
+}
+div.freetext {
+  display: inline-block;
+  width: 90%;
+  color: #404040;
+}
+.freetext .validationError{
+  display: none;
+}
+.freetext.error .validationError{
+  cursor: pointer;
+  display: block;
+  position: absolute;
+  z-index: 3;
+  background-color: lightgrey;
+  border: 1px solid darkgrey;
+}
+.errhilite {
+  color: red!important;
+  background-color: yellow!important;
+}
+.errmsg {
+  color: brown!important;
+  background-color: pink!important;
+}
+.ctxerror {
+  color: brown!important;
+}
+.freetextInput{
+  width: 80%;
+}
+.freetextResultTable{
+  display: none;
+}
+.freetext .commitButton {
+  display: none;
+}
+.freetext.valid .commitButton {
+  display: inline-block;
+  background-color: rgb(217,217,217);
+  width: 70px;
+  height: 23px;
+  border: 1px solid darkgrey;
+  cursor: pointer;
+  vertical-align: top;
+}
+.validateButton {
+  display: inline-block;
+  background-color: rgb(217,217,217);
+  width: 70px;
+  height: 23px;
+  border: 1px solid darkgrey;
+  cursor: pointer;
+  vertical-align: top;
+}

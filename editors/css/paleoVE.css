@@ -1,0 +1,294 @@
+/**
+* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
+* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
+* at <https://github.com/readsoftware>.
+*
+* READ is free software: you can redistribute it and/or modify it under the terms of the
+* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+* or (at your option) any later version.
+*
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along with READ.
+* If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+* @author      Stephen White  <stephenawhite57@gmail.com>
+* @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
+* @link        https://github.com/readsoftware
+* @version     1.0
+* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @package     READ Research Environment for Ancient Documents
+*/
+.paleoContentDiv.cellview .paleoFrameDiv{
+  display:none;
+}
+.paleoContentDiv.cellview .paleoSclGrpTaggingDiv{
+  display:block;
+}
+.paleoFrameDiv{
+  display:block;
+}
+.paleoSclGrpTaggingDiv{
+  display:none;
+}
+.paleoReportTable{
+  border: solid 1px darkgrey;
+  max-width: 990px;
+  margin-left: 10px;
+}
+.tagThematicDiv{
+  max-width: 20px;
+  margin: 5px;
+  display: table-cell;
+  max-height: 80px;
+  vertical-align: top;
+}
+.btTheme{
+  background-color: lightblue;
+  padding: 3px;
+}
+.fmtTheme{
+  background-color: orange;
+  padding: 3px;
+}
+.vtTheme{
+  background-color: lightgreen;
+  padding: 3px;
+}
+.btTheme.BT-1 span:after{
+  content: "1";
+  background-color: lightblue!important;
+}
+.btTheme.BT-2 span:after{
+  content: "2";
+  background-color: lightblue!important;
+}
+.btTheme.BT-3 span:after{
+  content: "3";
+  background-color: lightblue!important;
+}
+.btTheme.BT-4 span:after{
+  content: "4";
+  background-color: lightblue!important;
+}
+.btTheme.BT-5 span:after{
+  content: "5";
+  background-color: lightblue!important;
+}
+.btTheme.BT-6 span:after{
+  content: "6";
+  background-color: lightblue!important;
+}
+.btTheme.BT-7 span:after{
+  content: "7";
+  background-color: lightblue!important;
+}
+.btTheme.BT-8 span:after{
+  content: "8";
+  background-color: lightblue!important;
+}
+.btTheme.BT-9 span:after{
+  content: "9";
+  background-color: lightblue!important;
+}
+.btTheme.BT-10 span:after{
+  content: "10";
+  background-color: lightblue!important;
+}
+.btTheme.BT-Un span:after{
+  content: "U";
+  background-color: lightblue!important;
+}
+.fmtTheme.FMT-0 span:after{
+  content: "0";
+  background-color: orange!important;
+}
+.fmtTheme.FMT-1 span:after{
+  content: "1";
+  background-color: orange!important;
+}
+.fmtTheme.FMT-2 span:after{
+  content: "2";
+  background-color: orange!important;
+}
+.fmtTheme.FMT-3 span:after{
+  content: "3";
+  background-color: orange!important;
+}
+.fmtTheme.FMT-4 span:after{
+  content: "4";
+  background-color: orange!important;
+}
+.fmtTheme.FMT-5 span:after{
+  content: "5";
+  background-color: orange!important;
+}
+.fmtTheme.FMT-Un span:after{
+  content: "U";
+  background-color: orange!important;
+}
+.vtTheme.VT-1 span:after{
+  content: "1";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-2 span:after{
+  content: "2";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-3 span:after{
+  content: "3";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-4 span:after{
+  content: "4";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-5 span:after{
+  content: "5";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-6 span:after{
+  content: "6";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-7 span:after{
+  content: "7";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-8 span:after{
+  content: "8";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-9 span:after{
+  content: "9";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-10 span:after{
+  content: "10";
+  background-color: lightgreen!important;
+}
+.vtTheme.VT-Un span:after{
+  content: "U";
+  background-color: lightgreen!important;
+}
+
+.paleoChart, .taggingDiv{
+  display: block;
+  overflow-y: auto;
+  max-height: 450px;
+  overflow-x: hidden;
+}
+.columnHeader{
+  background-color: lightgrey;
+  min-width: 98px;
+  text-align: center;
+  vertical-align: middle;
+  min-height: 25px;
+}
+.tagColumnHeader{
+  background-color: lightgrey;
+  min-width: 398px;
+  text-align: center;
+  vertical-align: middle;
+  min-height: 25px;
+}
+.lastColumnHeader{
+  background-color: lightgrey;
+  min-width: 18px;
+  text-align: center;
+  vertical-align: middle;
+  min-height: 25px;
+}
+.paleoReportHeaderRow{
+  background-color: gray;
+  min-height: 25px;
+}
+.tagNameColumnHeader{
+  width: 100px;
+}
+.scrollColumnHeader{
+  width: 22px;
+}
+.paleoChartRowHeader{
+  display: table-cell;
+  background-color: lightgrey;
+  min-width: 96px !important;
+  text-align: center;
+  vertical-align: middle;
+}
+.paleoChartRow, .taggingGroupRow{
+  display:table-row;
+}
+.taggingSyllableSpan{
+  background-color: lightgrey !important;
+  font-weight: bold;
+}
+.taggingRowHeader{
+  display: table-cell;
+  background-color: lightgrey;
+  min-width: 96px !important;
+  text-align: center;
+  vertical-align: middle;
+}
+.taggingGrpCell{
+  display:inline-flex;
+  flex-wrap: wrap;
+  min-width: 98px;
+  text-align: justify;
+  vertical-align: middle;
+  min-height: 25px;
+  border: solid 1px darkgrey;
+  background-color: white;
+  padding: 10px;
+}
+.paleoChartCell{
+  display:table-cell;
+  min-width: 98px;
+  text-align: center;
+  vertical-align: middle;
+  min-height: 25px;
+  border: solid 1px darkgrey;
+  background-color: white;
+}
+.padCell{
+  display:table-cell;
+  min-width: 18px;
+  text-align: center;
+  vertical-align: middle;
+  min-height: 25px;
+  background-color: lightgrey;
+}
+.tagSegDiv{
+  padding: 4px;
+  display: table;
+}
+.tagSegDiv.defaultSeg{
+  border: solid 2px green;
+}
+.tagSegDiv.selected{
+  background-color: blue;
+}
+.segDiv{
+  padding: 4px;
+  display: inline-block;
+}
+.segDiv.selected{
+  background-color: blue;
+}
+.cellSegImg{
+  max-width: 50px;
+  max-height: 25px;
+}
+.taggingSegImg{
+  max-width: 55px;
+  max-height: 80px;
+}
+.paleoContentDiv{
+  overflow:auto;
+}
+.paleographicReportHeader {
+  padding-left: 30px;
+}

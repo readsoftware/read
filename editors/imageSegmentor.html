@@ -1,0 +1,279 @@
+<!--
+/**
+* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
+* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
+* at <https://github.com/readsoftware>.
+*
+* READ is free software: you can redistribute it and/or modify it under the terms of the
+* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+* or (at your option) any later version.
+*
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along with READ.
+* If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+* @author      Stephen White  <stephenawhite57@gmail.com>
+* @copyright   @see AUTHORS in repository root
+* @link        https://github.com/readsoftware
+* @version     1.0
+* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @package     READ Research Environment for Ancient Documents
+*/
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Image Segmentor</title>
+    <link rel="stylesheet" href="/jquery-ui/1.10.4/development-bundle/themes/base/jquery.ui.all.css">
+    <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.base.css" type="text/css" />
+    <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.energyblue.css" type="text/css" />
+    <link rel="stylesheet" href="../editors/css/imageViewer.css" type="text/css" />
+    <script src="../editors/js/imageViewer.js"></script>
+    <script src="/jquery/jquery-1.11.0.min.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxtouch.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxdata.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxbuttons.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxscrollbar.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxmenu.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxwindow.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxgrid.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxsplitter.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxgrid.selection.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxgrid.filter.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxgrid.sort.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxgrid.edit.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxgrid.columnsresize.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxdropdownlist.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxlistbox.js"></script>
+    <script src="/jquery-ui/1.10.4/js/jquery-ui-1.10.4.js"></script>
+    <style>
+      #sortable { list-style-type: none; margin: 0; padding: 0; }
+      #sortable div { margin: 3px 3px 3px 0; padding: 1px; float: left; width: 100px; height: 90px; font-size: 4em; text-align: center; }
+      .graphemeView { width: 100px; height: 100px; padding: 0.5em; }
+      #resizable { width: 650px; height: 150px; padding: 0.5em; }
+      #resizable h3 { text-align: center; margin: 0; }
+      body {
+        font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+        font-size: 62.5%;
+      }
+    </style>
+    <script>
+      var canvas, ctx,  cropServiceURL="http://localhost/kanishka/common/php/cropImagePoly.php?",
+          imgBaseURL, imgViewerDiv, imgViewer, imgURL = "", cropPoly, centerX, centerY,
+          img = new Image();
+      var w=60, h=60, rotRadians=0,x=0, y=0, path, crossSize=10, transX=0,transY=0;
+      // load data for baselines.
+      var textBaselineSource = {datatype: "json",
+                    url: 'http://localhost/kanishka/services/loadTextBaselines.php',
+                    data: {ckn: ['CKM0237','CKI02662']}
+                    };
+      var baselineImageDataAdapter = new $.jqx.dataAdapter(textBaselineSource, {
+          loadComplete: function () {
+              // update interface controls
+          }
+      });
+      baselineImageDataAdapter.dataBind();
+      function init() {
+        cropPoly=document.getElementById("cropPoly");
+        cropPoly.onblur=cropPolyChangeHandler;
+        imgBaseURL=document.getElementById("imageURL");
+        imgBaseURL.onblur=checkURLChange;
+        imgBaseURL.value="http://localhost/Gandhari.org/images/manuscripts/237/CKM0237.4.jpg";
+        //imgBaseURL.value="http://localhost/Gandhari.org/images/inscriptions/266/CKI02662_1.PNG";
+        imgViewerDiv=document.getElementById("imgViewerDiv");
+        canvas=document.getElementById("myCanvas");
+        centerX = Math.floor(canvas.width/2);
+        centerY = Math.floor(canvas.height/2);
+        ctx=canvas.getContext("2d");
+        imgViewer = new EDITORS.ImageViewer({image:img,
+                                                  imageCanvas:canvas,
+                                                  initViewPercent:80,
+                                                  imageDiv: imgViewerDiv,
+                                                  navSizePercent:15});
+        imgURL = imgBaseURL.value;
+        imgViewer.setImageSrc(imgBaseURL.value);
+        imgViewer.polygons = [];
+      }
+      function checkURLChange(e){
+        if (imgURL.indexOf(imgBaseURL.value) == -1) {
+          reloadImage();
+        }
+      }
+
+      function reloadImage(){
+        var newURL = imgBaseURL.value;
+        if (img.src.trim() != newURL.trim()) {
+          imgViewer.setImageSrc(imgBaseURL.value);
+        }
+      }
+
+      function cropPolyChangeHandler(){
+        if (!cropPoly.value) return;
+        path = JSON.parse( cropPoly.value );
+        redraw();
+      }
+
+      function getTranslatedPoly(points,newOrigX, newOrigY, scaleFactor) {
+        var poly = [];
+        var i;
+        if (!scaleFactor) scaleFactor = 1;
+        for(i=0;i<points.length;i++){
+          poly.push([scaleFactor*(points[i][0]+newOrigX), scaleFactor*(points[i][1]+newOrigY)]);
+        }
+        return poly;
+      }
+
+      function getBoundingRect(points) {
+        x1 = x2 = points[0][0];
+        y1 = y2 = points[0][1];
+        for(i=1;i<points.length;i++){
+          x1 = Math.min(x1,points[i][0]);
+          x2 = Math.max(x2,points[i][0]);
+          y1 = Math.min(y1,points[i][1]);
+          y2 = Math.max(y2,points[i][1]);
+        }
+        return [[x1,y1],[x2,y1],[x2,y2],[x1,y2]];
+      }
+
+
+      var num = 1;
+      $(function() {
+        $('#mainSplitter').jqxSplitter({ width: 1450, height: 900, orientation: 'horizontal', panels: [{ size: 150, collapsible: false }] });
+        $('#nestedSplitter').jqxSplitter({ width: '100%', height: '100%',  orientation: 'horizontal', panels: [{ size: 630, collapsible: false}] });
+//        $( "#sortable" ).sortable({ delay: 50,opacity: 0.4,  items: ".segmentView " });
+        $( "#sortable" ).disableSelection();
+        $( "#resizable" ).resizable();
+        $('#add-btn').click(function () {
+          var segID = "seg-" + num,
+              path = imgViewer.getPath(),
+              canvas = $("<canvas>", {style: 'maxWidth: 100px; maxHeight: 100px;'});
+          var bbox = getBoundingRect(path),
+              x = bbox[0][0], y = bbox[0][1],
+              w = bbox[1][0] - x, h = bbox[2][1] - y,
+              dw = w>h?100: Math.round(100 * w/h),
+              xscale = dw/w,
+              dh = w>h? Math.round(100 * h/w):100,
+              yscale = dh/h;
+          var div = $("<div>", {id: segID, style: 'width: '+dw+'px; height: '+dh+'px;', class: 'ui-state-default segmentView'})
+                      .appendTo("#sortable")
+                      .append(canvas)
+                      .on('click',function(e){
+                        var id = ($(this).attr('id')).substr(4);
+                            polygon = imgViewer.getImagePolygonAt(id);
+                        $(this).toggleClass("selected");
+                        if (polygon && polygon.color == "green") {
+                          imgViewer.setImagePolygonDisplay(id,"blue",2);
+                        }else{
+                          imgViewer.setImagePolygonDisplay(id,"green",1);
+                        }
+                        imgViewer.draw();
+                      })
+                      .on('mouseover',function(e){
+                        var polygon = imgViewer.getImagePolygonAt(($(this).attr('id')).substr(4));
+                        if (polygon) {
+                          imgViewer.drawColoredPolygon(polygon.polygon,"orange",2);
+                        }
+                      })
+                      .on('mouseout',function(e){
+                        imgViewer.draw();
+                      });
+          var ctx = canvas.get(0).getContext('2d');
+          imgViewer.addImagePolygon(path);
+          ctx.save();
+          ctx.globalAlpha = 0.2;
+          ctx.drawImage(imgViewer.image,x,y,w,h,0,0,dw,dh);
+          ctx.restore();
+          ctx.globalAlpha = 1.0;
+          ctx.beginPath();
+          ctx.moveTo((path[0][0]-x)*xscale,(path[0][1]-y)*yscale);
+          for (var i=1; i < path.length; i++) {
+            ctx.lineTo((path[i][0]-x)*xscale,(path[i][1]-y)*yscale);
+          }
+          ctx.closePath();
+          ctx.stroke();
+          ctx.clip();
+          ctx.drawImage(imgViewer.image,x,y,w,h,0,0,dw,dh);
+
+//          $( "#sortable" ).sortable( "refreshPositions" );
+          num++;
+        });
+        $('#embos-btn').click(function () {
+          imgViewer.emboss();
+          $('#imgCmds').val(imgViewer.getCommandStack());
+        });
+        $('#invert-btn').click(function () {
+          imgViewer.invert();
+          $('#imgCmds').val(imgViewer.getCommandStack());
+        });
+        $('#reduce-btn').click(function () {
+          imgViewer.reduce();
+          $('#imgCmds').val(imgViewer.getCommandStack());
+        });
+        $('#stretch-btn').click(function () {
+          imgViewer.stretch();
+          $('#imgCmds').val(imgViewer.getCommandStack());
+        });
+        $('#norm-btn').click(function () {
+          imgViewer.drawImage();
+          imgViewer.clearImageCommands();
+        });
+        $('#run-btn').click(function () {
+          imgViewer.runCommandString($('#imgCmds').val());
+        });
+        $('#bbox-btn').click(function () {
+          //for each select segment, find the bounding box and draw it in red
+          var polyPts = [];
+          $(".segmentView.selected",$("#sortable")).each(function(index,elem){
+            var id = ($(elem).attr('id')).substr(4);
+            polyPts = polyPts.concat((imgViewer.getImagePolygonAt(id)).polygon);
+          });
+          imgViewer.drawColoredPolygon(getBoundingRect(polyPts),"red",3);
+        });
+        init();
+      });
+
+
+      </script>
+  </head>
+  <body id='body'>
+    <div id="mainSplitter">
+      <div id="ms1">
+        <h3 class="ui-widget-header">Image Segmentor</h3>
+        <div>
+          <div >
+            <label for="imageURL" style="margin-left: 26px;">Image URL : </label><input id="imageURL" type="text" style="width: 750px; margin-bottom: 5px;"><br/>
+            <label for="cropPoly" style="margin-left: 4px;">Cropping Poly : </label><input id="cropPoly" type="text" style="width: 750px; height: 20px; margin-bottom: 5px;"><br/>
+
+          </div>
+          <div>
+            <button type="button" id="add-btn">Add Segment</button>
+            <button type="button" id="embos-btn">Emboss</button>
+            <button type="button" id="invert-btn">Invert</button>
+            <button type="button" id="reduce-btn">Reduce</button>
+            <button type="button" id="stretch-btn">Stretch</button>
+            <button type="button" id="norm-btn">Normal</button>
+            <button type="button" id="run-btn">Run Commands</button><input id="imgCmds" type="text" style="width: 150px; margin-bottom: 5px;">
+            <button type="button" id="bbox-btn">Show Bounds</button>
+          </div>
+        </div>
+      </div>
+      <div id="ms2">
+        <div id="nestedSplitter">
+          <div id="imgViewerDiv">
+            <canvas id="myCanvas" style="border:1px solid #d3d3d3;">
+              Your browser does not support the HTML5 canvas tag.</canvas>
+          </div>
+          <div>
+            <div id="sortable"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
