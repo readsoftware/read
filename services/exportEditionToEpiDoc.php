@@ -30,16 +30,40 @@
 * @subpackage  Services
 */
 
+  if (@$argv) {
+    $isCmdLineLaunch = true;
+    // handle command-line queries
+    $ARGV = array();
+    for ($i = 0;$i < count($argv);++$i) {
+        if ($argv[$i][0] === '-') {
+            if (@$argv[$i + 1] && $argv[$i + 1][0] != '-') {
+                $ARGV[$argv[$i]] = $argv[$i + 1];
+                ++$i;
+            } else {
+                $ARGV[$argv[$i]] = true;
+            }
+        } else {
+            array_push($ARGV, $argv[$i]);
+        }
+    }
+    if (@$ARGV['-db']) $_REQUEST["db"] = $ARGV['-db'];
+    if (@$ARGV['-ckn']) $_REQUEST['ckn'] = $ARGV['-ckn'];
+    if (@$ARGV['-ednID']) $_REQUEST['ednID'] = $ARGV['-ednID'];
+    if (@$ARGV['-userID']) $userID = $ARGV['-userID'];
+  }
+
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
   ob_start('ob_gzhandler');
 //header('Content-type: text/xml; charset=utf-8');
   header('Pragma: no-cache');
 
-  ob_start();
-  include_once(dirname(__FILE__).'/getTextRML.php');
-  $textRML = ob_get_contents();
-  ob_end_clean();
+  include_once(dirname(__FILE__).'/utilRML.php');
+
+  $textRML = null;
+  $textCKN = (array_key_exists('ckn',$_REQUEST)? $_REQUEST['ckn']:null);
+  $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
+  $textRML = calcEditionRML($ednID, $textCKN);
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
 error_reporting(E_ERROR);
   $textRMLDoc = new DOMDocument('1.0','utf-8');
@@ -63,7 +87,7 @@ error_reporting(E_ERROR);
   }
   $testDoc = new DOMDocument('1.1','utf-8');
   $testDoc->loadXML($epiXML);
-  if (!$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {
+  if (!isset($isCmdLineLaunch) && !$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {
     header("Content-type: text/javascript;  charset=utf-8");
     echo "transformation with 'rml2EpiDoc.xsl' failed validation against 'tei-epidoc.rng'";
     return;
@@ -77,6 +101,9 @@ error_reporting(E_ERROR);
     header("Content-type: application/tei+xml;  charset=utf-8");
     header("Content-Disposition: attachment; filename=epidoc_".$_REQUEST['ckn'].".tei");
     header("Expires: 0");
+  } else {
+    header('Content-type: text/xml; charset=utf-8');
+    header('Cache-Control: no-cache');
   }
   echo $epiXML;
 

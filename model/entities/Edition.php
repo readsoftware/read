@@ -78,7 +78,7 @@
         $dbMgr->query($this->getSingleEntityAccessQuery($arg));
         $row = $dbMgr->fetchResultRow(0);
         if(!$row || !array_key_exists('edn_id',$row)) {
-          error_log("unable to query for edition ID = $arg ");
+          error_log("unable to query for edition ID = $arg ".$dbMgr->getQuery());
         }else{
           $arg = $row;
         }
