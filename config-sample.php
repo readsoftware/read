@@ -12,6 +12,9 @@
   if(!defined("SITE_BASE_PATH")) define("SITE_BASE_PATH",REQSCHEMA."://".HOSTNAME.READ_DIR);
   if(!defined("READ_ROOT")) define("READ_ROOT",DOCUMENT_ROOT.READ_DIR);
   if(!defined("IMAGE_ROOT")) define("IMAGE_ROOT",DOCUMENT_ROOT."/images");
+  if(!defined("EXPORT_ROOT")) define("EXPORT_ROOT",DOCUMENT_ROOT."/export");
+  if(!defined("XML_EXPORT_ROOT")) define("XML_EXPORT_ROOT",EXPORT_ROOT."/xml");
+  if(!defined("EPIDOC_EXPORT_ROOT")) define("EPIDOC_EXPORT_ROOT",XML_EXPORT_ROOT."/epidoc");
   if(!defined("SEGMENT_CACHE_SUB_PATH")) define("SEGMENT_CACHE_SUB_PATH","/segment_cache");
   if(!defined("THUMBNAIL_SUB_PATH")) define("THUMBNAIL_SUB_PATH","/thumb");
   if(!defined("SEGMENT_CACHE_BASE_PATH")) define("SEGMENT_CACHE_BASE_PATH",IMAGE_ROOT.SEGMENT_CACHE_SUB_PATH."/");
@@ -35,6 +38,13 @@
     $isDir = mkdir($info, 0775, true);
     if (!$isDir) {//point at the temp dir which will only can temporarily
       uopz_redefine("SEGMENT_CACHE_BASE_PATH", sys_get_temp_dir()); //tod this has issues with multiple databases. Perhaps we place the db name on the file.
+    }
+  }
+  $info = new SplFileInfo(XML_EXPORT_ROOT);
+  if (!$info->isDir()) {
+    $isDir = mkdir($info, 0775, true);
+    if (!$isDir) {//point at the temp dir which will only can temporarily
+      uopz_redefine("SEGMENT_CACHE_BASE_PATH", DOCUMENT_ROOT);
     }
   }
 ?>

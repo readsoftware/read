@@ -16,9 +16,9 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-* saveSyllable
+* uploadImage
 *
-* saves the syllable passed making new or updating existing graphemes as needed, propagates up the containment hierarchy as needed.
+* uploads an image into configured location and creates thumbnail for image.
 * @author      Stephen White  <stephenawhite57@gmail.com>
 * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
 * @link        https://github.com/readsoftware
