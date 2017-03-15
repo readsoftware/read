@@ -2975,7 +2975,7 @@ mergeLine: function (direction,cbError) {
 */
 
     function selectStartHandler(e) {
-      alert("selectionstart");
+//      alert("selectionstart");
     }
     $(this.editDiv).unbind('selectstart').bind('selectstart', selectStartHandler);
 
