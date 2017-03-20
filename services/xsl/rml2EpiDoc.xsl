@@ -30,7 +30,7 @@
     extension-element-prefixes="exslt"
     xmlns:fn="http://www.w3.org/2005/xpath-functions"
     version="1.0">
-    <xsl:output method="xml" version="1.0" encoding="UTF-8"  indent="yes"/>
+    <xsl:output method="xml" version="1.0" omit-xml-declaration="no" encoding="UTF-8"  indent="yes"/>
     <!-- setup lookup table for linebreak detection -->
     <xsl:variable name="lineBreaks" >
             <xsl:for-each  select="/rml/entities/sequence[Type/link/@value = 'LinePhysical']">
@@ -172,13 +172,6 @@
                             <additional>
                                 <surrogates><!-- fill me in; use <bibl> for published facsimiles --></surrogates>
                             </additional>
-                            <msPart>
-                                <altIdentifier>
-                                    <idno></idno>
-                                </altIdentifier>
-                                <physDesc/>
-                                <history/>
-                            </msPart>
                         </msDesc>
                     </sourceDesc>
                     <!--xsl:if test="/rml/entities/attribution[@id=$text/attributions/link/@id]/title">
@@ -346,30 +339,29 @@
         <!-- output Structural level nodes -->
         <xsl:variable name="headerValue" select="DisplayLabel"/>
         <xsl:variable name="nValue" select="SuperScript"/>
-        <!--xsl:if test="string-length($headerValue) > 0">
-            <head><xsl:value-of select="$headerValue"/></head>
-        </xsl:if-->
-        <ab xmlns="http://www.tei-c.org/ns/1.0" type="textpart">
-            <xsl:attribute name="xml:id">
-                <xsl:value-of select="concat('seq',@id)"/>
-            </xsl:attribute>
-            <xsl:attribute name="subtype">
-                <xsl:value-of select="Type/link/@value"/>
-            </xsl:attribute>
-            <xsl:if test="string-length($nValue) > 0">
-                <xsl:attribute name="n">
-                    <xsl:value-of select="$nValue"/>
-                </xsl:attribute>
-            </xsl:if>
+        <xsl:if test="count(Components/link) > 0">
+          <ab type="textpart">
+              <xsl:attribute name="xml:id">
+                  <xsl:value-of select="concat('seq',@id)"/>
+              </xsl:attribute>
+              <xsl:attribute name="subtype">
+                  <xsl:value-of select="Type/link/@value"/>
+              </xsl:attribute>
+              <xsl:if test="string-length($nValue) > 0">
+                  <xsl:attribute name="n">
+                      <xsl:value-of select="$nValue"/>
+                  </xsl:attribute>
+              </xsl:if>
 
-            <!-- process subcomponents of sequence -->
-            <xsl:for-each select="Components/link">
-                <xsl:call-template name="linkexpander">
-                    <xsl:with-param name="link" select="current()"/>
-                </xsl:call-template>
-            </xsl:for-each>
-            <!-- close any line level nodes still open -->
-        </ab>
+              <!-- process subcomponents of sequence -->
+              <xsl:for-each select="Components/link">
+                  <xsl:call-template name="linkexpander">
+                      <xsl:with-param name="link" select="current()"/>
+                  </xsl:call-template>
+              </xsl:for-each>
+              <!-- close any line level nodes still open -->
+          </ab>
+        </xsl:if>
     </xsl:template>
 
     <xsl:template match="sequence" mode="line">

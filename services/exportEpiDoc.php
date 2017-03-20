@@ -204,17 +204,17 @@
       $epiXML = $xslProc->transformToXML($textRMLDoc);
       //if successful then
       if ($epiXML) {
-        $epiXML = substr($epiXML,strpos($epiXML,">")+1);
+//        $epiXML = substr($epiXML,strpos($epiXML,">")+1);
         if (strpos($epiXML,'xmlns=""')) {//php XSLT parser is ouputting blank xmlns statements and fails validation
           $epiXML = str_replace('xmlns=""','',$epiXML);//remove any blank xmlns statements
         }
-        $testDoc = new DOMDocument('1.1','utf-8');
+        $testDoc = new DOMDocument('1.0','utf-8');
         $epiXML = trim($epiXML);
         $testDoc->loadXML($epiXML);
-        if (false && !$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {
+        if (!$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {
           //log error
-          //    echo "transformation with 'rml2EpiDoc.xsl' failed validation against 'tei-epidoc.rng'";
-//          continue;
+          error_log("transformation with 'rml2EpiDoc.xsl' failed validation against 'tei-epidoc.rng'");
+          continue;
         }
         $epiXML = "<?xml version='1.0' encoding='UTF-8'?>\n".
                   '<?xml-model'." ".'href="http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>'."\n".

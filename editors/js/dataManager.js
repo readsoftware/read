@@ -792,6 +792,7 @@ MANAGERS.DataManager.prototype = {
 */
 
   stackLoadEdition: function(ednID,cb) {
+    DEBUG.traceEntry("dataMgr.stackLoadEdition",'ednID = '+ednID+(cb?" with cb":""));
     if (!this.ednStack) {
       this.ednStack = {};
     }
@@ -799,6 +800,7 @@ MANAGERS.DataManager.prototype = {
       this.ednStack[ednID] = [];
     }
     this.ednStack[ednID].push(cb);
+    DEBUG.traceExit("dataMgr.stackLoadEdition",'ednID = '+ednID+(cb?" with cb":""));
   },
 
 
@@ -808,7 +810,7 @@ MANAGERS.DataManager.prototype = {
 
   processLoadEditionStack: function() {
     DEBUG.traceEntry("dataMgr.processLoadEditionStack","");
-    var ednID, cb,exitMsg = "unknown reason";
+    var ednID, cb,exitMsg = "stack empty";
     if (!this.loadingEdition && this.ednStack &&
           Object.keys(this.ednStack).length) {
       for (ednID in this.ednStack) {
@@ -974,7 +976,7 @@ MANAGERS.DataManager.prototype = {
     if (ednID && (!this.isEditionLoaded(ednID) || refresh) && !this.editionForIDUnavailable(ednID)) {//test load again as call may have been on stack and another task may have loaded it
       dataQuery = {edn:ednID};
       dataMgr.loadingEdition = ednID;
-      exitMsg = "call ajax for ednID = " + ednID;
+      exitMsg = "call ajax for ednID = " + ednID+(cb?" with cb":"");
       $.ajax({
           type:"POST",
           dataType: 'json',
@@ -983,7 +985,7 @@ MANAGERS.DataManager.prototype = {
           async: true,
           success: function (data, status, xhr) {
               DEBUG.traceEntry("dataMgr.loadEdition.SuccessCB","ednID = " + ednID);
-              var cb = cb, callEdnID = ednID, loadIDs = "", loadedEdnID;
+              var callback = cb, callEdnID = ednID, loadIDs = "", loadedEdnID;
               dataMgr.loadingEdition = 0;
               if (typeof data == 'object' && data.entities && data.entities.update &&
                     data.entities.update.edn && Object.keys(data.entities.update.edn).length > 0
@@ -1024,9 +1026,9 @@ MANAGERS.DataManager.prototype = {
               if (data.warnings) {
                 DEBUG.log("warn", "warnings during loadEdition - " + data.warnings.join(" : "));
               }
-              if (cb && typeof cb == "function") {
+              if (callback && typeof callback == "function") {
                 DEBUG.trace('calling callback ',' for loaded edition ' + loadIDs);
-                cb();
+                callback();
               }
               dataMgr.checkAlternateEdition(loadedEdnID);
               dataMgr.processLoadEditionStack();

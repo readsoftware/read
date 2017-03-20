@@ -2975,7 +2975,7 @@ mergeLine: function (direction,cbError) {
 */
 
     function selectStartHandler(e) {
-//      alert("selectionstart");
+ //     alert("selectionstart");
     }
     $(this.editDiv).unbind('selectstart').bind('selectstart', selectStartHandler);
 
@@ -5263,7 +5263,11 @@ mergeLine: function (direction,cbError) {
               }
             } else if (grapheme.value == '_') {
               if (this.repType == "hybrid") {
-                grpHTML += (j==0?"&nbsp;_":"_");
+                if (j==0) {
+                  indx = grpHTML.indexOf('class="');
+                  grpHTML = grpHTML.substr(0,indx+7) + "prepadding " + grpHTML.substr(indx+7);
+                }
+                grpHTML += "_";
               } else {
                 grpHTML += (j==0?"&nbsp;.":".");
               }
@@ -5840,6 +5844,8 @@ mergeLine: function (direction,cbError) {
       this.renumberLines();
     }
   },
+
+
 
 
 /**

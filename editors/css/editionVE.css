@@ -71,10 +71,12 @@ div.selected span.wordTranslation {
 }
 .toksep {
   display: none;
+  visibility: hidden;
 }
 
 div.editContainer.showTokenSep .toksep {
   display: inline;
+  visibility: visible;
 }
 
 .selected {
@@ -109,6 +111,11 @@ span.grpGra, span.TCM {
   padding-right: 1px;
   display: inline-flex;
 }
+
+span.grpGra.prepadding {
+  padding-left: 5px;
+}
+
 #textEditPage span.tcmadd:not(.autoGen) {
   background-color: #648cc8;
   color: #2F5597 !important;

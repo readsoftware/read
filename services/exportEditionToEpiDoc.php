@@ -85,14 +85,14 @@ error_reporting(E_ERROR);
   if (strpos($epiXML,'xmlns=""')) {//php XSLT parser is ouputting blank xmlns statements and fails validation
     $epiXML = str_replace('xmlns=""','',$epiXML);//remove any blank xmlns statements
   }
-  $testDoc = new DOMDocument('1.1','utf-8');
+  $testDoc = new DOMDocument('1.0','utf-8');
   $testDoc->loadXML($epiXML);
   if (!isset($isCmdLineLaunch) && !$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {
     header("Content-type: text/javascript;  charset=utf-8");
     echo "transformation with 'rml2EpiDoc.xsl' failed validation against 'tei-epidoc.rng'";
     return;
   }
-  $epiXML = "<?xml version='1.0' encoding='UTF-8'?>\n".
+  $epiXML = "<?xml version='1.0' encoding='UTF-8'?>"."\n".
             '<?xml-model'." ".'href="http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>'."\n".
             '<?xml-model'." ".'href="http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>'."\n".
             $epiXML;
