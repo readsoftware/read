@@ -97,6 +97,7 @@ sup{
 #userNameDiv {
   display: inline-block;
   background-color: transparent;
+  color: black;
   height: 20px;
   margin-top: 4pt;
   margin-left: 10px;
