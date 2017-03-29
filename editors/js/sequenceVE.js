@@ -720,7 +720,7 @@ EDITORS.SequenceVE.prototype = {
           seqVE.$structTree.jqxTree('addTo',newItem[0],elem);
           seqVE.attachMenuEventHandler($(elem));
           seqVE.$structTree.jqxTree('expandItem', elem);
-        });
+        },null);
       }
     };
 
@@ -760,7 +760,7 @@ EDITORS.SequenceVE.prototype = {
 
   getTermListMenuItems: function(trmTag) {
     var trmTypeIDs, trmTypeID,i, items = [], trmID = trmTag.substring(3),
-        itemLabel, itemValue, item, itemID, tagItem, linkItem;
+        itemLabel, itemValue, item, itemID, tagItem, linkItem, canLinkComponenets = false;
     if (!this.dataMgr || !this.dataMgr.getTermListFromID) {
       return null;
     }
@@ -774,6 +774,7 @@ EDITORS.SequenceVE.prototype = {
           continue;
         }
         if (trmTypeID == this.cmpTypeID || trmTypeID == this.tokTypeID || trmTypeID == this.sclTypeID) {
+          canLinkComponenets = true;
           continue;
         }
         item = { label: itemLabel,
@@ -782,7 +783,7 @@ EDITORS.SequenceVE.prototype = {
         items.push(item);
       }
     }
-    if (trmID != this.cmpTypeID && trmID != this.tokTypeID && trmID != this.sclTypeID) {
+    if (canLinkComponenets) {
       linkItem = { label: "Link",
                       id: "Link",
                    value: "Link" };
@@ -937,7 +938,7 @@ EDITORS.SequenceVE.prototype = {
     }
     if (!entity.readonly || !tag.match(/seq/)) {
       menuItems = this.getTermListMenuItems(item.value);
-      if (!item.hasItems) {//item has no childred so can be removed
+      if (!item.hasItems) {//item has no children so can be removed
         if (!menuItems) {
           menuItems = [];
         }
@@ -995,7 +996,7 @@ EDITORS.SequenceVE.prototype = {
                     } else {
                       seqVE.$structTree.jqxTree('removeItem', selectedItem.element);
                     }
-                  });
+                  },null);
                 }
               }
               break;
@@ -1034,7 +1035,7 @@ EDITORS.SequenceVE.prototype = {
                   seqVE.$structTree.jqxTree('addTo',newItem[0],elem);
                   seqVE.attachMenuEventHandler($(elem));
                   seqVE.$structTree.jqxTree('expandItem', elem);
-                });
+                },null);
               }
           }
       });
@@ -1156,7 +1157,7 @@ EDITORS.SequenceVE.prototype = {
             //refresh property display
             seqVE.entPropVE.showEntity();
             //treeStrucutre is updated during the drop so don't have to update unless this proves to get out of synch
-          });
+          },null);
         }
       }
       //send notification that structure has changed.
@@ -1208,7 +1209,7 @@ EDITORS.SequenceVE.prototype = {
             //refresh property display
             seqVE.entPropVE.showEntity();
             //treeStrucutre is updated during the drop so don't have to update unless this proves to get out of synch
-          });
+          },true);
         }
       } else {
         //error unable to remove gid from Parent
@@ -1236,7 +1237,7 @@ EDITORS.SequenceVE.prototype = {
               //refresh property display
               seqVE.entPropVE.showEntity();
               //treeStrucutre is updated during the drop so don't have to update unless this proves to get out of synch
-            });
+            },true);
           }
         }
       } else {// reference postion insert
@@ -1268,7 +1269,7 @@ EDITORS.SequenceVE.prototype = {
               //refresh property display
               seqVE.entPropVE.showEntity();
               //treeStrucutre is updated during the drop so don't have to update unless this proves to get out of synch
-            });
+            },true);
           }
         }
       }

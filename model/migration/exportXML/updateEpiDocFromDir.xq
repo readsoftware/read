@@ -1,5 +1,3 @@
-(: XQuery file: updateEpiDocFromDir.xq :)
-(: example call  servername:8984/rest?run=readXQ/updateEpiDocFromDir.xq&dbName=vp2sk&dir=/var/www/epidoc :)
 declare namespace epi = 'dbax/epi';
 declare variable $dbxName as xs:string external := "test";
 declare variable $dbName as xs:string external := "sample";
@@ -11,20 +9,30 @@ declare %updating function epi:epidocImport(
   $retInfo as element()*
 ){
   db:output($retInfo),
-    db:replace($dbxName, $dbxFilepath, doc($filepathname))
+  db:replace($dbxName, $dbxFilepath, doc($filepathname))
 };
 
 let $schema := "http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng"
-for $docname in file:list($dir)
-  let $filepath := $dir || "/" || $docname
-  let $vReport := validate:rng-report($filepath,$schema)
-  let $isValidEpidoc :=(data($vReport/status) eq "valid")
+let $path := $dir || "/" || $dbName
+for $docname in file:list($path)
+  let $filepath := $path || "/" || $docname
+  let $vReport :=   try {
+                       validate:rng-report($filepath,$schema)
+                    } catch * {
+                      <report>
+                        <status>
+                         'Error [' || $err:code || ']: ' || $err:description
+                        </status>
+                      </report>
+                    }
+  let $isValidEpidoc :=(data($vReport/report/status) eq "valid")
   let $dbExist := db:exists($dbxName)
+
 where (not(file:is-dir($filepath)) and $isValidEpidoc and $dbExist)
   let $mod := file:last-modified($filepath)
   let $fileurl := "file:/" || $filepath
   let $filename := replace($docname,"epidoc_","")
-  let $dbxFilepath := $dbName || "/" || $filename
+  let $dbxFilepath := $dbName || "/epidoc/" || $filename
   let $returnInfo :=
       <fileinfo>
          <storeTo> {$dbxFilepath} </storeTo>

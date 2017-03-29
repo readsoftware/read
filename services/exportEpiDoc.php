@@ -204,7 +204,7 @@
       $epiXML = $xslProc->transformToXML($textRMLDoc);
       //if successful then
       if ($epiXML) {
-//        $epiXML = substr($epiXML,strpos($epiXML,">")+1);
+        $epiXML = substr($epiXML,strpos($epiXML,">")+1);
         if (strpos($epiXML,'xmlns=""')) {//php XSLT parser is ouputting blank xmlns statements and fails validation
           $epiXML = str_replace('xmlns=""','',$epiXML);//remove any blank xmlns statements
         }

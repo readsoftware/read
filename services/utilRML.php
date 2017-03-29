@@ -259,6 +259,7 @@
 
     foreach($editions as $edition){
       $RML .= getEditionRML($edition);
+      break;//epidoc export only handles one
     }
 
     $RML .= closeXMLNode('entities');

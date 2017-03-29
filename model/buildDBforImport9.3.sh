@@ -5,7 +5,7 @@ export LC_ALL="en_US.UTF-8"
 
 usage ()
 {
-  echo 'Usage : rebuildDBforImport9.3.sh dbname'
+  echo 'Usage : buildDBforImport9.3.sh dbname'
   exit
 }
 

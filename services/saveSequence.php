@@ -83,6 +83,10 @@ if (!$data) {
   if ( isset($data['hlthLog'])) {//check for health logging
     $healthLogging = true;
   }
+  $isSeqMove = false;
+  if ( isset($data['isSeqMove'])) {//check if sequence structural move to determine if the sequence is injected into the edition for temp storeage
+    $isSeqMove = true;
+  }
   if (count($errors) == 0) {
     $seqID = null;
     $seqGID = null;
@@ -180,7 +184,7 @@ if (count($errors) == 0) {
       if ($seqID) {
         addUpdateEntityReturnData("seq",$seqID,'entityIDs', $sequence->getEntityIDs());
       }
-      if ($edition && strpos($removeEntityGID,'seq')!== false){//removing a sequence so if substructure add back to edition sequenceIDs
+      if ($edition && strpos($removeEntityGID,'seq')!== false && !$isSeqMove){//removing a sequence so if substructure add back to edition sequenceIDs
         $removedSequence = new Sequence(substr($removeEntityGID,4));
         if (count($removedSequence->getEntityIDs())) {
           $seqIDs = array_unique($edition->getSequenceIDs());

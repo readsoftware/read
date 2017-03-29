@@ -1809,7 +1809,7 @@ EDITORS.EntityPropVE.prototype = {
 */
 
   createNewSequence: function(typeID,entityGIDs,cb) {
-    this.saveSequence(null,typeID,null,null,entityGIDs,null,null,null,cb);
+    this.saveSequence(null,typeID,null,null,entityGIDs,null,null,null,cb,null);
   },
 
 /**
@@ -1820,7 +1820,7 @@ EDITORS.EntityPropVE.prototype = {
 */
   changeSequenceType: function(typeID,cb) {
     if (this.prefix == 'seq') {
-      this.saveSequence(this.entID,typeID,null,null,null,null,null,null,cb);
+      this.saveSequence(this.entID,typeID,null,null,null,null,null,null,cb,null);
     }
   },
 
@@ -1833,7 +1833,7 @@ EDITORS.EntityPropVE.prototype = {
 
   changeSequenceLabel: function(label) {
     if (this.prefix == 'seq') {
-      this.saveSequence(this.entID,null,label,null,null,null,null,null);
+      this.saveSequence(this.entID,null,label,null,null,null,null,null,null,null);
     }
   },
 
@@ -1847,7 +1847,7 @@ EDITORS.EntityPropVE.prototype = {
 
   changeSequenceSup: function(superscript,cb) {
     if (this.prefix == 'seq') {
-      this.saveSequence(this.entID,null,null,superscript,null,null,null,null,cb);
+      this.saveSequence(this.entID,null,null,superscript,null,null,null,null,cb,null);
     }
   },
 
@@ -1861,7 +1861,7 @@ EDITORS.EntityPropVE.prototype = {
 
   changeSequenceEntityIDs: function(entityIDs,cb) {
     if (this.prefix == 'seq') {
-      this.saveSequence(this.entID,null,null,null,entityIDs,null,null,null,cb);
+      this.saveSequence(this.entID,null,null,null,entityIDs,null,null,null,cb,null);
     }
   },
 
@@ -1875,7 +1875,7 @@ EDITORS.EntityPropVE.prototype = {
 
   removeSequenceEntityGID: function(removeEntityGID,cb) {
     if (this.prefix == 'seq') {
-      this.saveSequence(this.entID,null,null,null,null,removeEntityGID,null,null,cb);
+      this.saveSequence(this.entID,null,null,null,null,removeEntityGID,null,null,cb,null);
     }
   },
 
@@ -1889,7 +1889,7 @@ EDITORS.EntityPropVE.prototype = {
 
   addSequenceEntityGID: function(addEntityGID,cb) {
     if (this.prefix == 'seq') {
-      this.saveSequence(this.entID,null,null,null,null,null,addEntityGID,null,cb);
+      this.saveSequence(this.entID,null,null,null,null,null,addEntityGID,null,cb,null);
     }
   },
 
@@ -1903,7 +1903,7 @@ EDITORS.EntityPropVE.prototype = {
 
   addNewSubSequenceType: function(addSubSeqTypeID,cb) {
     if (this.prefix == 'seq') {
-      this.saveSequence(this.entID,null,null,null,null,null,null,addSubSeqTypeID,cb);
+      this.saveSequence(this.entID,null,null,null,null,null,null,addSubSeqTypeID,cb,null);
     }
   },
 
@@ -1922,7 +1922,7 @@ EDITORS.EntityPropVE.prototype = {
 * @param function cb Callback function
 */
 
-  saveSequence: function(seqID, typeID, label, superscript, entityIDs, removeEntityGID, addEntityGID, addSubSeqTypeID, cb) {
+  saveSequence: function(seqID, typeID, label, superscript, entityIDs, removeEntityGID, addEntityGID, addSubSeqTypeID, cb, isSeqMove) {
     var savedata ={},url, text, typeID, vis,
         entPropVE = this;
     DEBUG.traceEntry("saveSequence");
@@ -1934,6 +1934,9 @@ EDITORS.EntityPropVE.prototype = {
     }
     if (label != null) {
       savedata["label"] = label;
+    }
+    if (isSeqMove != null) {
+      savedata["isSeqMove"] = isSeqMove;
     }
     if (superscript != null) {
       savedata["superscript"] = superscript;

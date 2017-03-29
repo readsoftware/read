@@ -663,10 +663,12 @@ EDITORS.WordlistVE.prototype = {
 */
 
   calcWordEntryHtml: function (wordTag) {
-    var word = this.dataMgr.getEntityFromGID(wordTag);
-    wordHTML = '<div class="wordlistentry"><span class="word '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value.replace(/ʔ/g,'')+'">' +
-                    (!word.transcr?'MISSING':word.transcr.replace(/ʔ/g,'').replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨')) +
-                    ' ' + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) + '</span></div>';
+    var word = this.dataMgr.getEntityFromGID(wordTag), wordHTML = "";
+    if (word && word.value) {
+      wordHTML = '<div class="wordlistentry"><span class="word '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value.replace(/ʔ/g,'')+'">' +
+                      (!word.transcr?'MISSING':word.transcr.replace(/ʔ/g,'').replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨')) +
+                      ' ' + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) + '</span></div>';
+    }
     return wordHTML;
   },
 
@@ -973,6 +975,9 @@ EDITORS.WordlistVE.prototype = {
         hintWord = this.dataMgr.getEntityFromGID(hintTag), $wordEntry,
         $node, $srchNode, srchWord, srchDir, $insertNode, position, match,
         wordHTML = this.calcWordEntryHtml(wordTag);
+    if (!wordHTML) {//nothing to insert
+      retrun;
+    }
     //find hint entity
     if (hintWord && hintWord.sort && word.sort) {
       $srchNode = $('div.wordlistentry:has(.'+hintTag+')',this.contentDiv);
