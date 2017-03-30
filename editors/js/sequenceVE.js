@@ -174,7 +174,7 @@ EDITORS.SequenceVE.prototype = {
   setTagView: function () {
     var endVE = this, tagID2Path = this.dataMgr.entTagToPath,
         anchorPath, parentIndex, parentElem, parentItem, $parent, tagItemTree = this.dataMgr.tags,
-        curTag, $anchor, anchorIndex, anchorItem, anchorElem;
+        curTag, curTagItem, curTagParentItem, $anchor, anchorIndex, anchorItem, anchorElem;
     // if top level show all
     if (!this.anchorTagID || !tagID2Path[this.anchorTagID].match(/;/)) {
       $('li.jqx-tree-item-li',this.tagTree).show();
@@ -227,8 +227,18 @@ EDITORS.SequenceVE.prototype = {
       if (this.curTagID) {
         curTag = $('li#'+this.curTagID,this.tagTree);
         if (curTag.length) {
-          this.tagTree.jqxTree("selectItem",curTag[0]);
-          this.tagTree.jqxTree("ensureVisible",curTag[0]);
+          curTagItem = this.tagTree.jqxTree("getItem",curTag[0]);
+          if (curTagItem) {
+            if (!curTagItem.selected) {
+              this.tagTree.jqxTree("selectItem",curTag[0]); //todo consider if case of needs to be selected.
+            }
+            if (curTagItem.parentElement) {
+              curTagParentItem = this.tagTree.jqxTree("getItem",curTagItem.parentElement);
+              if (curTagParentItem.isExpanded) {
+                this.tagTree.jqxTree("ensureVisible",curTag[0]);
+              }
+            }
+          }
         }
       }
     } else {
