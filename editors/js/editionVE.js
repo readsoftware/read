@@ -225,7 +225,7 @@ EDITORS.EditionVE.prototype = {
       }
       this.tagTree.jqxTree('refresh')
       //check selection is curTagID and ensure this is visible.
-      if (this.curTagID) {
+      if (false || this.curTagID) {
         curTag = $('li#'+this.curTagID,this.tagTree);
         if (curTag.length) {
           curTagItem = this.tagTree.jqxTree("getItem",curTag[0]);
