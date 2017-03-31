@@ -85,6 +85,8 @@ error_reporting(E_ERROR);
   if (strpos($epiXML,'xmlns=""')) {//php XSLT parser is ouputting blank xmlns statements and fails validation
     $epiXML = str_replace('xmlns=""','',$epiXML);//remove any blank xmlns statements
   }
+  $epiXML = str_replace('&lt;','<',$epiXML);//fixup angle brackets for ab element
+  $epiXML = str_replace('&gt;','>',$epiXML);//remove any blank xmlns statements
   $testDoc = new DOMDocument('1.0','utf-8');
   $testDoc->loadXML($epiXML);
   if (!isset($isCmdLineLaunch) && !$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {

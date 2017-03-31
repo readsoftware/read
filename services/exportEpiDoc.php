@@ -208,6 +208,8 @@
         if (strpos($epiXML,'xmlns=""')) {//php XSLT parser is ouputting blank xmlns statements and fails validation
           $epiXML = str_replace('xmlns=""','',$epiXML);//remove any blank xmlns statements
         }
+        $epiXML = str_replace('&lt;','<',$epiXML);//fixup angle brackets for ab element
+        $epiXML = str_replace('&gt;','>',$epiXML);//remove any blank xmlns statements
         $testDoc = new DOMDocument('1.0','utf-8');
         $epiXML = trim($epiXML);
         $testDoc->loadXML($epiXML);

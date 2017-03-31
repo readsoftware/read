@@ -72,18 +72,25 @@
     ini_set("zlib.output_compression_level", 5);
     ob_start('ob_gzhandler');
   }
-  header('Content-type: text/xml; charset=utf-8');
-  header('Cache-Control: no-cache');
   header('Pragma: no-cache');
 
   require_once (dirname(__FILE__) . '/utilRML.php');//RML utility functions
 
+  $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
   $rml = null;
   $textCKN = (array_key_exists('ckn',$_REQUEST)? $_REQUEST['ckn']:null);
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $rml = calcEditionRML($ednID, $textCKN);
 
   if ($rml) {
+    if ($isDownload) {
+      header("Content-type: text/xml;  charset=utf-8");
+      header("Content-Disposition: attachment; filename=rml_".$_REQUEST['ckn'].".xml");
+      header("Expires: 0");
+    } else {
+      header('Content-type: text/xml; charset=utf-8');
+      header('Cache-Control: no-cache');
+    }
     echo $rml;
   } else if ($errorMsg) {
     echo $errorMsg;

@@ -340,7 +340,7 @@
         <xsl:variable name="headerValue" select="DisplayLabel"/>
         <xsl:variable name="nValue" select="SuperScript"/>
         <xsl:if test="count(Components/link) > 0">
-          <ab type="textpart">
+          <div type="textpart">
               <xsl:attribute name="xml:id">
                   <xsl:value-of select="concat('seq',@id)"/>
               </xsl:attribute>
@@ -355,12 +355,21 @@
 
               <!-- process subcomponents of sequence -->
               <xsl:for-each select="Components/link">
+                  <xsl:if test="(position() = 1 or preceding-sibling::node()[2]/@entity = 'sequence') and current()/@entity != 'sequence'">
+                      <xsl:value-of select="concat('&lt;','ab&gt;')" />
+                  </xsl:if>
+                  <xsl:if test="preceding-sibling::node()[2]/@entity != 'sequence' and current()/@entity = 'sequence'">
+                      <xsl:value-of select="concat('&lt;','/ab&gt;')" />
+                  </xsl:if>
                   <xsl:call-template name="linkexpander">
                       <xsl:with-param name="link" select="current()"/>
                   </xsl:call-template>
+                  <xsl:if test="position() = last() and current()/@entity != 'sequence'">
+                      <xsl:value-of select="concat('&lt;','/ab&gt;')" />
+                  </xsl:if>
               </xsl:for-each>
               <!-- close any line level nodes still open -->
-          </ab>
+          </div>
         </xsl:if>
     </xsl:template>
 
