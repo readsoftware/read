@@ -1066,7 +1066,7 @@ EDITORS.SequenceVE.prototype = {
   attachMenuEventHandler: function($elem) {
     var seqVE = this;
     // open the context menu when the user presses the mouse right button.
-    $elem.find("li").unbind('mousedown').bind('mousedown', function (e) {
+    function mousedownHandler(e) {
         var target = $(e.target).parents('li:first')[0];
         if ((e.which == 3 || e.button == 2) && target != null) {
           seqVE.$structTree.jqxTree('selectItem', target);
@@ -1075,7 +1075,10 @@ EDITORS.SequenceVE.prototype = {
         } else if (target != null && e.args) {
           console.log("show structure class = " + $(e.args).attr('class'));
         }
-    });
+    }
+    $elem.unbind('mousedown').bind('mousedown', mousedownHandler);
+    $elem.find("li").unbind('mousedown').bind('mousedown', mousedownHandler);
+
 /*    $("#structTree li").unbind('mouseenter').bind('mouseenter', function (e) {
         var $linkedText;
         $linkedText = $('.linkedtextgroup:first',this);
