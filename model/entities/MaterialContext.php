@@ -52,7 +52,7 @@
     * private member variables
     * @access private
     */
-    private   $_arch_context_id,
+    private   $_arch_context,
               $_find_status;
 
 
@@ -79,7 +79,7 @@
       if(is_array($arg)) {//initialize from resultRow
         $this->initializeBaseEntity($arg);
         $this->_id=@$arg['mcx_id'] ? $arg['mcx_id']:NULL;
-        $this->_arch_context_id=@$arg['mcx_arch_context_id'] ? $arg['mcx_arch_context_id']:NULL;
+        $this->_arch_context=@$arg['mcx_arch_context'] ? $arg['mcx_arch_context']:NULL;
         $this->_find_status=@$arg['mcx_find_status'] ? $arg['mcx_find_status']:NULL;
         if (!array_key_exists('mcx_id',$arg)) {// must be a new record
           //ensure everything is encoded for save
@@ -107,8 +107,8 @@
     */
     protected function synchData() {
       $this->synchBaseData();
-      if ($this->_arch_context_id) {
-        $this->_data['mcx_arch_context_id'] = $this->_arch_context_id;
+      if ($this->_arch_context) {
+        $this->_data['mcx_arch_context'] = $this->_arch_context;
       }
       if (count($this->_find_status)) {
         $this->_data['mcx_find_status'] = $this->_find_status;
@@ -120,11 +120,11 @@
     //********GETTERS*********
 
     /**
-    * Gets the archaeological context term ID for this MaterialContext
-    * @return int for the term ID of the archaeological context
+    * Gets the archaeological context for this MaterialContext
+    * @return string for the archaeological context
     */
-    public function getArchContextID() {
-      return $this->_arch_context_id;
+    public function getArchContext() {
+      return $this->_arch_context;
     }
 
     /**
@@ -139,15 +139,15 @@
     //********SETTERS*********
 
     /**
-    * Sets the archaeological context term ID for this MaterialContext
-    * @param int for the term ID of the archaeological context
+    * Sets the archaeological context for this MaterialContext
+    * @param string for the archaeological context
     */
-    public function setArchContextID($trmID) {
-      if($this->_arch_context_id != $trmID) {
+    public function setArchContext($text) {
+      if($this->_arch_context != $text) {
         $this->_dirty = true;
-        $this->setDataKeyValuePair("mcx_arch_context_id",$trmID);
+        $this->setDataKeyValuePair("mcx_arch_context",$text);
       }
-      $this->_arch_context_id = $trmID;
+      $this->_arch_context = $text;
     }
 
     /**
