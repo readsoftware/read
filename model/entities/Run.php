@@ -75,7 +75,7 @@
       $this->_table_name = 'run';
       if (is_numeric($arg) && is_int(-1 + $arg + 1) && $arg > 0) {// this is an ID so need to query the db
         $dbMgr = new DBManager();
-//        $dbMgr->query("SELECT * FROM run WHERE run_id = $arg".(isSysAdmin()?"":" AND (".getUserID()."= run_owner_id or ".getUserID()." = ANY (\"run_visibility_ids\"))")." LIMIT 1");
+        $dbMgr->query("SELECT * FROM run WHERE run_id = $arg".(isSysAdmin()?"":" AND (".getUserID()."= run_owner_id or ".getUserID()." = ANY (\"run_visibility_ids\"))")." LIMIT 1");
         $row = $dbMgr->fetchResultRow(0);
         $dbMgr->query($this->getSingleEntityAccessQuery($arg));
         if(!$row || !array_key_exists('run_id',$row)) {
