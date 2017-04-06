@@ -33,7 +33,7 @@ var DEBUG = DEBUG || {};
   DEBUG.errOn = true;
   DEBUG.eventOn = false;
   DEBUG.genOn = false;
-  DEBUG.healthLogOn = true;
+  DEBUG.healthLogOn = false;
   DEBUG.levelOverrides = [];
   DEBUG.outputChildIDs = true;
   DEBUG.traceOn = false;
@@ -61,49 +61,49 @@ var DEBUG = DEBUG || {};
         case "data":
           if (DEBUG.dataOn){
             console.log(info);// define DEBUG.output as central function for redirected logging.
-            DEBUG.logtxt += "\n" + info;
+//            DEBUG.logtxt += "\n" + info;
           }
           break;
         case "nav":
           if (DEBUG.navOn){
             console.log(info);
-            DEBUG.logtxt += "\n" + info;
+//            DEBUG.logtxt += "\n" + info;
           }
           break;
         case "gen":
           if (DEBUG.genOn){
             console.log(info);
-            DEBUG.logtxt += "\n" + info;
+//            DEBUG.logtxt += "\n" + info;
           }
           break;
         case "warn":
           if (DEBUG.warnOn){
             console.log(info);
-            DEBUG.logtxt += "\n" + info;
+//            DEBUG.logtxt += "\n" + info;
           }
           break;
         case "trace":
           if (DEBUG.traceOn){
             console.log(info);
-            DEBUG.logtxt += "\n" + info;
+//            DEBUG.logtxt += "\n" + info;
           }
           break;
         case "health":
           if (DEBUG.healthLogOn){
             console.log(info);
-            DEBUG.logtxt += "\n" + info;
+//            DEBUG.logtxt += "\n" + info;
           }
           break;
         case "err":
           if (DEBUG.errOn){
             console.log(info);
-            DEBUG.logtxt += "\n" + info;
+//            DEBUG.logtxt += "\n" + info;
           }
           break;
         case "event":
           if (DEBUG.eventOn){
             console.log(info);
-            DEBUG.logtxt += "\n" + info;
+//            DEBUG.logtxt += "\n" + info;
           }
           break;
       }

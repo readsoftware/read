@@ -188,7 +188,7 @@ EDITORS.sclEditor.prototype = {
                 VSE.invalidate();
                 VSE.moveSyllable('prev',false);
                 if (VSE.syllable) {
-                  ednVE.refreshProperty(VSE.syllable.attr('class'));
+                  ednVE.refreshProperty(VSE.syllable.attr('class'));//update property editor
                 }
                 if (data.editionHealth) {
                   DEBUG.log("health","***Delete Syllable***");
@@ -323,8 +323,8 @@ EDITORS.sclEditor.prototype = {
                   break;
                 }
                 //redraw edition
-                ednVE.calcEditionRenderMappings();
-                ednVE.renderEdition();
+                ednVE.calcEditionRenderMappings(); //todo access change to single line update
+                ednVE.renderEdition();//todo access change to single line update
                 //  VSE.reInit();
                 VSE.moveToSyllable(newSclID,'selectAll');
                 if (VSE.syllable) {
@@ -360,8 +360,11 @@ EDITORS.sclEditor.prototype = {
 */
 
   save: function(cbSuccess,cbError) {
-    if ( this.curSyl != this.rawSyl) {
+  DEBUG.traceEntry("VSE save");
+    if ( this.curSyl != this.rawSyl && //unchanged so ignore
+        (this.savingHash || this.savingHash != this.sclID + this.rawSyl + this.curSyl)) {//ignore already in save process
       //save the syllable requires the context (edn, seq-tok-scl, prevGra) and newSyl graphemes.
+      this.savingHash = this.sclID + this.rawSyl + this.curSyl;
       var VSE = this, ednID = this.ednVE.edition.id,
           ednVE = this.ednVE, lineOrdTag, headerNode, physLineSeqID,
           tNodes = this.textNodes.map(function(index,elem){return elem.textContent;}),
@@ -376,7 +379,7 @@ EDITORS.sclEditor.prototype = {
                                                                                 .trim()
                                                                                 .replace(/\s/g,",");}),
           txtDivSeqID = contxt[0].split(",")[0].substring(3);
-      for (i=0; i < contxt.length; i++) {
+      for (i=0; i < contxt.length; i++) {// possible to have a split syllable.
         if (prevCtxStrings != contxt[i]) {
           ctxStrings.push(contxt[i]);
           prevCtxStrings = contxt[i];
@@ -388,7 +391,7 @@ EDITORS.sclEditor.prototype = {
       lineOrdTag = this.syllable[0].className.match(/ordL\d+/)[0];
       headerNode = $('.textDivHeader.'+lineOrdTag,ednVE.contentDiv);
       physLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
-      if (prevNode.hasClass("grpGra")) {
+      if (prevNode.hasClass("grpGra")) {//find the previous syllable's last grapheme's TCM
         sclID = prevNode.get(0).className.match(/scl(\d+)/)[1];
         graIDs = entities['scl'][sclID].graphemeIDs;
         prevTCM = entities['gra'][graIDs[graIDs.length-1]].txtcrit;
@@ -448,18 +451,20 @@ EDITORS.sclEditor.prototype = {
                   DEBUG.log("data","after saveSyllable sequence dump\n" + DEBUG.dumpSeqData(data['newTextDivSeqGID'].substring(4),0,1,ednVE.lookup.gra));
                 }
                 if (data.entities.insert && data.entities.insert.scl) {
-                  for (sclIDSaved in data.entities.insert.scl) {
+                  for (sclIDSaved in data.entities.insert.scl) {//find first
                     break;
                   }
                 } else if (data.entities.update && data.entities.update.scl) {
-                  for (sclIDSaved in data.entities.update.scl) {
+                  for (sclIDSaved in data.entities.update.scl) {//find first
                     break;
                   }
                 }
+                DEBUG.trace("VSE.save successHandler","saved slc "+sclIDSaved);
                 //redraw edition
-                ednVE.calcEditionRenderMappings();
-                ednVE.renderEdition();
-                ednVE.sclEd.dirty = false;
+                ednVE.calcEditionRenderMappings();//TODO optimize to redraw line or 2
+                ednVE.renderEdition();//TODO optimize to redraw line or 2
+                VSE.dirty = false;
+                VSE.dirty = false;
                 if (cbSuccess) {
                   cbSuccess(sclIDSaved);
                 } else {
@@ -479,7 +484,8 @@ EDITORS.sclEditor.prototype = {
               if (data.warnings) {
                 DEBUG.log("warn", "warnings during save syllable - " + data.warnings.join(" : "));
               }
-              ednVE.sclEd.saving = false;
+              VSE.saving = false;
+              delete VSE.savingHash;
           },// end success cb
           error: function (xhr,status,error) {
               // add record failed.
@@ -489,11 +495,13 @@ EDITORS.sclEditor.prototype = {
               } else {
                 alert(errStr);
               }
+              DEBUG.trace("VSE.save errorHandler",errStr);
               ednVE.sclEd.saving = false;
           }
       });// end ajax
     }
 //    DEBUG.log("gen""call to save end with origStr "+this.rawSyl+" and curStr "+this.curSyl);
+  DEBUG.traceExit("VSE save");
   },
 
 
