@@ -14,7 +14,7 @@ then
   usage
 fi
 
-PSWD="shae4Phi"
+ADMINPSWD="admin"
 PSQLPATH="/C/xampp/PostgreSQL/9.3/bin/psql -U postgres "
 PHPPATH="/C/xampp/php/php "
 TABLENAMES_QUERY="SELECT relname
@@ -40,10 +40,10 @@ while read tablename; do
   fi
   echo '</postgresql_export>' >> $1_$tablename.xml
 #  if [ -e ./$1_$tablename.xml ]
-#    then /opt/basex/bin/basexclient -Uadmin -P$PSWD -c "CHECK $1; REPLACE $1_$tablename.xml $PWD/$1_$tablename.xml"
+#    then /opt/basex/bin/basexclient -Uadmin -P$ADMINPSWD -c "CHECK $1; REPLACE $1_$tablename.xml $PWD/$1_$tablename.xml"
 #  fi
   if [ -e ./$1_$tablename.xml ]
-  then rm ./$1_$tablename.xml
+   then rm ./$1_$tablename.xml
   fi
 
 done
@@ -53,5 +53,5 @@ if [[ -e ./removeDuplicateNodes.php  &&  -e ./$1_schema.xsd ]]; then
   echo "removed duplicate elements from $1_schema.xsd"
 fi
 #if [ -e ./$1_schema.xsd ]; then
-#  /opt/basex/bin/basexclient -Uadmin -P$PSWD -c "CHECK $1; REPLACE $1_schema.xsd $PWD/$1_schema.xsd"
+#  /opt/basex/bin/basexclient -Uadmin -P$ADMINPSWD -c "CHECK $1; REPLACE $1_schema.xsd $PWD/$1_schema.xsd"
 #fi

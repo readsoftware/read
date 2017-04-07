@@ -37,9 +37,7 @@
   require_once (dirname(__FILE__) . '/common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/common/php/userAccess.php');//get user access control
   require_once (dirname(__FILE__) . '/model/entities/EntityFactory.php');//get user access control
-//  $userID = 12;
   $dbMgr = new DBManager();
-//  $ckn = (array_key_exists("ckn",$_REQUEST) ? $_REQUEST["ckn"]:"CKI02661,CKI02662,CKM0237");
 ?>
 <!DOCTYPE html>
 <html lang="en">

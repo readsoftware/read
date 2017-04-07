@@ -1,12 +1,13 @@
 (: XQuery file: getNode.xq :)
-declare variable $nodeName as xs:string external;
+(: example call  servername:8984/rest?run=readXQ/getNode.xq&db=test&tableName=token&id=25 :)
+declare variable $db as xs:string external;
+declare variable $tableName as xs:string external;
 declare variable $id as xs:integer external;
-let $idName :=
-          IF $nodeName = "token" THEN "tok_id"
-          ELSE IF $nodeName = "compound" THEN "cmp_id"
-          ELSE IF $nodeName = "sequence" THEN "seq_id"
-          ELSE IF $nodeName = "grapheme" THEN "gra_id"
-          ELSE IF $nodeName = "syllsblecluster" THEN "scl_id"
-          ELSE "???"
-RETURN
-   {//$nodeName[$idName=$id]}
+let $idName := if ($tableName = "token") then "tok_id"
+          else if ($tableName = "compound") then "cmp_id"
+          else if ($tableName = "sequence") then "seq_id"
+          else if ($tableName = "grapheme") then "gra_id"
+          else if ($tableName = "syllablecluster") then "scl_id"
+          else "???"
+for $nodes in db:open($db)//*[name() eq $nodeName][*[name() eq $idName and xs:integer(data()) eq $id]]
+ return $nodes
