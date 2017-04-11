@@ -24,7 +24,6 @@ TABLENAMES_QUERY="SELECT relname
                     AND relkind='r' AND nspname = 'public'
                   ORDER BY relname;"
 echo $TABLENAMES_QUERY | $PSQLPATH -t -d $1 > $1_table_names.txt
-
 echo '<?xml version="1.0" encoding="utf-8"?>' > $1_schema.xsd
 echo "<root>" >> $1_schema.xsd
 
@@ -42,9 +41,9 @@ while read tablename; do
 #  if [ -e ./$1_$tablename.xml ]
 #    then /opt/basex/bin/basexclient -Uadmin -P$ADMINPSWD -c "CHECK $1; REPLACE $1_$tablename.xml $PWD/$1_$tablename.xml"
 #  fi
-  if [ -e ./$1_$tablename.xml ]
-   then rm ./$1_$tablename.xml
-  fi
+#  if [ -e ./$1_$tablename.xml ]
+#  then rm ./$1_$tablename.xml
+#  fi
 
 done
 echo "</root>" >> $1_schema.xsd

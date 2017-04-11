@@ -185,10 +185,12 @@
       $fragments->rewind();
     }
 
-  // get all parts
+    $itmIDs = array();
+    $parts = null;
+    $items = null;
+    // get all parts
     if (count($prtIDs)) {
       $parts = new Parts('prt_id in ('.join(",",$prtIDs).')','prt_id',null,null);//null offset and limit will get all in case of no condition
-      $itmIDs = array();
       foreach($parts as $part){
         if ($part->getItemID()) {
           array_push($itmIDs,$part->getItemID());

@@ -80,42 +80,10 @@
                                 <surname>Baums</surname>
                             </persName>
                         </respStmt>
-                        <respStmt>
-                            <resp>editor</resp>
-                            <persName ref="#AG">
-                                <forename>Arlo</forename>
-                                <surname>Griffiths</surname>
-                            </persName>
-                        </respStmt>
-                        <respStmt>
-                            <resp>editor</resp>
-                            <persName ref="#IS">
-                                <forename>Ingo</forename>
-                                <surname>Strauch</surname>
-                            </persName>
-                        </respStmt>
-                        <respStmt>
-                            <resp>editor</resp>
-                            <persName ref="#VT">
-                                <forename>Vincent</forename>
-                                <surname>Tournier</surname>
-                            </persName>
-                        </respStmt>
                     </titleStmt>
                     <publicationStmt>
                         <authority>Early Inscriptions of Āndhradeśa</authority>
                         <idno type="filename"><xsl:value-of select="$text/Inv"/>.xml</idno>
-                        <availability>
-                            <!--licence target="http://creativecommons.org/licenses/by/3.0/"-->
-                                <p>Copyright (c) 2017 by Stefan Baums, Arlo Griffiths, Ingo Strauch
-                                    and Vincent Tournier.</p>
-                                <p>This work is licensed under the Creative Commons Attribution 3.0
-                                    Unported License. To view a copy of this license, visit
-                                    http://creativecommons.org/licenses/by/3.0/ or send a letter to
-                                    Creative Commons, 444 Castro Street, Suite 900, Mountain View,
-                                    California, 94041, USA.</p>
-                            <!--/licence-->
-                        </availability>
                     </publicationStmt>
                     <sourceDesc>
                         <msDesc>

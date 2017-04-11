@@ -62,7 +62,7 @@
 //header('Content-type: text/xml; charset=utf-8');
   header('Pragma: no-cache');
 
-  error_reporting(E_ERROR);
+//  error_reporting(E_ERROR);
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
 
   if (!isLoggedIn()) {
@@ -78,7 +78,6 @@
   $force = (array_key_exists('f',$_REQUEST)? true:false);
 
   include_once("BaseXClient.php");
-
   //get list of manifest edition ids
   $basexEpiDocEdnIDs = array();
   $mods = array();
@@ -95,10 +94,11 @@
     exit("unable to connect to basex: ".$e->getMessage());
   }
   $dbExist = false;
+  $dbName = DBNAME;
   if ($session) {
     try {
       //check basex dbname exist
-      $input = 'let $db := "'.DBNAME.'"'.
+      $input = 'let $db := "'.$dbName.'" '.
                'return db:exists($db)';
       $query = $session->query($input);
       // get results
@@ -108,89 +108,103 @@
       // close query instance
       $query->close();
       if ($dbExist) {
-        $logReport .= "Db ".DBNAME." exist in baseX \n";
+        $logReport .= "Db ".$dbName." exist in baseX \n";
       }
     } catch (Exception $e) {
       // print exception
-      $errMsg = "Failed to check existance of ".DBNAME." in basex: ".$e->getMessage();
+      $errMsg = "Failed to check existance of ".$dbName." in basex: ".$e->getMessage();
       $logReport .= $errMsg."\n";
       error_log($errMsg);
+      $query->close();
     }
     if (!$dbExist) { //try to create db
       try {
         //check basex dbname exist
-        $input = 'let $db := "'.DBNAME.'"'.
+        $input = 'let $db := "'.$dbName.'" '.
                  'return db:create($db)';
         $query = $session->query($input);
+       if($query->more()) {
+            $ret = $query->next();
+        }
         // close query instance
         $query->close();
-        $logReport .= "Created db ".DBNAME."in baseX \n";
+        $logReport .= "Created db ".$dbName."in baseX \n";
       } catch (Exception $e) {
         // print exception
-        $errMsg = "Failed to create db ".DBNAME." in basex: ".$e->getMessage();
+        $errMsg = "Failed to create db ".$dbName." in basex: ".$e->getMessage();
         $logReport .= $errMsg."\n";
         error_log($errMsg);
         exit($logReport);
       }
     }
 
-    try {
-      //get ednIDs of all epidoc documents for dbname
-      $input = 'let $docs := db:list("'.DBNAME.'","epidoc") '.
-                'for $docname in $docs '.
-                'let $editionTag := replace($docname,"epidoc/.*_edn","") '.
-                'let $ednTag := replace($editionTag,"\..*","") '.
-                'return $ednTag';
-      $query = $session->query($input);
-      // loop through all results
-      while($query->more()) {
-        array_push($basexEpiDocEdnIDs, $query->next());
+    if ($dbExist) { //db pre existed so check documents
+      try {
+        //get ednIDs of all epidoc documents for dbname
+        $input = 'let $docs := db:list("'.$dbName.'","epidoc") '.
+                 'where count($docs) > 0 '.
+                 'for $docname in $docs '.
+                 'let $editionTag := replace($docname,"epidoc/.*_edn","") '.
+                 'let $ednTag := replace($editionTag,"\..*","") '.
+                 'return $ednTag';
+        $query = $session->query($input);
+        // loop through all results
+        while($query->more()) {
+          array_push($basexEpiDocEdnIDs, $query->next());
+        }
+        // close query instance
+        $query->close();
+        $logReport .= "Found ".count($basexEpiDocEdnIDs)." epidoc editions in ".$dbName." db in baseX \n";
+      } catch (Exception $e) {
+        // print exception
+        $errMsg = "Failed to find any epidoc file in ".$dbName." db in basex: ".$e->getMessage();
+        $logReport .= $errMsg."\n";
+        error_log($errMsg);
+        $query->close();
       }
-      // close query instance
-      $query->close();
-      $logReport .= "Found ".count($basexEpiDocEdnIDs)." epidoc editions in ".DBNAME." db in baseX \n";
-    } catch (Exception $e) {
-      // print exception
-      $errMsg = "Failed to find any epidoc file in ".DBNAME." db in basex: ".$e->getMessage();
-      $logReport .= $errMsg."\n";
-      error_log($errMsg);
     }
 
     //ensure that manifest is available
     try {
-    $input = 'let $db := "'.DBNAME.'" '.
-             'let $r := db:exists($db,"manifest") '.
-             'where (not($r)) '.
-             'return db:add($db,"<manifest/>","manifest")';
+      $input = 'let $db := "'.$dbName.'" '.
+               'let $r := db:exists($db,"manifest") '.
+               'where (not($r)) '.
+               'return db:add($db,"<manifest/>","manifest")';
       $query = $session->query($input);
+      if($query->more()) {
+        $ret = $query->next();
+      }
       // close query instance
       $query->close();
-      $logReport .= "Checked manifest exists in ".DBNAME." db in baseX \n";
+      $logReport .= "Checked manifest exists in ".$dbName." db in baseX \n";
     } catch (Exception $e) {
       // print exception
-      $errMsg = "Failed to create manifest for ".DBNAME." db in basex: ".$e->getMessage();
+      $errMsg = "Failed to create manifest for ".$dbName." db in basex: ".$e->getMessage();
       $logReport .= $errMsg."\n";
       error_log($errMsg);
+      $query->close();
     }
 
     try {
-      $input = 'let $manifest := doc("'.DBNAME.'/manifest") '.
-                'for $edn in $manifest/manifest/edn '.
-                'return "edn" || $edn/@id || "," || $edn/@modDate';
+      $input = 'let $manifestNode := doc("'.$dbName.'/manifest")/manifest '.
+               'where count($manifestNode) > 0 '.
+               'for $edn allowing empty in $manifestNode/edn '.
+               'return "edn" || $edn/@id || "," || $edn/@modDate';
       $query = $session->query($input);
       // loop through all results
-     while($query->more()) {
+      while($query->more()) {
           list($ednTag,$modDate) = explode(",",$query->next());
           $mods[$ednTag] = $modDate;
       }
       // close query instance
       $query->close();
-      $logReport .= "Found ".count($mods)." edition entries in manifest of ".DBNAME." db in baseX \n";
+      $logReport .= "Found ".count($mods)." edition entries in manifest of ".$dbName." db in baseX \n";
     } catch (Exception $e) {
       // print exception
       $errMsg = "Failed to read manifest from basex: ".$e->getMessage();
       $logReport .= $errMsg."\n";
       error_log($errMsg);
+      $query->close();
     }
   }
 
@@ -279,7 +293,15 @@
       $xslProc->importStylesheet($xslDoc);
       // set up common parameters for stylesheets.
       //$xslProc->setParameter('','transform',$styleFilename);
-      $epiXML = $xslProc->transformToXML($textRMLDoc);
+//      error_log("Starting transform");
+      try {
+        $epiXML = $xslProc->transformToXML($textRMLDoc);
+      } catch (Exception $e) {
+        $epiXML = null;
+        $errMsg = "Failed to transform rml: ".$e->getMessage();
+        $logReport .= $errMsg."\n";
+        error_log($errMsg);
+      }
       //if successful then
       if ($epiXML) {
         $epiXML = substr($epiXML,strpos($epiXML,">")+1);
@@ -294,7 +316,7 @@
         if (!$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {
           //log error
           $logReport .= "Failed to validate epidoc transformation of $ednTag RML, skipping \n";
-          error_log("transformation with 'rml2EpiDoc.xsl' failed validation against 'tei-epidoc.rng'");
+          error_log("transformation  of $ednTag RML with 'rml2EpiDoc.xsl' failed validation against 'tei-epidoc.rng'");
           continue;
         }
 
@@ -318,61 +340,77 @@
         }
         $filepathname = "epidoc/$textLabel"."_edn".$edition->getID().".xml";
         if ($session) {
+          $updateSuccess = false;
           try {
             //update epidoc xml in basex
-            $input = 'let $xml := \''.$xml.'\' '.
-                     'return db:replace("'.DBNAME.'","'.$filepathname.'",$xml)';
+            $input = 'let $xml := \''.$epiXML.'\' '.
+                     'return db:replace("'.$dbName.'","'.$filepathname.'",$xml)';
             $query = $session->query($input);
+            if($query->more()) {
+              $ret = $query->next();
+            }
+            $updateSuccess = true;
             // close query instance
             $query->close();
-            $logReport .= "Updated/added $filepathname to basex db ".DBNAME." \n";
+            $logReport .= "Updated/added $filepathname to basex db ".$dbName." \n";
           } catch (Exception $e) {
             // print exception
-            $errMsg = "Failed to update/add $filepathname to basex db ".DBNAME." error: ".$e->getMessage();
+            $errMsg = "Failed to update/add $filepathname to basex db ".$dbName." error: ".$e->getMessage();
             $logReport .= $errMsg."\n";
             error_log($errMsg);
+            $query->close();
             continue;
           }
-          $modDate = $edition->getModified();
-          $nodeStr = "<edn id=\"$ednID\" modDate=\"$modDate\"/>";
-          //if entry in manifest then update
-          if (array_key_exists($ednTag,$mods)) {
-            try {
-              //update epidoc xml in basex
-              $input = 'let $db := "'.DBNAME.'" '.
-                       'let $ednID := "'.$ednID.'" '.
-                       'let $nodes := db:open($db,"/manifest")/manifest/edn '.
-                       'for $edn in $nodes[@id = $ednID] '.
-                       'return replace value of node $edn/@modDate with "'.$modDate.'"';
-              $query = $session->query($input);
-              // close query instance
-              $query->close();
-              $logReport .= "Updated timestamp on edn node for edition $ednID in manifest of basex db ".DBNAME." \n";
-            } catch (Exception $e) {
-              // print exception
-              $errMsg = "Failed to insert edn node for edition $ednID into manifest for basex db ".DBNAME." error: ".$e->getMessage();
-              $logReport .= $errMsg."\n";
-              error_log($errMsg);
-            }
-          } else {//else insert new entry
-            try {
-              //update epidoc xml in basex
-              $input = 'let $node := \''.$nodeStr.'\' '.
-                       'return insert node $node as last into doc(\''.DBNAME.'/manifest\')/manifest';
-              $query = $session->query($input);
-              // close query instance
-              $query->close();
-              $logReport .= "Inserted edn node for edition $ednID into manifest for to basex db ".DBNAME." \n";
-            } catch (Exception $e) {
-              // print exception
-              $errMsg = "Failed to insert edn node for edition $ednID into manifest for basex db ".DBNAME." error: ".$e->getMessage();
-              $logReport .= $errMsg."\n";
-              error_log($errMsg);
+          if ($updateSuccess) {
+            $modDate = $edition->getModified();
+            $nodeStr = "<edn id=\"$ednID\" modDate=\"$modDate\"/>";
+            //if entry in manifest then update
+            if (array_key_exists($ednTag,$mods)) {
+              try {
+                //update epidoc xml in basex
+                $input = 'let $db := "'.$dbName.'" '.
+                         'let $ednID := "'.$ednID.'" '.
+                         'let $nodes := db:open($db,"/manifest")/manifest/edn '.
+                         'for $edn in $nodes[@id = $ednID] '.
+                         'return replace value of node $edn/@modDate with "'.$modDate.'"';
+                $query = $session->query($input);
+                if($query->more()) {
+                    $ret = $query->next();
+                }
+                // close query instance
+                $query->close();
+                $logReport .= "Updated timestamp on edn node for edition $ednID in manifest of basex db ".$dbName." \n";
+              } catch (Exception $e) {
+                // print exception
+                $errMsg = "Failed to insert edn node for edition $ednID into manifest for basex db ".$dbName." error: ".$e->getMessage();
+                $logReport .= $errMsg."\n";
+                error_log($errMsg);
+                $query->close();
+              }
+            } else {//else insert new entry
+              try {
+                //update epidoc xml in basex
+                $input = 'let $node := '.$nodeStr.
+                         ' return insert node $node as last into doc(\''.$dbName.'/manifest\')/manifest';
+                $query = $session->query($input);
+                if($query->more()) {
+                    $ret = $query->next();
+                }
+                // close query instance
+                $query->close();
+                $logReport .= "Inserted edn node for edition $ednID into manifest of basex db ".$dbName." \n";
+              } catch (Exception $e) {
+                // print exception
+                $errMsg = "Failed to insert edn node for edition $ednID into manifest of basex db ".$dbName." error: ".$e->getMessage();
+                $logReport .= $errMsg."\n";
+                error_log($errMsg);
+                $query->close();
+              }
             }
           }
         }
       } else {
-        $errMsg = "Failed to transform $ednTag for basex db ".DBNAME." skipping";
+        $errMsg = "Failed to transform $ednTag for basex db ".$dbName." skipping";
         $logReport .= $errMsg."\n";
         error_log($errMsg);
       }
@@ -392,17 +430,17 @@ if ($verbose) {
 
 
 function returnXMLSuccessMsgPage($msg) {
-	global $verbose;
+  global $verbose;
     if (@$verbose) {
-	    die("<html><body><success>$msg</success></body></html>");
+      die("<html><body><success>$msg</success></body></html>");
     }else{
       error_log("successful transform ".$msg);
     }
 }
 
 function returnXMLErrorMsgPage($msg) {
-	global $verbose;
-	if (@$verbose) {
+  global $verbose;
+  if (@$verbose) {
         die("<?xml version='1.0' encoding='UTF-8'?>\n<error>$msg</error>");
     }
    error_log("errored transform ".$msg);
