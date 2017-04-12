@@ -213,13 +213,17 @@
       }
     }
     // update edition if sequences cloned
-    if (count($errors) == 0 && @$oldPhysSeqID && $oldPhysSeqID != $newPhysSeqID) {
-      //get segIDs
-      $edSeqIds = $edition->getSequenceIDs();
-      $seqIDIndex = array_search($oldPhysSeqID,$edSeqIds);
-      array_splice($edSeqIds,$seqIDIndex,1,$newPhysSeqID);
-     //update edition seqIDs
-      $edition->setSequenceIDs($edSeqIds);
+    if (count($errors) == 0 ) {
+      //touch edition for synch code
+      $edition->storeScratchProperty("lastModified",$edition->getModified());
+      if (@$oldPhysSeqID && $oldPhysSeqID != $newPhysSeqID) {
+        //get segIDs
+        $edSeqIds = $edition->getSequenceIDs();
+        $seqIDIndex = array_search($oldPhysSeqID,$edSeqIds);
+        array_splice($edSeqIds,$seqIDIndex,1,$newPhysSeqID);
+       //update edition seqIDs
+        $edition->setSequenceIDs($edSeqIds);
+      }
       $edition->save();
       if ($edition->hasError()) {
         array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));

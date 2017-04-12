@@ -175,7 +175,6 @@
             if (($i+3 < $cnt) && $char4 && array_key_exists($char4,$graphemeCharacterMap[$char][$char2][$char3])){ // another char for grapheme
               if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4])){ // invalid sequence
                 array_push($this->_errors,"incomplete grapheme $char$char2$char3$char4, has no sort code");
-                break;
               }else{//found valid grapheme, save it
                 if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3][$char4])) {
                   $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4]['ssrt'];
@@ -185,7 +184,6 @@
               }
             }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3])){ // invalid sequence
               array_push($this->_errors,"incomplete grapheme $char$char2$char3, has no sort code");
-              break;
             }else{//found valid grapheme, save it
               if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3])) {
                 $srt = $graphemeCharacterMap[$char][$char2][$char3]['ssrt'];
@@ -195,7 +193,6 @@
             }
           }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2])){ // invalid sequence
             array_push($this->_errors,"incomplete grapheme $char$char2, has no sort code");
-            break;
           }else{//found valid grapheme, save it
             if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2])) {
               $srt = $graphemeCharacterMap[$char][$char2]['ssrt'];
@@ -205,7 +202,6 @@
           }
         }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char])){ // invalid sequence
           array_push($this->_errors,"incomplete grapheme $char, has no sort code");
-          break;
         }else{//found valid grapheme, save it
           if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char])) {
             $srt = $graphemeCharacterMap[$char]['ssrt'];

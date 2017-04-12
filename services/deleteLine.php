@@ -262,22 +262,26 @@
             }
           }
           //******************** edition *********************
-          if ($oldPhysSeqID || $oldTextSeqID) {
-            //get segIDs
-            $edSeqIds = $edition->getSequenceIDs();
-            //if phys changed update id
-            if ($oldPhysSeqID) {
-              $seqIDIndex = array_search($oldPhysSeqID,$edSeqIds);
-              array_splice($edSeqIds,$seqIDIndex,1,$seqPhys->getID());
-              $retVal['newPhysSeqID'] = $seqPhys->getID();
+          if (count($errors) == 0 && $edition) {
+            //touch edition for synch code
+            $edition->storeScratchProperty("lastModified",$edition->getModified());
+            if ($oldPhysSeqID || $oldTextSeqID) {
+              //get segIDs
+              $edSeqIds = $edition->getSequenceIDs();
+              //if phys changed update id
+              if ($oldPhysSeqID) {
+                $seqIDIndex = array_search($oldPhysSeqID,$edSeqIds);
+                array_splice($edSeqIds,$seqIDIndex,1,$seqPhys->getID());
+                $retVal['newPhysSeqID'] = $seqPhys->getID();
+              }
+              if ($oldTextSeqID) {
+                $seqIDIndex = array_search($oldTextSeqID,$edSeqIds);
+                array_splice($edSeqIds,$seqIDIndex,1,$seqText->getID());
+                $retVal['newTextSeqID'] = $seqText->getID();
+              }
+              //update edition seqIDs
+              $edition->setSequenceIDs($edSeqIds);
             }
-            if ($oldTextSeqID) {
-              $seqIDIndex = array_search($oldTextSeqID,$edSeqIds);
-              array_splice($edSeqIds,$seqIDIndex,1,$seqText->getID());
-              $retVal['newTextSeqID'] = $seqText->getID();
-            }
-            //update edition seqIDs
-            $edition->setSequenceIDs($edSeqIds);
             $edition->save();
             if ($edition->hasError()) {
               array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));

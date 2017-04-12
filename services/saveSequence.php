@@ -284,6 +284,12 @@ if (count($errors) == 0) {
     invalidateParentCache($sequence->getGlobalID(),$edition->getSequenceIDs());
   }
 }
+if (count($errors) == 0 && $edition) {
+  //touch edition for synch code
+  $edition->storeScratchProperty("lastModified",$edition->getModified());
+  $edition->save();
+}
+
 $retVal["success"] = false;
 if (count($errors)) {
   $retVal["errors"] = $errors;

@@ -417,14 +417,18 @@
   }
 
 
-  // update edition if text sequence cloned
-  if (count($errors) == 0 && $oldTextSeqID) {
-    //get segIDs
-    $edSeqIds = $edition->getSequenceIDs();
-    $seqIDIndex = array_search($oldTextSeqID,$edSeqIds);
-    array_splice($edSeqIds,$seqIDIndex,1,$seqText->getID());
-    //update edition seqIDs
-    $edition->setSequenceIDs($edSeqIds);
+  if (count($errors) == 0 && $edition) {
+    //touch edition for synch code
+    $edition->storeScratchProperty("lastModified",$edition->getModified());
+    // update edition if text sequence cloned
+    if ($oldTextSeqID) {
+      //get segIDs
+      $edSeqIds = $edition->getSequenceIDs();
+      $seqIDIndex = array_search($oldTextSeqID,$edSeqIds);
+      array_splice($edSeqIds,$seqIDIndex,1,$seqText->getID());
+      //update edition seqIDs
+      $edition->setSequenceIDs($edSeqIds);
+    }
     $edition->save();
     if ($edition->hasError()) {
       array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));

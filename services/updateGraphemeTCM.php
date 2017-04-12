@@ -618,7 +618,9 @@
   if (count($errors) > 0) {
     error_log("updTCM - errors : ".print_r($errors,true));
     return;
-  } else if (count($errors) == 0 && ($oldPhysSeqID || $oldTextSeqID)) {
+  } else if (count($errors) == 0 ) {
+    //touch edition for synch code
+    $edition->storeScratchProperty("lastModified",$edition->getModified());
     //get segIDs
     $edSeqIds = $edition->getSequenceIDs();
     //if phys changed update id

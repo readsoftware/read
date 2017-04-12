@@ -62,11 +62,11 @@
 //header('Content-type: text/xml; charset=utf-8');
   header('Pragma: no-cache');
 
-//  error_reporting(E_ERROR);
+  error_reporting(E_ERROR);
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
 
   if (!isLoggedIn()) {
-    set_session(session_id(),1,"superuser","admin",null,null,null);
+    set_session(session_id(),1,"superuser","admin",null,null,array(1,2,3));
   }
 
   include_once(dirname(__FILE__).'/../services/utilRML.php');
@@ -103,7 +103,7 @@
       $query = $session->query($input);
       // get results
       if($query->more()) {
-          $dbExist = $query->next();
+          $dbExist = ($query->next() === "true");
       }
       // close query instance
       $query->close();
@@ -123,8 +123,8 @@
         $input = 'let $db := "'.$dbName.'" '.
                  'return db:create($db)';
         $query = $session->query($input);
-       if($query->more()) {
-            $ret = $query->next();
+        if($query->more()) {
+          $ret = $query->next();
         }
         // close query instance
         $query->close();
@@ -242,7 +242,7 @@
   }
   $editions = new Editions($condition,null,null,null);
   if ($editions && ($editions->getCount()==0 || $editions->getError())) {
-    exit("editions not loaded");
+    exit("$dbName editions for condition $condition not loaded \nlog report: \n $logReport");
   }
   $editions->setAutoAdvance(false); // make sure the iterator doesn't prefetch
   $exportEditions = array();

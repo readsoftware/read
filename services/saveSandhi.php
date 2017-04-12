@@ -601,6 +601,12 @@ if ( count($errors) == 0 && $cmd == "add") {
 //TODO check if there is a case for edition update.
 //propagate change up containment hierarchy  TODO
 
+if (count($errors) == 0 && $edition) {
+  //touch edition for synch code
+  $edition->storeScratchProperty("lastModified",$edition->getModified());
+  $edition->save();
+}
+
 
 $retVal["success"] = false;
 if (count($errors)) {

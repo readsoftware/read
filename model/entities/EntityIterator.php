@@ -188,8 +188,10 @@
       //rebuild query
       $this->_buildQuery();
       $this->_error = NULL;
-//      error_log($this->_query);
       $this->_dbMgr->query($this->_query);// query always selects *
+      if ($this->_dbMgr->getError()) {
+        $this->_error = $this->_dbMgr->getError();
+      }
       while($row = $this->_dbMgr->fetchResultRow()){
         $key = $row[$this->_pkColumnName];
         if (!array_key_exists($key,$this->_keyIndexMap)) {

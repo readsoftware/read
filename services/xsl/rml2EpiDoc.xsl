@@ -176,9 +176,13 @@
 
         <!-- process subcomponents of line -->
         <xsl:for-each select="Sequences/link">
-            <xsl:call-template name="linkexpander">
-                <xsl:with-param name="link" select="current()"/>
-            </xsl:call-template>
+            <xsl:variable name="linkID" select="current()/@id"/>
+            <xsl:variable name="type" select="/rml/entities/sequence[@id=$linkID]/Type/link/@value"/>
+            <xsl:if test="$type = 'Analysis'">
+                <xsl:call-template name="linkexpander">
+                    <xsl:with-param name="link" select="current()"/>
+                </xsl:call-template>
+            </xsl:if>
         </xsl:for-each>
         </div>
         <!-- close any line level nodes still open -->
@@ -194,7 +198,6 @@
             <xsl:when test="$type = 'TextPhysical'"><!--xsl:apply-templates select="current()" mode="TextPhysical"/--></xsl:when>
             <xsl:when test="$type = 'TextDivision'"><!--xsl:apply-templates select="current()" mode="TextDivision"/--></xsl:when>
             <xsl:when test="$type = 'LinePhysical'"><!--xsl:apply-templates select="current()" mode="LinePhysical"/--></xsl:when>
-            <xsl:when test="$type = 'Paragraph'"><xsl:apply-templates select="current()" mode="Paragraph"/></xsl:when>
             <xsl:when test="$type = 'Verse'"><xsl:apply-templates select="current()" mode="Verse"/></xsl:when>
             <xsl:when test="$type = 'Stanza'"><xsl:apply-templates select="current()" mode="Verse"/></xsl:when>
             <xsl:when test="$type = 'Pāda'"><xsl:apply-templates select="current()" mode="Pāda"/></xsl:when>
@@ -272,7 +275,7 @@
         <!--xsl:if test="string-length($headerValue) > 0">
             <head><xsl:value-of select="$headerValue"/></head>
         </xsl:if-->
-        <p >
+        <p>
             <xsl:attribute name="xml:id">
                 <xsl:value-of select="concat('seq',@id)"/>
             </xsl:attribute>

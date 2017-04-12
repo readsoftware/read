@@ -272,18 +272,22 @@
         }
       }
     }
-    // update edition if sequences cloned
-    if (count($errors) == 0 &&$oldTextSeqID) {
-      //get segIDs
-      $edSeqIds = $edition->getSequenceIDs();
-      //if phys changed update id
-
+    if (count($errors) == 0 && $edition) {
+      //touch edition for synch code
+      $edition->storeScratchProperty("lastModified",$edition->getModified());
+      // update edition if sequences cloned
       if ($oldTextSeqID) {
-        $seqIDIndex = array_search($oldTextSeqID,$edSeqIds);
-        array_splice($edSeqIds,$seqIDIndex,1,$seqText->getID());
+        //get segIDs
+        $edSeqIds = $edition->getSequenceIDs();
+        //if phys changed update id
+
+        if ($oldTextSeqID) {
+          $seqIDIndex = array_search($oldTextSeqID,$edSeqIds);
+          array_splice($edSeqIds,$seqIDIndex,1,$seqText->getID());
+        }
+        //update edition seqIDs
+        $edition->setSequenceIDs($edSeqIds);
       }
-      //update edition seqIDs
-      $edition->setSequenceIDs($edSeqIds);
       $edition->save();
       if ($edition->hasError()) {
         array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));

@@ -193,15 +193,19 @@
       addUpdateEntityReturnData('seq',$seqPhys->getID(),'entityIDs',$seqPhys->getEntityIDs());
     }
   }
-  // update edition if text physical sequence cloned
-  if (count($errors) == 0 && isset($oldPhysSeqID)) {
-    //get segIDs
-    $edSeqIds = $edition->getSequenceIDs();
-    $seqIDIndex = array_search($oldPhysSeqID,$edSeqIds);
-    array_splice($edSeqIds,$seqIDIndex,1,$seqPhys->getID());
-    $retVal['newPhysSeqID'] = $seqPhys->getID();
-    //update edition seqIDs
-    $edition->setSequenceIDs($edSeqIds);
+  if (count($errors) == 0 && $edition) {
+    //touch edition for synch code
+    $edition->storeScratchProperty("lastModified",$edition->getModified());
+    // update edition if text physical sequence cloned
+    if (count($errors) == 0 && isset($oldPhysSeqID)) {
+      //get segIDs
+      $edSeqIds = $edition->getSequenceIDs();
+      $seqIDIndex = array_search($oldPhysSeqID,$edSeqIds);
+      array_splice($edSeqIds,$seqIDIndex,1,$seqPhys->getID());
+      $retVal['newPhysSeqID'] = $seqPhys->getID();
+      //update edition seqIDs
+      $edition->setSequenceIDs($edSeqIds);
+    }
     $edition->save();
     if ($edition->hasError()) {
       array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
