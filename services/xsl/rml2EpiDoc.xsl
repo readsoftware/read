@@ -155,12 +155,50 @@
             </teiHeader>
             <text xml:lang="pra-Brah">
                 <body>
-                    <!--div type="physical"-->
+                    <xsl:variable name="epixml">
                         <xsl:apply-templates select="/rml/entities/edition"/>
-                    <!--/div-->
+                    </xsl:variable>
+                    <xsl:apply-templates select="exslt:node-set($epixml)" mode="compress"/>
                 </body>
             </text>
         </TEI>
+    </xsl:template>
+
+    <xsl:template match="gap" mode="compress">
+        <xsl:if test="not(@reason=preceding-sibling::gap[1]/@reason)">
+            <gap>
+                <xsl:variable name="start" select="count(preceding-sibling::gap)" />
+                <xsl:variable name="end" select="count(following-sibling::gap[not(@reason=current()/@reason)][1]/preceding-sibling::gap)" />
+                <xsl:variable name="n">
+                    <xsl:choose>
+                        <xsl:when test="$end">
+                            <xsl:value-of select="$end - $start - 1"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="count(following-sibling::gap)"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+                <xsl:for-each select="@*">
+                    <xsl:choose>
+                        <xsl:when test="name() = 'extent'">
+                            <xsl:attribute name="extent" >
+                                <xsl:value-of select="number($n) + 1"/>
+                            </xsl:attribute>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:copy-of select="."/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:for-each>
+            </gap>
+        </xsl:if>
+    </xsl:template>
+
+    <xsl:template match="@*|node()" mode="compress">
+        <xsl:copy>
+            <xsl:apply-templates select="@*|node()" mode="compress"/>
+        </xsl:copy>
     </xsl:template>
 
     <xsl:template match="edition" >
@@ -172,8 +210,6 @@
         </xsl:attribute>
         <xsl:attribute name="type">edition</xsl:attribute>
         <xsl:attribute name="xml:lang">pra-Brah</xsl:attribute>
-        <xsl:attribute name="xml:space">preserve</xsl:attribute>
-
         <!-- process subcomponents of line -->
         <xsl:for-each select="Sequences/link">
             <xsl:variable name="linkID" select="current()/@id"/>
@@ -326,10 +362,10 @@
 
               <!-- process subcomponents of sequence -->
               <xsl:for-each select="Components/link">
-                  <xsl:if test="(position() = 1 or preceding-sibling::node()[2]/@entity = 'sequence') and current()/@entity != 'sequence'">
+                  <xsl:if test="(position() = 1 or preceding-sibling::link[1]/@entity = 'sequence') and current()/@entity != 'sequence'">
                       <xsl:value-of select="concat('&lt;','ab&gt;')" />
                   </xsl:if>
-                  <xsl:if test="preceding-sibling::node()[2]/@entity != 'sequence' and current()/@entity = 'sequence'">
+                  <xsl:if test="preceding-sibling::link[1]/@entity != 'sequence' and current()/@entity = 'sequence'">
                       <xsl:value-of select="concat('&lt;','/ab&gt;')" />
                   </xsl:if>
                   <xsl:call-template name="linkexpander">
