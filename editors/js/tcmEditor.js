@@ -145,7 +145,7 @@ EDITORS.tcmEditor.prototype = {
         lineOrd = elem.className.match(/ordL(\d+)/) ? elem.className.match(/ordL(\d+)/)[1] : null;
         if (lineOrd) {
           unsavedLineOrds[lineOrd] = 1;
-          if (lineOrd == this.lineOrd) {
+          if (lineOrd == tcmED.lineOrd) {
             isCurLineUnsaved = true;
           }
         }
@@ -447,7 +447,9 @@ EDITORS.tcmEditor.prototype = {
               }else if (data['error']) {
                 alert("An error occurred while trying to save TCM information. Error: " + data['error']);
               }
-              ednVE.tcmEd.saving = false;
+              if (ednVE.tcmEd && ednVE.tcmEd.saving) {
+                ednVE.tcmEd.saving = false;
+              }
           },// end success cb
           error: function (xhr,status,error) {
               // add record failed.

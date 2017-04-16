@@ -5467,7 +5467,7 @@ mergeLine: function (direction,cbError) {
     var j,cnt = textDivSeqIDs.length,nextLineLabel, tcms = 'S', ret,
         nextSeqID,lineLastEntityID,textLineSeqID, text = this.dataMgr.getEntity('txt',this.edition.txtID),
         html = '<div class="editionTitleDiv" contenteditable="false"><h3 class="ednLabel edn'+this.edition.id+'">'+this.edition.value+ '</h3>' +
-              (text && text.CKN?' <a target="_blank" title="export edition to EpiDoc" href="'+basepath+'/services/exportEditionToEpiDoc.php?db='+dbName+'&ckn='+ text.CKN +'">[epidoc]</a>':'') +
+              (text && text.CKN?' <a target="_blank" title="export edition to EpiDoc" href="'+basepath+'/services/exportEditionToEpiDoc.php?db='+dbName+'&ednID='+ this.edition.id +'">[epidoc]</a>':'') +
               '</div>';
     $(this.contentDiv).html(html);
 
