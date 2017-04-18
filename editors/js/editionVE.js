@@ -3446,17 +3446,21 @@ mergeLine: function (direction,cbError) {
             break;
           case 40://'Down':
             DEBUG.log("nav","Call to down arrow keydown ");
-
-
             tcmEditor.moveLine('down');
             break;
           case 37://"Left":
             DEBUG.log("nav","Call to left arrow keydown ");
-            tcmEditor.moveCursor('left');
+            if (tcmEditor.moveCursor('left')) {
+              e.stopImmediatePropagation();
+              return false;//eat all other keys
+            }
             break;
           case 39://"Right":
             DEBUG.log("nav","Call to right arrow keydown ");
-            tcmEditor.moveCursor('right');
+            if (tcmEditor.moveCursor('right')) {
+              e.stopImmediatePropagation();
+              return false;//eat all other keys
+            }
             break;
           case 18://"Alt":
           case 16://"Shift":
@@ -3561,10 +3565,10 @@ mergeLine: function (direction,cbError) {
           e.stopImmediatePropagation();
           return false;//eat all other keys
         }
-      } else if (key && ednVE.editMode == "tcm"  && tcmEditor) {
+      } else if (key && ednVE.editMode == "tcm" && tcmEditor) {
         //tcmEditor.processKey(key,e.ctrlKey,e.shiftKey,e.altKey,e);
-        e.stopImmediatePropagation();
-        return false;//eat all other keys
+//        e.stopImmediatePropagation();
+//        return false;//eat all other keys
        }
     };
 
@@ -3699,9 +3703,17 @@ mergeLine: function (direction,cbError) {
             sclEditor.synchSelection();
         }
       } else if (ednVE.editMode == "tcm" && tcmEditor) {
-        tcmEditor.processKey(e.key,e.ctrlKey,e.shiftKey,e.altKey,e);
-        e.stopImmediatePropagation();
-        return false;
+        switch (e.keyCode || e.which) {
+          case 37: //'Left':
+          case 39://'Right':
+          case 38://'Up':
+          case 40://'Down':
+            break;
+          default:
+            tcmEditor.processKey(e.key,e.ctrlKey,e.shiftKey,e.altKey,e);
+            e.stopImmediatePropagation();
+            return false;
+        }
       }
     };
 

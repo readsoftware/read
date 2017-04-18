@@ -255,8 +255,9 @@ EDITORS.tcmEditor.prototype = {
          classes.indexOf("TCM") +
          classes.indexOf("boundary") +
          classes.indexOf("linebreak" )) > -4) {//summed returns = -4 if all fail
-      range.setStart(node.firstChild,offset);
-      range.setEnd(node.firstChild,offset);
+      range.setStart((node.firstChild?node.firstChild:node),offset);
+      range.setEnd((node.firstChild?node.firstChild:node),offset);
+      DEBUG.log("warn","setting cursor at offset " + offset + " of node " + $(node).text());// + this.selectNode.attr('class'));
       return true;
     }
     return false;
@@ -463,7 +464,7 @@ EDITORS.tcmEditor.prototype = {
               ednVE.tcmEd.saving = false;
           }
       });// end ajax
-      return true;
+//      return true;
     }
     return false;
 //    DEBUG.log("gen""call to save end with origStr "+this.rawSyl+" and curStr "+this.curSyl);
@@ -557,6 +558,7 @@ EDITORS.tcmEditor.prototype = {
       }
     }
     DEBUG.traceExit("moveLine","in dir = "+ direction );
+    return true;
   },
 
 
@@ -570,57 +572,129 @@ EDITORS.tcmEditor.prototype = {
 
   moveCursor: function(direction) {
     DEBUG.traceEntry("moveCursor","in dir = "+ direction );
-    var isLeft = (direction == "left"),selectNode,offset, tcmEd = this;
+    DEBUG.log("warn","call to move cursor "+ direction +" from offset " +this.offset + " at node " + this.selectNode.text());// + this.selectNode.attr('class'));
+    var isLeft = (direction == "left"),selectNode,selHdrNode,offset, tcmEd = this;
     //if cursor is at end and direction to move beyond end then move to previous syllable or next syllable
     //for selection just beep
     if ( isLeft ) {
-      if (this.selectNode.prev().hasClass('textDivHeader')) {//at first node
+      //handle case at beginning of line
+      if (this.offset == 0 && this.selectNode.prev().hasClass('textDivHeader')) {//at first node
         if (!this.hdrNode.hasClass('startHeader')) {
           //find linebreak of previous line
-          selectNode = $(this.hdrNode.prevUntil('.grpGra','.linebreak').get(0));
-          //call save with reInit on previous line linebreak
-          return this.save(function() {
-                            tcmEd.reInit(selectNode,0);
-                          });
+          selectNode = $(this.selectNode.prevUntil('.grpGra','.linebreak').get(0));
+          selHdrNode = $(selectNode.prevUntil('.linebreak','.textDivHeader').get(0));
+          while (selectNode && selHdrNode.hasClass('freetext')) {
+            selectNode = $(selHdrNode.prevUntil('.grpGra','.linebreak').get(0));
+            selHdrNode = $(selectNode.prevUntil('.linebreak','.textDivHeader').get(0));
+          }
+          if (selectNode) {
+            if (!this.dirty) {
+              tcmEd.reInit(selectNode,0);
+              return true;
+            }
+            //call save with reInit on previous line linebreak
+            if (!this.save(function() {
+                              tcmEd.reInit(selectNode,0);
+                            })) {
+              tcmEd.reInit(selectNode,0);
+            }
+            return true;
+          }
         } else {
           DEBUG.log("warn","BEEP! At first line cannot move back.");
+          return true;
         }
-      } else {
-        this.offset -= 1;
-        if (this.offset < 0) {
+      } else if (this.offset == 0){//at beginning of node so move to previous node
+        this.selectNode = this.selectNode.prev();
+        if (this.selectNode.hasClass('boundary') || this.selectNode.hasClass('toksep') && !this.ednVE.toksepVisible) {//skip hidden separator
           this.selectNode = this.selectNode.prev();
-          if (this.selectNode.hasClass('toksep') && !this.ednVE.toksepVisible) {//skip hidden separator
+        }
+        this.offset = this.selectNode.text().length-1;
+        if (this.offset > 0) {
+          this.synchSelectionToNode();
+          return true;
+        } else {//at beginning of node
+          if (!this.selectNode.prev().hasClass('textDivHeader')) {
             this.selectNode = this.selectNode.prev();
+            if (this.selectNode.hasClass('boundary') || this.selectNode.hasClass('toksep') && !this.ednVE.toksepVisible) {//skip hidden separator
+              this.selectNode = this.selectNode.prev();
+            }
+            this.offset = this.selectNode.text().length;
           }
-          this.offset = this.selectNode.text().length-1;
+          this.synchSelectionToNode();
+          return true;
+        }
+      } else {//move one position left
+        this.offset -= 1;
+        if (this.offset == 0) {//at beginning of node
+          if (!this.selectNode.prev().hasClass('textDivHeader')) {// not at first node
+            this.selectNode = this.selectNode.prev();
+            if (this.selectNode.hasClass('boundary') || this.selectNode.hasClass('toksep') && !this.ednVE.toksepVisible) {//skip hidden separator
+              this.selectNode = this.selectNode.prev();
+            }
+            this.offset = this.selectNode.text().length;
+          }
+          this.synchSelectionToNode();
+          return true;
         }
       }
-    } else {
-      if (this.selectNode.next().hasClass('linebreak')) {//at last node
+    } else {//move right
+      //handle case at end of line
+      if (this.offset == this.selectNode.text().length && this.selectNode.next().hasClass('linebreak')) {//at last node
         if (!this.hdrNode.hasClass('endHeader')) {
-          //find linebreak of previous line
-          selectNode = $(this.hdrNode.nextUntil('.grpGra','.textDivHeader').next().get(0));
-          //call save with reInit on previous line linebreak
-          return this.save(function() {
+          //find first element past header of next line
+          selectNode = $(this.selectNode.nextUntil('.grpGra','.textDivHeader:not(.freetext)').next().get(0));
+          if (!this.dirty) {
+            tcmEd.reInit(selectNode,0);
+            return true;
+          }
+          //call save with reInit on first element past header of next line
+          if (!this.save(function() {
                             tcmEd.reInit(selectNode,0);
-                          });
+                          })) {
+            tcmEd.reInit(selectNode,0);
+          }
+          return true;
         } else {
           DEBUG.log("warn","BEEP! At last line cannot move forward.");
+          return true;
         }
-      } else {
-        this.offset += 1;
-        if (this.offset > this.selectNode.text().length) {
+      } else if (this.offset == this.selectNode.text().length){//at end of node so move to next node
+        this.selectNode = this.selectNode.next();
+        if (this.selectNode.hasClass('boundary') || this.selectNode.hasClass('toksep') && !this.ednVE.toksepVisible) {//skip hidden separator
           this.selectNode = this.selectNode.next();
-          if (this.selectNode.hasClass('toksep') && !this.ednVE.toksepVisible) {//skip hidden separator
+        }
+        this.offset = 1;
+        if (this.offset < this.selectNode.text().length) {
+          this.synchSelectionToNode();
+          return true;
+        } else {//at end of node and moving right so set location to beginning of next non separator node
+          this.selectNode = this.selectNode.next();
+          if (this.selectNode.hasClass('boundary') || this.selectNode.hasClass('toksep') && !this.ednVE.toksepVisible) {//skip hidden separator
             this.selectNode = this.selectNode.next();
           }
-          this.offset = 1;
+          this.offset = 0;
+          this.synchSelectionToNode();
+          return true;
+        }
+      } else {//move one position right
+        this.offset += 1;
+        if (this.offset == this.selectNode.text().length){//at end of node so move to next node
+          if (!this.selectNode.next().hasClass('linebreak')) {//not at last node
+            this.selectNode = this.selectNode.next();
+            if (this.selectNode.hasClass('boundary') || this.selectNode.hasClass('toksep') && !this.ednVE.toksepVisible) {//skip hidden separator
+              this.selectNode = this.selectNode.next();
+            }
+            this.offset = 0;
+          }
+          this.synchSelectionToNode();
+          return true;
         }
       }
     }
-    DEBUG.log("warn","call to move cursor "+ direction +" offset " +this.offset + " at node " + this.selectNode.attr('class'));
+    DEBUG.log("warn","moved cursor "+ direction +" to offset " +this.offset + " of node " + this.selectNode.text());// + this.selectNode.attr('class'));
     DEBUG.traceExit("moveCursor","in dir = "+ direction );
-   return true;
+    return false;
   },
 
 
@@ -1237,13 +1311,13 @@ var tcmBracketCharToStateLookup = {
 
 var tcmStateToBracketLookup = {
     //state : char
-      "A":"⟨",
-//      "A":"⟨*",
+//      "A":"⟨",
+      "A":"⟨*",
       "D" : "{",
       "I" : "⟪",
       "Sd" : "{{",
-      "R" : "(",
-//      "R" : "(*",
+//      "R" : "(",
+      "R" : "(*",
       "U" : "[",
       "-A" : "⟩",
       "-D" : "}",
@@ -1251,39 +1325,39 @@ var tcmStateToBracketLookup = {
       "-R" : ")",
       "-Sd" : "}}",
       "-U" : "]",
-      "DA" : "{⟨",
-//      "DA" : "{⟨*",
-      "DR" : "{(",
-//      "DR" : "{(*",
+//      "DA" : "{⟨",
+      "DA" : "{⟨*",
+//      "DR" : "{(",
+      "DR" : "{(*",
       "DU" : "{[",
       "DSd" : "{{{",
       "DI" : "{⟪",
       "DIU" : "{⟪[",
-      "DIR" : "{⟪(",
-//      "DIR" : "{⟪(*",
+//      "DIR" : "{⟪(",
+      "DIR" : "{⟪(*",
       "DISd" : "{⟪{{",
-      "DIA" : "{⟪⟨",
-//      "DIA" : "{⟪⟨*",
-      "IR" : "⟪(",
-//      "IR" : "⟪(*",
+//      "DIA" : "{⟪⟨",
+      "DIA" : "{⟪⟨*",
+//      "IR" : "⟪(",
+      "IR" : "⟪(*",
       "IU" : "⟪[",
       "ID" : "⟪{",
       "ISd" : "⟪{{",
-      "IA" : "⟪⟨",
-//      "IA" : "⟪⟨*",
-      "SdR" : "{{(",
-//      "SdR" : "{{(*",
+//      "IA" : "⟪⟨",
+      "IA" : "⟪⟨*",
+//      "SdR" : "{{(",
+      "SdR" : "{{(*",
       "SdU" : "{{[",
       "SdD" : "{{{",
-      "SdA" : "{{⟨",
-//      "SdA" : "{{⟨*",
+//      "SdA" : "{{⟨",
+      "SdA" : "{{⟨*",
       "SdI" : "{{⟪",
-      "SdIR" : "{{⟪(",
-//      "SdIR" : "{{⟪(*",
+//      "SdIR" : "{{⟪(",
+      "SdIR" : "{{⟪(*",
       "SdIU" : "{{⟪[",
       "SdID" : "{{⟪{",
-      "SdIA" : "{{⟪⟨",
-//      "SdIA" : "{{⟪⟨*",
+//      "SdIA" : "{{⟪⟨",
+      "SdIA" : "{{⟪⟨*",
       "-DA" : "⟩}",
       "-DI" : "⟫}",
       "-DR" : ")}",
