@@ -641,7 +641,7 @@ EDITORS.SearchVE.prototype = {
         this.searchCurInfoBar = $('<div id="searchCursorInfoBar">Loading....</div>');
         this.searchCurInfoBar.insertAfter(this.searchMediaBar);
       }
-      this.searchCurInfoBar.html('<div class="cursorTitle">'+ (curText.CKN?curText.CKN+"-":"") + curText.value+ '</div>');
+      this.searchCurInfoBar.html('<div class="cursorTitle">'+ (curText.CKN?curText.CKN+" - ":"") + curText.value+ '</div>');
       this.searchCurInfoBar.append(resBtnBar);
       if (this.searchCurResourcePanel) {
         this.searchCurResourcePanel.remove();

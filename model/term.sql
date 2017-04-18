@@ -742,7 +742,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (737,'en=>"LinePhysical"',736,778,'{1287}',NULL,'Line',NULL,NULL,NULL,1,'{2}'),
 (738,'en=>"Text"',735,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (739,'en=>"TextDivision"',738,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(740,'en=>"Analysis"',735,778,'{741,744,750,756,1442}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(740,'en=>"Analysis"',735,778,'{741,1437,744,750}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (741,'en=>"Chapter"',740,778,'{744,745,742,1442}',NULL,'Chapter',NULL,NULL,NULL,1,'{2}'),
 (742,'en=>"Stanza"',741,778,'{743}',NULL,'Stanza',NULL,NULL,NULL,1,'{2}'),
 (743,'en=>"Pāda"',742,778,'{972,1345}',NULL,'Pāda',NULL,NULL,NULL,1,'{2}'),
