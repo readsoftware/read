@@ -99,15 +99,17 @@ MANAGERS.DataManager.prototype = {
     this.switchLookup = {};
     this.cknToTxtID = {};
     this.termInfo = {};
-    this.loadedText = {}
-    this.loadedBaseline = {}
-    this.loadedEdition = {}
-    this.loadedCatalog = {}
-    this.textUnavailable = {}
-    this.baselineUnavailable = {}
-    this.editionUnavailable = {}
-    this.catalogUnavailable = {}
+    this.loadedText = {};
+    this.loadedBaseline = {};
+    this.loadedEdition = {};
+    this.loadedCatalog = {};
+    this.textUnavailable = {};
+    this.baselineUnavailable = {};
+    this.editionUnavailable = {};
+    this.catalogUnavailable = {};
     this.loadAttributions();
+    this.entTag2LinkedByAnoIDsByType = {};
+    this.entTag2LinkedAnoIDsByType = {};
     DEBUG.traceExit("dataMgr.init","");
   },
 
@@ -126,14 +128,16 @@ MANAGERS.DataManager.prototype = {
     this.switchInfoByTextID = {};
     this.cknToTxtID = {};
     this.termInfo = {};
-    this.loadedText = {}
-    this.loadedBaseline = {}
-    this.loadedEdition = {}
-    this.loadedCatalog = {}
-    this.textUnavailable = {}
-    this.baselineUnavailable = {}
-    this.editionUnavailable = {}
-    this.catalogUnavailable = {}
+    this.loadedText = {};
+    this.loadedBaseline = {};
+    this.loadedEdition = {};
+    this.loadedCatalog = {};
+    this.textUnavailable = {};
+    this.baselineUnavailable = {};
+    this.editionUnavailable = {};
+    this.catalogUnavailable = {};
+    this.entTag2LinkedByAnoIDsByType = {};
+    this.entTag2LinkedAnoIDsByType = {};
     DEBUG.traceExit("flushLocalCache","");
   },
 
@@ -157,8 +161,32 @@ MANAGERS.DataManager.prototype = {
           if (!this.entities[prefix]) {
             this.entities[prefix] = {};
           }
+          if (!this.entTag2LinkedByAnoIDsByType[prefix + entID]) {
+            if (inserts[prefix][entID]["linkedByAnoIDsByType"]) {
+              this.entTag2LinkedByAnoIDsByType[prefix + entID] = inserts[prefix][entID]["linkedByAnoIDsByType"];
+            } else if (this.entities[prefix][entID] &&
+                        this.entities[prefix][entID]["linkedByAnoIDsByType"]) {
+              this.entTag2LinkedByAnoIDsByType[prefix + entID] = this.entities[prefix][entID]["linkedByAnoIDsByType"];
+            }
+          }
+          if (!this.entTag2LinkedAnoIDsByType[prefix + entID]) {
+            if (inserts[prefix][entID]["linkedAnoIDsByType"]) {
+              this.entTag2LinkedAnoIDsByType[prefix + entID] = inserts[prefix][entID]["linkedAnoIDsByType"];
+            } else if (this.entities[prefix][entID] &&
+                        this.entities[prefix][entID]["linkedAnoIDsByType"]) {
+              this.entTag2LinkedAnoIDsByType[prefix + entID] = this.entities[prefix][entID]["linkedAnoIDsByType"];
+            }
+          }
           this.entities[prefix][entID] = inserts[prefix][entID];
-         DEBUG.log("data","inserted " + prefix + entID + " entity");
+          if (this.entTag2LinkedByAnoIDsByType[prefix + entID] &&
+              !this.entities[prefix][entID]["linkedByAnoIDsByType"]) {
+            this.entities[prefix][entID]["linkedByAnoIDsByType"] = this.entTag2LinkedByAnoIDsByType[prefix + entID];
+          }
+          if (this.entTag2LinkedAnoIDsByType[prefix + entID] &&
+              !this.entities[prefix][entID]["linkedAnoIDsByType"]) {
+            this.entities[prefix][entID]["linkedAnoIDsByType"] = this.entTag2LinkedAnoIDsByType[prefix + entID];
+          }
+          DEBUG.log("data","inserted " + prefix + entID + " entity");
         }
       }
       for (prefix in inserts) {
@@ -184,15 +212,9 @@ MANAGERS.DataManager.prototype = {
             this.entities[prefix][entID][prop] = updates[prefix][entID][prop];
             DEBUG.log("data","updated " + prefix + entID + " " + prop + " property");
             if (prop == "linkedAnoIDsByType") {//annotations changed
-              if (!this.entTag2LinkedAnoIDsByType) {
-                this.entTag2LinkedAnoIDsByType = {};
-              }
               this.entTag2LinkedAnoIDsByType[prefix + entID]=updates[prefix][entID][prop];
             }
             if (prop == "linkedByAnoIDsByType") {//annotations changed
-              if (!this.entTag2LinkedByAnoIDsByType) {
-                this.entTag2LinkedByAnoIDsByType = {};
-              }
               this.entTag2LinkedByAnoIDsByType[prefix + entID]=updates[prefix][entID][prop];
             }
           }

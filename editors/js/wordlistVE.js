@@ -687,6 +687,9 @@ EDITORS.WordlistVE.prototype = {
         displayValue = '';
     if (this.dataMgr.entities && this.dataMgr.entities.lem && this.dataMgr.entities.lem[lemID]) {
       lemma = this.dataMgr.entities.lem[lemID];
+      if (!lemma.tag) {
+        lemma.tag = "lem" + lemID;
+      }
       cf = lemma.certainty?lemma.certainty:[3,3,3,3,3];
       pos = this.dataMgr.getTermFromID(lemma.pos);
       isNoun = pos == 'noun';
@@ -874,8 +877,10 @@ EDITORS.WordlistVE.prototype = {
     lemmaHTML = this.calcLemmaHtml(lemID);
     //find entry and replace html
     $lemmaEntry = $('div.wordlistentry:has(.'+lemTag+')', this.editDiv);
-    $lemmaEntry.html(lemmaHTML);
-    this.addEventHandlers($lemmaEntry);
+    if ($lemmaEntry) {
+      $lemmaEntry.html(lemmaHTML);
+      this.addEventHandlers($lemmaEntry);
+    }
   },
 
 

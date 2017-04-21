@@ -269,7 +269,7 @@ EDITORS.TagVE.prototype = {
     //create input with save button
     this.custTagUI.append($('<div class="propEditUI">'+
                     '<div class="valueInputDiv propEditElement"><input class="valueInput" placeholder="Type Tag Here"/></div>'+
-                    '<div class="saveDiv propEditElement">Save</div>'+
+                    '<button class="saveDiv propEditElement">Save</button>'+
                     '</div>'));
     //attach event handlers
       //click to edit

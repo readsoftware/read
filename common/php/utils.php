@@ -949,7 +949,7 @@ function getSeqSubTypeStructure($trmID) {
 
 function getCustomTags($trmID,$ctxPos = "") {
   global $entTagToLabel,$entTagToPath,$tagIDToAnoID;
-  $annoRepresentations = new Annotations("ano_type_id = $trmID and ano_owner_id = ".getUserID(),"ano_text",null,null);
+  $annoRepresentations = new Annotations("ano_type_id = $trmID and ano_owner_id = ".getUserDefEditorID(),"ano_text",null,null);
   if ($annoRepresentations && $annoRepresentations->getCount() > 0 ){
     $subTagsInfo = array();
     $index=0;

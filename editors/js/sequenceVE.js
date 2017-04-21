@@ -110,7 +110,6 @@ EDITORS.SequenceVE.prototype = {
     this.addEventHandlers();
   },
 
-
 /**
 * put your comment there...
 *
@@ -119,7 +118,6 @@ EDITORS.SequenceVE.prototype = {
   setFocus: function () {
     this.$structTree.focus();
   },
-
 
 /**
 * put your comment there...
@@ -261,7 +259,6 @@ EDITORS.SequenceVE.prototype = {
     }
   },
 
-
 /**
 * put your comment there...
 *
@@ -281,7 +278,6 @@ EDITORS.SequenceVE.prototype = {
     }
     DEBUG.traceExit("addSequence");
   },
-
 
 /**
 * put your comment there...
@@ -423,8 +419,6 @@ EDITORS.SequenceVE.prototype = {
     this.seqGIDsByType = seqIDsByType;
     this.entTagsBySeqTag = entTagsBySeqTag;
   },
-
-
 
 /**
 * put your comment there...
@@ -1056,7 +1050,6 @@ EDITORS.SequenceVE.prototype = {
     }
   },
 
-
 /**
 * put your comment there...
 *
@@ -1095,7 +1088,6 @@ EDITORS.SequenceVE.prototype = {
     });*/
   },
 
-
 /**
 * put your comment there...
 *
@@ -1115,7 +1107,6 @@ EDITORS.SequenceVE.prototype = {
     //attach MenuHandler to item.
     this.attachMenuEventHandler($('#'+entTag,this.$structTree));
   },
-
 
 /**
 * put your comment there...
@@ -1177,7 +1168,6 @@ EDITORS.SequenceVE.prototype = {
     }
   },
 
-
 /**
 * put your comment there...
 *
@@ -1197,6 +1187,10 @@ EDITORS.SequenceVE.prototype = {
         seqIDs, entityGIDs;
 
     if (fromParent && toParent) {
+      if (toParentEntTag == childEntTag) {//cannot link to self so return
+        DEBUG.log("warn","BEEP! Call to move entity to itself - recursion not allowed toParentEntTag ='"+toParentEntTag+"' and childEntTag = "+childEntTag);
+        return;
+      }
       seqIDs = fromParent.seqIDs;
       entityGIDs = fromParent.entityIDs;
       //remove entity GID from entityIDs of fromParent
@@ -1288,7 +1282,6 @@ EDITORS.SequenceVE.prototype = {
       }
     }
   },
-
 
 /**
 * put your comment there...
