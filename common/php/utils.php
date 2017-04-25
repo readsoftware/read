@@ -330,6 +330,17 @@ class BoundingBox{
     return "{'(".$this->_offsetx.",".$this->_offsety.")','(".($this->_offsetx + $this->_width).",".($this->_offsety + $this->_height).")'}";
   }
 
+  /**
+  * Get points as a string ((x1,y1),(x2,y2),....,(xn,yn))
+  * @return string representing the vertices of this polygon
+  */
+  public function getPolygonString() {
+    return "((".$this->_offsetx.",".$this->_offsety."),(".
+               ($this->_offsetx + $this->_width).",".$this->_offsety."),(".
+               ($this->_offsetx + $this->_width).",".($this->_offsety + $this->_height)."),(".
+               $this->_offsetx.",".($this->_offsety + $this->_height)."))";
+  }
+
   //********SETTERS*********
 
   /**

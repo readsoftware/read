@@ -287,8 +287,12 @@
     *
     * @return int contextIDs of a material context entities for this fragment
     */
-    public function getMaterialContextIDs() {
-      return $this->_material_context_ids;
+    public function getMaterialContextIDs($asString = false) {
+      if ($asString){
+        return $this->idsToString($this->_material_context_ids);
+      }else{
+        return $this->idsStringToArray($this->_material_context_ids);
+      }
     }
 
     /**

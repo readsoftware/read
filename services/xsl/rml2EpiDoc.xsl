@@ -153,6 +153,15 @@
                     </xsl:if-->
                 </fileDesc>
             </teiHeader>
+            <xsl:if test="count(/rml/entities/baseline[Type/link/@value = 'Image']) > 0">
+            <facsimile>
+                <xsl:for-each select="/rml/entities/baseline[Type/link/@value = 'Image']">
+                  <xsl:call-template name="getSurfaceZone">
+                      <xsl:with-param name="baseline" select="current()"/>
+                  </xsl:call-template>
+              </xsl:for-each>  
+            </facsimile>
+            </xsl:if>
             <text xml:lang="pra-Brah">
                 <body>
                     <xsl:variable name="epixml">
@@ -163,7 +172,112 @@
             </text>
         </TEI>
     </xsl:template>
-
+    <xsl:template name="getSurfaceZone">
+        <xsl:param name="baseline" />
+        <xsl:variable name="blnID" select="$baseline/@id"/>
+        <xsl:variable name="image" select="/rml/entities/image[@id = $baseline/Image/link/@id]"/>
+        <xsl:variable name="imageurl" select="$image/URL"/>
+        <surface>
+            <xsl:choose>
+                <xsl:when test="$baseline/Position  and $image/Position">
+                    <xsl:attribute name="ulx">
+                        <xsl:value-of select="$baseline/Position/boundary/boundingbox/@left + $image/Position/boundary/boundingbox/@left"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="uly">
+                        <xsl:value-of select="$baseline/Position/boundary/boundingbox/@top + $image/Position/boundary/boundingbox/@top"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lrx">
+                        <xsl:value-of select="$baseline/Position/boundary/boundingbox/@right + $image/Position/boundary/boundingbox/@left"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lry">
+                        <xsl:value-of select="$baseline/Position/boundary/boundingbox/@bottom + $image/Position/boundary/boundingbox/@top"/>
+                    </xsl:attribute>
+                </xsl:when>
+                <xsl:when test="$baseline/Position">
+                    <xsl:attribute name="ulx">
+                        <xsl:value-of select="$baseline/Position/boundary/boundingbox/@left"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="uly">
+                        <xsl:value-of select="$baseline/Position/boundary/boundingbox/@top"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lrx">
+                        <xsl:value-of select="$baseline/Position/boundary/boundingbox/@right"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lry">
+                        <xsl:value-of select="$baseline/Position/boundary/boundingbox/@bottom"/>
+                    </xsl:attribute>
+                </xsl:when>
+                <xsl:when test="$image/Position">
+                    <xsl:attribute name="ulx">
+                        <xsl:value-of select="$image/Position/boundary/boundingbox/@left"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="uly">
+                        <xsl:value-of select="$image/Position/boundary/boundingbox/@top"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lrx">
+                        <xsl:value-of select="$image/Position/boundary/boundingbox/@right"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lry">
+                        <xsl:value-of select="$image/Position/boundary/boundingbox/@bottom"/>
+                    </xsl:attribute>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:attribute name="ulx">
+                        <xsl:value-of select="0"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="uly">
+                        <xsl:value-of select="0"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lrx">
+                        <xsl:value-of select="$imageurl/@width"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lry">
+                        <xsl:value-of select="$imageurl/@height"/>
+                    </xsl:attribute>
+                </xsl:otherwise>
+            </xsl:choose>
+            <zone>
+                <xsl:attribute name="ulx">
+                    <xsl:value-of select="0"/>
+                </xsl:attribute>
+                <xsl:attribute name="uly">
+                    <xsl:value-of select="0"/>
+                </xsl:attribute>
+                <xsl:attribute name="lrx">
+                    <xsl:value-of select="$imageurl/@width"/>
+                </xsl:attribute>
+                <xsl:attribute name="lry">
+                    <xsl:value-of select="$imageurl/@height"/>
+                </xsl:attribute>
+                <graphic>
+                    <xsl:attribute name="url">
+                        <xsl:value-of select="$imageurl/text()"/>
+                    </xsl:attribute>
+                </graphic>
+            </zone>
+            <xsl:for-each select="/rml/entities/segment[BaseLines/link/@id = $blnID]">
+                <xsl:variable name="tag" select="concat('seg',./@id)"/>
+                <xsl:variable name="bbox" select="./Position/boundary/boundingbox"/>
+                <zone>
+                    <xsl:attribute name="xml:id">
+                        <xsl:value-of select="$tag"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="ulx">
+                        <xsl:value-of select="$bbox/@left"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="uly">
+                        <xsl:value-of select="$bbox/@top"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lrx">
+                        <xsl:value-of select="$bbox/@right"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lry">
+                        <xsl:value-of select="$bbox/@bottom"/>
+                    </xsl:attribute>
+                </zone>
+            </xsl:for-each>
+        </surface>
+    </xsl:template>
     <xsl:template match="gap" mode="compress">
         <xsl:if test="not(@reason=preceding-sibling::gap[1]/@reason)">
             <gap>
