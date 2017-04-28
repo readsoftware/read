@@ -329,7 +329,7 @@
                 } else {
                   $sclRTF .= (array_key_exists($graID,$graID2BoundaryMap)?".":". ");
                   $sclRTF = preg_replace('/_+/',"_",$sclRTF);
-                  $sclRTF = preg_replace('/_\./',($hasNonReconConsnt?". ":($j || $i?" ":"")."+"),$sclRTF);
+                  $sclRTF = preg_replace('/_\./',($hasNonReconConsnt?".. ":($j || $i?" ":"")."+"),$sclRTF);
                 }
               }else if ($typ != "VowelModifier"){
                 $sclRTF .= "+";
@@ -364,6 +364,7 @@
             }
           }//end for graphIDs
           $previousGraFootnotes .= getEntityFootnotesRTF($syllable);
+          $sclRTF = preg_replace('/_\./',"..",$sclRTF);
           $rtf .= preg_replace('/\s\s/'," ",$sclRTF);
         }//end for sclIDs
         if ($prevTCMS != "S") {//close off any TCM

@@ -429,8 +429,8 @@
       $wordRTF = join("",$wordParts);
       $wordRTF = preg_replace('/\/\/\//',"",$wordRTF); // remove edge indicator
       $wordRTF = preg_replace('/_+/',"_",$wordRTF); // multple missing consonants
-      $wordRTF = preg_replace('/_([^\.])/',".\\1",$wordRTF); // multple missing consonants
-      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
+      $wordRTF = preg_replace('/_([^\.])*/',".\\1",$wordRTF); // multple missing consonants
+//      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
       if (!preg_match('/[^\s]/',$wordRTF)) {
         $wordRTF = "";
       }

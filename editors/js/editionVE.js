@@ -5271,7 +5271,7 @@ mergeLine: function (direction,cbError) {
                     grpHTML += plusSign;
                   } else {
                     grpHTML += (graLU.boundary?". ":". ");
-                    grpHTML = grpHTML.replace(/_+/g,"_").replace(/_\./g,(hasNonReconConsnt?". ":(j || i?" ":"")+plusSign));
+                    grpHTML = grpHTML.replace(/_+/g,"_").replace(/_\./g,(hasNonReconConsnt?"..":(j || i?" ":"")+plusSign));
                   }
                 }else if (typ != "VowelModifier"){
                   grpHTML += plusSign;
@@ -5382,7 +5382,7 @@ mergeLine: function (direction,cbError) {
         lineHTML = lineHTML.replace(/⟪/g,"").replace(/⟫/g,""); // remove scribal insertion brackets
         lineHTML = lineHTML.replace(/\{\{[^}]*\}\}/g,""); // remove scribal deletion brackets and text
         lineHTML = lineHTML.replace(/\/\/\//g,""); // remove edge indicator
-        lineHTML = lineHTML.replace(/_+/g,"_").replace(/(_)([^\.])/g,".$2").replace(/\.\./g,".");
+        lineHTML = lineHTML.replace(/_+/g,"_").replace(/(_)([^\.])/g,".$2");//.replace(/\.\./g,".");
       }
       DEBUG.traceExit("editionVE.renderPhysicalLine","physLseqID = " + physLineSeqID);
       return [lineHTML,grpOrd];
@@ -5726,7 +5726,7 @@ mergeLine: function (direction,cbError) {
             grpHTML = '';
           }
           wordHTML = wordHTML.replace(/\/\/\//g,""); // remove edge indicator
-          wordHTML = wordHTML.replace(/_+/g,"_").replace(/(_)([^\.])/g,".$2").replace(/\.\./g,".");
+          wordHTML = wordHTML.replace(/_+/g,"_").replace(/(_)([^\.])*/g,".$2");//.replace(/\.\./g,".");
           parentDiv.append(wordHTML);
           wordHTML = "";
         }//end for token IDs
