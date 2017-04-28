@@ -2128,14 +2128,25 @@ EDITORS.LemmaVE.prototype = {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var newLemID, newCatID;
+              var newLemID, newCatID,updLemID;
               if (typeof data == 'object' && data.success && data.entities) {
                 //update data
                 lemmaVE.dataMgr.updateLocalCache(data,null);
                 if (compAnalysis) {
                   //TODO find out new lemmas and insert them
                   //change lemma to Update
-                  lemmaVE.wordlistVE.refreshGlossary();
+                  if (data.entities && data.entities.insert && data.entities.insert.lem &&
+                      Object.keys(data.entities.insert.lem).length) {
+                    for (newLemID in data.entities.insert.lem) {
+                      lemmaVE.wordlistVE.insertLemmaEntry(newLemID);
+                    }
+                  }
+                  if (data.entities && data.entities.update && data.entities.update.lem &&
+                      Object.keys(data.entities.update.lem).length) {
+                    for (updLemID in data.entities.update.lem) {
+                      lemmaVE.wordlistVE.updateLemmaEntry(updLemID);
+                    }
+                  }
                 }
                 lemmaVE.showLemma();
               }

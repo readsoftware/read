@@ -479,13 +479,18 @@ EDITORS.WordlistVE.prototype = {
         if (this.dataMgr.entities.lem[lemIDs[i]]) {
           lemma = this.dataMgr.getEntity('lem',lemIDs[i]);
           lemma.tag = 'lem'+lemIDs[i];
-          val = lemma.value.replace(/ʔ/g,'');
-          if (this.lemLookup[val]) {
-            if (this.lemLookup[val].indexOf(lemma.id) == -1) {
-              this.lemLookup[val].push(lemma.id);
+          if (lemma.value) {
+            val = lemma.value.replace(/ʔ/g,'');
+            if (this.lemLookup[val]) {
+              if (this.lemLookup[val].indexOf(lemma.id) == -1) {
+                this.lemLookup[val].push(lemma.id);
+              }
+            } else {
+              this.lemLookup[val] = [lemma.id];
             }
           } else {
-            this.lemLookup[val] = [lemma.id];
+            DEBUG.log('warn',"Lemma "+tag+" has no value, adding undefined ");
+            lemma.value = "missing value";
           }
           wordGIDs = lemma.entityIDs;
           if (wordGIDs && wordGIDs.length) {
@@ -892,11 +897,14 @@ EDITORS.WordlistVE.prototype = {
 */
 
   insertLemmaEntry: function (lemID, wordGID) {
-    var hintTag = wordGID.replace(':',''), lemTag = 'lem'+lemID,
+    var hintTag, hintWord, lemTag = 'lem'+lemID,
         lemma = this.dataMgr.getEntityFromGID(lemTag),
-        hintWord = this.dataMgr.getEntityFromGID(hintTag),
         $node, $srchNode, srchWord, srchDir, $insertNode, position, match,
         $lemmaEntry, lemmaHTML = this.calcLemmaHtml(lemID);
+    if (wordGID) {
+       hintTag = wordGID.replace(':','');
+       hintWord = this.dataMgr.getEntityFromGID(hintTag);
+    }
     //find hint entity
     if (hintWord && hintWord.sort && lemma.sort) {
       $srchNode = $('div.wordlistentry:has(.'+hintTag+')',this.contentDiv);
