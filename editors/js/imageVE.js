@@ -1319,12 +1319,19 @@ EDITORS.ImageVE.prototype = {
       //adjust point to be image coordinates
       var x = (imgVE.vpLoc.x * imgVE.image.width / imgVE.navCanvas.width + imgVE.vpSize.width/imgVE.navCanvas.width*imgVE.image.width * pt[0]/imgVE.imgCanvas.width),
           y = (imgVE.vpLoc.y * imgVE.image.height / imgVE.navCanvas.height + imgVE.vpSize.height/imgVE.navCanvas.height*imgVE.image.height * pt[1]/imgVE.imgCanvas.height),
-          i,index,gid;
+          i,index,gid,bBox;
       //hittest for target polygons
       var hitPolyIndices = imgVE.hitTestPolygons(x,y);
       //unselect existing if no ctrl key pressed
       if (!e.ctrlKey) {
         imgVE.selectedPolygons = {};
+        // save shift click rectagular size of first hitTest polygon so works for only dblclick polygon
+        index = hitPolyIndices[0];
+        if (index) {
+          bBox = UTILITY.getBoundingRect(imgVE.polygons[index -1].polygon);
+          imgVE.aPolyW = bBox[2][0] - bBox[0][0];
+          imgVE.aPolyH = bBox[2][1] - bBox[0][1];
+        }
       }
       //add indices to selected array
       for (i=0; i < hitPolyIndices.length; i++) {
@@ -1334,6 +1341,7 @@ EDITORS.ImageVE.prototype = {
         imgVE.selectedPolygons[gid] = 1;
 //        imgVE.selectedPolygons[index] = 1;
       }
+
       if (imgVE.selectedPolygons && Object.keys(imgVE.selectedPolygons).length > 0) {
         if ( Object.keys(imgVE.selectedPolygons).length == 1) {
           //enable delete button
@@ -1378,28 +1386,38 @@ EDITORS.ImageVE.prototype = {
         imgVE.imgCanvas.focus();
         imgVE.layoutMgr.curLayout.trigger('focusin',imgVE.id);
       }
-      if (e.ctrlKey) { //user selecting or finishing drag navigation
-        //set cursor back to pointer ???
-        //hittest for target polygons
-        var hitPolyIndices = imgVE.hitTestPolygons(x,y);
-        //add indices to selected array
-        for (i=0; i < hitPolyIndices.length; i++) {
-          index = hitPolyIndices[i];
-          imgVE.selectedPolygons[imgVE.polygons[index -1].label] = 1;
-//          imgVE.selectedPolygons[index] = 1;
-        }
-        //redraw
-        if (imgVE.linkMode) {
-          imgVE.linkMode=false;
-          imgVE.drawImage();
-          imgVE.drawImagePolygons();
-          $('.editContainer').trigger('linkResponse',[imgVE.id,imgVE.getSelectedPolygonLabels()[0]]);
-        } else {
-          imgVE.drawImage();
-          imgVE.drawImagePolygons();
-          $('.editContainer').trigger('updateselection',[imgVE.id,imgVE.getSelectedPolygonLabels()]);
-        }
-        return;
+      if (e.shiftKey && !(e.ctrlKey || e.altKey)) {
+        var w = imgVE.aPolyW ? imgVE.aPolyW:20,
+            wL = Math.round(w/2), wR = w - wL, //split size accounting for odd size
+            h = imgVE.aPolyH ? imgVE.aPolyH:20,
+            hU = Math.round(h/2), hL = h - hU; //split size accounting for odd size
+        if (x-wL < 0) x = wL;
+        if (x+wR > imgVE.imgCanvas.width) x = imgVE.imgCanvas.width - wR;
+        if (y-hU < 0) y = hU;
+        if (y+hL > imgVE.imgCanvas.height) y = imgVE.imgCanvas.height - hL;
+        imgVE.path = [[x-wL,y-hU],[x+wR,y-hU],[x+wR,y+hL],[x-wL,y+hL]];
+        imgVE.draw();
+      } else if (e.ctrlKey && !(e.shiftKey || e.altKey)) { //user selecting or finishing drag navigation
+          //set cursor back to pointer ???
+          //hittest for target polygons
+          var hitPolyIndices = imgVE.hitTestPolygons(x,y);
+          //add indices to selected array
+          for (i=0; i < hitPolyIndices.length; i++) {
+            index = hitPolyIndices[i];
+            imgVE.selectedPolygons[imgVE.polygons[index -1].label] = 1;
+          }
+          //redraw
+          if (imgVE.linkMode) {
+            imgVE.linkMode=false;
+            imgVE.drawImage();
+            imgVE.drawImagePolygons();
+            $('.editContainer').trigger('linkResponse',[imgVE.id,imgVE.getSelectedPolygonLabels()[0]]);
+          } else {
+            imgVE.drawImage();
+            imgVE.drawImagePolygons();
+            $('.editContainer').trigger('updateselection',[imgVE.id,imgVE.getSelectedPolygonLabels()]);
+          }
+          return;
       }else if (e.altKey) { //user wants set start point for path
         imgVE.path = [[x,y]];
         imgVE.segMode = "path";
@@ -1419,6 +1437,7 @@ EDITORS.ImageVE.prototype = {
 //        imgVE.drawImage();
       }
     };
+
     imgVE.rbRect,imgVE.drgStart,imgVE.rbImageData = null;
     $(imgVE.imgCanvas).unbind("mousedown touchstart").bind("mousedown touchstart", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgVE.id);
@@ -1510,8 +1529,8 @@ EDITORS.ImageVE.prototype = {
               w = (imgVE.vpSize.width/imgVE.navCanvas.width*imgVE.image.width * (imgVE.rbRect[1][0]-2*lw)/imgVE.imgCanvas.width),
               h = (imgVE.vpSize.height/imgVE.navCanvas.height*imgVE.image.height * (imgVE.rbRect[1][1]-2*lw)/imgVE.imgCanvas.height);
           imgVE.path = [[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
-//        }else if (imgVE.rbImageData && imgVE.rbRect) {//else redraw saved pixels
-//          imgVE.imgContext.putImageData(imgVE.rbImageData,imgVE.rbRect[0][0], imgVE.rbRect[0][1]);
+          imgVE.aPolyW = w;
+          imgVE.aPolyH = h;
         }
         //clean up
         imgVE.imgCanvas.style.cursor = 'crosshair';
