@@ -959,6 +959,15 @@ EDITORS.WordlistVE.prototype = {
         this.addEventHandlers($lemmaEntry);
       }
     }
+    //update lookup list
+    if (this.lemLookup[lemma.value]) {
+      if (this.lemLookup[lemma.value].indexOf(lemID) == -1) {
+        this.lemLookup[lemma.value].push(lemID);
+      }
+    } else {
+      this.lemLookup[lemma.value] = [lemID];
+    }
+
   },
 
 
