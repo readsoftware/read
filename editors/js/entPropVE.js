@@ -1678,7 +1678,7 @@ EDITORS.EntityPropVE.prototype = {
     return($('<div class="annotationentry '+annoType+' '+anno.tag+'">' +
          '<span class="annotation">(' + annoType + ') ' + anno.text + '</span>'+
          '<span class="modstamp">' + (attrText?attrText:anno.modStamp) + '</span>'+
-         (anno.readonly?'':'<span class="removeanno '+anno.tag+'" title="remove tag '+anno.tag+'">X</span>')+
+         (anno.readonly?'':'<span class="removeanno '+anno.tag+'" title="remove annotation '+anno.tag+'">X</span>')+
          '</div>'));
   },
 

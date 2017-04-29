@@ -325,6 +325,13 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
   width: 94%;
   background-color: rgb(242,242,242);
 }
+.attestedannobtn{
+  margin-top: 10px;
+  background-color: inherit !important;
+  color: blue !important;
+  font-size: 98%;
+  cursor: pointer;
+}
 .radioUI{
   width: 96%;
   margin-left: 5px;
@@ -544,7 +551,7 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
   color: blue!important;
   cursor: pointer;
 }
-span.unlink, div.sandhibtn{
+span.unlink, div.sandhibtn, span.attestedannobtn{
   background-color: inherit!important;
   margin-top: 10px;
   color: blue!important;
@@ -555,6 +562,10 @@ span.unlink, div.sandhibtn{
 .annoHeader, .imgHeader, .taggingHeader, .attributionHeader{
   font-size: large;
   padding-left: 5px;
+}
+.attestedui{
+  background-color: inherit !important;
+  margin-top: 5px;
 }
 .annoUI{
   width: 100%;

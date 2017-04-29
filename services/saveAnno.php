@@ -240,18 +240,20 @@ if (count($errors) == 0) {
             array_push($errors,"error deleting annotation unable to find linked entity (".$linkedFromEntity->getGlobalID().") in linkFromIDs of ".$annotation->getGlobalID());
           }
         }
-        if (count($errors) == 0 && Entity::getIDofTermParentLabel("footnotetype-annotationtype") == $annotation->getTypeID($typeID) &&//term dependency
-          !$linkedFromEntity->isReadonly()) {
-          $annoIDs = $linkedFromEntity->getAnnotationIDs();
-          $anoIndex = array_search($annotation->getID(),$annoIDs);
-          array_splice($annoIDs,$anoIndex,1);
-          $linkedFromEntity->setAnnotationIDs($annoIDs);
-          $linkedFromEntity->save();
-          if ($linkedFromEntity->hasError()) {
-            array_push($errors,"error unlinking entity '".$linkedFromEntity->getGlobalID()."' - ".$linkedFromEntity->getErrors(true));
-          }else{
-            addUpdateEntityReturnData(substr($linkedFromEntity->getGlobalID(),0,3),$linkedFromEntity->getID(),'annotationIDs', $linkedFromEntity->getAnnotationIDs());
+        if (count($errors) == 0 && !$linkedFromEntity->isReadonly()) {
+          if (Entity::getIDofTermParentLabel("footnotetype-annotationtype") == $annotation->getTypeID($typeID)) {//term dependency
+            $annoIDs = $linkedFromEntity->getAnnotationIDs();
+            $anoIndex = array_search($annotation->getID(),$annoIDs);
+            array_splice($annoIDs,$anoIndex,1);
+            $linkedFromEntity->setAnnotationIDs($annoIDs);
+            $linkedFromEntity->save();
+            if ($linkedFromEntity->hasError()) {
+              array_push($errors,"error unlinking entity '".$linkedFromEntity->getGlobalID()."' - ".$linkedFromEntity->getErrors(true));
+            }else{
+              addUpdateEntityReturnData($linkedFromEntity->getEntityTypeCode(),$linkedFromEntity->getID(),'annotationIDs', $linkedFromEntity->getAnnotationIDs());
+            }
           }
+          addUpdateEntityReturnData($linkedFromEntity->getEntityTypeCode(),$linkedFromEntity->getID(),'linkedAnoIDsByType', $linkedFromEntity->getLinkedAnnotationsByType());
         }
       }
       break;

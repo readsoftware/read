@@ -98,7 +98,11 @@ EDITORS.AnnoVE.prototype = {
       prefix = tag.substring(0,3),
       id = tag.substring(3);
       if (prefix != "ano"){
-        alert(" invalid annotation ID reverting to new");
+        DEBUG.log("warn","setting annotation editor to not anno GID "+gid);
+        delete this.tag;
+        delete this.anoID;
+        this.entity = null;
+        this.linkTag = tag;
         this.showAnno();
       } else {
         this.tag = tag;
@@ -157,7 +161,7 @@ EDITORS.AnnoVE.prototype = {
 
   showAnno: function(id) {
     DEBUG.traceEntry("showAnno");
-    var value;
+    var value = "unknown";
     if (id && this.dataMgr.getEntity("ano",id)) {
       this.anoID = id;
       this.tag = "ano" + id;
@@ -166,7 +170,14 @@ EDITORS.AnnoVE.prototype = {
       this.tag = "ano" + this.anoID;
       this.entity = this.dataMgr.getEntity("ano",this.anoID);
     }
-    if (this.entTag) {
+    if (this.linkTag) {
+      if (this.dataMgr.getEntityFromGID(this.linkTag)) {
+        value = this.dataMgr.getEntityFromGID(this.linkTag).value;
+      }
+      if (!value) {
+        value = this.linkTag;
+      }
+    } else if (this.entTag) {
       if (this.dataMgr.getEntityFromGID(this.entTag)) {
         value = this.dataMgr.getEntityFromGID(this.entTag).value;
       }
@@ -478,14 +489,14 @@ EDITORS.AnnoVE.prototype = {
     var savedata ={},url, text, typeID, vis,
         annoVE = this;
     DEBUG.traceEntry("saveAnno");
-    if (this.editDiv.hasClass("dirty") && this.entTag) {
+    if (this.editDiv.hasClass("dirty") && (this.entTag || this.linkTag)) {
       url = $('div.valueInputDiv input',this.urlUI).val();
       text = this.annoTextUI.val();
       typeID = $('.buttonDiv.selected',this.typeUI).prop('trmID');
       vis = $('.buttonDiv.selected',this.visUI).prop('trmID');
       if (!this.anoID && (text.length || url.length)) {//create new annotation case
         savedata["cmd"] = "createAno";
-        savedata["linkFromGID"] = this.entTag;
+        savedata["linkFromGID"] = (this.linkTag?this.linkTag:this.entTag);
         savedata["typeID"] = typeID;
         savedata["vis"] = vis;
         if (text.length) {

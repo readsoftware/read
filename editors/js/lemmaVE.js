@@ -73,7 +73,10 @@ EDITORS.LemmaVE.prototype = {
 
   init: function() {
     DEBUG.traceEntry("init","init lemma editor");
-    if (this.prefix && this.entID && this.dataMgr.getEntity(this.prefix,this.entID)) {
+    if (this.dataMgr) {
+      this.glAnnoType = this.dataMgr.termInfo.idByTerm_ParentLabel["glossary-commentarytype"];// warning!! term dependency
+    }
+    if (this.prefix && this.entID && this.dataMgr && this.dataMgr.getEntity(this.prefix,this.entID)) {
       this.showLemma();
     } else {
       this.editDiv.html('Lemma Editor');
@@ -1234,7 +1237,7 @@ EDITORS.LemmaVE.prototype = {
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['pron.-partofspeech'] ||//term dependency
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['num.-partofspeech']))? true:false,//term dependency
         entities = [], infMap = {},entity, displayUI, infVal, inflection,
-        attested, entIDs = this.isLemma ? this.entity.entityIDs:"";
+        attested, attestedAnnoTag, attestedAnno, attestedAnnoLabel, entIDs = this.isLemma ? this.entity.entityIDs:"";
     DEBUG.traceEntry("createAttestedUI");
     //create UI container
     this.attestedUI = $('<div class="attestedUI"></div>');
@@ -1332,12 +1335,31 @@ EDITORS.LemmaVE.prototype = {
             infVal = "inflection";
           }
         }
+        attestedAnnoTag = null;
+        attestedAnno = "Annotate attested form";
+        attestedAnnoLabel = "A";
+        if (attested.linkedAnoIDsByType && attested.linkedAnoIDsByType[this.glAnnoType]) { //has a glossary annotation
+          attestedAnnoTag = "ano"+attested.linkedAnoIDsByType[this.glAnnoType][0];
+          temp = this.dataMgr.getEntityFromGID(attestedAnnoTag);
+          if (temp && temp.text && temp.text.length) {
+            attestedAnno = temp.text;
+            if (attestedAnno.length > 250) {
+              attestedAnno = attestedAnno.substring(0,249) + "…";
+            }
+            attestedAnnoLabel = "…"
+          }
+        }
         attestedEntry = $('<div class="attestedentry">' +
                             '<span class="attestedformloc '+attested.tag+'">' + (attested.locLabel?attested.locLabel:"$nbsp;") + '</span>'+
                             '<span class="attestedform '+attested.tag+'">' + attested.transcr.replace(/ʔ/g,'') + '</span>'+
                             (infVal?'<span class="inflection '+attested.tag+'">' + infVal + '</span>':'') +
+                            '<span class="attestedui '+attested.tag+'">' +
+                            '<span class="attestedannobtn '+attested.tag+'"' + ' title="'+attestedAnno+'"' + '>' +
+                                        attestedAnnoLabel + '</span>' +
                             '<span class="unlink '+attested.tag+'"><u>unlink</u></span>'+
+                            '</span>'+
                           '</div>');
+        $('.attestedannobtn',attestedEntry).prop('gid',(attestedAnnoTag?attestedAnnoTag:attested.gid));
         $('.inflection',attestedEntry).prop('gid',attested.gid);
         $('.unlink',attestedEntry).prop('gid',attested.gid);//attach entGID of attested to be unlinked
         if (infID) {//attach link to inflection if inflected entity
@@ -1355,6 +1377,10 @@ EDITORS.LemmaVE.prototype = {
       $('.editContainer').trigger('updateselection',[lemmaVE.id,[entTag],entTag]);
       e.stopImmediatePropagation();
       return false;
+    });
+    $('span.attestedannobtn',this.attestedUI).unbind("click").bind("click",function(e) {
+      //show anno editor with glossary annotation if exist
+      lemmaVE.propMgr.showVE("annoVE",$(this).prop('gid'));
     });
     $('span.inflection',this.attestedUI).unbind("click").bind("click",function(e) {
       lemmaVE.attestedUI.addClass("edit");

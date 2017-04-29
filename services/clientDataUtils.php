@@ -328,8 +328,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'modStamp' => $annotation->getModificationStamp(),
         'linkedFromIDs' => $annotation->getLinkFromIDs(),
         'linkedToIDs' => $annotation->getLinkToIDs(),
-        'value' => ($annotation->getText() ||
-                    $annotation->getURL()),//todo reformat this to have semantic term with entity value
+        'value' => ($annotation->getText()? $annotation->getText():$annotation->getURL()),//todo reformat this to have semantic term with entity value
         'readonly' => $annotation->isReadonly(),
         'url' => $annotation->getURL(),
         'typeID' => $annotation->getTypeID());
