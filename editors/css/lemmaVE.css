@@ -541,7 +541,7 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
 }
 .inflection{
   background-color: inherit!important;
-  margin-top: 10px;
+  margin-top: 5px;
   color: blue!important;
   cursor: pointer;
 }

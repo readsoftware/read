@@ -149,6 +149,17 @@ MANAGERS.PropertyManager.prototype = {
     }
   },
 
+/**
+* put your comment there...
+*
+*/
+
+  entityUpdated: function () {
+    if (this.currentVE && this.currentVE.afterUpdate) {
+      this.currentVE.afterUpdate();
+    }
+  },
+
 
 /**
 * put your comment there...

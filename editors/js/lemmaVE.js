@@ -1960,6 +1960,15 @@ EDITORS.LemmaVE.prototype = {
     this.linkRelated(fromGID, linkTypeID, toGID);
   },
 
+/**
+* put your comment there...
+*
+*/
+
+  afterUpdate: function() {
+    this.wordlistVE.updateLemmaEntry(this.entID);
+  },
+
 
 /**
 * put your comment there...

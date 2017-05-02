@@ -108,6 +108,9 @@ EDITORS.WordlistVE.prototype = {
     } else {
       propMgrCfg['ednID'] = this.ednID;
     }
+    if (this.dataMgr) {
+      this.glossAnnoType = this.dataMgr.termInfo.idByTerm_ParentLabel["glossary-commentarytype"];// warning!! term dependency
+    }
     this.propMgr = new MANAGERS.PropertyManager(propMgrCfg);
     this.displayProperties = this.propMgr.displayProperties;
     this.splitterDiv.unbind('focusin').bind('focusin',this.layoutMgr.focusHandler);
@@ -689,7 +692,7 @@ EDITORS.WordlistVE.prototype = {
   calcLemmaHtml: function (lemID) {
     var wordlistVE = this,i,j,k,cnt,html = "",tag, wtag, word, wordGIDs, inflection, infGIDs, val,
         isNoun, isPronoun, isAdjective, isNumeral, isVerb, isInflectable, cf, tempLabel, pos,
-        displayValue = '';
+        displayValue = '', wordAnnoTag, wordAnno;
     if (this.dataMgr.entities && this.dataMgr.entities.lem && this.dataMgr.entities.lem[lemID]) {
       lemma = this.dataMgr.entities.lem[lemID];
       if (!lemma.tag) {
@@ -839,17 +842,39 @@ EDITORS.WordlistVE.prototype = {
               for (j=0; j<wordGIDs.length; j++) {
                 word = this.dataMgr.getEntityFromGID(wordGIDs[j]);
                 if (word) {
+                  wordAnno = "";
+                  if (word.linkedAnoIDsByType && word.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
+                    wordAnnoTag = "ano"+word.linkedAnoIDsByType[this.glossAnnoType][0];
+                    temp = this.dataMgr.getEntityFromGID(wordAnnoTag);
+                    if (temp && temp.text && temp.text.length) {
+                      wordAnno = temp.text;
+                      if (wordAnno.length > 250) {
+                        wordAnno = wordAnno.substring(0,249) + "…";
+                      }
+                    }
+                  }
                   html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value+'">' +
                           (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                          ' ' + word.transcr.replace(/ʔ/g,'')+ '</span>';
+                          ' ' + word.transcr.replace(/ʔ/g,'') + (wordAnno?' ('+wordAnno+')':"") + '</span>';
                 }
               }
             } else {
               word = this.dataMgr.getEntityFromGID(wordGIDs[k]);
               if (word) {
+                wordAnno = "";
+                if (word.linkedAnoIDsByType && word.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
+                  wordAnnoTag = "ano"+word.linkedAnoIDsByType[this.glossAnnoType][0];
+                  temp = this.dataMgr.getEntityFromGID(wordAnnoTag);
+                  if (temp && temp.text && temp.text.length) {
+                    wordAnno = temp.text;
+                    if (wordAnno.length > 250) {
+                      wordAnno = wordAnno.substring(0,249) + "…";
+                    }
+                  }
+                }
                 html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value+'">' +
                         (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                        ' ' + word.transcr.replace(/ʔ/g,'')+ '</span>';
+                        ' ' + word.transcr.replace(/ʔ/g,'') + (wordAnno?' ('+wordAnno+')':"") + '</span>';
               }
             }
           }
@@ -858,9 +883,20 @@ EDITORS.WordlistVE.prototype = {
           for (j=0; j<wordGIDs.length; j++) {
             word = this.dataMgr.getEntityFromGID(wordGIDs[j]);
             if (word) {
+              wordAnno = "";
+              if (word.linkedAnoIDsByType && word.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
+                wordAnnoTag = "ano"+word.linkedAnoIDsByType[this.glossAnnoType][0];
+                temp = this.dataMgr.getEntityFromGID(wordAnnoTag);
+                if (temp && temp.text && temp.text.length) {
+                  wordAnno = temp.text;
+                  if (wordAnno.length > 250) {
+                    wordAnno = wordAnno.substring(0,249) + "…";
+                  }
+                }
+              }
               html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value+'">' +
                       (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                      ' ' + word.transcr.replace(/ʔ/g,'')+ '</span>';
+                      ' ' + word.transcr.replace(/ʔ/g,'') + (wordAnno?' ('+wordAnno+')':"") + '</span>';
             }
           }
         }

@@ -543,6 +543,9 @@ EDITORS.AnnoVE.prototype = {
                     annoVE.propMgr.showVE();
                   }
                 }
+                if (annoVE.propMgr && annoVE.propMgr.entityUpdated) {
+                  annoVE.propMgr.entityUpdated();
+                }
               }
               if (data.errors) {
                 alert("An error occurred while trying to save annotation record. Error: " + data.errors.join());
