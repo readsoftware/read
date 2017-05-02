@@ -336,6 +336,14 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
   width: 96%;
   margin-left: 5px;
 }
+.linkLikeFormsDiv{
+  text-align: justify;
+  width: 96%;
+  margin-left: 5px;
+  background-color: rgb(242,242,242);
+  border: 1px solid darkgrey;
+  display: flex;
+}
 .radioGroupUI{
   text-align: justify;
   width: 96%;
@@ -391,7 +399,7 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
   border: 1px solid darkgrey;
   display: inline-flex;
 }
-.saveBtnDiv, .clearBtnDiv{
+.saveBtnDiv, .cancelBtnDiv, .clearBtnDiv{
 /*  display: inline-block;*/
   background-color: rgb(146,146,146);
   color: white!important;
@@ -576,6 +584,13 @@ span.unlink, div.sandhibtn, span.attestedannobtn{
   cursor: pointer;
   float: right;
   padding-right: 10px;
+  font-size: 98%;
+}
+.linkAttestedFormButton{
+  background-color: inherit!important;
+  color: blue!important;
+  cursor: pointer;
+  padding: 10px;
   font-size: 98%;
 }
 #btnupload{

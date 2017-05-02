@@ -1001,7 +1001,7 @@ EDITORS.LemmaVE.prototype = {
 
   linkAttestedForm: function(attestedGID) {
     var lemmaVE = this;
-    this.saveLemma(null, attestedGID, null, null, true);
+    this.saveLemma(null, attestedGID, (this.linkToInfID?this.linkToInfID:null), null, true);
   },
 
 
@@ -1091,7 +1091,8 @@ EDITORS.LemmaVE.prototype = {
         list2ndConj = [{label: "desid.",trmID:857},
                        {label: "intens.",trmID:859}],
         listCtrl = [{label: "Save",type:"saveBtnDiv"},
-                    {label: "Clear",type:"clearBtnDiv"}];
+                    {label: "Clear",type:"clearBtnDiv"},
+                    {label: "Cancel",type:"cancelBtnDiv"}];
     //find the show inflection UI indicators
     posSelectedBtns = $('.posEditUI button.buttonDiv.selected',lemmaVE.posUI);
     if (posSelectedBtns.length == 0) {
@@ -1160,6 +1161,9 @@ EDITORS.LemmaVE.prototype = {
         infEdit.addClass(showSub);
       }
     }
+    if (infID) { //link direct UI for inflecting tokens with the current inflection values.
+      infEdit.append('<div class="linkLikeFormsDiv"><span class="linkAttestedFormButton"><u>Link Attested Form</u></span></div>');
+    }
     //click to clear
     $('.clearBtnDiv',infEdit).unbind("click").bind("click",function(e) {
       var ctxDiv = infEdit;
@@ -1189,6 +1193,19 @@ EDITORS.LemmaVE.prototype = {
           ctxDiv.removeClass("dirty");
         }
       }
+      if (lemmaVE.linkToInfID) {
+        delete lemmaVE.linkToInfID;
+        lemmaVE.wordlistVE.setLinkMode(false);
+        $('span.linkAttestedFormButton',this.infEdit).html('<u>Link Attested Form</u>');
+      }
+    });
+    //save inflection data
+    $('.cancelBtnDiv',infEdit).unbind("click").bind("click",function(e) {
+      lemmaVE.attestedUI.removeClass("edit");
+      if (lemmaVE.linkToInfID) {
+        delete lemmaVE.linkToInfID;
+        lemmaVE.wordlistVE.setLinkMode(false);
+      }
     });
     //save inflection data
     $('.saveBtnDiv',infEdit).unbind("click").bind("click",function(e) {
@@ -1217,7 +1234,25 @@ EDITORS.LemmaVE.prototype = {
         infEdit.removeClass('dirty');
       }
       lemmaVE.attestedUI.removeClass("edit");
+      if (lemmaVE.linkToInfID) {
+        delete lemmaVE.linkToInfID;
+        lemmaVE.wordlistVE.setLinkMode(false);
+      }
     });
+    if (infID) {
+      $('span.linkAttestedFormButton',this.infEdit).unbind("click").bind("click",function(e) {
+        if ($(this).text() == 'Link Attested Form') {//switch to linking mode for directly linking attested forms with the same inflection
+          $(this).html('<u>Cancel link attested mode</u>');
+          lemmaVE.linkToInfID = infID;
+          lemmaVE.wordlistVE.setLinkMode(true);
+        } else {//cancel linking mode
+          $(this).html('<u>Link Attested Form</u>');
+          delete lemmaVE.linkToInfID;
+          lemmaVE.wordlistVE.setLinkMode(false);
+          lemmaVE.showLemma();
+        }
+      });
+    }
   },
 
 /************* Attested Form Interface ****************/
@@ -1854,10 +1889,9 @@ EDITORS.LemmaVE.prototype = {
       savedata["cmd"] = "inflectTok";
       savedata["lemID"] = this.entID;
       savedata["tokGID"] = tokGID;
-      if (infID) {
-        savedata["infID"] = infID;
+      if (infProps) {
+        savedata["infProps"] = infProps;
       }
-      savedata["infProps"] = infProps;
     }
     if (DEBUG.healthLogOn) {
       savedata['hlthLog'] = 1;
@@ -1912,7 +1946,9 @@ EDITORS.LemmaVE.prototype = {
                   //REPLACE WITH updateLemmaEntry
                   //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
                   lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
-                  lemmaVE.showLemma('lem',oldLemID);
+                  if (!lemmaVE.linkToInfID) {//if linkTo then don't update lemmaVE display, still in link mode
+                    lemmaVE.showLemma('lem',oldLemID);
+                  }
                   lemmaVE.wordlistVE.removeWordEntry(tokGID);
                   break;
                 case "unlinkTok":

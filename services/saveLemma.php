@@ -338,7 +338,21 @@ if (count($errors) == 0) {
       }
       break;
     case "linkTok":
-      if ($lemma) {
+      if ($inflection) {// add token to passed inflection
+        $entIDs = $inflection->getComponentIDs();
+        if ($entIDs && is_array($entIDs)) {
+          array_push($entIDs,$tokGID);
+        } else {
+          $entIDs = array($tokGID);
+        }
+        $inflection->setComponentIDs($entIDs);
+        $inflection->save();
+        if ($inflection->hasError()) {
+          array_push($errors,"error updating inflection '".$inflection->getID()."' - ".$inflection->getErrors(true));
+        } else {
+          addUpdateEntityReturnData('inf',$inflection->getID(),'entityIDs',$inflection->getComponentIDs());
+        }
+      } else if ($lemma) {
         $entIDs = $lemma->getComponentIDs();
         if ($entIDs && is_array($entIDs)) {
           array_push($entIDs,$tokGID);
