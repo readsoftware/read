@@ -402,7 +402,7 @@ EDITORS.ImageVE.prototype = {
             return;
           }
         }
-        alert("Please select a syllable cluster for segment #" + selectedSeg);
+        alert("Please select a syllable cluster or segment for segment #" + selectedSeg);
         imgVE.linkSource = selectedSeg;
         $('.editContainer').trigger('linkRequest',[imgVE.id,selectedSeg]);
       }else{
@@ -732,7 +732,20 @@ EDITORS.ImageVE.prototype = {
 */
 
   getIndexbyPolygonName: function (label) {
-    return this.polygonLookup[label];
+    var imgVE = this, index = null;
+    if (this.polygonLookup[label]) {
+      index = this.polygonLookup[label];
+    } else if (label.match(/seg/)) { //check mapped segments
+      segment = this.dataMgr.getEntityFromGID(label);
+      if (segment && segment.mappedSegIDs && segment.mappedSegIDs.length) {
+        $.each(segment.mappedSegIDs, function(i,val) {
+          if (!index && imgVE.polygonLookup['seg'+val]) {
+            index = imgVE.polygonLookup['seg'+val];
+          }
+        });
+      }
+    }
+    return index;
   },
 
 
@@ -807,8 +820,18 @@ EDITORS.ImageVE.prototype = {
 */
 
   selectPolygonByName: function (label) {
+    var imgVE = this;
     if (this.polygonLookup[label]) {
       this.selectedPolygons[label] = 1;
+    } else if (label.match(/seg/)) { //check mapped segments
+      segment = this.dataMgr.getEntityFromGID(label);
+      if (segment && segment.mappedSegIDs && segment.mappedSegIDs.length) {
+        $.each(segment.mappedSegIDs, function(i,val) {
+          if (imgVE.polygonLookup['seg'+val]) {
+            imgVE.selectedPolygons['seg'+val] = 1;
+          }
+        });
+      }
     }
   },
 
@@ -831,7 +854,7 @@ EDITORS.ImageVE.prototype = {
 */
 
   setImagePolygonHilite: function(index,hilite){
-    if (index == 0 || isNaN(index) || index > this.polygons.length) return;
+    if (index === null || index == 0 || isNaN(index) || index > this.polygons.length) return;
     if (hilite || hilite === false) {
       this.polygons[index-1].hilite = hilite;
     }
@@ -1746,8 +1769,10 @@ EDITORS.ImageVE.prototype = {
                     segLabel = 'seg'+segID;
                     // update cached data
                     segSylIDs = imgVE.dataMgr.entities['seg'][segID]['sclIDs'] ? imgVE.dataMgr.entities['seg'][segID]['sclIDs']:[];
-                    segSylIDs.push(sclID);
-                    imgVE.dataMgr.entities['seg'][segID]['sclIDs'] = segSylIDs;
+                    if (segSylIDs.indexOf(sclID) == -1) {
+                      segSylIDs.push(sclID);
+                      imgVE.dataMgr.entities['seg'][segID]['sclIDs'] = segSylIDs;
+                    }
                     imgVE.dataMgr.entities['scl'][sclID]['segID'] = segID;
                     imgVE.polygons[imgVE.polygonLookup[segLabel]-1].linkIDs = segSylIDs;
                     imgVE.polygons[imgVE.polygonLookup[segLabel]-1].color = "";

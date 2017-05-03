@@ -205,6 +205,10 @@ function addNewEntityReturnData($prefix,$entity) {
       if ($stringpos && count($stringpos) > 0) {
         $entities["insert"]['seg'][$entID]['stringpos']= $stringpos;
       }
+      $mappedSegIDs = $segment->getMappedSegmentIDs();
+      if (count($mappedSegIDs) > 0) {
+        $entities["insert"]['seg'][$entID]['mappedSegIDs'] = $mappedSegIDs;
+      }
       break;
     case 'lem':
       $lemma = $entity;

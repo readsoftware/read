@@ -180,6 +180,10 @@
           $entities["insert"]['seg'][$segID]['boundary']= array($boundary->getPoints());
           $entities["insert"]['seg'][$segID]['urls']= $segment->getURLs();
         }
+        $mappedSegIDs = $segment->getMappedSegmentIDs();
+        if (count($mappedSegIDs) > 0) {
+          $entities["insert"]['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
+        }
         $stringpos = $segment->getStringPos();
         if ($stringpos && count($stringpos) > 0) {
           $entities["insert"]['seg'][$segID]['stringpos']= $stringpos;

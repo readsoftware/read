@@ -153,13 +153,21 @@
               array_push($entities['bln'][$blnID]['segIDs'],$segID);
               if ($segID && !array_key_exists($segID, $entities['seg'])) {
                 $entities['seg'][$segID] = array( 'surfaceID'=> $srfID,
-                                       'baselineIDs' => $segment->getBaselineIDs(),
-                                       'layer' => $segment->getLayer());
+                                        'baselineIDs' => $segment->getBaselineIDs(),
+                                        'layer' => $segment->getLayer(),
+                                        'id' => $segID,
+                                        'readonly' => $segment->isReadonly(),
+                                        'center' => $segment->getCenter(),
+                                        'value' => 'seg'.$segID);
                 $boundary = $segment->getImageBoundary();
                 if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
                   $boundary = $boundary[0];
                   $entities['seg'][$segID]['boundary']= array($boundary->getPoints());
                   $entities['seg'][$segID]['urls']= $segment->getURLs();
+                }
+                $mappedSegIDs = $segment->getMappedSegmentIDs();
+                if (count($mappedSegIDs) > 0) {
+                  $entities['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
                 }
                 $stringpos = $segment->getStringPos();
                 if ($stringpos && count($stringpos) > 0) {
