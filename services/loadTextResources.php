@@ -172,10 +172,11 @@
     foreach ($baselines as $baseline) {
       $blnID = $baseline->getID();
       if ($blnID && !array_key_exists($blnID, $entities['update']['bln'])) {
-        $entities['update']['bln'][$blnID] = array('url' => $baseline->getURL(),
+        $url = $baseline->getURL();
+        $entities['update']['bln'][$blnID] = array('url' => $url,
                                                    'id' => $blnID,
                                                    'type' => $baseline->getType(),
-                                                   'value' => ($baseline->getURL()?$baseline->getURL():$baseline->getTranscription()),
+                                                   'value' => ($url?$url:$baseline->getTranscription()),
                                                    'readonly' => $baseline->isReadonly(),
                                                    'transcription' => $baseline->getTranscription(),
                                                    'boundary' => $baseline->getImageBoundary());
@@ -188,6 +189,11 @@
               array_push($entities['update']['txt'][$blnTxtID]['blnIDs'],$blnID);
             }
           }
+        }
+        if ($url) {
+          $info = pathinfo($url);
+          $thumbUrl = $info['dirname']."/th".$info['basename'];
+          $entities['update']['bln'][$imgID]['thumbUrl'] = $thumbUrl;
         }
         $bImgID = $baseline->getImageID();
         if ($bImgID) {

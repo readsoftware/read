@@ -874,23 +874,27 @@ EDITORS.PaleoVE.prototype = {
       //find the segment for each syllable
       for(i in sclCell.syllables) {
         syllable = sclCell.syllables[i];
-        if (syllable && syllable.segID) {
-          segment = this.dataMgr.getEntity('seg',syllable.segID);
-          if (segment && segment.urls && segment.urls.length) {//tod add code to handle separate urls
-            if (!url || syllable.def) {
-              url = segment.urls[0];
+        if (syllable) {
+          if(syllable.segID) {
+            segment = this.dataMgr.getEntity('seg',syllable.segID);
+            if (segment && segment.urls && segment.urls.length) {//tod add code to handle separate urls
+              if (!url || syllable.def) {
+                url = segment.urls[0];
+              }
             }
           }
           if (!segDiv) {
             title = syllable.value.replace('ʔ','')+ " (Line: "+syllable.line+" Akṣara:"+syllable.pos+")";
-            segDiv = $('<div class="segDiv scl'+syllable.id+' seg'+syllable.segID+'" title="'+title+'"/>');
+            segDiv = $('<div class="segDiv scl'+syllable.id+'" title="'+title+'"/>');
             segImg = $('<img class="cellSegImg" alt="'+sclStr+'"/>');
             segDiv.append(segImg);
             sclCellDiv.append(segDiv);
           } else {
-            segDiv.addClass('seg'+syllable.segID);
             title += "\n"+syllable.value.replace('ʔ','')+ " (Line: "+syllable.line+" Akṣara:"+syllable.pos+")";
             segDiv.attr('title',title);
+          }
+          if (syllable.segID) {
+            segDiv.addClass('seg'+syllable.segID);
           }
         }
       }
