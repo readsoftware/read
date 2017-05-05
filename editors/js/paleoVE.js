@@ -894,7 +894,9 @@ EDITORS.PaleoVE.prototype = {
           }
         }
       }
-      segImg.attr('src',(url?url:defaultUrl));
+      if (segImg) {
+        segImg.attr('src',(url?url:defaultUrl));
+      }
       return sclCellDiv;
     } else {
       return $('<div/>');
