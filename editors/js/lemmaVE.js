@@ -1801,7 +1801,7 @@ EDITORS.LemmaVE.prototype = {
     if (Object.keys(relEntGIDsByType).length) {
       for (i in relEntGIDsByType) {
         linkType = this.dataMgr.getTermFromID(i);
-        displayUI.append($('<div class="relUISection"><span>'+linkType+' for :'+'</span></div>'));
+        displayUI.append($('<div class="relUISection"><span>'+linkType+'</span></div>'));
         relEntIDs = relEntGIDsByType[i];
         for (j in relEntIDs) {
           entGID =  relEntIDs[j];

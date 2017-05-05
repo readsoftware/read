@@ -1524,9 +1524,9 @@ EDITORS.ImageVE.prototype = {
             h = imgVE.aPolyH ? imgVE.aPolyH:20,
             hU = Math.round(h/2), hL = h - hU; //split size accounting for odd size
         if (x-wL < 0) x = wL;
-        if (x+wR > imgVE.imgCanvas.width) x = imgVE.imgCanvas.width - wR;
+        if (x+wR > imgVE.image.width) x = imgVE.image.width - wR;
         if (y-hU < 0) y = hU;
-        if (y+hL > imgVE.imgCanvas.height) y = imgVE.imgCanvas.height - hL;
+        if (y+hL > imgVE.image.height) y = imgVE.image.height - hL;
         imgVE.path = [[x-wL,y-hU],[x+wR,y-hU],[x+wR,y+hL],[x-wL,y+hL]];
         imgVE.draw();
       } else if (imgVE.orderSegMode == "on") { //ordering segments so call service to set ordinal of clicked polygon
@@ -2249,7 +2249,7 @@ EDITORS.ImageVE.prototype = {
           this.imgContext.strokeText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
           this.imgContext.lineWidth = 3 ;
         } else {
-          this.imgContext.strokeStyle = "red";
+          this.imgContext.strokeStyle = "blue";
           this.imgContext.lineWidth = 2 ;
         }
       }
