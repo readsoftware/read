@@ -184,6 +184,10 @@
         if (count($mappedSegIDs) > 0) {
           $entities["insert"]['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
         }
+        $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
+        if ($segBlnOrder) {
+          $entities["insert"]['seg'][$segID]['ordinal'] = $segBlnOrder;
+        }
         $stringpos = $segment->getStringPos();
         if ($stringpos && count($stringpos) > 0) {
           $entities["insert"]['seg'][$segID]['stringpos']= $stringpos;

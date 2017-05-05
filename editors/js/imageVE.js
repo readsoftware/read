@@ -121,13 +121,19 @@ EDITORS.ImageVE =  function(imgVECfg) {
   }
 
   if (this.blnEntity && this.blnEntity.segIDs && this.blnEntity.segIDs.length > 0) {
-    var i, len = this.blnEntity.segIDs.length;
+    var i, len = this.blnEntity.segIDs.length, maxOrdinal = 0, segOrdinal;
     for (i=0; i<len; i++) {// add segments to baseline image
       segID = this.blnEntity.segIDs[i];
       segment = this.dataMgr.entities['seg'][segID];
-      //WARNING todo add code for multiple polygon boundary
-      this.addImagePolygon(segment.boundary[0],"seg"+segID,false,segment['sclIDs'],segment.center);//WARNING!! todo code change boundary can be multiple polygons
+      if (segment) {
+        if (segment.ordinal && segment.ordinal > maxOrdinal) {
+          maxOrdinal = segment.ordinal;
+        }
+        //WARNING todo add code for multiple polygon boundary
+        this.addImagePolygon(segment.boundary[0],"seg"+segID,false,segment['sclIDs'],segment.center,(segment.ordinal?segment.ordinal:null));//WARNING!! todo code change boundary can be multiple polygons
+      }
     }
+    this.nextSegOrdinal = 1 + parseInt(maxOrdinal);
   }
 
   //adjust initial size of image canvas
@@ -220,13 +226,14 @@ EDITORS.ImageVE.prototype = {
     this.navDIV.style.width = width + 'px';
     this.navDIV.style.height = (height + 35) + 'px';
     this.navDIV.className = 'navDiv';
-    //position this to the righthand side less 20 pixels
-//    this.navDIV.style.left =  '' + (this.imgCanvas.width - 20 - width) + 'px';
     this.navDIV.style.left =  this.navPositionLeft + 'px';;
     this.navDIV.style.top =  this.navPositionTop + 'px';
     this.initViewport();
     this.draw();
     this.createStaticToolbar();
+    if (!this.nextSegOrdinal) {
+      this.nextSegOrdinal = 1;
+    }
   },
 
 
@@ -241,7 +248,7 @@ EDITORS.ImageVE.prototype = {
 
 
 /**
-* put your comment there...
+* sets the focus on the canvas element
 *
 */
 
@@ -251,7 +258,7 @@ EDITORS.ImageVE.prototype = {
 
 
 /**
-* put your comment there...
+* saves a new created polygon
 *
 */
 
@@ -281,7 +288,7 @@ EDITORS.ImageVE.prototype = {
       //save polygon segment
       $.ajax({
           dataType: 'json',
-          url: basepath+'/services/saveEntityData.php?db='+dbName,
+          url: basepath+'/services/saveEntityData.php?db='+dbName, //TODO: convert this to saveSegment service with update cache model
           data: 'data='+JSON.stringify(savedata),
           asynch: false,
           success: function (data, status, xhr) {
@@ -312,7 +319,7 @@ EDITORS.ImageVE.prototype = {
                                               center:UTILITY.getCentroid(record[imgPosIndex]),
                                               layer: record[layerIndex],
                                               surfaceID: imgVE.blnEntity.surfaceID,
-                                              id:segID
+                                              id:segID,
                                               };
                     // add new lookup seg:id for newX index
                     imgVE.polygonLookup[segLabel] = imgVE.polygonLookup[segIDToTemp[segID]];
@@ -427,8 +434,8 @@ EDITORS.ImageVE.prototype = {
                               '" title="Replace select segment polygon with new one">&#x25C8;</button>'+
                             '<div class="toolbuttonlabel">Replace polygon</div>'+
                            '</div>');
-    $('#'+btnReplacePolyName,this.replacePolyBtnDiv).unbind('click')
-                               .bind('click',function(e) {
+    // replace polygon code
+    $('#'+btnReplacePolyName,this.replacePolyBtnDiv).unbind('click').bind('click',function(e) {
       if (!Object.keys(imgVE.selectedPolygons).length ||
            Object.keys(imgVE.selectedPolygons).length > 1 ) {
         DEBUG.log("warn","Must select just one segment to be replaced. Aborting!");
@@ -501,6 +508,101 @@ EDITORS.ImageVE.prototype = {
       });
     });
 
+    var btnSegOrdinalName = this.id+'orderSeg';
+    this.orderSegBtnDiv = $('<div class="toolbuttondiv">' +
+                            '<button class="toolbutton iconbutton" id="'+btnSegOrdinalName +
+                              '" title="Delete selected segments">Off</button>'+
+                            '<div class="toolbuttonlabel">Order Segments</div>'+
+                           '</div>');
+    this.orderSegBtn = $('#'+btnSegOrdinalName,this.orderSegBtnDiv);
+    imgVE.orderSegMode = "off";
+    //set segment order code
+    this.orderSegBtn.unbind('click').bind('click',function(e) {
+          var savedata ={};
+          if (imgVE.linkMode) {
+            return;
+          }
+          switch (imgVE.orderSegMode) {
+            case 'off':
+              //ask user if continue or restart
+              if (!confirm("Would you like to continue ordering segments from the next availble ordinal "+
+                            imgVE.nextSegOrdinal + ". Press cancel to reset and begin ordering from 1.")) {
+                //restart - call service to clear seg ordinals with success update cache, set nextOrdinal = 1 and redraw
+                savedata["cmd"] = "clearOrdinals";
+                savedata["blnID"] = imgVE.blnEntity.id;
+                // set state on
+                imgVE.orderSegMode = "resetting";
+                //update btn html
+                imgVE.orderSegBtn.html("Resetting");
+                //jqAjax synch save
+                $.ajax({
+                    type: 'POST',
+                    dataType: 'json',
+                    url: basepath+'/services/orderSegment.php?db='+dbName,//caution dependency on context having basepath and dbName
+                    data: savedata,
+                    async: true,
+                    success: function (data, status, xhr) {
+                        var segID,polygon;
+                        if (typeof data == 'object' && data.success ) {
+                          //update data
+                          if (data.entities){
+                            imgVE.dataMgr.updateLocalCache(data,null);
+                            if (data.entities.removeprop && data.entities.removeprop.seg) {
+                              for (segID in data.entities.removeprop.seg) {
+                                if (data.entities.removeprop.seg[segID][0] == 'ordinal') {
+                                  polygon = imgVE.polygons[imgVE.polygonLookup['seg'+segID]-1];
+                                  if (polygon.order) {
+                                    delete polygon.order;
+                                  }
+                                }
+                              }
+                            }
+                          }
+                          // set state on
+                          imgVE.orderSegMode = "on";
+                          //update btn html
+                          imgVE.orderSegBtn.html("On");
+                          imgVE.drawImage();
+                          imgVE.drawImagePolygons();
+                          imgVE.nextSegOrdinal = 1;
+                        }
+                        if (data.editionHealth) {
+                          DEBUG.log("health","***Save Lemma cmd="+cmd+"***");
+                          DEBUG.log("health","Params: "+JSON.stringify(savedata));
+                          DEBUG.log("health",data.editionHealth);
+                        }
+                        if (data.errors) {
+                          alert("An error occurred while trying to resetting segment ordinals for baseline bln"+imgVE.blnEntity.id+". Error: " + data.errors.join());
+                        }
+                    },
+                    error: function (xhr,status,error) {
+                        // add record failed.
+                        alert("An error occurred while trying to resetting segment ordinals for baseline bln"+imgVE.blnEntity.id+". Error: " + error);
+                    }
+                });
+              } else {//continue - redraw
+                // set state on
+                imgVE.orderSegMode = "on";
+                //update btn html
+                $(this).html("On");
+                imgVE.drawImage();
+                imgVE.drawImagePolygons();
+              }
+              break;
+            case 'setting':
+            case 'resetting':
+            case 'on':
+              // set state off
+              imgVE.orderSegMode = "off";
+              //update btn html
+              $(this).html("Off");
+              // redraw
+              imgVE.drawImage();
+              imgVE.drawImagePolygons();
+              break;
+          }
+        });
+
     var btnDeleteSegName = this.id+'deleteSeg';
     this.deleteSegBtnDiv = $('<div class="toolbuttondiv">' +
                             '<button class="toolbutton iconbutton" id="'+btnDeleteSegName +
@@ -508,8 +610,8 @@ EDITORS.ImageVE.prototype = {
                             '<div class="toolbuttonlabel">Delete Segment</div>'+
                            '</div>');
     this.delSegBtn = $('#'+btnDeleteSegName,this.deleteSegBtnDiv);
-    this.delSegBtn.unbind('click')
-                  .bind('click',function(e) {
+    //delete segment code
+    this.delSegBtn.unbind('click').bind('click',function(e) {
       var i,
           deldata = {seg:[]},
           polygon,
@@ -647,10 +749,13 @@ EDITORS.ImageVE.prototype = {
                 .append(this.imgFadeBtnDiv)
                 .append(this.imgNormalBtnDiv);
     this.layoutMgr.registerViewToolbar(this.id,this.viewToolbar);
-    this.editToolbar.append(this.linkSegBtnDiv)
-                .append(this.savePolysBtnDiv)
-                .append(this.replacePolyBtnDiv)
-                .append(this.deleteSegBtnDiv);
+    if (this.blnEntity) {
+      this.editToolbar.append(this.linkSegBtnDiv)
+                  .append(this.savePolysBtnDiv)
+                  .append(this.replacePolyBtnDiv)
+                  .append(this.deleteSegBtnDiv)
+                  .append(this.orderSegBtnDiv);
+    }
     this.layoutMgr.registerEditToolbar(this.id,this.editToolbar);
   },
 
@@ -759,7 +864,7 @@ EDITORS.ImageVE.prototype = {
 * @param center
 */
 
-  addImagePolygon: function (polygon,label,visible,linkIDs,center) {
+  addImagePolygon: function (polygon,label,visible,linkIDs,center,ordinal) {
     //todo add code to validate the polygon
     var clr = "green";
     if (!linkIDs){
@@ -767,6 +872,7 @@ EDITORS.ImageVE.prototype = {
     }
     this.polygons.push({polygon:polygon,
                         center: center?center:UTILITY.getCentroid(polygon),
+                        order: ordinal?ordinal:null,
                         color:clr,
                         width:1, //polygon width
                         label:label,
@@ -1338,63 +1444,64 @@ EDITORS.ImageVE.prototype = {
 */
     imgVE.segMode = "done";
     imgVE.imgCanvas.ondblclick = function (e){
-      var pt = imgVE.eventToCanvas(e, imgVE.imgCanvas);
-      //adjust point to be image coordinates
-      var x = (imgVE.vpLoc.x * imgVE.image.width / imgVE.navCanvas.width + imgVE.vpSize.width/imgVE.navCanvas.width*imgVE.image.width * pt[0]/imgVE.imgCanvas.width),
-          y = (imgVE.vpLoc.y * imgVE.image.height / imgVE.navCanvas.height + imgVE.vpSize.height/imgVE.navCanvas.height*imgVE.image.height * pt[1]/imgVE.imgCanvas.height),
-          i,index,gid,bBox;
-      //hittest for target polygons
-      var hitPolyIndices = imgVE.hitTestPolygons(x,y);
-      //unselect existing if no ctrl key pressed
-      if (!e.ctrlKey) {
-        imgVE.selectedPolygons = {};
-        // save shift click rectagular size of first hitTest polygon so works for only dblclick polygon
-        index = hitPolyIndices[0];
-        if (index) {
-          bBox = UTILITY.getBoundingRect(imgVE.polygons[index -1].polygon);
-          imgVE.aPolyW = bBox[2][0] - bBox[0][0];
-          imgVE.aPolyH = bBox[2][1] - bBox[0][1];
-        }
-      }
-      //add indices to selected array
-      for (i=0; i < hitPolyIndices.length; i++) {
-        index = hitPolyIndices[i];
-        gid = imgVE.polygons[index -1].label;
-        imgVE.propMgr.showVE(null,gid);
-        imgVE.selectedPolygons[gid] = 1;
-//        imgVE.selectedPolygons[index] = 1;
-      }
-
-      if (imgVE.selectedPolygons && Object.keys(imgVE.selectedPolygons).length > 0) {
-        if ( Object.keys(imgVE.selectedPolygons).length == 1) {
-          //enable delete button
-          imgVE.delSegBtn.removeAttr('disabled');
-        } else {//check for duplicate overlaying polygons
-          selectedTags = Object.keys(imgVE.selectedPolygons);
-          firstPoly = imgVE.polygons[imgVE.polygonLookup[selectedTags[0]]-1];
-          firstPolyVerts = firstPoly.polygon.join();
-          for (i = 1; i < selectedTags.length; i++) {
-            testPoly = imgVE.polygons[imgVE.polygonLookup[selectedTags[i]]-1];
-            if (testPoly.polygon.join() == firstPolyVerts) {
-              delete imgVE.selectedPolygons[selectedTags[i]];
-            }
+      if (imgVE.orderSegMode == "off") {
+        var pt = imgVE.eventToCanvas(e, imgVE.imgCanvas);
+        //adjust point to be image coordinates
+        var x = (imgVE.vpLoc.x * imgVE.image.width / imgVE.navCanvas.width + imgVE.vpSize.width/imgVE.navCanvas.width*imgVE.image.width * pt[0]/imgVE.imgCanvas.width),
+            y = (imgVE.vpLoc.y * imgVE.image.height / imgVE.navCanvas.height + imgVE.vpSize.height/imgVE.navCanvas.height*imgVE.image.height * pt[1]/imgVE.imgCanvas.height),
+            i,index,gid,bBox;
+        //hittest for target polygons
+        var hitPolyIndices = imgVE.hitTestPolygons(x,y);
+        //unselect existing if no ctrl key pressed
+        if (!e.ctrlKey) {
+          imgVE.selectedPolygons = {};
+          // save shift click rectagular size of first hitTest polygon so works for only dblclick polygon
+          index = hitPolyIndices[0];
+          if (index) {
+            bBox = UTILITY.getBoundingRect(imgVE.polygons[index -1].polygon);
+            imgVE.aPolyW = bBox[2][0] - bBox[0][0];
+            imgVE.aPolyH = bBox[2][1] - bBox[0][1];
           }
-          if (Object.keys(imgVE.selectedPolygons).length == 1) {
+        }
+        //add indices to selected array
+        for (i=0; i < hitPolyIndices.length; i++) {
+          index = hitPolyIndices[i];
+          gid = imgVE.polygons[index -1].label;
+          imgVE.propMgr.showVE(null,gid);
+          imgVE.selectedPolygons[gid] = 1;
+        }
+
+        if (imgVE.selectedPolygons && Object.keys(imgVE.selectedPolygons).length > 0) {
+          if ( Object.keys(imgVE.selectedPolygons).length == 1) {
             //enable delete button
             imgVE.delSegBtn.removeAttr('disabled');
-          } else if (!imgVE.delSegBtn.attr('disabled') && Object.keys(imgVE.selectedPolygons).length > 1){
-            //disable delete button
-            imgVE.delSegBtn.attr('disabled','disabled');
+          } else {//check for duplicate overlaying polygons
+            selectedTags = Object.keys(imgVE.selectedPolygons);
+            firstPoly = imgVE.polygons[imgVE.polygonLookup[selectedTags[0]]-1];
+            firstPolyVerts = firstPoly.polygon.join();
+            for (i = 1; i < selectedTags.length; i++) {
+              testPoly = imgVE.polygons[imgVE.polygonLookup[selectedTags[i]]-1];
+              if (testPoly.polygon.join() == firstPolyVerts) {
+                delete imgVE.selectedPolygons[selectedTags[i]];
+              }
+            }
+            if (Object.keys(imgVE.selectedPolygons).length == 1) {
+              //enable delete button
+              imgVE.delSegBtn.removeAttr('disabled');
+            } else if (!imgVE.delSegBtn.attr('disabled') && Object.keys(imgVE.selectedPolygons).length > 1){
+              //disable delete button
+              imgVE.delSegBtn.attr('disabled','disabled');
+            }
           }
         }
-      }
-      //redraw
-      imgVE.drawImage();
-      imgVE.drawImagePolygons();
-      if (imgVE.linkMode) {
-        $('.editContainer').trigger('linkResponse',[imgVE.id,imgVE.getSelectedPolygonLabels()[0]]);
-      } else {
-        $('.editContainer').trigger('updateselection',[imgVE.id,imgVE.getSelectedPolygonLabels()]);
+        //redraw
+        imgVE.drawImage();
+        imgVE.drawImagePolygons();
+        if (imgVE.linkMode) {
+          $('.editContainer').trigger('linkResponse',[imgVE.id,imgVE.getSelectedPolygonLabels()[0]]);
+        } else {
+          $('.editContainer').trigger('updateselection',[imgVE.id,imgVE.getSelectedPolygonLabels()]);
+        }
       }
     };
 
@@ -1409,7 +1516,9 @@ EDITORS.ImageVE.prototype = {
         imgVE.imgCanvas.focus();
         imgVE.layoutMgr.curLayout.trigger('focusin',imgVE.id);
       }
-      if (e.shiftKey && !(e.ctrlKey || e.altKey)) {
+      if (imgVE.orderSegMode == "resetting" || imgVE.orderSegMode == "setting") { //(re)setting segment(s) ordinal so ignore clicks
+        return;
+      } else if (e.shiftKey && !(e.ctrlKey || e.altKey)) {
         var w = imgVE.aPolyW ? imgVE.aPolyW:20,
             wL = Math.round(w/2), wR = w - wL, //split size accounting for odd size
             h = imgVE.aPolyH ? imgVE.aPolyH:20,
@@ -1420,6 +1529,65 @@ EDITORS.ImageVE.prototype = {
         if (y+hL > imgVE.imgCanvas.height) y = imgVE.imgCanvas.height - hL;
         imgVE.path = [[x-wL,y-hU],[x+wR,y-hU],[x+wR,y+hL],[x-wL,y+hL]];
         imgVE.draw();
+      } else if (imgVE.orderSegMode == "on") { //ordering segments so call service to set ordinal of clicked polygon
+          var hitPolyIndices = imgVE.hitTestPolygons(x,y),
+              segTag, savedata = {};
+          // polygon hit then mark segment with next ordinal
+          if (hitPolyIndices.length > 0) {
+            index = hitPolyIndices[0];
+            segTag = imgVE.polygons[index -1].label;
+            savedata["cmd"] = "setOrdinal";
+            savedata["segID"] = segTag.substring(3);
+            savedata["ord"] = imgVE.nextSegOrdinal;
+            // set state on
+            imgVE.orderSegMode = "setting";
+            //update btn html
+            imgVE.orderSegBtn.html("Setting");
+            //jqAjax synch save
+            $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: basepath+'/services/orderSegment.php?db='+dbName,//caution dependency on context having basepath and dbName
+                data: savedata,
+                async: true,
+                success: function (data, status, xhr) {
+                    var segID, polygon;
+                    if (typeof data == 'object' && data.success && data.entities) {
+                      //update data
+                      imgVE.dataMgr.updateLocalCache(data,null);
+                      imgVE.nextSegOrdinal = 1 + parseInt(imgVE.nextSegOrdinal);
+                      if (data.entities.update && data.entities.update.seg) {
+                        for (segID in data.entities.update.seg) {
+                          if (data.entities.update.seg[segID]['ordinal']) {
+                            polygon = imgVE.polygons[imgVE.polygonLookup['seg'+segID]-1];
+                            if (polygon) {
+                              polygon.order = data.entities.update.seg[segID]['ordinal'];
+                            }
+                          }
+                        }
+                      }
+                      // set state on
+                      imgVE.orderSegMode = "on";
+                      //update btn html
+                      imgVE.orderSegBtn.html("On");
+                      imgVE.drawImage();
+                      imgVE.drawImagePolygons();
+                    }
+                    if (data.editionHealth) {
+                      DEBUG.log("health","***Save Lemma cmd="+cmd+"***");
+                      DEBUG.log("health","Params: "+JSON.stringify(savedata));
+                      DEBUG.log("health",data.editionHealth);
+                    }
+                    if (data.errors) {
+                      alert("An error occurred while trying to setting segment ordinal for segment "+segTag+". Error: " + data.errors.join());
+                    }
+                },
+                error: function (xhr,status,error) {
+                    // add record failed.
+                    alert("An error occurred while trying to setting segment ordinal for segment "+segTag+". Error: " + error);
+                }
+            });
+          }
       } else if (e.ctrlKey && !(e.shiftKey || e.altKey)) { //user selecting or finishing drag navigation
           //set cursor back to pointer ???
           //hittest for target polygons
@@ -1486,6 +1654,7 @@ EDITORS.ImageVE.prototype = {
       e.preventDefault();
       imgVE.segMode = "rect";
     });
+
     $(imgVE.imgCanvas).unbind("mousemove touchmove").bind("mousemove touchmove", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgVE.id);
       if (e.ctrlKey && e.buttons == 1) { // ctrl+left mouse button with move user is drag navigation
@@ -1521,6 +1690,7 @@ EDITORS.ImageVE.prototype = {
         }
       }
     });
+
     $(imgVE.imgCanvas).unbind("mouseup touchend").bind("mouseup touchend", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgVE.id);
       if (e.ctrlKey) { // || isDragNavigation ) { //user ending drag navigation
@@ -2046,40 +2216,6 @@ EDITORS.ImageVE.prototype = {
 /**
 * put your comment there...
 *
-* @param polygon
-*/
-
-  hiliteImagePolygon: function (polygon) {//todo finish highlite - should save image section, draw path and restore in unhighlite
-    var imgVE = this;
-    if (!polygon) return;
-    this.imgContext.save();
-    var i,j,
-        offsetX = imgVE.vpLoc.x * imgVE.image.width / imgVE.navCanvas.width,
-        scaleX = imgVE.navCanvas.width/imgVE.vpSize.width*imgVE.imgCanvas.width/imgVE.image.width,
-        offsetY = imgVE.vpLoc.y * imgVE.image.height / imgVE.navCanvas.height,
-        scaleY = imgVE.navCanvas.height/imgVE.vpSize.height*imgVE.imgCanvas.height/imgVE.image.height;
-    if (!this.viewAllPolygons) {
-      if (polygon.hidden && !this.selectedPolygons[polygon.label]) {
-        ;
-      }
-    }
-    this.imgContext.strokeStyle = this.selectedPolygons[polygon.label]? "white" : polygon.color;
-    this.imgContext.lineWidth = this.selectedPolygons[polygon.label]? 3 :polygon.width; //polygon width
-    this.imgContext.beginPath();
-    this.imgContext.moveTo((polygon.polygon[0][0] - offsetX)*scaleX,(polygon.polygon[0][1] - offsetY)*scaleY);
-    for (j=1; j < polygon.polygon.length; j++) {
-      this.imgContext.lineTo((polygon.polygon[j][0] - offsetX)*scaleX,(polygon.polygon[j][1] - offsetY)*scaleY);
-    }
-    this.imgContext.closePath();
-    this.imgContext.stroke();
-
-    this.imgContext.restore();
-  },
-
-
-/**
-* put your comment there...
-*
 */
 
   drawImagePolygons: function () {
@@ -2091,15 +2227,32 @@ EDITORS.ImageVE.prototype = {
         scaleX = imgVE.navCanvas.width/imgVE.vpSize.width*imgVE.imgCanvas.width/imgVE.image.width,
         offsetY = imgVE.vpLoc.y * imgVE.image.height / imgVE.navCanvas.height,
         scaleY = imgVE.navCanvas.height/imgVE.vpSize.height*imgVE.imgCanvas.height/imgVE.image.height;
+    this.imgContext.font = "1.4em arial";
+    this.imgContext.textAlign = "center";
+    this.imgContext.textBaseline = "middle";
     for(i=0;i<this.polygons.length; i++) {
       polygon = this.polygons[i];
-      if (!this.viewAllPolygons && !this.linkMode) {
+      if (!this.viewAllPolygons && !this.linkMode && this.orderSegMode != "on") {
         if (polygon.hidden && !polygon.hilite && !this.selectedPolygons[polygon.label]) {
           continue;
         }
       }
-      this.imgContext.strokeStyle = polygon.hilite? "white" : (this.selectedPolygons[polygon.label]? "white" : polygon.color);
-      this.imgContext.lineWidth = (this.selectedPolygons[polygon.label]? 3 : polygon.width); //polygon width
+      if ( this.orderSegMode != "on" ) {
+        this.imgContext.strokeStyle = polygon.hilite? "white" : (this.selectedPolygons[polygon.label]? "white" : polygon.color);
+        this.imgContext.lineWidth = (this.selectedPolygons[polygon.label]? 3 : polygon.width); //polygon width
+      } else {
+        if (polygon.order) {// draw order numer if there is one
+          this.imgContext.lineWidth = 1;
+          this.imgContext.strokeStyle = "white";
+          this.imgContext.fillStyle = "white";
+          this.imgContext.fillText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
+          this.imgContext.strokeText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
+          this.imgContext.lineWidth = 3 ;
+        } else {
+          this.imgContext.strokeStyle = "red";
+          this.imgContext.lineWidth = 2 ;
+        }
+      }
       this.imgContext.beginPath();
       this.imgContext.moveTo((polygon.polygon[0][0] - offsetX)*scaleX,(polygon.polygon[0][1] - offsetY)*scaleY);
       for (j=1; j < polygon.polygon.length; j++) {
@@ -2108,35 +2261,6 @@ EDITORS.ImageVE.prototype = {
       this.imgContext.closePath();
       this.imgContext.stroke();
     }
-    this.imgContext.restore();
-  },
-
-
-/**
-* put your comment there...
-*
-* @param polygon
-* @param color
-* @param width
-*/
-
-  drawColoredPolygon: function (polygon,color,width) {
-    var imgVE = this;
-    this.imgContext.save();
-    this.imgContext.strokeStyle = (color?color:"green");
-    this.imgContext.lineWidth = (width?width:1);
-    var j,
-        offsetX = imgVE.vpLoc.x * imgVE.image.width / imgVE.navCanvas.width,
-        scaleX = imgVE.navCanvas.width/imgVE.vpSize.width*imgVE.imgCanvas.width/imgVE.image.width,
-        offsetY = imgVE.vpLoc.y * imgVE.image.height / imgVE.navCanvas.height,
-        scaleY = imgVE.navCanvas.height/imgVE.vpSize.height*imgVE.imgCanvas.height/imgVE.image.height;
-    this.imgContext.beginPath();
-    this.imgContext.moveTo((polygon[0][0] - offsetX)*scaleX,(polygon[0][1] - offsetY)*scaleY);
-    for (j=1; j < polygon.length; j++) {
-      this.imgContext.lineTo((polygon[j][0] - offsetX)*scaleX,(polygon[j][1] - offsetY)*scaleY);
-    }
-    this.imgContext.closePath();
-    this.imgContext.stroke();
     this.imgContext.restore();
   },
 

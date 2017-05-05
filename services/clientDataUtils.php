@@ -209,6 +209,10 @@ function addNewEntityReturnData($prefix,$entity) {
       if (count($mappedSegIDs) > 0) {
         $entities["insert"]['seg'][$entID]['mappedSegIDs'] = $mappedSegIDs;
       }
+      $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
+      if ($segBlnOrder) {
+        $entities["insert"]['seg'][$entID]['ordinal'] = $segBlnOrder;
+      }
       break;
     case 'lem':
       $lemma = $entity;
@@ -384,6 +388,33 @@ function addUpdateEntityReturnData($prefix,$entID,$key,$value) {
     $entities['update'][$prefix][$entID] = array();
   }
   $entities['update'][$prefix][$entID][$key] = $value;
+  if ( in_array($key, array('entityIDs','graphemeIDs'))) {
+    addUpdateSwitchHashReturnData($prefix,$entID);
+  }
+}
+
+
+/**
+* put your comment there...
+*
+* @param mixed $prefix
+* @param mixed $entID
+* @param mixed $key
+* @param mixed $value
+*/
+
+function addRemovePropertyReturnData($prefix,$entID,$key) {
+  global $entities;
+  if (!array_key_exists('removeprop',$entities)) {
+    $entities['removeprop'] = array();
+  }
+  if (!array_key_exists($prefix,$entities['removeprop'])) {
+    $entities['removeprop'][$prefix] = array();
+  }
+  if (!array_key_exists($entID,$entities['removeprop'][$prefix])) {
+    $entities['removeprop'][$prefix][$entID] = array();
+  }
+  array_push($entities['removeprop'][$prefix][$entID],$key);
   if ( in_array($key, array('entityIDs','graphemeIDs'))) {
     addUpdateSwitchHashReturnData($prefix,$entID);
   }

@@ -269,7 +269,7 @@ MANAGERS.DataManager.prototype = {
       }
     }
 
-    //remove old data
+    //remove old entity data
     if (retData.entities.remove) {
       var removals = retData.entities.remove,
           index;
@@ -283,6 +283,24 @@ MANAGERS.DataManager.prototype = {
         }
       }
     }
+
+    //remove entity property
+    if (retData.entities.removeprop) {
+      var propremovals = retData.entities.removeprop,
+          index;
+      for (prefix in propremovals) {
+        for (entID in propremovals[prefix]) {
+          for (index in propremovals[prefix][entID]) {
+            propName = propremovals[prefix][index];
+            if (this.entities[prefix] && this.entities[prefix][entID] && this.entities[prefix][entID][propName] ) {
+              delete this.entities[prefix][entID][propName];
+              DEBUG.log("data","removed " + prefix + entID + " entity's "+ propName + " property");
+            }
+          }
+        }
+      }
+    }
+
     //update tags info
     if (retData.tagsInfo) {
       if (retData.tagsInfo.tags){

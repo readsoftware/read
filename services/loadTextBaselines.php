@@ -169,6 +169,10 @@
                 if (count($mappedSegIDs) > 0) {
                   $entities['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
                 }
+                $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
+                if ($segBlnOrder) {
+                  $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
+                }
                 $stringpos = $segment->getStringPos();
                 if ($stringpos && count($stringpos) > 0) {
                   $entities['seg'][$segID]['stringpos']= $stringpos;
@@ -341,19 +345,36 @@
 //          }
           break;
         case 'seg':
-         $entities['seg'][$entID] = array( 'baselineIDs' => $entity->getBaselineIDs(),
-                                            'layer' => $entity->getLayer());
-                $boundary = $entity->getImageBoundary();
-                if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
-                  $boundary = $boundary[0];
-                  $entities['seg'][$segID]['boundary']= array($boundary->getPoints());
-                  $entities['seg'][$segID]['urls']= $entity->getURLs();
-                }
-                $stringpos = $entity->getStringPos();
-                if ($stringpos && count($stringpos) > 0) {
-                  $entities['seg'][$segID]['stringpos']= $stringpos;
-                }
-                // ??? do we need to get spans??? mapped segments???
+          $segment = $entity;
+          $entities['seg'][$entID] = array( 'baselineIDs' => $entity->getBaselineIDs(),
+              'id' => $entID,
+              'baselineIDs' => $segment->getBaselineIDs(),
+              'layer' => $segment->getLayer(),
+              'readonly' => $segment->isReadonly(),
+              'center' => $segment->getCenter(),
+              'value' => 'seg'.$entID);
+          $sclIDs = $segment->getSyllableIDs();
+          if ($sclIDs && count($sclIDs) > 0) {
+            $entities['seg'][$entID]['sclIDs']= $sclIDs;
+          }
+          $boundary = $segment->getImageBoundary();
+          if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
+            $boundary = $boundary[0];
+            $entities['seg'][$entID]['boundary']= array($boundary->getPoints());
+            $entities['seg'][$entID]['urls']= $segment->getURLs();
+          }
+          $stringpos = $segment->getStringPos();
+          if ($stringpos && count($stringpos) > 0) {
+            $entities['seg'][$entID]['stringpos']= $stringpos;
+          }
+          $mappedSegIDs = $segment->getMappedSegmentIDs();
+          if (count($mappedSegIDs) > 0) {
+            $entities['seg'][$entID]['mappedSegIDs'] = $mappedSegIDs;
+          }
+          $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
+          if ($segBlnOrder) {
+            $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
+          }
           break;
         case 'atb':
          $entities['atb'][$entID] = array( 'title'=> $entity->getTitle(),

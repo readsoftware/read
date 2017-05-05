@@ -696,6 +696,10 @@
                 if (count($mappedSegIDs) > 0) {
                   $entities['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
                 }
+                $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
+                if ($segBlnOrder) {
+                  $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
+                }
                 $sBlnIDs = $segment->getBaselineIDs();
                 if (count($sBlnIDs) > 0) {
                   $entities['seg'][$segID]['baselineIDs'] = $sBlnIDs;

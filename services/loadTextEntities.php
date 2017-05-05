@@ -569,6 +569,10 @@
         if (count($mappedSegIDs) > 0) {
           $entities['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
         }
+        $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
+        if ($segBlnOrder) {
+          $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
+        }
         $AnoIDs = $segment->getAnnotationIDs();
         if (count($AnoIDs) > 0) {
           $entities['seg'][$segID]['annotationIDs'] = $AnoIDs;
@@ -1377,6 +1381,10 @@
               $mappedSegIDs = $segment->getMappedSegmentIDs();
               if (count($mappedSegIDs) > 0) {
                 $entities['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
+              }
+              $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
+              if ($segBlnOrder) {
+                $entities['seg'][$segID]['ordinal'] = $segBlnOrder;
               }
               $sBlnIDs = $segment->getBaselineIDs();
               if (count($sBlnIDs) > 0) {
