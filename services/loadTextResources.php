@@ -193,7 +193,7 @@
         if ($url) {
           $info = pathinfo($url);
           $thumbUrl = $info['dirname']."/th".$info['basename'];
-          $entities['update']['bln'][$imgID]['thumbUrl'] = $thumbUrl;
+          $entities['update']['bln'][$blnID]['thumbUrl'] = $thumbUrl;
         }
         $bImgID = $baseline->getImageID();
         if ($bImgID) {
