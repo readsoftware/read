@@ -426,7 +426,7 @@ EDITORS.LemmaVE.prototype = {
       return compAnal;
     }
     var lemmaVE = this, strAnalysis = compAnal, value, markup, hasHead, isHead, lemma, lemID,
-        subNodes, subNode, compNodes, i, j, k, key, l=0, nodeLookup = {}, lemmaIDs,
+        subNodes, subNode, compNodes, i, j, k, subKey, key, l=0, nodeLookup = {}, lemmaIDs,
         reSqBrkOpen = /\[/g,
         reSqBrkClose = /\]/g,
         reCompMarkup = /[\[\]!]/g,//find all compound analysis markup characters
@@ -500,7 +500,7 @@ EDITORS.LemmaVE.prototype = {
           if (markup.match(/^\[!/)) {
             isHead = true;
           }
-          markup = markup.replace(/^\[!/,"").replace(/\]$/,"");
+          markup = markup.replace(/^\[!?/,"").replace(/\]$/,"");
           nodeLookup[key] = { 'markup':markup,
                               'subKeys': subNodes,
                               'value':value};
@@ -1851,7 +1851,7 @@ EDITORS.LemmaVE.prototype = {
 
   createRelatedUI: function() {
     var lemmaVE = this,i,j, prefix, id, entGID, relEntIDs,
-        displayUI,entity, relEntry,
+        displayUI, entity, entities, relEntry,
         relEntGIDsByType = (this.entity && this.entity.relatedEntGIDsByType)? this.entity.relatedEntGIDsByType:[];
     DEBUG.traceEntry("createRelatedUI");
     //create UI container
@@ -1866,9 +1866,14 @@ EDITORS.LemmaVE.prototype = {
         linkType = this.dataMgr.getTermFromID(i);
         displayUI.append($('<div class="relUISection"><span>'+linkType+'</span></div>'));
         relEntIDs = relEntGIDsByType[i];
+        entities = [];
         for (j in relEntIDs) {
           entGID =  relEntIDs[j];
-          entity = this.dataMgr.getEntityFromGID(entGID);
+          entities.push(this.dataMgr.getEntityFromGID(entGID));
+        }
+        entities.sort(UTILITY.compareEntities);
+        for (j in entities) {
+          entity =  entities[j];
           if (entity) {
             entity.tag = entGID.replace(':','');
             //TODO add code to display the different types linked vs URL vs text
