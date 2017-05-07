@@ -403,7 +403,9 @@ EDITORS.LemmaVE.prototype = {
             $('div.valueLabelDiv',lemmaVE.compUI).html("Compound Analysis");
           }
           $('.propEditUI',lemmaVE.compUI).removeClass('dirty');
-          lemmaVE.saveCompoundAnalysis(compAnalysis, rootKey);
+          if (compAnalysis && rootKey) {
+            lemmaVE.saveCompoundAnalysis(compAnalysis, rootKey);
+          }
           lemmaVE.compUI.removeClass("edit");
         }
       });
@@ -423,12 +425,15 @@ EDITORS.LemmaVE.prototype = {
     if (!compAnal) {
       return compAnal;
     }
-    var lemmaVE = this, strAnalysis = compAnal, value, markup, hasHead, lemma, lemID,
-        subNodes, compNodes, i, j, k, key, subKey, l=0, nodeLookup = {}, lemmaIDs,
+    var lemmaVE = this, strAnalysis = compAnal, value, markup, hasHead, isHead, lemma, lemID,
+        subNodes, subNode, compNodes, i, j, k, key, l=0, nodeLookup = {}, lemmaIDs,
         reSqBrkOpen = /\[/g,
         reSqBrkClose = /\]/g,
         reCompMarkup = /[\[\]!]/g,//find all compound analysis markup characters
         reBrkNodes = /\[[^\[\]]+\]/g;//text surrounded by square brackets
+    if (!strAnalysis.match(reSqBrkOpen) || !strAnalysis.match(reSqBrkClose)) {
+      return false;
+    }
     if (strAnalysis.match(reSqBrkOpen).length != strAnalysis.match(reSqBrkClose).length) {
       alert("Compound Analysis has mismatched brackets, please correct before saving.");
       return false;
@@ -476,15 +481,32 @@ EDITORS.LemmaVE.prototype = {
           hasHead = false;
           for (j in subNodes) {
             subKey = subNodes[j];
-            if (nodeLookup[subKey].head) {
+            subNode = nodeLookup[subKey];
+            if (subNode.head) {
               hasHead = true;
             }
-            markup = markup.replace(subKey,nodeLookup[subKey].markup);
-            value = value.replace(subKey,nodeLookup[subKey].value);
+            if (subNode.subKeys) {// is compound so need to wrap markup
+              if (subNode.head) {// comphead so mark it with !
+                markup = markup.replace(subKey,"[!"+subNode.markup+"]");
+              } else {
+                markup = markup.replace(subKey,"["+subNode.markup+"]");
+              }
+            } else {//leaf
+              markup = markup.replace(subKey,subNode.markup);
+            }
+            value = value.replace(subKey,subNode.value);
           }
+          isHead = false;
+          if (markup.match(/^\[!/)) {
+            isHead = true;
+          }
+          markup = markup.replace(/^\[!/,"").replace(/\]$/,"");
           nodeLookup[key] = { 'markup':markup,
                               'subKeys': subNodes,
                               'value':value};
+          if (isHead) {
+            nodeLookup[key]['head'] = 1;
+          }
           lemmaIDs = this.wordlistVE.lookupLemma(value);
           if (lemmaIDs && lemmaIDs.length) {
             for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
@@ -500,12 +522,9 @@ EDITORS.LemmaVE.prototype = {
               }
             }
           }
-          if (!hasHead) {
-            alert("Compound Analysis has missing HEAD WORD for constituent '"+markup+"', please correct before saving.");
+          if (!hasHead && lemID != this.entID) {
+            alert("Compound Analysis has missing HEAD WORD for compound constituent '"+markup+"', please correct before saving.");
             return false;
-          }
-          if (markup.match(/^\[!/)) {
-            nodeLookup[key]['head'] = 1;
           }
           strAnalysis = strAnalysis.replace(compNodes[i],key);
         }
@@ -517,6 +536,50 @@ EDITORS.LemmaVE.prototype = {
     if (strAnalysis.match(/(\[|\])/)) {
       alert("Compound Analysis has misaligned brackets, please correct before saving.");
       return false;
+    } else { //process root node
+      l++;
+      key = "n"+l;
+      markup = strAnalysis;
+      value = strAnalysis;
+      subNodes = value.match(/(n\d+)/g);//find all node keys
+      hasHead = false;
+      for (j in subNodes) {
+        subKey = subNodes[j];
+        subNode = nodeLookup[subKey];
+        if (subNode.head) {
+          hasHead = true;
+        }
+        if (subNode.subKeys) {// is compound so need to wrap markup
+          if (subNode.head) {// comphead so mark it with !
+            markup = markup.replace(subKey,"[!"+subNode.markup+"]");
+          } else {
+            markup = markup.replace(subKey,"["+subNode.markup+"]");
+          }
+        } else {//leaf
+          markup = markup.replace(subKey,subNode.markup);
+        }
+        value = value.replace(subKey,subNode.value);
+      }
+      if (!hasHead) {
+        alert("Compound Analysis has missing HEAD WORD for compound '"+markup+"', please correct before saving.");
+        return false;
+      }
+      nodeLookup[key] = { 'markup':markup,
+                          'subKeys': subNodes,
+                          'root': 1,
+                          'value':value};
+      lemmaIDs = this.wordlistVE.lookupLemma(value);
+      if (lemmaIDs && lemmaIDs.length) {
+        for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
+          lemID = lemmaIDs[k];
+          lemma = this.dataMgr.getEntity('lem',lemID);
+          if (lemma && ((lemma.compAnalysis &&
+              (markup == lemma.compAnalysis)) || markup == compAnal)) {
+            nodeLookup[key]['lemID'] = lemID;
+            break;
+          }
+        }
+      }
     }
     if (nodeLookup[key].value  != lemmaVE.entity.value.replace(/ʔ/g,'')) {
       alert("Compound Analysis compound does not match constituents, please correct before saving.");
