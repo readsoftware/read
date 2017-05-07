@@ -660,29 +660,33 @@
               $tokens = $tokenSet->getEntities();
               $fToken = $tokens[0];
               $sclIDs = $fToken->getSyllableClusterIDs();
-              $fSclID = $sclIDs[0];
-              $sclTag = 'scl'.$fSclID;
-              if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                $label = $sclTagToLabel[$sclTag];
-              } else {
-                $tokID = $fToken->getID();
-                error_log("no start label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                $label = null;
+              if (count($sclIDs) > 0) {
+                $fSclID = $sclIDs[0];
+                $sclTag = 'scl'.$fSclID;
+                if ( array_key_exists($sclTag,$sclTagToLabel)) {
+                  $label = $sclTagToLabel[$sclTag];
+                } else {
+                  $tokID = $fToken->getID();
+                  error_log("no start label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                  $label = null;
+                }
               }
               if ($label) {
                 $lToken = $tokens[count($tokens)-1];
                 $sclIDs = $lToken->getSyllableClusterIDs();
-                $lSclID = $sclIDs[count($sclIDs)-1];
-                $sclTag = 'scl'.$lSclID;
-                if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                  $label2 = $sclTagToLabel[$sclTag];
-                } else {
-                  $tokID = $lToken->getID();
-                  error_log("no end label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                  $label2 = null;
-                }
-                if($label2 && $label2 != $label) {
-                  $label .= "-" . $label2;
+                if (count($sclIDs) > 0) {
+                  $lSclID = $sclIDs[count($sclIDs)-1];
+                  $sclTag = 'scl'.$lSclID;
+                  if ( array_key_exists($sclTag,$sclTagToLabel)) {
+                    $label2 = $sclTagToLabel[$sclTag];
+                  } else {
+                    $tokID = $lToken->getID();
+                    error_log("no end label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                    $label2 = null;
+                  }
+                  if($label2 && $label2 != $label) {
+                    $label .= "-" . $label2;
+                  }
                 }
                 $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
               } else {
@@ -690,12 +694,17 @@
               }
             } else if ($prefix == 'tok') {
               $sclIDs = $word->getSyllableClusterIDs();
-              $fSclID = $sclIDs[0];
-              $sclTag = 'scl'.$fSclID;
-              if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                $label = $sclTagToLabel[$sclTag];
+              if (count($sclIDs) > 0) {
+                $fSclID = $sclIDs[0];
+                $sclTag = 'scl'.$fSclID;
+                if ( array_key_exists($sclTag,$sclTagToLabel)) {
+                  $label = $sclTagToLabel[$sclTag];
+                } else {
+                  error_log("no start label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                  $label = null;
+                }
               } else {
-                error_log("no start label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                error_log("no syllable IDs found for $word processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
                 $label = null;
               }
               if ($label) {

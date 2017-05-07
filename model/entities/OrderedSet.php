@@ -61,6 +61,8 @@
               $_keys = array(),         //parallel array entities keys
               $_keyIndexMap = array(),  //array map of entity keys to index
               $_position = 0,           //index into array
+              $_allowDups = false,          //allow duplicate
+              $_ignoreDups = true,         //allow duplicate
               $_error;                  //error
     //****************************CONSTRUCTOR FUNCTION***************************************
 
@@ -193,9 +195,14 @@
     */
     public function loadEntities($globalIDsArray) {
       foreach ( $globalIDsArray as $globalID ){
-        if (array_key_exists($globalID,$this->_keyIndexMap)) {
-          $this->_error = "duplicate global id found $globalID";
-          return false;
+        if (array_key_exists($globalID,$this->_keyIndexMap) && !$this->_allowDups) {//duplicate
+          $errMsg = "duplicate global id found $globalID";
+          if (!$this->_ignoreDups) {
+            $this->_error = "duplicate global id found $globalID";
+            return false;
+          } else {
+            continue;
+          }
         }else{
           $entity = EntityFactory::createEntityFromGlobalID($globalID);
           if (!$entity){
