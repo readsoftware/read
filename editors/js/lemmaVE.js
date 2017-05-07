@@ -1851,7 +1851,7 @@ EDITORS.LemmaVE.prototype = {
 
   createRelatedUI: function() {
     var lemmaVE = this,i,j, prefix, id, entGID, relEntIDs,
-        displayUI, entity, entities, relEntry,
+        displayUI, relTypeUIDiv, entity, entities, relEntry,
         relEntGIDsByType = (this.entity && this.entity.relatedEntGIDsByType)? this.entity.relatedEntGIDsByType:[];
     DEBUG.traceEntry("createRelatedUI");
     //create UI container
@@ -1864,7 +1864,8 @@ EDITORS.LemmaVE.prototype = {
     if (Object.keys(relEntGIDsByType).length) {
       for (i in relEntGIDsByType) {
         linkType = this.dataMgr.getTermFromID(i);
-        displayUI.append($('<div class="relUISection"><span>'+linkType+'</span></div>'));
+        relTypeUIDiv =$('<div class="relUISection expand"><span class="btnRelUIExpander"/><span class="relUIHeader">'+linkType+'</span></div>');
+        displayUI.append(relTypeUIDiv);
         relEntIDs = relEntGIDsByType[i];
         entities = [];
         for (j in relEntIDs) {
@@ -1881,12 +1882,20 @@ EDITORS.LemmaVE.prototype = {
             relEntry.prop('tag',entity.tag);
             $('span.unlink',relEntry).prop('entGID',entGID);
             $('span.unlink',relEntry).prop('typeID',i);
-            displayUI.append(relEntry);
+            relTypeUIDiv.append(relEntry);
           }
         }
       }
     }
     this.relUI.append(displayUI);
+    $('span.btnRelUIExpander',this.relUI).unbind("click").bind("click",function(e) {
+      var isExpanded = $(this).parent().hasClass('expand');
+      if (isExpanded) {
+        $(this).parent().removeClass('expand');
+      } else {
+        $(this).parent().addClass('expand');
+      }
+    });
     $('div.relationentry',this.relUI).unbind("dblclick").bind("dblclick",function(e) {
       var entTag = $(this).prop('tag'),entity;
       entity = lemmaVE.dataMgr.getEntityFromGID(entTag);

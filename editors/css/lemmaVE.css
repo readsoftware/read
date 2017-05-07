@@ -520,6 +520,24 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
   margin-top: 15px;
   background-color: inherit;
 }
+.relUISection .btnRelUIExpander{
+  background-image: url('/jqwidget/jqwidgets/styles/images/icon-down.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 17px;
+  width: 17px;
+  float: left;
+  cursor: pointer;
+}
+.relUISection.expand .btnRelUIExpander{
+  background-image: url('/jqwidget/jqwidgets/styles/images/icon-up.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 17px;
+  width: 17px;
+  float: left;
+  cursor: pointer;
+}
 .relUISection{
   margin-top: 5px;
   padding-left: 5px;
@@ -530,6 +548,17 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
 .attrUIHeader > span, .relUISection > span, .componentsUIHeader > span{
   background-color: inherit!important;
 }
+.relUISection div.relationentry{
+  display: none;
+}
+.relUISection.expand div.relationentry{
+  background-color: rgb(217,217,217);
+  text-align: justify;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
 .attestedentry,.componententry,.relationentry{
   background-color: rgb(217,217,217);
   text-align: justify;
