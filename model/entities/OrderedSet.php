@@ -166,6 +166,24 @@
     }
 
     /**
+    * Set Allow Duplicate Switch
+    *
+    * @param boolean allowing (true) or disallowing (false - default) duplicate entries in the set
+    */
+    public function setAllowDups($value = false) {
+      $this->_allowDups = $value;
+    }
+
+    /**
+    * Set Ignore Duplicate Switch
+    *
+    * @param boolean determining behavior for disallowed duplicates when found - ignored (true - default) or error (false)
+    */
+    public function setIgnoreDups($value = true) {
+      $this->_ignoreDups = $value;
+    }
+
+    /**
     * findEntity - find entity by it's globalID from the current set
     *
     * @param string $gid global ID string identifying the unique entity
