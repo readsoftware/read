@@ -122,6 +122,10 @@ if (!$data) {
         $log .= "Successfully merged data from source seg$segID into target seg$trgSegID.\n";
         $segments->next();
       }
+      if (count($errors) == 0) {//can remove ordinal segments
+        $query = "delete from segment where seg_id in (".join(",",$ordSegIDs).")";
+        $dbMgr->query($query);
+      }
     }
   }
 }
