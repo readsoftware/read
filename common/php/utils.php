@@ -2167,7 +2167,6 @@ function FixUnicodeForRtf($matches) {
 * @param mixed $rplcStrings replacement string
 * @param mixed $mbStr subject string
 */
-
 function mbPregReplace($srchStrings,$rplcStrings,$mbStr) {
   $cnt = count($srchStrings);
   $mbStrReplaced = $mbStr;
@@ -2177,4 +2176,69 @@ function mbPregReplace($srchStrings,$rplcStrings,$mbStr) {
   return $mbStrReplaced;
 }
 
+
+function findSclGIDsFromPattern($pattern,$sclGIDsByLinePostion) {
+  $sclGIDs = array();
+  $lineOrds = array();
+  $sclOrds = array();
+  list($lpattern,$spattern) = explode(":",$pattern);
+  if (!$lpattern || $lpattern == "L*") {//all lines pattern
+    $lineOrds = array_keys($sclGIDsByLinePostion);
+  } else if (preg_match("/L(\d+)(\+|\-)(\d+)/",$lpattern,$matches)) {//every N lines or range pattern
+      $lineOrd = $matches[1]-1;
+      if ($matches[2] == "+") {//every N
+        $ordInc = $matches[3];
+        $limitOrd = count($sclGIDsByLinePostion);
+      } else {// range
+        $limitOrd = $matches[3];
+        $ordInc = 1;
+      }
+      while ($lineOrd < $limitOrd) {
+        array_push($lineOrds,$lineOrd);
+        $lineOrd += $ordInc;
+      }
+  } else {//simple line ordinal case
+    $lineOrds = array(substr($lpattern,1)-1);
+  }
+  $maxLine = 0;
+  foreach ($sclGIDsByLinePostion as $lineOfSclIDs) {
+    $maxLine = max($maxLine,count($lineOfSclIDs));
+  }
+  if (!$spattern || $spattern == "S*") {//all syllables
+//    $lineOrds = array_keys($sclGIDsByLinePostion);
+    for ($i=0;$i < $maxLine; $i++) {
+      array_push($sclOrds,$i);//load ordinals to the max as overrun is ignored
+    }
+  } else if (preg_match("/S(\d+)(\+|\-)(\d+)/",$spattern,$matches)) {//every N lines or range pattern
+      $sclOrd = $matches[1]-1;
+      if ($matches[2] == "+") {//every N
+        $ordInc = $matches[3];
+        $limitOrd = $maxLine;
+      } else {// range
+        $limitOrd = $matches[3];
+        $ordInc = 1;
+      }
+      while ($sclOrd < $limitOrd) {
+        array_push($sclOrds,$sclOrd);
+        $sclOrd += $ordInc;
+      }
+  } else {//simple line ordinal case
+    $sclOrds = array(substr($spattern,1)-1);
+  }
+  foreach ($lineOrds as $lOrd) {
+    $line = $sclGIDsByLinePostion[$lOrd];
+    if ($line) {
+      $maxOrd = count($line);
+      foreach ($sclOrds as $sOrd) {
+        if ($sOrd < $maxOrd) {//skip overrun
+          $sclGID = $line[$sOrd];
+          if ($sclGID) {
+            array_push($sclGIDs,$sclGID);
+          }
+        }
+      }
+    }
+  }
+  return $sclGIDs;
+}
 ?>

@@ -53,8 +53,6 @@ $dbMgr = new DBManager();
 $retVal = array();
 $errors = array();
 $warnings = array();
-$ednOwnerID = null;
-$tokenSplitRequired = false;
 $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):$_REQUEST);
 if (!$data) {
   array_push($errors,"invalid json data - decode failed");
