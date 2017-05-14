@@ -1844,7 +1844,7 @@ EDITORS.ImageVE.prototype = {
             data: savedata,
             async: true,
             success: function (data, status, xhr) {
-              var segID,polygon;
+              var segID,polygon,segTag,redrawPolygons = false;
               if (typeof data == 'object' && data.success ) {
                 //update data
                 if (data.entities){
@@ -1852,6 +1852,18 @@ EDITORS.ImageVE.prototype = {
                 }
                 if (imgVE.orderSegMode == "on") {//pressed autolinkord while in order segments mode
                   imgVE.orderSegMode = "off";
+                  redrawPolygons = true;
+                }
+                //TODO update polygons linked.
+                if (data.entities.update && data.entities.update.seg){
+                  for (segID in data.entities.update.seg) {
+                    polygon = imgVE.polygons[imgVE.polygonLookup["seg"+segID]-1];
+                    polygon.color = "green";
+                    polygon.linkIDs = data.entities.update.seg[segID]['sclIDs'];
+                  }
+                  redrawPolygons = true;
+                }
+                if (redrawPolygons) {
                   imgVE.drawImage();
                   imgVE.drawImagePolygons();
                 }

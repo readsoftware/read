@@ -947,13 +947,19 @@ EDITORS.EditionVE.prototype = {
                              '</div>');
       $('#'+btnLinkOrdName,this.linkOrdBtnDiv).unbind('click')
                                  .bind('click',function(e) {
-        var ednID = ednVE.edition.id,sclIDs=[],sclGIDs = ednVE.getSelectionOrdEntityGIDs('scl');
-        if (sclGIDs) {
-          for (index in sclGIDs) {
-            sclIDs.push((sclGIDs[index]).substr(3));
+        var ednID = ednVE.edition.id,sclIDs=[],sclGIDs = ednVE.getSelectionOrdEntityGIDs('scl'),index,pos;
+        if (ednVE.autoLinkOrdMode) {
+          if (!sclGIDs) {
+            sclGIDs = ednVE.getSelectionEntityGIDs();
           }
+          if (sclGIDs) {
+            for (index in sclGIDs) {
+              pos = (sclGIDs[index].match(/\:/)?4:3);
+              sclIDs.push((sclGIDs[index]).substr(pos));
+            }
+          }
+          $('.editContainer').trigger('autoLinkOrdReturn',[ednVE.id,ednVE.autoLinkOrdBln,ednID,sclIDs]);
         }
-        $('.editContainer').trigger('autoLinkOrdReturn',[ednVE.id,ednVE.autoLinkOrdBln,ednID,sclIDs]);
       });
 
     this.insertLineBtnDiv = $('<div class="toolbuttondiv">' +
@@ -2472,7 +2478,7 @@ mergeLine: function (direction,cbError) {
     }
     foundGIDsLookup = {};
     selectGIDs = [];
-    if (endOrd > startOrd) {//reverse selection
+    if (endOrd < startOrd) {//reverse selection
       ord = endOrd;
       endOrd = startOrd;
     } else {
@@ -2531,8 +2537,8 @@ mergeLine: function (direction,cbError) {
 */
 
   getSelectionOrdEntityGIDs: function (prefix) {
-    var entGID = null, selectGIDs = null, regexEntGID = new RegExp(prefix+"\\d+");
-    if (this.selOrderGrpGraClasses.length) {
+    var entGID = null, selectedGIDs = null, regexEntGID = new RegExp(prefix+"\\d+");
+    if (this.selOrderGrpGraClasses && this.selOrderGrpGraClasses.length) {
       selectedGIDs = [];
       $(this.selOrderGrpGraClasses).each(function(index,className) {
         entGID = className.match(regexEntGID);
@@ -2971,6 +2977,8 @@ mergeLine: function (direction,cbError) {
     };
 
     $(this.editDiv).unbind('autoLinkAdvance').bind('autoLinkAdvance', autoLinkAdvanceHandler);
+
+
 
 
     /**

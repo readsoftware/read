@@ -251,15 +251,19 @@ if (!$data) {
     while (count($sclIDs) && count($ordSegIDs)) {
       $sclID = array_shift($sclIDs);
       $segID = array_shift($ordSegIDs);
-      $syllable = $syllables->searchKey($sclID);
-      if($syllable) {
-        $syllable->setSegmentID($segID);
-        $syllable->save();
-        if ($syllable->hasError()) {
-          array_push($errors,"Error saving syllable id = ".$syllable->getID()." errors - ".join(",",$syllable->getErrors()));
-          break;
-        } else {
-          addUpdateEntityReturnData("scl",$syllable->getID(),"segID",$syllable->getSegmentID());
+      $segment = new Segment($segID);
+      if ($segment && !$segment->hasError()) {
+        $syllable = $syllables->searchKey($sclID);
+        if($syllable) {
+          $syllable->setSegmentID($segID);
+          $syllable->save();
+          if ($syllable->hasError()) {
+            array_push($errors,"Error saving syllable id = ".$syllable->getID()." errors - ".join(",",$syllable->getErrors()));
+            break;
+          } else {
+            addUpdateEntityReturnData("seg",$segment->getID(),"sclIDs",$segment->getSyllableIDs());
+            addUpdateEntityReturnData("scl",$syllable->getID(),"segID",$syllable->getSegmentID());
+          }
         }
       }
     }
