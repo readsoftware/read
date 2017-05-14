@@ -81,6 +81,7 @@ EDITORS.EditionVE.prototype = {
     this.parentTagID = null;
     this.autoInsert = true;
     this.autoLink = false;
+    this.selOrderGrpGraClasses = [];
     this.trmIDtoLabel = this.dataMgr.termInfo.labelByID;
     this.splitterDiv = $('<div id="'+this.id+'splitter"/>');
     this.contentDiv = $('<div id="'+this.id+'textContent" class = "ednveContentDiv" contenteditable="true" spellcheck="false" ondragstart="return false;" />');
@@ -119,6 +120,37 @@ EDITORS.EditionVE.prototype = {
 */
 
   setFocus: function () {
+    $(this.editDiv).removeClass('autoOrdLinkTarget');
+    if (this.pendingAutoLinkOrdBln) {//pending autoLink request so verify we can enter mode
+      //check already in link mode
+      if (this.linkMode) {
+        alert("Currently in direct single select link mode" + (this.autoLink?" with autoAdvance":"") +
+               ". You must exit before trying to Auto Link Ordinals. Aborting Auto Ordinal Link Request.");
+        $('.editContainer').trigger('autoLinkOrdAbort',[this.id,this.pendingAutoLinkOrdBln]);
+        delete this.pendingAutoLinkOrdBln;
+        delete this.pendingAutoLinkOrdMode;
+        return;
+      }
+      //check bln is associated with this editions text
+      text = this.dataMgr.getEntity('txt',this.edition.txtID);
+      if (text.blnIDs.indexOf(this.pendingAutoLinkOrdBln) == -1) {//invalid link request but user may be doing something in the interem
+        delete this.pendingAutoLinkOrdBln;
+        delete this.pendingAutoLinkOrdDefault;
+      } else {//valid editon for baseline so tell the user to select the first syllable
+        this.autoLinkOrdMode = this.pendingAutoLinkOrdMode;
+        this.autoLinkOrdBln = this.pendingAutoLinkOrdBln;
+        $(this.editDiv).addClass('autoOrdLinkingMode');
+        delete this.pendingAutoLinkOrdBln;
+        delete this.pendingAutoLinkOrdMode;
+        if (this.autoLinkOrdMode == "default") {//send the edition info back to the request
+          $('.editContainer').trigger('autoLinkOrdReturn',[this.id,this.autoLinkOrdBln,this.edition.id]);
+        } else {
+          //show link ordinal button
+          this.linkOrdBtnDiv.show();
+          alert("Auto Linking by Ordinal for a range of segments requires you to select the syllables. Please ctrl+dblclick the syllbles and click link ordinal button when done.");
+        }
+      }
+    }
     $(this.editDiv.firstChild.firstChild).find('.grpGra:first').focus();
   },
 
@@ -907,6 +939,23 @@ EDITORS.EditionVE.prototype = {
       }
     });
 
+      var btnLinkOrdName = this.id+'LinkOrd';
+      this.linkOrdBtnDiv = $('<div class="toolbuttondiv">' +
+                              '<button class="toolbutton" id="'+btnLinkOrdName +
+                                '" title="Link selected syllable by segment ordinal">Link Ordinal</button>'+
+                              '<div class="toolbuttonlabel">Link Syllables</div>'+
+                             '</div>');
+      $('#'+btnLinkOrdName,this.linkOrdBtnDiv).unbind('click')
+                                 .bind('click',function(e) {
+        var ednID = ednVE.edition.id,sclIDs=[],sclGIDs = ednVE.getSelectionOrdEntityGIDs('scl');
+        if (sclGIDs) {
+          for (index in sclGIDs) {
+            sclIDs.push((sclGIDs[index]).substr(3));
+          }
+        }
+        $('.editContainer').trigger('autoLinkOrdReturn',[ednVE.id,ednVE.autoLinkOrdBln,ednID,sclIDs]);
+      });
+
     this.insertLineBtnDiv = $('<div class="toolbuttondiv">' +
                             '<button class="toolbutton" id="'+btnInsertLineName +
                               '" title="Insert a new physical line">+</button>'+
@@ -1037,11 +1086,13 @@ EDITORS.EditionVE.prototype = {
     this.editToolbar.append(this.deleteLineBtnDiv);
     this.editToolbar.append(this.curTagBtnDiv);
     this.editToolbar.append(this.addSequenceBtnDiv);
+    this.editToolbar.append(this.linkOrdBtnDiv);
     this.editToolbar.append(this.addSyllableBtnDiv);
     this.layoutMgr.registerEditToolbar(this.id,this.editToolbar);
     this.insertLineBtnDiv.hide();
     this.deleteLineBtnDiv.hide();
     this.addSyllableBtnDiv.hide();
+    this.linkOrdBtnDiv.hide();
     this.curTagBtnDiv.hide();
     this.repType = "hybrid";//default
     this.downloadRTFLink.attr('href',basepath+"/services/exportRTFEdition.php?db="+dbName+"&ednID="+this.edition.id+"&style="+this.repType+"&download=1");
@@ -1091,6 +1142,7 @@ EDITORS.EditionVE.prototype = {
         this.deleteLineBtnDiv.show();
         this.addSyllableBtnDiv.show();
         this.addSequenceBtnDiv.hide();
+        this.linkOrdBtnDiv.hide();
         this.showSeqBtnDiv.hide();
         this.showTagBtnDiv.hide();
         this.objLevelBtn.attr('disabled','disabled');
@@ -1119,6 +1171,7 @@ EDITORS.EditionVE.prototype = {
                  (!ednVE.editMode && ednVE.edition.readonly)) {
         if (!ednVE.editMode && ednVE.edition.readonly) {
           this.addSequenceBtnDiv.hide();
+          this.linkOrdBtnDiv.hide();
           this.objLevelBtn.attr('disabled','disabled');
           this.edStyleBtn.attr('disabled','disabled');
           this.linkSclBtn.attr('disabled','disabled');
@@ -1154,6 +1207,9 @@ EDITORS.EditionVE.prototype = {
           this.formatBtn.removeAttr('disabled');
           this.curTagBtnDiv.hide();
           this.addSequenceBtnDiv.show();
+          if (this.autoLinkOrdMode) {
+            this.linkOrdBtnDiv.show();
+          }
           this.showSeqBtnDiv.show();
       }
   },
@@ -2288,7 +2344,7 @@ mergeLine: function (direction,cbError) {
 
 
 /**
-* get the currently select entity global ids at the current selected level
+* get the current browser selection as entity global ids at the current selected level
 *
 * @returns string array | null Array of Entity global ids
 */
@@ -2296,6 +2352,9 @@ mergeLine: function (direction,cbError) {
   getSelectionEntityGIDs: function () {
     var ednVE = this,startNode, endNode, nextNode, prevNode, selectNode, startOrd, endOrd, ord,
          grdCnt=500, curGID, lastGID, prefix = this.level2Prefix[this.layoutMgr.getEditionObjectLevel()];
+    if (this.autoLinkOrdMode) {
+      prefix = 'scl';
+    }
     if (window.getSelection) {
       sel = window.getSelection();
       if (sel.isCollapsed) {
@@ -2413,7 +2472,12 @@ mergeLine: function (direction,cbError) {
     }
     foundGIDsLookup = {};
     selectGIDs = [];
-    ord = startOrd;
+    if (endOrd > startOrd) {//reverse selection
+      ord = endOrd;
+      endOrd = startOrd;
+    } else {
+      ord = startOrd;
+    }
     selectNode = $(startNode);
     while ( ord <= endOrd) {
 //      selectNode = $('.grpGra.ord'+ord,ednVE.contenDIV);
@@ -2457,6 +2521,27 @@ mergeLine: function (direction,cbError) {
     } else {
       return null;
     }
+  },
+
+
+/**
+* get the current selected entity global ids at the given entity level
+*
+* @returns string array | null Array of Entity global ids
+*/
+
+  getSelectionOrdEntityGIDs: function (prefix) {
+    var entGID = null, selectGIDs = null, regexEntGID = new RegExp(prefix+"\\d+");
+    if (this.selOrderGrpGraClasses.length) {
+      selectedGIDs = [];
+      $(this.selOrderGrpGraClasses).each(function(index,className) {
+        entGID = className.match(regexEntGID);
+        if (entGID.length) {
+          selectedGIDs.push(entGID[0]);
+        }
+      });
+    }
+    return selectedGIDs;
   },
 
 
@@ -2732,6 +2817,58 @@ mergeLine: function (direction,cbError) {
 
 
     /**
+    * handle 'autoLinkOrdRequest' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string linkSource Identifies the source baseline used for segments to link
+    * @param string mode Identifies the number of segments used in link mode command
+    */
+
+    function autoLinkOrdRequestHandler(e,senderID, linkSource, mode) {
+      if (senderID == ednVE.id) {
+        return;
+      }
+      DEBUG.log("event","link request recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource);
+      ednVE.pendingAutoLinkOrdBln= linkSource;
+      ednVE.pendingAutoLinkOrdMode = (mode == 0?"default":(mode == 1?"start":(mode == 2?"startstop":"multi")));
+      //if bln is linked to this text then show highlight
+      $(ednVE.editDiv).addClass('autoOrdLinkTarget');
+    };
+
+    $(this.editDiv).unbind('autoLinkOrdRequest').bind('autoLinkOrdRequest', autoLinkOrdRequestHandler);
+
+
+    /**
+    * handle 'autoLinkOrdComplete' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string linkSource Identifies the source baseline used for segments to link
+    * @param string linkEditionID identifies the edition being linked to
+    */
+
+    function autoLinkOrdCompleteHandler(e,senderID, linkSource, linkEditionID) {
+      if (senderID == ednVE.id) {
+        return;
+      }
+      DEBUG.log("event","link complete recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource+" linkEditionID of "+linkEditionID);
+      if (ednVE.autoLinkOrdMode && linkEditionID == ednVE.edition.id) {
+        //in link mode and linking has been completed so cleanup and update display
+        delete ednVE.autoLinkOrdMode;
+        delete ednVE.autoLinkOrdBln;
+        $(ednVE.editDiv).removeClass('autoOrdLinkingMode');
+        ednVE.refreshSegIDLinks();
+      } else if (ednVE.pendingAutoLinkOrdBln) {//non target editionVE, let's not keep it waiting.
+        delete ednVE.pendingAutoLinkOrdBln;
+        delete ednVE.pendingAutoLinkOrdMode;
+      }
+    };
+
+    $(this.editDiv).unbind('autoLinkOrdComplete').bind('autoLinkOrdComplete', autoLinkOrdCompleteHandler);
+
+
+    /**
     * handle 'linkAbort' event
     *
     * @param object e System event object
@@ -3004,7 +3141,9 @@ mergeLine: function (direction,cbError) {
           entTag, headernode, segIDs = [],i, sclIDs = [],sclID, lineord;
       if(!e.ctrlKey){//if not multiselect
         $(".selected", ednVE.contentDiv).removeClass("selected");
+        ednVE.selOrderGrpGraClasses = [];
       }
+      ednVE.selOrderGrpGraClasses.push(classes);
       if (objLevel == 'token' && ednVE.editMode != "modify") {
         entTag = classes.match(/tok\d+/)[0];
       } else if (objLevel == 'compound' && ednVE.editMode != "modify") {
@@ -3047,7 +3186,7 @@ mergeLine: function (direction,cbError) {
       //trigger selection change
       if (ednVE.linkMode) {
         $('.editContainer').trigger('linkResponse',[ednVE.id,classes.match(/scl\d+/)[0]]);
-      } else {
+      } else if (!ednVE.autoLinkOrdMode){
         $('.editContainer').trigger('updateselection',[ednVE.id,segIDs,entTag]);
       }
       //find first and last syllable
@@ -3067,7 +3206,7 @@ mergeLine: function (direction,cbError) {
             }
           }
       });
-      if (firstGroup && lastGroup) {
+      if (firstGroup && lastGroup && firstGroup != lastGroup) {
         sclSetSelection(firstGroup,"start",lastGroup,"end");
       }
       if (ednVE.editMode == "modify" && ednVE.sclEd) {
@@ -4353,8 +4492,9 @@ mergeLine: function (direction,cbError) {
         mdTarget = null;
         mmTarget = null;
         return false;
-      } else {
+      } else if (!e.ctrlKey) {
         $(".selected",ednVE.contentDiv).removeClass("selected");
+        $('.editContainer').trigger('updateselection',[ednVE.id,[""]]);
       }
     };
 
@@ -5945,6 +6085,23 @@ mergeLine: function (direction,cbError) {
                                                   (hindex==0?' firstLine':
                                                    (hindex == endHeaderIndex?" lastLine":""));
                 });
+        });
+  },
+
+/**
+* refreshes segID for all grapheme groups in an edition
+*/
+
+  refreshSegIDLinks: function () {
+    var ednVE = this,sclID,segID;
+    $(".grpGra",ednVE.contentDiv).each(function(hindex,elem){
+            //refresh the segID links for each scl
+            if (sclID = elem.className.match(/scl(\d+)/)) {
+              segID = ednVE.dataMgr.entities.scl[sclID[1]].segID;
+              if (segID) {
+                elem.className = elem.className.replace(/seg\d+/,"seg"+ segID);
+              }
+            }
         });
   },
 

@@ -93,6 +93,16 @@ div.editContainer.showTokenSep .toksep {
   background-color: orange;
 }
 
+#textEditPage .editContainer.hasFocus.autoOrdLinkingMode {
+  padding: 4px;
+  background-color: blue;
+}
+
+#textEditPage .editContainer.autoOrdLinkTarget {
+  padding: 4px;
+  background-color: lightblue;
+}
+
 #textEditPage .tcmedit {
   background-color: #e5e5e5;
 }

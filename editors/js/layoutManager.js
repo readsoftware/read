@@ -705,7 +705,7 @@ MANAGERS.LayoutManager.prototype = {
   focusHandler: function(e,args){
     var layoutMgr = this,
         paneID = (e && e.target.id && e.target.id.match(/pane\d+/))?
-                    e.target.id.match(/pane\d+/)[0]:null;
+                    e.target.id.match(/pane\d+/)[0]:null, $targetPane;
     if ( !paneID && e && e.target.id && e.target.id.match(/searchVE/)) {
       paneID = "searchVE";
     }
@@ -719,7 +719,8 @@ MANAGERS.LayoutManager.prototype = {
       }
     }
     if (paneID) {
-      if (this.focusPaneID) {
+      $targetPane = $('.editContainer.'+paneID+':not(:has(div.editPlaceholder))');
+      if (this.focusPaneID && this.focusPaneID != paneID) {
         $('#viewToolBarPanel').removeClass('show'+this.focusPaneID+'TB');
         $('#editToolBarPanel').removeClass('show'+this.focusPaneID+'TB');
         if ($('.editContainer.'+this.focusPaneID).hasClass('hasFocus')) {
@@ -729,13 +730,15 @@ MANAGERS.LayoutManager.prototype = {
           this.lastTextFocusPaneID = this.focusPaneID;
         }
       }
-      $('.editContainer.'+paneID).addClass('hasFocus');
-      $('#viewToolBarPanel').addClass('show'+paneID+'TB');
-      $('#editToolBarPanel').addClass('show'+paneID+'TB');
-      this.focusPaneID = paneID;
-      //TODO call editors setFocus api if available
-      if (this.editors && this.editors[paneID] && this.editors[paneID].setFocus) {
-        this.editors[paneID].setFocus();
+      if (!$targetPane.hasClass('hasFocus')) {
+        $('.editContainer.'+paneID).addClass('hasFocus');
+        $('#viewToolBarPanel').addClass('show'+paneID+'TB');
+        $('#editToolBarPanel').addClass('show'+paneID+'TB');
+        this.focusPaneID = paneID;
+        //TODO call editors setFocus api if available
+        if (this.editors && this.editors[paneID] && this.editors[paneID].setFocus) {
+          this.editors[paneID].setFocus();
+        }
       }
     }
   },

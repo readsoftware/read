@@ -661,6 +661,26 @@ EDITORS.ImageVE.prototype = {
     this.delSegBtn.attr('disabled','disabled');
 
     if (this.blnEntity) {
+      var btnAutoLinkOrdName = this.id+'AutoLinkOrd';
+      this.autoLinkOrdBtnDiv = $('<div class="toolbuttondiv">' +
+                              '<button class="toolbutton" id="'+btnAutoLinkOrdName +
+                                '" title="Auto link segments by ordinal">Auto Link</button>'+
+                              '<div class="toolbuttonlabel">Link by Ordinal</div>'+
+                             '</div>');
+      $('#'+btnAutoLinkOrdName,this.autoLinkOrdBtnDiv).unbind('click')
+                                 .bind('click',function(e) {
+        var blnID = imgVE.blnEntity.id, defaultMode;
+        if (imgVE.nextSegOrdinal && imgVE.nextSegOrdinal > 1) {
+          mode = Object.keys(imgVE.selectedPolygons).length;
+          imgVE.autoLinkOrdMode = true;
+          $('.editContainer').trigger('autoLinkOrdRequest',[imgVE.id,blnID,mode]);
+        } else {
+          alert("Please order segments first");
+        }
+      });
+    }
+
+    if (this.blnEntity) {
       var btnShowSegName = this.id+'ShowSeg';
       this.showSegBtnDiv = $('<div class="toolbuttondiv">' +
                               '<button class="toolbutton" id="'+btnShowSegName +
@@ -754,7 +774,8 @@ EDITORS.ImageVE.prototype = {
                   .append(this.savePolysBtnDiv)
                   .append(this.replacePolyBtnDiv)
                   .append(this.deleteSegBtnDiv)
-                  .append(this.orderSegBtnDiv);
+                  .append(this.orderSegBtnDiv)
+                  .append(this.autoLinkOrdBtnDiv);
     }
     this.layoutMgr.registerEditToolbar(this.id,this.editToolbar);
   },
@@ -1761,6 +1782,103 @@ EDITORS.ImageVE.prototype = {
     $(imgVE.editDiv).unbind('linkRequest').bind('linkRequest', linkRequestHandler);
 
 
+    /**
+    * handle 'autoLinkOrdAbort' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string requestSource Identifies the source baseline that sent the link request being aborted
+    */
+
+    function autoLinkOrdAbortHandler(e,senderID, requestSource) {
+      if (senderID == imgVE.id) {
+        return;
+      }
+      DEBUG.log("event","link abort recieved by imageVE in "+imgVE.id+" from "+senderID+" with requestSource "+ requestSource);
+      if (imgVE.autoLinkOrdMode && requestSource == imgVE.blnEntity.id) {
+        imgVE.autoLinkOrdMode = false;
+      }
+    };
+
+    $(this.editDiv).unbind('autoLinkOrdAbort').bind('autoLinkOrdAbort', autoLinkOrdAbortHandler);
+
+
+    /**
+    * handle 'autoLinkOrdReturn' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string requestSource Identifies the source baseline that sent the link request
+    * @param string linkTargetEdition Identifies the target edition to link
+    * @param string array sclIDs identifing the start and/or stop or set of syllables to use for ordinal linking
+    */
+
+    function autoLinkOrdReturnHandler(e,senderID, requestSource, linkTargetEdition, sclIDs) {
+      var savedata ={},segID,segIDs;
+      if (senderID == imgVE.id) {
+        return;
+      }
+      DEBUG.log("event","link abort recieved by imageVE in "+imgVE.id+" from "+senderID+" with requestSource "+ requestSource +
+                " link to ednID -"+linkTargetEdition+
+                (sclIDs?"  syllable IDs -"+sclIDs.join():""));
+      if (imgVE.autoLinkOrdMode && requestSource == imgVE.blnEntity.id && linkTargetEdition) {
+        //in link mode and have edition info so call link service
+        //sclIDs, segIDs, blnIDs, pattern and ednID
+        savedata["ednID"] = linkTargetEdition;
+        savedata["blnIDs"] = [imgVE.blnEntity.id];
+        if (sclIDs) {
+          savedata["sclIDs"] = sclIDs;
+        }
+        if (Object.keys(imgVE.selectedPolygons).length) {
+          segIDs = [];
+          for (segID in imgVE.selectedPolygons) {
+            segIDs.push(segID.substring(3));
+          }
+          savedata["segIDs"] = segIDs;
+        }
+        //jqAjax synch save
+        $.ajax({
+            type: 'POST',
+            dataType: 'json',
+            url: basepath+'/services/linkOrderedSegments.php?db='+dbName,//caution dependency on context having basepath and dbName
+            data: savedata,
+            async: true,
+            success: function (data, status, xhr) {
+              var segID,polygon;
+              if (typeof data == 'object' && data.success ) {
+                //update data
+                if (data.entities){
+                  imgVE.dataMgr.updateLocalCache(data,null);
+                }
+                if (imgVE.orderSegMode == "on") {//pressed autolinkord while in order segments mode
+                  imgVE.orderSegMode = "off";
+                  imgVE.drawImage();
+                  imgVE.drawImagePolygons();
+                }
+              }
+              if (data.editionHealth) {
+                DEBUG.log("health","***Save Lemma cmd="+cmd+"***");
+                DEBUG.log("health","Params: "+JSON.stringify(savedata));
+                DEBUG.log("health",data.editionHealth);
+              }
+              if (data.errors) {
+                alert("An error occurred while trying to link ordered segments for baseline bln"+imgVE.blnEntity.id+". Error: " + data.errors.join());
+              }
+              $('.editContainer').trigger('autoLinkOrdComplete',[imgVE.id,imgVE.blnEntity.id,linkTargetEdition]);
+              imgVE.autoLinkOrdMode = false;
+            },
+            error: function (xhr,status,error) {
+              // add record failed.
+              alert("An error occurred while sending a link ordered segments for baseline bln"+imgVE.blnEntity.id+". Error: " + error);
+              $('.editContainer').trigger('autoLinkOrdComplete',[imgVE.id,imgVE.blnEntity.id,linkTargetEdition]);
+            }
+        });
+      }
+    };
+
+    $(this.editDiv).unbind('autoLinkOrdReturn').bind('autoLinkOrdReturn', autoLinkOrdReturnHandler);
+
+
 /**
 * put your comment there...
 *
@@ -2009,7 +2127,7 @@ EDITORS.ImageVE.prototype = {
 */
 
     function updateSelectionHandler(e,senderID, selectionIDs) {
-      if (senderID == imgVE.id) {
+      if (senderID == imgVE.id || imgVE.autoLinkOrdMode) {
         return;
       }
       DEBUG.log("event","selection changed received by imageVE in "+imgVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
@@ -2239,6 +2357,12 @@ EDITORS.ImageVE.prototype = {
       }
       if ( this.orderSegMode != "on" ) {
         this.imgContext.strokeStyle = polygon.hilite? "white" : (this.selectedPolygons[polygon.label]? "white" : polygon.color);
+        if (polygon.order) {// draw order numer if there is one
+          this.imgContext.lineWidth = 1;
+          this.imgContext.fillStyle = this.imgContext.strokeStyle;
+          this.imgContext.fillText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
+          this.imgContext.strokeText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
+        }
         this.imgContext.lineWidth = (this.selectedPolygons[polygon.label]? 3 : polygon.width); //polygon width
       } else {
         if (polygon.order) {// draw order numer if there is one
