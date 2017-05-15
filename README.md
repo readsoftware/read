@@ -15,3 +15,7 @@ Linking texts to translations:
 Creating glossaries for texts:
 
 ![Glossary](http://130.223.29.184/screenshots/read_glossary.png)
+
+Creating paleographic tables:
+
+![Paleography](http://130.223.29.184/screenshots/read_paleography.png)
