@@ -121,12 +121,12 @@ EDITORS.ImageVE =  function(imgVECfg) {
   }
 
   if (this.blnEntity && this.blnEntity.segIDs && this.blnEntity.segIDs.length > 0) {
-    var i, len = this.blnEntity.segIDs.length, maxOrdinal = 0, segOrdinal;
+    var i, len = this.blnEntity.segIDs.length, maxOrdinal = 0, segOrdinal, segment;
     for (i=0; i<len; i++) {// add segments to baseline image
       segID = this.blnEntity.segIDs[i];
       segment = this.dataMgr.entities['seg'][segID];
       if (segment) {
-        if (segment.ordinal && segment.ordinal > maxOrdinal) {
+        if (segment.ordinal && parseInt(segment.ordinal) > maxOrdinal) {
           maxOrdinal = segment.ordinal;
         }
         //WARNING todo add code for multiple polygon boundary
@@ -231,9 +231,7 @@ EDITORS.ImageVE.prototype = {
     this.initViewport();
     this.draw();
     this.createStaticToolbar();
-    if (!this.nextSegOrdinal) {
-      this.nextSegOrdinal = 1;
-    }
+    this.syncNextSegOrdinal();
   },
 
 
@@ -254,6 +252,29 @@ EDITORS.ImageVE.prototype = {
 
   setFocus: function () {
     this.imgCanvas.focus();
+  },
+
+
+/**
+* Syncs/calculates (max + 1) the next segment order number for this baseline
+*
+*/
+
+  syncNextSegOrdinal: function () {
+    var i, len, maxOrdinal = 0;
+    if (this.blnEntity && this.blnEntity.segIDs && this.blnEntity.segIDs.length) {
+      len = this.blnEntity.segIDs.length;
+      for (i=0; i<len; i++) {// add segments to baseline image
+        segID = this.blnEntity.segIDs[i];
+        segment = this.dataMgr.entities['seg'][segID];
+        if (segment) {
+          if (segment.ordinal && parseInt(segment.ordinal) > maxOrdinal) {
+            maxOrdinal = segment.ordinal;
+          }
+        }
+      }
+    }
+    this.nextSegOrdinal = 1 + parseInt(maxOrdinal);
   },
 
 
@@ -511,8 +532,8 @@ EDITORS.ImageVE.prototype = {
     var btnSegOrdinalName = this.id+'orderSeg';
     this.orderSegBtnDiv = $('<div class="toolbuttondiv">' +
                             '<button class="toolbutton iconbutton" id="'+btnSegOrdinalName +
-                              '" title="Delete selected segments">Off</button>'+
-                            '<div class="toolbuttonlabel">Order Segments</div>'+
+                              '" title="Set segment order by numbering">Off</button>'+
+                            '<div class="toolbuttonlabel">Number segs.</div>'+
                            '</div>');
     this.orderSegBtn = $('#'+btnSegOrdinalName,this.orderSegBtnDiv);
     imgVE.orderSegMode = "off";
@@ -522,11 +543,11 @@ EDITORS.ImageVE.prototype = {
           if (imgVE.linkMode) {
             return;
           }
+          imgVE.syncNextSegOrdinal();
           switch (imgVE.orderSegMode) {
             case 'off':
               //ask user if continue or restart
-              if (!confirm("Would you like to continue ordering segments from the next availble ordinal "+
-                            imgVE.nextSegOrdinal + ". Press cancel to reset and begin ordering from 1.")) {
+              if (!confirm("Press OK to continue numbering segments from "+ imgVE.nextSegOrdinal + ". Press cancel to restart numbering at 1.")) {
                 //restart - call service to clear seg ordinals with success update cache, set nextOrdinal = 1 and redraw
                 savedata["cmd"] = "clearOrdinals";
                 savedata["blnID"] = imgVE.blnEntity.id;
@@ -607,7 +628,7 @@ EDITORS.ImageVE.prototype = {
     this.deleteSegBtnDiv = $('<div class="toolbuttondiv">' +
                             '<button class="toolbutton iconbutton" id="'+btnDeleteSegName +
                               '" title="Delete selected segments">-</button>'+
-                            '<div class="toolbuttonlabel">Delete Segment</div>'+
+                            '<div class="toolbuttonlabel">Delete segment</div>'+
                            '</div>');
     this.delSegBtn = $('#'+btnDeleteSegName,this.deleteSegBtnDiv);
     //delete segment code
@@ -664,8 +685,8 @@ EDITORS.ImageVE.prototype = {
       var btnAutoLinkOrdName = this.id+'AutoLinkOrd';
       this.autoLinkOrdBtnDiv = $('<div class="toolbuttondiv">' +
                               '<button class="toolbutton" id="'+btnAutoLinkOrdName +
-                                '" title="Auto link segments by ordinal">Auto Link</button>'+
-                              '<div class="toolbuttonlabel">Link by Ordinal</div>'+
+                                '" title="Auto link numbered segments">Auto Link</button>'+
+                              '<div class="toolbuttonlabel">Link by number</div>'+
                              '</div>');
       $('#'+btnAutoLinkOrdName,this.autoLinkOrdBtnDiv).unbind('click')
                                  .bind('click',function(e) {
@@ -2384,10 +2405,9 @@ EDITORS.ImageVE.prototype = {
           this.imgContext.fillText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
           this.imgContext.strokeText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
           this.imgContext.lineWidth = 3 ;
-        } else {
-          this.imgContext.strokeStyle = "blue";
-          this.imgContext.lineWidth = 2 ;
         }
+        this.imgContext.strokeStyle = "blue";
+        this.imgContext.lineWidth = 1 ;
       }
       this.imgContext.beginPath();
       this.imgContext.moveTo((polygon.polygon[0][0] - offsetX)*scaleX,(polygon.polygon[0][1] - offsetY)*scaleY);

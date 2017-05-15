@@ -125,7 +125,7 @@ EDITORS.EditionVE.prototype = {
       //check already in link mode
       if (this.linkMode) {
         alert("Currently in direct single select link mode" + (this.autoLink?" with autoAdvance":"") +
-               ". You must exit before trying to Auto Link Ordinals. Aborting Auto Ordinal Link Request.");
+               ". You must exit before trying to Auto Link by Number. Aborting Auto Number Link Request.");
         $('.editContainer').trigger('autoLinkOrdAbort',[this.id,this.pendingAutoLinkOrdBln]);
         delete this.pendingAutoLinkOrdBln;
         delete this.pendingAutoLinkOrdMode;
@@ -147,7 +147,7 @@ EDITORS.EditionVE.prototype = {
         } else {
           //show link ordinal button
           this.linkOrdBtnDiv.show();
-          alert("Auto Linking by Ordinal for a range of segments requires you to select the syllables. Please ctrl+dblclick the syllbles and click link ordinal button when done.");
+          alert("Auto Linking for a range of segments requires you to select the first syllable (or ctrl+dblclick a range of syllables) and then click 'Finish Linking' button.");
         }
       }
     }
@@ -942,8 +942,8 @@ EDITORS.EditionVE.prototype = {
       var btnLinkOrdName = this.id+'LinkOrd';
       this.linkOrdBtnDiv = $('<div class="toolbuttondiv">' +
                               '<button class="toolbutton" id="'+btnLinkOrdName +
-                                '" title="Link selected syllable by segment ordinal">Link Ordinal</button>'+
-                              '<div class="toolbuttonlabel">Link Syllables</div>'+
+                                '" title="Finish auto linking by segment number">Finish Linking</button>'+
+                              '<div class="toolbuttonlabel">Link by number</div>'+
                              '</div>');
       $('#'+btnLinkOrdName,this.linkOrdBtnDiv).unbind('click')
                                  .bind('click',function(e) {
@@ -2865,6 +2865,7 @@ mergeLine: function (direction,cbError) {
         delete ednVE.autoLinkOrdBln;
         $(ednVE.editDiv).removeClass('autoOrdLinkingMode');
         ednVE.refreshSegIDLinks();
+        ednVE.linkOrdBtnDiv.hide();
       } else if (ednVE.pendingAutoLinkOrdBln) {//non target editionVE, let's not keep it waiting.
         delete ednVE.pendingAutoLinkOrdBln;
         delete ednVE.pendingAutoLinkOrdMode;
