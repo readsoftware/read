@@ -2,7 +2,7 @@ The Research Environment for Ancient Documents (READ) is a software system suppo
 
 READ is being developed by a core team consisting of Stefan Baums (Munich), Andrew Glass (Seattle), Ian McCrabb (Sydney) and Stephen White (Venice). Other contributors include Arlo Griffiths, Yang Li and Andrea Schlosser. READ development has received generous funding from the Bavarian Academy of Sciences and Humanities, the University of Lausanne, the University of Washington, the Prakaś Foundation, the École française d’Extrême‐Orient and the University of Sydney. READ is open‐source software under the terms of the GNU General Public License version 3.
 
-The following screenshots (courtesy of Andrea Schlosser) illustrate some of the functionality of READ
+The following screenshots (courtesy of Andrea Schlosser) illustrate some of the functionality of READ.
 
 Linking images to texts:
 
