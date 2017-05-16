@@ -120,13 +120,13 @@ if (!$data) {
   $vis = null;
   if ( isset($data['vis'])) {//get vis
     if ( $data['vis'] == "User"){
-      $vis = 3;
+      $vis = array(3);
     }
     if ( $data['vis'] == "Public"){
-      $vis = 2;
+      $vis = array(2);
     }
     if ( $data['vis'] == "Private"){
-      $vis =getUserDefEditorID();
+      $vis =getUserDefVisibilityIDs();
     }
   }
   $url = null;
@@ -187,7 +187,7 @@ if (count($errors) == 0) {
         }
         $annotation->setTypeID($typeID);
         $annotation->setOwnerID(getUserDefEditorID());
-        $annotation->setVisibilityIDs(getUserDefVisibilityIDs());
+        $annotation->setVisibilityIDs($vis);
         $defAttrIDs = getUserDefAttrIDs();
         if ($defAttrIDs){
           $annotation->setAttributionIDs($defAttrIDs);
@@ -259,8 +259,7 @@ if (count($errors) == 0) {
       break;
     case "updateAno":
       if ($vis){
-        $annotation->setVisibilityIDs(array($vis));
-        $vis = $annotation->getVisibilityIDs();
+        $annotation->setVisibilityIDs($vis);
         if (in_array(2,$vis)) {
           $vis = "Public";
         } else if (in_array(3,$vis)) {

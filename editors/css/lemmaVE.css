@@ -325,12 +325,13 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
   width: 94%;
   background-color: rgb(242,242,242);
 }
-.attestedannobtn{
+.attestedannoui{
   margin-top: 10px;
   background-color: inherit !important;
   color: blue !important;
   font-size: 98%;
   cursor: pointer;
+  padding-right: 15px;
 }
 .radioUI{
   width: 96%;
@@ -478,6 +479,7 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
   border: none;
   background-color: rgb(194,194,194)!important;
   cursor: pointer;
+  color: red !important;
 }
 .removetag, .removeattr, .removeimg {
   margin: 0px 0px 0px 5px;
@@ -587,6 +589,9 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
   margin-top: 15px;
   color: blue!important;
   cursor: pointer;
+}
+span.attestedannobtn{
+  padding-right: 0px!important;
 }
 span.unlink, div.sandhibtn, span.attestedannobtn{
   background-color: inherit!important;

@@ -1334,7 +1334,7 @@ EDITORS.LemmaVE.prototype = {
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['noun-partofspeech'] ||//term dependency
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['pron.-partofspeech'] ||//term dependency
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['num.-partofspeech']))? true:false,//term dependency
-        entities = [], infMap = {},entity, displayUI, infVal, inflection,
+        entities = [], infMap = {},entity, displayUI, infVal, inflection, addDelBtn,
         attested, attestedAnnoTag, attestedAnno, attestedAnnoLabel, entIDs = this.isLemma ? this.entity.entityIDs:"";
     DEBUG.traceEntry("createAttestedUI");
     //create UI container
@@ -1436,6 +1436,7 @@ EDITORS.LemmaVE.prototype = {
         attestedAnnoTag = null;
         attestedAnno = "Annotate attested form";
         attestedAnnoLabel = "A";
+        addDelBtn = false;
         if (attested.linkedAnoIDsByType && attested.linkedAnoIDsByType[this.glAnnoType]) { //has a glossary annotation
           attestedAnnoTag = "ano"+attested.linkedAnoIDsByType[this.glAnnoType][0];
           temp = this.dataMgr.getEntityFromGID(attestedAnnoTag);
@@ -1445,6 +1446,7 @@ EDITORS.LemmaVE.prototype = {
               attestedAnno = attestedAnno.substring(0,249) + "…";
             }
             attestedAnnoLabel = "…"
+            addDelBtn = true;
           }
         }
         attestedEntry = $('<div class="attestedentry">' +
@@ -1452,12 +1454,14 @@ EDITORS.LemmaVE.prototype = {
                             '<span class="attestedform '+attested.tag+'">' + attested.transcr.replace(/ʔ/g,'') + '</span>'+
                             (infVal?'<span class="inflection '+attested.tag+'">' + infVal + '</span>':'') +
                             '<span class="attestedui '+attested.tag+'">' +
-                            '<span class="attestedannobtn '+attested.tag+'"' + ' title="'+attestedAnno+'"' + '>' +
+                            '<span class="attestedannoui"><span class="attestedannobtn '+attested.tag+'"' + ' title="'+attestedAnno+'"' + '>' +
                                         attestedAnnoLabel + '</span>' +
-                            '<span class="unlink '+attested.tag+'"><u>unlink</u></span>'+
+                            (addDelBtn?'<span class="removeanno '+attestedAnnoTag+'" title="remove glossary note ('+attestedAnnoTag+')">X</span>':"")+
+                            '</span><span class="unlink '+attested.tag+'"><u>unlink</u></span>'+
                             '</span>'+
                           '</div>');
         $('.attestedannobtn',attestedEntry).prop('gid',(attestedAnnoTag?attestedAnnoTag:attested.gid));
+        $('.removeanno',attestedEntry).prop('gid',attested.gid);
         $('.inflection',attestedEntry).prop('gid',attested.gid);
         $('.unlink',attestedEntry).prop('gid',attested.gid);//attach entGID of attested to be unlinked
         if (infID) {//attach link to inflection if inflected entity
@@ -1479,6 +1483,15 @@ EDITORS.LemmaVE.prototype = {
     $('span.attestedannobtn',this.attestedUI).unbind("click").bind("click",function(e) {
       //show anno editor with glossary annotation if exist
       lemmaVE.propMgr.showVE("annoVE",$(this).prop('gid'));
+    });
+    //remove anno
+    $('span.removeanno',this.attestedUI).unbind("click").bind("click",function(e) {
+      var classes = $(this).attr('class'),
+          anoTag = classes.match(/ano\d+/);
+      if (anoTag && anoTag.length) {
+          anoTag = anoTag[0];
+          lemmaVE.removeAnno(anoTag,$(this).prop('gid'));
+      }
     });
     $('span.inflection',this.attestedUI).unbind("click").bind("click",function(e) {
       lemmaVE.attestedUI.addClass("edit");
@@ -1681,8 +1694,11 @@ EDITORS.LemmaVE.prototype = {
     //remove anno
     $('span.removeanno',this.annoUI).unbind("click").bind("click",function(e) {
       var classes = $(this).attr('class'),
-          anoTag = classes.match(/ano\d+/)[0];
-      lemmaVE.removeAnno(anoTag);
+          anoTag = classes.match(/ano\d+/);
+      if (anoTag && anoTag.length) {
+          anoTag = anoTag[0];
+          lemmaVE.removeAnno(anoTag);
+      }
     });
     //create input with save button
     DEBUG.traceExit("createAnnotationUI");
@@ -1714,11 +1730,11 @@ EDITORS.LemmaVE.prototype = {
 * @param anoTag
 */
 
-  removeAnno: function(anoTag) {
+  removeAnno: function(anoTag,linkFromGID) {
     var lemmaVE = this, savedata = {};
     DEBUG.traceEntry("removeAnno");
     savedata["cmd"] = "removeAno";
-    savedata["linkFromGID"] = this.prefix+":"+this.entID;
+    savedata["linkFromGID"] = (linkFromGID?linkFromGID: this.prefix+":"+this.entID);
     savedata["anoTag"] = anoTag;
     //jqAjax synch save
     $.ajax({
