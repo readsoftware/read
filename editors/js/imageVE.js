@@ -261,11 +261,16 @@ EDITORS.ImageVE.prototype = {
 */
 
   syncNextSegOrdinal: function () {
-    var i, len, maxOrdinal = 0;
+    var i, len, maxOrdinal = 0, segID, segIDs;
     if (this.blnEntity && this.blnEntity.segIDs && this.blnEntity.segIDs.length) {
-      len = this.blnEntity.segIDs.length;
+      segIDs = this.blnEntity.segIDs;
+    } else if (this.dataMgr.entities.seg) {
+      segIDs = Object.keys(this.dataMgr.entities.seg);
+    }
+    if (segIDs && segIDs.length) {
+      len = segIDs.length;
       for (i=0; i<len; i++) {// add segments to baseline image
-        segID = this.blnEntity.segIDs[i];
+        segID = segIDs[i];
         segment = this.dataMgr.entities['seg'][segID];
         if (segment) {
           if (segment.ordinal && parseInt(segment.ordinal) > maxOrdinal) {
@@ -314,6 +319,9 @@ EDITORS.ImageVE.prototype = {
           asynch: false,
           success: function (data, status, xhr) {
               if (typeof data == 'object' && data.segment && data.segment.success) {
+                if (data.entities && data.entities.insert) {
+                  imgVE.dataMgr.updateLocalCache(data,null);
+                }
                 if (data['segment'].columns &&
                     data['segment'].records[0] &&
                     data['segment'].columns.indexOf('seg_id') > -1) {
