@@ -239,8 +239,13 @@
                 }
                 if ($conj2) {
                   $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
+                } else {
+                  $conj2 = '?';
                 }
-                $node = &$groupedForms[$vtensemood][$num][$vper];
+                if (!array_key_exists($conj2,$groupedForms[$vtensemood][$num][$vper])) {
+                  $groupedForms[$vtensemood][$num][$vper][$conj2] = array();
+                }
+                $node = &$groupedForms[$vtensemood][$num][$vper][$conj2];
               } else {
                 if ($gen) {
                   $gen = $termLookup[$gen].($ingCF[3]==2?'(?)':'');
@@ -268,8 +273,13 @@
                 }
                 if ($conj2) {
                   $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
+                } else {
+                  $conj2 = '?';
                 }
-                $node = &$groupedForms[$gen][$num][$case];
+                if (!array_key_exists($conj2,$groupedForms[$gen][$num][$case])) {
+                  $groupedForms[$gen][$num][$case][$conj2] = array();
+                }
+                $node = &$groupedForms[$gen][$num][$case][$conj2];
               }
               $inflectionComponents = $inflection->getComponents(true);
               foreach ($inflectionComponents as $inflectionComponent) {
@@ -302,6 +312,7 @@
                   }
                 }
                 $loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
+                //accumulate locations
                 if (!array_key_exists($sc,$node)) {
                   $node[$sc] = array('value'=>
                                        array($value =>
@@ -359,7 +370,11 @@
               if (! array_key_exists('?',$groupedForms['?']['?'])) {
                 $groupedForms['?']['?']['?'] = array();
               }
-              $node = &$groupedForms['?']['?']['?'];
+              if (! array_key_exists('?',$groupedForms['?']['?']['?'])) {
+                $groupedForms['?']['?']['?']['?'] = array();
+              }
+              $node = &$groupedForms['?']['?']['?']['?'];
+              // accumulate locations
               if (! array_key_exists($sc,$node)) {
                 $node[$sc] = array('value'=>
                                      array($value =>
@@ -380,10 +395,12 @@
             $displayOrder1 = array('pres.','pres.(?)','Indic.','Indic.(?)','opt.','opt.(?)','impv.','impv.(?)','fut.','fut.(?)','perf.','perf.(?)','pret.','pret.(?)','?');
             $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
             $displayOrder3 = array('1st','1st(?)','2nd','2nd(?)','3rd','3rd(?)','?');
+            $displayOrder4 = array('inf.','inf.(?)','abs.','abs.(?)','?');
           } else {
             $displayOrder1 = array('m.','m.(?)','mn.','mn.(?)','n.','n.(?)','mnf.','mnf.(?)','nf.','nf.(?)','f.','f.(?)','mf.','mf.(?)','?');
             $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
             $displayOrder3 = array('nom.','nom.(?)','acc.','acc.(?)','instr.','instr.(?)','dat.','dat.(?)','dat/gen.','dat/gen.(?)','abl.','abl.(?)','gen.','gen.(?)','loc.','loc.(?)','voc.','voc.(?)','?');
+            $displayOrder4 = array('desid.','desid.(?)','intens.','intens.(?)','?');
           }
           $firstComponent = true;
           foreach ($displayOrder1 as $key1) {
@@ -399,59 +416,66 @@
                 if (!array_key_exists($key3,$groupedForms[$key1][$key2])){
                   continue;
                 }
-                if ($firstComponent) {
-                  $firstComponent = false;
-                } else if ($key1 == '?' && $key2 == '?' && $key3 == '?'){
-                  $rtf .= "; ";
-                } else {
-                  $rtf .= "; ";
-                }
-                $rtf .= $infStyle;
-                if ($isFirstKey1) {
-                  $isFirstKey1 = false;
-                  if ($key1 == '?' && $key2 == '?' && $key3 == '?') {
-                    if ($lemmaPos != 'adv.' && $lemmaPos != 'ind.'){ //term dependency
-                      $rtf .= "unclear: ";
-                    }
-                  } else if (!$lemmaGender){//handle noun supress infection gender output
-                    $rtf .= $key1." ";
+                foreach ($displayOrder4 as $key4) {
+                  if (!array_key_exists($key4,$groupedForms[$key1][$key2][$key3])){
+                    continue;
                   }
-                }
-                if ($key1 != '?' || $key1 == '?' && ($key2 != '?' || $key3 != '?')) {
-                  $rtf .= $key3." ".$key2." ";
-                }
-                $rtf .= $endStyle;
-                $grpNode = $groupedForms[$key1][$key2][$key3];
-                ksort($grpNode);
-                $isFirstNode = true;
-                foreach ($grpNode as $sc => $formInfo) {
-                  if ($isFirstNode) {
-                    $isFirstNode = false;
+                  if ($firstComponent) {
+                    $firstComponent = false;
+//                  } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?'){
+//                    $rtf .= "; ";
                   } else {
-                    $rtf .= ", ";
+                    $rtf .= "; ";
                   }
-                  $isFirstForm = true;
-                  foreach ($formInfo['value'] as $formTranscr => $locInfo) {
-                    if ($isFirstForm) {
-                      $isFirstForm = false;
+                  $rtf .= $infStyle;
+                  if ($isFirstKey1) {
+                    $isFirstKey1 = false;
+                    if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {
+                      if ($lemmaPos != 'adv.' && $lemmaPos != 'ind.'){ //term dependency
+                        $rtf .= "unclear: ";
+                      }
+                    } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 != '?') {
+                      $rtf .= $key4." ";
+                    } else if (!$lemmaGender){//handle noun supress infection gender output
+                      $rtf .= $key1." ";
+                    }
+                  }
+                  if ($key1 != '?' || $key1 == '?' && ($key2 != '?' || $key3 != '?')) {
+                    $rtf .= $key3." ".$key2." ";
+                  }
+                  $rtf .= $endStyle;
+                  $grpNode = $groupedForms[$key1][$key2][$key3][$key4];
+                  ksort($grpNode);
+                  $isFirstNode = true;
+                  foreach ($grpNode as $sc => $formInfo) {
+                    if ($isFirstNode) {
+                      $isFirstNode = false;
                     } else {
                       $rtf .= ", ";
                     }
-                    $rtf .= $attestedStyle.$formTranscr.$endStyle;
-                    ksort($locInfo);
-                    $isFirstLoc = true;
-                    foreach ($locInfo['loc'] as $formLoc => $cntLoc) {
-                      if ($isFirstLoc) {
-                        $rtf .= $space.$eol.$linRefStyle;
-                        $isFirstLoc = false;
+                    $isFirstForm = true;
+                    foreach ($formInfo['value'] as $formTranscr => $locInfo) {
+                      if ($isFirstForm) {
+                        $isFirstForm = false;
                       } else {
                         $rtf .= ", ";
                       }
-                      $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
+                      $rtf .= $attestedStyle.$formTranscr.$endStyle;
+                      ksort($locInfo['loc']);
+                      $isFirstLoc = true;
+                      foreach ($locInfo['loc'] as $formLoc => $cntLoc) {
+                        if ($isFirstLoc) {
+                          $rtf .= $space.$eol.$linRefStyle;
+                          $isFirstLoc = false;
+                        } else {
+                          $rtf .= ", ";
+                        }
+                        $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
+                      }
+                      $rtf .= $endStyle.$eol;
                     }
-                    $rtf .= $endStyle.$eol;
+                    //$rtf .= $endStyle.$eol;
                   }
-                  //$rtf .= $endStyle.$eol;
                 }
               }
             }
@@ -704,7 +728,7 @@
                   $label = null;
                 }
               } else {
-                error_log("no syllable IDs found for $word processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                error_log("no syllable IDs found for ".$word->getGlobalID()." processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
                 $label = null;
               }
               if ($label) {

@@ -479,7 +479,6 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
   border: none;
   background-color: rgb(194,194,194)!important;
   cursor: pointer;
-  color: red !important;
 }
 .removetag, .removeattr, .removeimg {
   margin: 0px 0px 0px 5px;
