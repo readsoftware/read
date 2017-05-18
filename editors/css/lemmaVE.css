@@ -503,7 +503,7 @@ div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLa
 .dirty .saveBtnDiv{
   background-color: green;
 }
-.buttonDiv > span, .saveBtnDiv > span,
+.buttonDiv > span, .saveBtnDiv > span, .deleteBtnDiv > span,
 .clearBtnDiv > span, .cancelBtnDiv > span{
   background-color: inherit!important;
   color: inherit!important;

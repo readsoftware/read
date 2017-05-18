@@ -1334,7 +1334,7 @@ EDITORS.LemmaVE.prototype = {
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['noun-partofspeech'] ||//term dependency
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['pron.-partofspeech'] ||//term dependency
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['num.-partofspeech']))? true:false,//term dependency
-        entities = [], infMap = {},entity, displayUI, infVal, inflection, addDelBtn,
+        entities = [], infMap = {},entity, displayUI, infVal, inflection,
         attested, attestedAnnoTag, attestedAnno, attestedAnnoLabel, entIDs = this.isLemma ? this.entity.entityIDs:"";
     DEBUG.traceEntry("createAttestedUI");
     //create UI container
@@ -1436,7 +1436,6 @@ EDITORS.LemmaVE.prototype = {
         attestedAnnoTag = null;
         attestedAnno = "Annotate attested form";
         attestedAnnoLabel = "A";
-        addDelBtn = false;
         if (attested.linkedAnoIDsByType && attested.linkedAnoIDsByType[this.glAnnoType]) { //has a glossary annotation
           attestedAnnoTag = "ano"+attested.linkedAnoIDsByType[this.glAnnoType][0];
           temp = this.dataMgr.getEntityFromGID(attestedAnnoTag);
@@ -1446,7 +1445,6 @@ EDITORS.LemmaVE.prototype = {
               attestedAnno = attestedAnno.substring(0,249) + "…";
             }
             attestedAnnoLabel = "…"
-            addDelBtn = true;
           }
         }
         attestedEntry = $('<div class="attestedentry">' +
@@ -1456,11 +1454,11 @@ EDITORS.LemmaVE.prototype = {
                             '<span class="attestedui '+attested.tag+'">' +
                             '<span class="attestedannoui"><span class="attestedannobtn '+attested.tag+'"' + ' title="'+attestedAnno+'"' + '>' +
                                         attestedAnnoLabel + '</span>' +
-                            (addDelBtn?'<span class="removeanno '+attestedAnnoTag+'" title="remove glossary note ('+attestedAnnoTag+')">X</span>':"")+
                             '</span><span class="unlink '+attested.tag+'"><u>unlink</u></span>'+
                             '</span>'+
                           '</div>');
-        $('.attestedannobtn',attestedEntry).prop('gid',(attestedAnnoTag?attestedAnnoTag:attested.gid));
+        $('.attestedannobtn',attestedEntry).prop('anoTag',(attestedAnnoTag?attestedAnnoTag:null));
+        $('.attestedannobtn',attestedEntry).prop('gid',attested.gid);
         $('.removeanno',attestedEntry).prop('gid',attested.gid);
         $('.inflection',attestedEntry).prop('gid',attested.gid);
         $('.unlink',attestedEntry).prop('gid',attested.gid);//attach entGID of attested to be unlinked
@@ -1482,7 +1480,7 @@ EDITORS.LemmaVE.prototype = {
     });
     $('span.attestedannobtn',this.attestedUI).unbind("click").bind("click",function(e) {
       //show anno editor with glossary annotation if exist
-      lemmaVE.propMgr.showVE("annoVE",$(this).prop('gid'));
+      lemmaVE.propMgr.showVE("annoVE",$(this).prop('anoTag'),$(this).prop('gid'));
     });
     //remove anno
     $('span.removeanno',this.attestedUI).unbind("click").bind("click",function(e) {
@@ -1748,6 +1746,9 @@ EDITORS.LemmaVE.prototype = {
               //update data
               lemmaVE.dataMgr.updateLocalCache(data,null);
               lemmaVE.propMgr.showVE();
+              if (lemmaVE.propMgr.annoVE) {
+                lemmaVE.propMgr.annoVE.removeDirtyMarkers();
+              }
             }
             if (data.errors) {
               alert("An error occurred while trying to remove annotation record. Error: " + data.errors.join());

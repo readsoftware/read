@@ -225,10 +225,9 @@ if (count($errors) == 0) {
             $annotation->save();
             if ($annotation->hasError()) {
               array_push($errors,"error unlinking annotation '".$annotation->getValue()."' - ".$annotation->getErrors(true));
-            }else{
+            }else if (count($linkFromIDs) > 0) {
               addUpdateEntityReturnData("ano",$annotation->getID(),'linkedFromIDs', $annotation->getLinkFromIDs());
-            }
-            if (count($linkFromIDs) == 0) {
+            } else if (count($linkFromIDs) == 0) {
               $annotation->markForDelete();
               if ($annotation->hasError()) {
                 array_push($errors,"error deleting annotation '".$annotation->getValue()."' - ".$annotation->getErrors(true));

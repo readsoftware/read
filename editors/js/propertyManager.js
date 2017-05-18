@@ -168,7 +168,7 @@ MANAGERS.PropertyManager.prototype = {
 * @param gid
 */
 
-  showVE: function (propVEType,gid) {
+  showVE: function (propVEType,gid,ctxGID) {
     DEBUG.traceEntry("showVE");
     if (!gid && propVEType == "tabPropVE") {
       gid = this.currentVE.tag;
@@ -282,7 +282,7 @@ MANAGERS.PropertyManager.prototype = {
             if (this.currentVE) {
               this.currentVE.hide();
               if (this.currentVE.tag){
-                this.annoVE.entTag = this.currentVE.tag;//set the annoVE scope entity
+                this.annoVE.entTag = (ctxGID?ctxGID:this.currentVE.tag);//set the annoVE scope entity
               }
             }
             this.annoVE.show();// ensure anno editor is visible

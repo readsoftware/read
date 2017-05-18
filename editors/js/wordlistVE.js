@@ -1444,9 +1444,12 @@ EDITORS.WordlistVE.prototype = {
       $(".selected", wordlistVE.contentDiv).removeClass("selected");
       if (selectionIDs && selectionIDs.length && selectionIDs[0].substr(0,3) != 'seg') {
         $.each(selectionIDs, function(i,val) {
-          var elem = $('.'+val,wordlistVE.contentDiv)
-          if (!elem.hasClass("selected")) {
-            elem.addClass("selected");
+          if (val) {
+            var elem;
+            elem = $('.'+val,wordlistVE.contentDiv);
+            if (elem && !elem.hasClass("selected")) {
+              elem.addClass("selected");
+            }
           }
         });
       } else if (entTag && entTag.length && entTag.length > 3) {

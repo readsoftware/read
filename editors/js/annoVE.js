@@ -98,7 +98,7 @@ EDITORS.AnnoVE.prototype = {
       prefix = tag.substring(0,3),
       id = tag.substring(3);
       if (prefix != "ano"){
-        DEBUG.log("warn","setting annotation editor to not anno GID "+gid);
+        DEBUG.log("warn","setting annotation editor to non anno GID "+gid);
         delete this.tag;
         delete this.anoID;
         this.entity = null;
@@ -248,6 +248,16 @@ EDITORS.AnnoVE.prototype = {
         this.editDiv.removeClass("dirty");
       }
     }
+  },
+
+
+/**
+* put your comment there...
+*
+*/
+
+  removeDirtyMarkers: function() {
+    this.editDiv.find('.dirty').removeClass("dirty");
   },
 
 
@@ -458,12 +468,15 @@ EDITORS.AnnoVE.prototype = {
 */
 
   createSaveUI: function() {
-    var annoVE = this,
-        listCtrl = [{label: "Save",type:"saveBtnDiv"},
-                    {label: "Cancel",type:"cancelBtnDiv"}];
-    var annoVE = this,
-        radioGroup = $('<div class="radioGroupUI annoSaveUI"></div>');
+    var annoVE = this, annotation,
+    radioGroup = $('<div class="radioGroupUI annoSaveUI"></div>');
     radioGroup.append($('<button class="saveBtnDiv" type="button"><span>Save</span></button>'));
+    if (this.anoID) {
+      annotation = this.dataMgr.getEntity('ano',this.anoID);
+      if (!annotation.readOnly) {
+        radioGroup.append($('<button class="deleteBtnDiv" type="button"><span>Delete</span></button>'));
+      }
+    }
     radioGroup.append($('<button class="cancelBtnDiv" type="button"><span>Cancel</span></button>'));
     annoVE.editDiv.append(radioGroup);
     //click to cancel
@@ -473,7 +486,11 @@ EDITORS.AnnoVE.prototype = {
         annoVE.propMgr.showVE(annoVE.cbVEType);
       }
     });
-    //save inflection data
+    //delete annotation
+    $('.deleteBtnDiv',annoVE.editDiv).unbind("click").bind("click",function(e) {
+      annoVE.removeAnno();
+    });
+    //save annotation data
     $('.saveBtnDiv',annoVE.editDiv).unbind("click").bind("click",function(e) {
       annoVE.saveAnno();
     });
@@ -481,6 +498,54 @@ EDITORS.AnnoVE.prototype = {
 
 
 /**
+* put your comment there...
+*
+*/
+
+  removeAnno: function() {
+    var annoVE = this, savedata = {};
+    DEBUG.traceEntry("removeAnno");
+    savedata["cmd"] = "removeAno";
+    savedata["linkFromGID"] = this.entTag;
+    savedata["anoTag"] = this.tag;
+    //jqAjax synch save
+    $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: basepath+'/services/saveAnno.php?db='+dbName,//caution dependency on context having basepath and dbName
+        data: savedata,
+        async: true,
+        success: function (data, status, xhr) {
+            if (typeof data == 'object' && data.success && data.entities && annoVE.hide ) {
+              //update data
+              annoVE.dataMgr.updateLocalCache(data);
+              annoVE.hide();
+              annoVE.removeDirtyMarkers();
+              if (annoVE.propMgr && annoVE.propMgr.showVE) {
+                if (annoVE.cbVEType) {
+                  annoVE.propMgr.showVE();
+                } else {
+                  annoVE.propMgr.showVE();
+                }
+              }
+              if (annoVE.propMgr && annoVE.propMgr.entityUpdated) {
+                annoVE.propMgr.entityUpdated();
+              }
+            }
+            if (data.errors) {
+              alert("An error occurred while trying to remove annotation record. Error: " + data.errors.join());
+            }
+        },
+        error: function (xhr,status,error) {
+            // add record failed.
+            alert("An error occurred while trying to retrieve a record. Error: " + error);
+        }
+    });
+    DEBUG.traceExit("removeAnno");
+  },
+
+
+  /**
 * put your comment there...
 *
 */
@@ -532,13 +597,14 @@ EDITORS.AnnoVE.prototype = {
           success: function (data, status, xhr) {
               var cmd = savedata["cmd"];
               if (typeof data == 'object' && data.success && data.entities &&
-                  annoVE && annoVE.dataMgr && annoVE.hide ) {
+                annoVE && annoVE.dataMgr && annoVE.hide ) {
                 //update data
                 annoVE.dataMgr.updateLocalCache(data);
                 annoVE.hide();
+                annoVE.removeDirtyMarkers();
                 if (annoVE.propMgr && annoVE.propMgr.showVE) {
                   if (annoVE.cbVEType) {
-                    annoVE.propMgr.showVE(annoVE.cbVEType,annoVE.entTag);
+                    annoVE.propMgr.showVE();
                   } else {
                     annoVE.propMgr.showVE();
                   }
