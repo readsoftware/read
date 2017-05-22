@@ -85,7 +85,7 @@
   if ($rml) {
     if ($isDownload) {
       header("Content-type: text/xml;  charset=utf-8");
-      header("Content-Disposition: attachment; filename=rml_".$_REQUEST['ckn'].".xml");
+      header("Content-Disposition: attachment; filename=rml_".DBNAME.($textCKN?$textCKN:"edn$ednID").".xml");
       header("Expires: 0");
     } else {
       header('Content-type: text/xml; charset=utf-8');

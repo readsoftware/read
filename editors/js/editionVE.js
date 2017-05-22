@@ -810,8 +810,8 @@ EDITORS.EditionVE.prototype = {
                         ednVE.editModeBtn.attr('disabled','disabled');
                         if (ednVE.downloadRTFBtn.attr('disabled') == 'disabled') {
                           ednVE.downloadRTFBtn.removeAttr('disabled');
-                          ednVE.downloadRTFBtn.attr('title',"Download Structured Reconstructed View to RTF")
                         }
+                        ednVE.downloadRTFBtn.attr('title',"Download Structured Reconstructed View to RTF");
                         ednVE.downloadRTFLink.attr('href',basepath+"/services/exportRTFStructural.php?db="+dbName+"&ednID="+ednVE.edition.id+"&download=1");
                         ednVE.showSeqBtnDiv.hide();
                         break;
@@ -3096,13 +3096,16 @@ mergeLine: function (direction,cbError) {
       DEBUG.log("event","selection changed recieved by editionVE in "+ednVE.id+" from "+senderID+" selected ids "+ selectionGIDs.join());
       $(".selected", ednVE.contentDiv).removeClass("selected");
       $.each(selectionGIDs, function(i,val) {
-        var entity = $('.'+val,ednVE.contentDiv),j,entTag;
-        if (entity && entity.length > 0) {
-          entity.addClass("selected");
-        } else if (val.match(/^seq/) && ednVE.entTagsBySeqTag[val] && ednVE.entTagsBySeqTag[val].length) {
-          for (j in ednVE.entTagsBySeqTag[val]) {
-            entTag = ednVE.entTagsBySeqTag[val][j];
-            $('.'+entTag,ednVE.contentDiv).addClass("selected");
+        var entity ,j,entTag;
+        if (val) {
+          entity = $('.'+val,ednVE.contentDiv);
+          if (entity && entity.length > 0) {
+            entity.addClass("selected");
+          } else if (val.match(/^seq/) && ednVE.entTagsBySeqTag[val] && ednVE.entTagsBySeqTag[val].length) {
+            for (j in ednVE.entTagsBySeqTag[val]) {
+              entTag = ednVE.entTagsBySeqTag[val][j];
+              $('.'+entTag,ednVE.contentDiv).addClass("selected");
+            }
           }
         }
       });
@@ -5750,6 +5753,10 @@ mergeLine: function (direction,cbError) {
         for(i=0; i<tokIDs.length; i++) {
           tokID = tokIDs[i];
           graIDs = entities['tok'][tokID].graphemeIDs;
+          if (graIDs.length == 0) {
+              DEBUG.log("err","rendering words in structure view with token ("+tokID+") that has no graphemes");
+              continue;
+          }
           firstT = (i==0);
           lastT = (1+i == tokIDs.length);
           //for each grapheme in token

@@ -26,7 +26,6 @@
 */
 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns="http://www.w3.org/1999/xhtml"
     xmlns:exslt="http://exslt.org/common"
     extension-element-prefixes="exslt"
     xmlns:fn="http://www.w3.org/2005/xpath-functions"
@@ -67,7 +66,7 @@
     <xsl:variable name="text" select="/rml/entities/text"/>
 
     <xsl:template match="/">
-        <TEI xmlns="http://www.tei-c.org/ns/1.0">
+        <TEI xmlns:ns="http://www.tei-c.org/ns/1.0">
             <teiHeader>
                 <fileDesc>
                     <titleStmt>
@@ -160,10 +159,10 @@
                   <xsl:call-template name="getSurfaceZone">
                       <xsl:with-param name="baseline" select="current()"/>
                   </xsl:call-template>
-              </xsl:for-each>  
+              </xsl:for-each>
             </facsimile>
             </xsl:if>
-            <text xml:lang="pra-Brah">
+            <text xml:lang="pra-Latn">
                 <body>
                     <xsl:variable name="epixml">
                         <xsl:apply-templates select="/rml/entities/edition"/>
@@ -180,7 +179,7 @@
         <xsl:variable name="imageurl" select="$image/URL"/>
         <surface>
             <xsl:choose>
-                <xsl:when test="$baseline/Position  and $image/Position">
+                <xsl:when test="$baseline/Position and $image/Position">
                     <xsl:attribute name="ulx">
                         <xsl:value-of select="$baseline/Position/boundary/boundingbox/@left + $image/Position/boundary/boundingbox/@left"/>
                     </xsl:attribute>
@@ -222,7 +221,7 @@
                         <xsl:value-of select="$image/Position/boundary/boundingbox/@bottom"/>
                     </xsl:attribute>
                 </xsl:when>
-                <xsl:otherwise>
+                <xsl:when test="$imageurl/@width and $imageurl/@height">
                     <xsl:attribute name="ulx">
                         <xsl:value-of select="0"/>
                     </xsl:attribute>
@@ -235,21 +234,53 @@
                     <xsl:attribute name="lry">
                         <xsl:value-of select="$imageurl/@height"/>
                     </xsl:attribute>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:attribute name="ulx">
+                        <xsl:value-of select="0"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="uly">
+                        <xsl:value-of select="0"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lrx">
+                        <xsl:value-of select="0"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="lry">
+                        <xsl:value-of select="0"/>
+                    </xsl:attribute>
                 </xsl:otherwise>
             </xsl:choose>
             <zone>
-                <xsl:attribute name="ulx">
-                    <xsl:value-of select="0"/>
-                </xsl:attribute>
-                <xsl:attribute name="uly">
-                    <xsl:value-of select="0"/>
-                </xsl:attribute>
-                <xsl:attribute name="lrx">
-                    <xsl:value-of select="$imageurl/@width"/>
-                </xsl:attribute>
-                <xsl:attribute name="lry">
-                    <xsl:value-of select="$imageurl/@height"/>
-                </xsl:attribute>
+                <xsl:choose>
+                    <xsl:when test="$imageurl/@width and $imageurl/@height">
+                        <xsl:attribute name="ulx">
+                            <xsl:value-of select="0"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="uly">
+                            <xsl:value-of select="0"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="lrx">
+                            <xsl:value-of select="$imageurl/@width"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="lry">
+                            <xsl:value-of select="$imageurl/@height"/>
+                        </xsl:attribute>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:attribute name="ulx">
+                            <xsl:value-of select="0"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="uly">
+                            <xsl:value-of select="0"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="lrx">
+                            <xsl:value-of select="0"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="lry">
+                            <xsl:value-of select="0"/>
+                        </xsl:attribute>
+                    </xsl:otherwise>
+                </xsl:choose>
                 <graphic>
                     <xsl:attribute name="url">
                         <xsl:value-of select="$imageurl/text()"/>
@@ -280,7 +311,7 @@
         </surface>
     </xsl:template>
     <xsl:template match="gap" mode="compress">
-        <xsl:if test="not(@reason=preceding-sibling::gap[1]/@reason)">
+        <xsl:if test="not(@reason=preceding-sibling::gap[1]/@reason) or not(preceding-sibling::node()[1][self::gap])">
             <gap>
                 <xsl:variable name="start" select="count(preceding-sibling::gap)" />
                 <xsl:variable name="end" select="count(following-sibling::gap[not(@reason=current()/@reason)][1]/preceding-sibling::gap)" />
@@ -290,7 +321,7 @@
                             <xsl:value-of select="$end - $start - 1"/>
                         </xsl:when>
                         <xsl:otherwise>
-                            <xsl:value-of select="count(following-sibling::gap)"/>
+                            <xsl:value-of select="count(following-sibling::node()[not(self::gap)][1]/preceding-sibling::gap) - $start - 1"/>
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
@@ -324,7 +355,7 @@
             <xsl:value-of select="concat('edn',@id)"/>
         </xsl:attribute>
         <xsl:attribute name="type">edition</xsl:attribute>
-        <xsl:attribute name="xml:lang">pra-Brah</xsl:attribute>
+        <xsl:attribute name="xml:lang">pra-Latn</xsl:attribute>
         <!-- process subcomponents of line -->
         <xsl:for-each select="Sequences/link">
             <xsl:variable name="linkID" select="current()/@id"/>
@@ -570,8 +601,17 @@
     </xsl:template>
 
     <xsl:template match="token" mode="physical">
+        <xsl:variable name="tokID" select="@id"/>
+        <xsl:variable name="lbrNode" select="$LBs[tokID = $tokID]"/>
+        <xsl:if test="$lbrNode/graID and $lbrNode/graID = current()/Graphemes/link/@id[1]">
+            <xsl:call-template name="convertTCM">
+                <!--xsl:with-param name="tcmString" select="replace(replace(replace($transcr,'ʔi','ï'),'ʔu','ü'),'ʔ','')"/-->
+                <xsl:with-param name="tcmString" >=</xsl:with-param>
+                <xsl:with-param name="lbNode" select="$lbrNode"/>
+            </xsl:call-template>
+        </xsl:if>
         <xsl:choose>
-            <xsl:when test="DisplayValue = '‧'"><pc>‧</pc></xsl:when>
+            <!--xsl:when test="DisplayValue = '‧'"><pc>‧</pc></xsl:when>
             <xsl:when test="DisplayValue = '×'"><pc>×</pc></xsl:when>
             <xsl:when test="DisplayValue = '∈'"><pc>∈</pc></xsl:when>
             <xsl:when test="DisplayValue = '⌇'"><pc>⌇</pc></xsl:when>
@@ -587,7 +627,16 @@
             <xsl:when test="DisplayValue = '–'"><pc>–</pc></xsl:when>
             <xsl:when test="DisplayValue = '—'"><pc>—</pc></xsl:when>
             <xsl:when test="DisplayValue = '|'"><pc>|</pc></xsl:when>
-            <xsl:when test="DisplayValue = ':'"><pc>:</pc></xsl:when>
+            <xsl:when test="DisplayValue = ':'"><pc>:</pc></xsl:when-->
+            <xsl:when test="contains('‧×∈⌇◯○◦•·∙☒☸❀❉–—|:',DisplayValue)">
+                <pc>
+                    <xsl:call-template name="convertTCM">
+                        <!--xsl:with-param name="tcmString" select="replace(replace(replace($transcr,'ʔi','ï'),'ʔu','ü'),'ʔ','')"/-->
+                        <xsl:with-param name="tcmString" select="Transcription"/>
+                        <xsl:with-param name="lbNode" select="$lbrNode"/>
+                    </xsl:call-template>
+                </pc>
+            </xsl:when>
             <xsl:when test="DisplayValue = '+'">
                 <gap reason="lost" extent="1" unit="akṣara"/>
             </xsl:when>
@@ -605,32 +654,38 @@
             <xsl:attribute name="xml:id">
                 <xsl:value-of select="concat('tok',@id)"/>
             </xsl:attribute>
-            <xsl:variable name="tokID" select="@id"/>
-            <xsl:variable name="lbrNode" select="$LBs[tokID = $tokID]"/>
             <xsl:choose>
                 <xsl:when test="$lbrNode/graID">
                     <xsl:variable name="transcr">
-                        <xsl:call-template name="insertLBTCM">
-                            <xsl:with-param name="graIDs" select="current()/Graphemes/link/@id"/>
-                            <xsl:with-param name="graTrgID" select="$lbrNode/graID"/>
-                            <xsl:with-param name="graIndex" select="1"/>
-                            <xsl:with-param name="preString" select="''"/>
-                            <xsl:with-param name="postString" select="Transcription"/>
-                        </xsl:call-template>
+                        <xsl:choose>
+                            <xsl:when test="$lbrNode/graID = current()/Graphemes/link/@id[1]">
+                                <xsl:value-of select="Transcription"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:call-template name="insertLBTCM">
+                                    <xsl:with-param name="graIDs" select="current()/Graphemes/link/@id"/>
+                                    <xsl:with-param name="graTrgID" select="$lbrNode/graID"/>
+                                    <xsl:with-param name="graIndex" select="1"/>
+                                    <xsl:with-param name="preString" select="''"/>
+                                    <xsl:with-param name="postString" select="Transcription"/>
+                                </xsl:call-template>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                        
                     </xsl:variable>
                     <!-- process TCM and missing -->
                     <xsl:variable name="transcr1">
                         <xsl:call-template name="replaceAll">
                             <xsl:with-param name="str" select="$transcr"/>
-                            <xsl:with-param name="search" select="'ʔi'"/>
-                            <xsl:with-param name="sub" select="'ï'"/>
+                            <xsl:with-param name="search" select="'aʔi'"/>
+                            <xsl:with-param name="sub" select="'aï'"/>
                         </xsl:call-template>
                     </xsl:variable>
                     <xsl:variable name="transcr2">
                         <xsl:call-template name="replaceAll">
                             <xsl:with-param name="str" select="$transcr1"/>
-                            <xsl:with-param name="search" select="'ʔu'"/>
-                            <xsl:with-param name="sub" select="'ü'"/>
+                            <xsl:with-param name="search" select="'aʔu'"/>
+                            <xsl:with-param name="sub" select="'aü'"/>
                         </xsl:call-template>
                     </xsl:variable>
                     <xsl:variable name="transcr3">
@@ -650,15 +705,15 @@
                     <xsl:variable name="transcr1">
                         <xsl:call-template name="replaceAll">
                             <xsl:with-param name="str" select="Transcription"/>
-                            <xsl:with-param name="search" select="'ʔi'"/>
-                            <xsl:with-param name="sub" select="'ï'"/>
+                            <xsl:with-param name="search" select="'aʔi'"/>
+                            <xsl:with-param name="sub" select="'aï'"/>
                         </xsl:call-template>
                     </xsl:variable>
                     <xsl:variable name="transcr2">
                         <xsl:call-template name="replaceAll">
                             <xsl:with-param name="str" select="$transcr1"/>
-                            <xsl:with-param name="search" select="'ʔu'"/>
-                            <xsl:with-param name="sub" select="'ü'"/>
+                            <xsl:with-param name="search" select="'aʔu'"/>
+                            <xsl:with-param name="sub" select="'aü'"/>
                         </xsl:call-template>
                     </xsl:variable>
                     <xsl:variable name="transcr3">
@@ -756,7 +811,7 @@
                         <xsl:with-param name="tcmString" select="substring-before($tcmString,'.')"/>
                         <xsl:with-param name="lbNode" select="$lbNode"/>
                     </xsl:call-template>
-                    <gap reason="lost" unit="akṣarapart"/>
+                    <gap reason="lost" extent="1" unit="akṣarapart"/>
                     <xsl:call-template name="convertTCM">
                         <xsl:with-param name="tcmString" select="substring-after($tcmString,'.')"/>
                         <xsl:with-param name="lbNode" select="$lbNode"/>
@@ -767,7 +822,7 @@
                         <xsl:with-param name="tcmString" select="substring-before($tcmString,'_')"/>
                         <xsl:with-param name="lbNode" select="$lbNode"/>
                     </xsl:call-template>
-                    <gap reason="lost" unit="akṣarapart"/>
+                    <gap reason="lost" extent="1" unit="akṣarapart"/>
                     <xsl:call-template name="convertTCM">
                         <xsl:with-param name="tcmString" select="substring-after($tcmString,'_')"/>
                         <xsl:with-param name="lbNode" select="$lbNode"/>

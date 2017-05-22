@@ -111,17 +111,45 @@
     }
     $entityLookup['term']['byID'][$row['trm_id']] = $row;
   }
-
+  $ugrUserTypeID = Entity::getIDofTermParentLabel('user-grouptype');
+  $ugrGroupTypeID = Entity::getIDofTermParentLabel('group-grouptype');
+  $groupMemberNamesQuery =
+    "select * from (select g.ugr_id as id,g.ugr_name as alias,string_agg(concat(u.ugr_name,':',u.ugr_given_name,' ', u.ugr_family_name),',') as names ".
+    "from usergroup as g left join usergroup as u on u.ugr_id = ANY(g.ugr_member_ids) ".
+    "where g.ugr_type_id = $ugrGroupTypeID and (u.ugr_given_name is not null or u.ugr_family_name is not null) ".
+    "group by g.ugr_id ".
+    "union ".
+    "select ugr_id as id, ugr_name as alias, concat(ugr_given_name,' ', ugr_family_name) as names ".
+    "from usergroup ".
+    "where ugr_type_id = $ugrUserTypeID and (ugr_given_name is not null or ugr_family_name is not null) or ".
+          "ugr_name in ('Public','Users')) ugr ".
+    "order by id";
   $fullnameLookup = array();
-  $dbMgr->query("select ugr_id,concat(ugr_given_name,' ', ugr_family_name) as ugr_fullname
-                  from usergroup where ugr_given_name is not null or ugr_family_name is not null;");
+  $dbMgr->query($groupMemberNamesQuery);
   while($row = $dbMgr->fetchResultRow()){
-    $fullnameLookup[$row['ugr_id']] = $row['ugr_fullname'];
+    $id = $row['id'];
+    $alias = $row['alias'];
+    $names = explode(",",$row['names']);
+    $groupXML = "";
+    if (count($names) > 1) {//it's user group
+      $groupXML .= openXMLNode("Group",array('name' => $alias));
+      foreach ($names as $nameinfo) {
+        list($usrAlias,$fullname) = explode(":",$nameinfo);
+        $groupXML .= makeXMLNode("Member",array('alias' => $usrAlias),trim($fullname));
+      }
+      $groupXML .= closeXMLNode('Group');
+    } else if ($alias == "Public" || $alias == "Users") {
+      $groupXML .= makeXMLNode("Group",array('alias' => $alias),trim($names[0]));
+    } else {
+      $groupXML .= makeXMLNode("Individual",array('alias' => $alias),trim($names[0]));
+    }
+    $fullnameLookup[$row['id']] = $groupXML;
   }
+
   $errorMsg = null;
 
   function calcEditionRML($ednID, $ckn) {
-    global $errorMsg;
+    global $errorMsg,$fullnameLookup;
 
     $txtID = null;
     $text = null;
@@ -238,6 +266,16 @@
   //$condition = "$txtID = ANY (\"srf_text_ids\")";
   //start generating RML
     $RML = startRML(null,false);
+    $attr = array('time'=>date(DATE_RFC2822),'dbname'=>DBNAME);
+    if ($ednID){
+      $attr['ednID'] = $ednID;
+    }
+    if ($ckn){
+      $attr['ckn'] = $ckn;
+    }
+    $RML .= openXMLNode('requestInfo',$attr);
+    $RML .= makeXMLNode('requestor',null,(array_key_exists(getUserID(),$fullnameLookup)?$fullnameLookup[getUserID()] :"unknown"),true,false);
+    $RML .= closeXMLNode('requestInfo');
     $RML .= openXMLNode('entities');
 
     if ($text) {
@@ -303,13 +341,13 @@
     }
     $rml = openXMLNode('edition',array('id' => $edition->getID(), 'modified' => $edition->getModificationStamp()));
     if ($edition->getDescription()) {
-      $label = $entityLookup['term']['idByCode']['edn_description']['englabel'];
+      $label = $entityLookup['term']['idByCode']['edn_description']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'description');
       $rml .= makeXMLNode($label,null,$edition->getDescription());
     }
     $seqRML = "";
     if (count($edition->getSequenceIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['edn_sequence_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['edn_sequence_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'sequences');
       $rml .= openXMLNode($label,array('ordered' => 'true'));
       foreach($edition->getSequenceIDs() as $id) {
@@ -356,7 +394,7 @@
     $rml = openXMLNode('textmetadata',array('id' => $textmetadata->getID(), 'modified' => $textmetadata->getModificationStamp()));
     $txtRML = "";
     if ($textmetadata->getTextID()) {
-      $label = $entityLookup['term']['idByCode']['tmd_text_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['tmd_text_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'text');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'text','id'=>$textmetadata->getTextID()));
@@ -364,7 +402,7 @@
       $txtRML = getTextRML($textmetadata->getText(true));
     }
     if (count($textmetadata->getTypeIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['tmd_type_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['tmd_type_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'types');
       $rml .= openXMLNode($label);
       foreach($textmetadata->getTypeIDs() as $id) {
@@ -374,7 +412,7 @@
     }
     $refRML = "";
     if (count($textmetadata->getReferenceIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['tmd_reference_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['tmd_reference_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'references');
       $rml .= openXMLNode($label);
       foreach($textmetadata->getReferenceIDs() as $id) {
@@ -411,18 +449,18 @@
     }
     $rml = openXMLNode('text',array('id' => $text->getID(), 'modified' => $text->getModificationStamp()));
     if ($text->getCKN()) {
-      $label = $entityLookup['term']['idByCode']['txt_ckn']['englabel'];
+      $label = $entityLookup['term']['idByCode']['txt_ckn']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'CKN');
       $rml .= makeXMLNode($label,null,$text->getCKN());
     }
     if ($text->getTitle()) {
-      $label = $entityLookup['term']['idByCode']['txt_title']['englabel'];
+      $label = $entityLookup['term']['idByCode']['txt_title']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'title');
       $rml .= makeXMLNode($label,null,$text->getTitle());
     }
     $txtRML = "";
     if (count($text->getReplacementIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['txt_replacement_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['txt_replacement_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'replacementtexts');
       $rml .= openXMLNode($label);
       foreach($text->getReplacementIDs() as $id) {
@@ -434,7 +472,7 @@
       }
     }
     if (count($text->getTypeIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['txt_type_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['txt_type_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'types');
       $rml .= openXMLNode($label);
       foreach($text->getTypeIDs() as $id) {
@@ -444,7 +482,7 @@
     }
     $refRML = "";
     if (count($text->getEditionReferenceIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['txt_edition_ref_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['txt_edition_ref_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'references');
       $rml .= openXMLNode($label);
       foreach($text->getEditionReferenceIDs() as $id) {
@@ -457,7 +495,7 @@
     }
     $imgRML = "";
     if (count($text->getImageIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['txt_image_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['txt_image_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'images');
       $rml .= openXMLNode($label);
       foreach($text->getImageIDs() as $id) {
@@ -494,14 +532,22 @@
     }
     $rml = openXMLNode('image',array('id' => $image->getID(), 'modified' => $image->getModificationStamp()));
     if ($image->getTitle()) {
-      $label = $entityLookup['term']['idByCode']['img_title']['englabel'];
+      $label = $entityLookup['term']['idByCode']['img_title']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'title');
       $rml .= makeXMLNode($label,null,$image->getTitle());
     }
     if ($image->getURL()) {
-      $label = $entityLookup['term']['idByCode']['img_url']['englabel'];
+      $label = $entityLookup['term']['idByCode']['img_url']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'url');
-      list($width, $height, $type, $attr) = getimagesize($image->getURL());
+      $imgInfo = null;
+      try {
+        $imgInfo = getimagesize($image->getURL());
+      } catch(Exception $e){
+      }
+      $width = $height = $type = $attr = null;
+      if ($imgInfo) {
+        list($width, $height, $type, $attr) = $imgInfo;
+      }
       $attr = null;
       if ($width && $height) {
         $attr = array('width' => $width,'height' => $height,'mimetype' => image_type_to_mime_type($type));
@@ -509,7 +555,7 @@
       $rml .= makeXMLNode($label,$attr,$image->getURL());
     }
     if ($image->getTypeID()){
-      $label = $entityLookup['term']['idByCode']['img_type_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['img_type_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'type');
       $value = $entityLookup['term']['byID'][$image->getTypeID()]['englabel'];
       $value = ($value?$value:'');
@@ -518,7 +564,7 @@
       $rml .= closeXMLNode($label);
     }
     if (count($image->getBoundary()) > 0){
-      $label = $entityLookup['term']['idByCode']['img_image_pos']['englabel'];
+      $label = $entityLookup['term']['idByCode']['img_image_pos']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'boundary');
       $rml .= openXMLNode($label);
       foreach($image->getBoundary() as $polygon) {
@@ -564,19 +610,19 @@
     }
     $rml = openXMLNode('sequence',$attribs);
     if ($sequence->getLabel()) {
-      $label = $entityLookup['term']['idByCode']['seq_label']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seq_label']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'label');
       $rml .= makeXMLNode($label,null,$sequence->getLabel());
     }
     if ($sequence->getSuperScript()) {
-      $label = $entityLookup['term']['idByCode']['seq_superscript']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seq_superscript']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'label');
       $rml .= makeXMLNode($label,null,$sequence->getSuperScript());
     }
     if ($sequence->getTypeID()) {
-      $label = $entityLookup['term']['idByCode']['seq_type_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seq_type_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'type');
-      $value = $entityLookup['term']['byID'][$sequence->getTypeID()]['englabel'];
+      $value = $entityLookup['term']['byID'][$sequence->getTypeID()]['englabel'];//warning term trm_code dependency
       $value = ($value?$value:'');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'term','id'=>$sequence->getTypeID(),'value' => $value));
@@ -584,7 +630,7 @@
     }
     $seqRML = "";
     if (count($sequence->getEntityIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['seq_entity_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seq_entity_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'components');
       $rml .= openXMLNode($label,array('ordered' => 'true'));
       foreach($sequence->getEntityIDs() as $gid) {
@@ -627,17 +673,18 @@
     }
     $rml = openXMLNode('compound',array('id' => $compound->getID(), 'modified' => $compound->getModificationStamp()));
     if ($compound->getValue()) {
-      $label = $entityLookup['term']['idByCode']['cmp_value']['englabel'];
+      $label = $entityLookup['term']['idByCode']['cmp_value']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'value');
       $rml .= makeXMLNode($label,null,$compound->getValue());
     }
     if ($compound->getTranscription()) {
-      $label = $entityLookup['term']['idByCode']['cmp_transcription']['englabel'];
+      $label = $entityLookup['term']['idByCode']['cmp_transcription']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'transcription');
       $rml .= makeXMLNode($label,null,$compound->getTranscription());
     }
+    $cpnRML = "";
     if (count($compound->getComponentIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['cmp_component_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['cmp_component_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'components');
       $rml .= openXMLNode($label,array('ordered' => 'true'));
       foreach($compound->getComponentIDs() as $gid) {
@@ -646,7 +693,6 @@
         $rml .= makeXMLNode('link',array('entity' => $prefixToTableName[$prefix],'id'=>$id));
       }
       $rml .= closeXMLNode($label);
-      $cpnRML = "";
       foreach( $compound->getComponents(true) as $entity) {
         $cpnRML .= getEntityRML($entity);
       }
@@ -685,23 +731,23 @@
     }
     $rml = openXMLNode('token',array('id' => $token->getID(), 'modified' => $token->getModificationStamp()));
     if ($token->getValue()) {
-      $label = $entityLookup['term']['idByCode']['tok_value']['englabel'];
+      $label = $entityLookup['term']['idByCode']['tok_value']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'value');
       $rml .= makeXMLNode($label,null,$token->getValue());
     }
     if ($token->getTranscription()) {
-      $label = $entityLookup['term']['idByCode']['tok_transcription']['englabel'];
+      $label = $entityLookup['term']['idByCode']['tok_transcription']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'transcription');
       $rml .= makeXMLNode($label,null,$token->getTranscription());
     }
     if ($token->getTranslation()) {
-      $label = $entityLookup['term']['idByCode']['tok_translation']['englabel'];
+      $label = $entityLookup['term']['idByCode']['tok_translation']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'translation');
       $rml .= makeXMLNode($label,null,$token->getTranslation());
     }
     $graRML = "";
     if (count($token->getGraphemeIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['tok_grapheme_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['tok_grapheme_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'graphemes');
       $rml .= openXMLNode($label,array('ordered' => 'true'));
       foreach($token->getGraphemeIDs() as $id) {
@@ -713,7 +759,7 @@
       }
     }
     if ($token->getNominalAffix()) {
-      $label = $entityLookup['term']['idByCode']['tok_nom_affix']['englabel'];
+      $label = $entityLookup['term']['idByCode']['tok_nom_affix']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'affix');
       $rml .= makeXMLNode($label,null,$token->getNominalAffix());
     }
@@ -753,7 +799,7 @@
     }
     $graRML = "";
     if (count($syllable->getGraphemeIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['scl_grapheme_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['scl_grapheme_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'graphemes');
       $rml .= openXMLNode($label,array('ordered' => 'true'));
       foreach($syllable->getGraphemeIDs() as $id) {
@@ -764,8 +810,9 @@
         $graRML .= getGraphemeRML($grapheme);
       }
     }
+    $segRML = "";
     if ($syllable->getSegmentID()) {
-      $label = $entityLookup['term']['idByCode']['scl_segment_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['scl_segment_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'segment');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'segment','id'=>$syllable->getSegmentID()));
@@ -805,7 +852,7 @@
     $rml = openXMLNode('segment',array('id' => $segment->getID(), 'modified' => $segment->getModificationStamp()));
     $blnRML = "";
     if (count($segment->getBaselineIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['seg_baseline_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seg_baseline_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'baselines');
       $rml .= openXMLNode($label,array('ordered' => 'true'));
       foreach($segment->getBaselineIDs() as $id) {
@@ -817,7 +864,7 @@
       }
     }
     if (count($segment->getImageBoundary()) > 0){
-      $label = $entityLookup['term']['idByCode']['seg_image_pos']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seg_image_pos']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'boundaries');
       $rml .= openXMLNode($label,array('ordered' => 'true'));
       foreach($segment->getImageBoundary() as $polygon) {
@@ -837,22 +884,22 @@
       $rml .= closeXMLNode($label);
     }
     if (count($segment->getStringPos()) > 0){
-      $label = $entityLookup['term']['idByCode']['seg_string_pos']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seg_string_pos']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'stringpos');
       $rml .= makeXMLNode('stringposition',null,$segment->getStringPos(true));
     }
     if ($segment->getLayer()) {
-      $label = $entityLookup['term']['idByCode']['seg_layer']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seg_layer']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'layer');
       $rml .= makeXMLNode($label,null,$segment->getLayer());
     }
     if ($segment->getRotation()) {
-      $label = $entityLookup['term']['idByCode']['seg_rotation']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seg_rotation']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'rotation');
       $rml .= makeXMLNode($label,null,$segment->getRotation());
     }
     if ($segment->getClarity()) {
-      $label = $entityLookup['term']['idByCode']['seg_clarity_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seg_clarity_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'type');
       $value = $entityLookup['term']['byID'][$segment->getClarity()]['englabel'];
       $value = ($value?$value:'');
@@ -861,7 +908,7 @@
       $rml .= closeXMLNode($label);
     }
     if (count($segment->getObscurations()) > 0) {
-      $label = $entityLookup['term']['idByCode']['seg_obscurations']['englabel'];
+      $label = $entityLookup['term']['idByCode']['seg_obscurations']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'obscurations');
       $rml .= openXMLNode($label,array('ordered' => 'false'));
       foreach($segment->getObscurations() as $obscuration) {
@@ -896,7 +943,7 @@
     $rml = openXMLNode('baseline',array('id' => $baseline->getID(), 'modified' => $baseline->getModificationStamp()));
     $imgRML = "";
     if ($baseline->getImageID()){
-      $label = $entityLookup['term']['idByCode']['bln_image_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['bln_image_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'image');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'image','id'=>$baseline->getImageID()));
@@ -904,7 +951,7 @@
       $imgRML .= getImageRML($baseline->getImage(true));
     }
     if (count($baseline->getImageBoundary()) > 0){
-      $label = $entityLookup['term']['idByCode']['bln_image_position']['englabel'];
+      $label = $entityLookup['term']['idByCode']['bln_image_position']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'boundaries');
       $rml .= openXMLNode($label,array('ordered' => 'true'));
       foreach($baseline->getImageBoundary() as $polygon) {
@@ -919,12 +966,12 @@
       $rml .= closeXMLNode($label);
     }
     if ($baseline->getTranscription()) {
-      $label = $entityLookup['term']['idByCode']['bln_transcription']['englabel'];
+      $label = $entityLookup['term']['idByCode']['bln_transcription']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'layer');
       $rml .= makeXMLNode($label,null,$baseline->getTranscription());
     }
     if ($baseline->getType()) {
-      $label = $entityLookup['term']['idByCode']['bln_type_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['bln_type_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'type');
       $value = $entityLookup['term']['byID'][$baseline->getType()]['englabel'];
       $value = ($value?$value:'');
@@ -934,7 +981,7 @@
     }
     $srfRML = "";
     if ($baseline->getSurfaceID()){
-      $label = $entityLookup['term']['idByCode']['bln_surface_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['bln_surface_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'surface');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'surface','id'=>$baseline->getSurfaceID()));
@@ -967,13 +1014,13 @@
     }
     $rml = openXMLNode('grapheme',array('id' => $grapheme->getID(), 'modified' => $grapheme->getModificationStamp()));
     if ($grapheme->getValue()) {
-      $label = $entityLookup['term']['idByCode']['gra_grapheme']['englabel'];
+      $label = $entityLookup['term']['idByCode']['gra_grapheme']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'grapheme');
       $rml .= makeXMLNode($label,null,$grapheme->getValue());
     }
     // todo code for term ids.
     if ($grapheme->getType()) {
-      $label = $entityLookup['term']['idByCode']['gra_type_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['gra_type_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'type');
 //      $value = $entityLookup['term']['byID'][$grapheme->getTypeID()]['englabel'];
 //      $value = ($value?$value:'');
@@ -983,22 +1030,22 @@
 //      $rml .= closeXMLNode($label);
     }
     if ($grapheme->getTextCriticalMark()) {
-      $label = $entityLookup['term']['idByCode']['gra_text_critical_mark']['englabel'];
+      $label = $entityLookup['term']['idByCode']['gra_text_critical_mark']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'tcm');
       $rml .= makeXMLNode($label,null,$grapheme->getTextCriticalMark());
     }
     if ($grapheme->getAlternative()) {
-      $label = $entityLookup['term']['idByCode']['gra_alt']['englabel'];
+      $label = $entityLookup['term']['idByCode']['gra_alt']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'alternative');
       $rml .= makeXMLNode($label,null,$grapheme->getAlternative());
     }
     if ($grapheme->getEmmendation()) {
-      $label = $entityLookup['term']['idByCode']['gra_emmendation']['englabel'];
+      $label = $entityLookup['term']['idByCode']['gra_emmendation']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'emmendation');
       $rml .= makeXMLNode($label,null,$grapheme->getEmmendation());
     }
     if ($grapheme->getDecomposition()) {
-      $label = $entityLookup['term']['idByCode']['gra_decomposition']['englabel'];
+      $label = $entityLookup['term']['idByCode']['gra_decomposition']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'decomposition');
       $rml .= makeXMLNode($label,null,$grapheme->getDecomposition());
     }
@@ -1032,18 +1079,18 @@
       $rml .= makeXMLNode($label,null,$surface->getDescription());
     }
     if ($surface->getNumber()) {
-      $label = $entityLookup['term']['idByCode']['srf_number']['englabel'];
+      $label = $entityLookup['term']['idByCode']['srf_number']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'number');
       $rml .= makeXMLNode($label,null,$surface->getNumber());
     }
     if ($surface->getLayerNumber()) {
-      $label = $entityLookup['term']['idByCode']['srf_layer_number']['englabel'];
+      $label = $entityLookup['term']['idByCode']['srf_layer_number']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'layer');
       $rml .= makeXMLNode($label,null,$surface->getLayerNumber());
     }
     $frgRML = "";
     if ($surface->getFragmentID()) {
-      $label = $entityLookup['term']['idByCode']['srf_fragment_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['srf_fragment_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'fragment');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'fragment','id'=>$surface->getFragmentID()));
@@ -1057,7 +1104,7 @@
       $rml .= makeXMLNode('scripts',$surface->getScripts(true));
     }
     if (count($surface->getTextIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['srf_text_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['srf_text_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'texts');
       $rml .= openXMLNode($label);
       foreach($surface->getTextIDs() as $id) {
@@ -1067,7 +1114,7 @@
     }
     $imgRML = "";
     if (count($surface->getImageIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['srf_image_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['srf_image_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'images');
       $rml .= openXMLNode($label);
       foreach($surface->getImageIDs() as $id) {
@@ -1099,7 +1146,7 @@
     $rml = openXMLNode('fragment',array('id' => $fragment->getID(), 'modified' => $fragment->getModificationStamp()));
     $prtRML = "";
     if ($fragment->getPartID()) {
-      $label = $entityLookup['term']['idByCode']['frg_part_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['frg_part_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'part');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'part','id'=>$fragment->getPartID()));
@@ -1107,7 +1154,7 @@
       $prtRML .= getPartRML($fragment->getPart(true));
     }
     if ($fragment->getDescription()) {
-      $label = $entityLookup['term']['idByCode']['frg_description']['englabel'];
+      $label = $entityLookup['term']['idByCode']['frg_description']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'description');
       $rml .= makeXMLNode($label,null,$fragment->getDescription());
     }
@@ -1123,7 +1170,7 @@
       $rml .= makeXMLNode($label,null,$fragment->getLabel());
     }
     if ($fragment->getRestoreStateID()) {
-      $label = $entityLookup['term']['idByCode']['frg_restore_state_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['frg_restore_state_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'type');
       $value = $entityLookup['term']['byID'][$fragment->getRestoreStateID()]['englabel'];
       $value = ($value?$value:'');
@@ -1132,13 +1179,13 @@
       $rml .= closeXMLNode($label);
     }
     if ($fragment->getMeasure()) {
-      $label = $entityLookup['term']['idByCode']['frg_measure']['englabel'];
+      $label = $entityLookup['term']['idByCode']['frg_measure']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'measure');
       $rml .= makeXMLNode($label,null,$fragment->getMeasure());
     }
     $imgRML = "";
     if (count($fragment->getImageIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['frg_image_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['frg_image_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'images');
       $rml .= openXMLNode($label);
       foreach($fragment->getImageIDs() as $id) {
@@ -1151,7 +1198,7 @@
     }
     $mcxRML = "";
     if (count($fragment->getMaterialContextIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['frg_material_context_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['frg_material_context_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'materialcontext');
       $rml .= openXMLNode($label);
       foreach($fragment->getMaterialContextIDs() as $id) {
@@ -1182,7 +1229,7 @@
     }
     $rml = openXMLNode('part',array('id' => $part->getID(), 'modified' => $part->getModificationStamp()));
     if ($part->getType()) {
-      $label = $entityLookup['term']['idByCode']['prt_type_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['prt_type_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'type');
       $value = $entityLookup['term']['byID'][$part->getType()]['englabel'];
       $value = ($value?$value:'');
@@ -1191,17 +1238,17 @@
       $rml .= closeXMLNode($label);
     }
     if ($part->getLabel()) {
-      $label = $entityLookup['term']['idByCode']['prt_label']['englabel'];
+      $label = $entityLookup['term']['idByCode']['prt_label']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'label');
       $rml .= makeXMLNode($label,null,$part->getLabel());
     }
     if ($part->getSequence()) {
-      $label = $entityLookup['term']['idByCode']['prt_sequence']['englabel'];
+      $label = $entityLookup['term']['idByCode']['prt_sequence']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'sequencenumber');
       $rml .= makeXMLNode($label,null,$part->getSequence());
     }
     if ($part->getShape()) {
-      $label = $entityLookup['term']['idByCode']['prt_shape_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['prt_shape_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'shape');
       $value = $entityLookup['term']['byID'][$part->getShape()]['englabel'];
       $value = ($value?$value:'');
@@ -1210,13 +1257,13 @@
       $rml .= closeXMLNode($label);
     }
     if (count($part->getMediums()) > 0){
-      $label = $entityLookup['term']['idByCode']['prt_mediums']['englabel'];
+      $label = $entityLookup['term']['idByCode']['prt_mediums']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'mediums');
 //      $rml .= makeXMLNode($label,$part->getLocationRefs(true));
       $rml .= makeXMLNode($label,null,$part->getMediums(true));
     }
     if ($part->getManufactureID()) {
-      $label = $entityLookup['term']['idByCode']['prt_manufacture_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['prt_manufacture_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'manufacturing');
       $value = $entityLookup['term']['byID'][$part->getManufactureID()]['englabel'];
       $value = ($value?$value:'');
@@ -1225,13 +1272,13 @@
       $rml .= closeXMLNode($label);
     }
     if ($part->getMeasure()) {
-      $label = $entityLookup['term']['idByCode']['prt_measure']['englabel'];
+      $label = $entityLookup['term']['idByCode']['prt_measure']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'measure');
       $rml .= makeXMLNode($label,null,$part->getMeasure());
     }
     $itmRML = "";
     if ($part->getItemID()) {
-      $label = $entityLookup['term']['idByCode']['prt_item_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['prt_item_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'item');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'item','id'=>$part->getItemID()));
@@ -1240,7 +1287,7 @@
     }
     $imgRML = "";
     if (count($part->getImageIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['prt_image_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['prt_image_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'images');
       $rml .= openXMLNode($label);
       foreach($part->getImageIDs() as $id) {
@@ -1271,28 +1318,28 @@
     }
     $rml = openXMLNode('item',array('id' => $item->getID(), 'modified' => $item->getModificationStamp()));
     if ($item->getTitle()) {
-      $label = $entityLookup['term']['idByCode']['itm_title']['englabel'];
+      $label = $entityLookup['term']['idByCode']['itm_title']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'title');
       $rml .= makeXMLNode($label,null,$item->getTitle());
     }
     if ($item->getType()) {
-      $label = $entityLookup['term']['idByCode']['itm_type_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['itm_type_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'type');
-      $value = $entityLookup['term']['byID'][$item->getType()]['englabel'];
+      $value = $entityLookup['term']['byID'][$item->getType()]['englabel'];//warning term trm_code dependency
       $value = ($value?$value:'');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'term','id'=>$item->getType(),'value' => $value));
       $rml .= closeXMLNode($label);
     }
     if ($item->getMeasure()) {
-      $label = $entityLookup['term']['idByCode']['itm_measure']['englabel'];
+      $label = $entityLookup['term']['idByCode']['itm_measure']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'measure');
       $rml .= makeXMLNode($label,null,$item->getMeasure());
     }
     if ($item->getShapeID()) {
-      $label = $entityLookup['term']['idByCode']['itm_shape_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['itm_shape_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'shape');
-      $value = $entityLookup['term']['byID'][$item->getShapeID()]['englabel'];
+      $value = $entityLookup['term']['byID'][$item->getShapeID()]['englabel'];//warning term trm_code dependency
       $value = ($value?$value:'');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'term','id'=>$item->getShapeID(),'value' => $value));
@@ -1300,7 +1347,7 @@
     }
     $imgRML = "";
     if (count($item->getImageIDs()) > 0){
-      $label = $entityLookup['term']['idByCode']['itm_image_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode']['itm_image_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'images');
       $rml .= openXMLNode($label);
       foreach($item->getImageIDs() as $id) {
@@ -1325,18 +1372,18 @@
     if (!array_key_exists('materialcontext', $entityLookup)){
       $entityLookup['materialcontext'] = array();
     }
-    if (in_array($materialcontext->getID(), $entityLookup['materialcontext'])){
+    if (in_array($materialcontext->getID(), $entityLookup['materialcontext'])){//warning term trm_code dependency
       // output error log message ??
      return "";
     }
     $rml = openXMLNode('materialcontext',array('id' => $materialcontext->getID(), 'modified' => $materialcontext->getModificationStamp()));
     if ($materialcontext->getArchContext()) {
-      $label = $entityLookup['term']['idByCode']['mcx_arch_context']['englabel'];
+      $label = $entityLookup['term']['idByCode']['mcx_arch_context']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'archcontext');
       $rml .= makeXMLNode($label,null,$materialcontext->getArchContext());
     }
     if ($materialcontext->getFindStatus()) {
-      $label = $entityLookup['term']['idByCode']['mcx_find_status']['englabel'];
+      $label = $entityLookup['term']['idByCode']['mcx_find_status']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'findstatus');
       $rml .= makeXMLNode($label,null,$materialcontext->getFindStatus());
     }
@@ -1360,17 +1407,17 @@
     }
     $rml = openXMLNode('attribution',array('id' => $attribution->getID(), 'modified' => $attribution->getModificationStamp()));
     if ($attribution->getTitle()) {
-      $label = $entityLookup['term']['idByCode']['atb_title']['englabel'];
+      $label = $entityLookup['term']['idByCode']['atb_title']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'title');
       $rml .= makeXMLNode($label,null,$attribution->getTitle());
     }
     if ($attribution->getDescription()) {
-      $label = $entityLookup['term']['idByCode']['atb_description']['englabel'];
+      $label = $entityLookup['term']['idByCode']['atb_description']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'description');
       $rml .= makeXMLNode($label,null,$attribution->getDescription());
     }
     if ($attribution->getBibliographyID()) {
-      $label = $entityLookup['term']['idByCode']['atb_bib_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['atb_bib_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'bibliography');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'bibliography','id'=>$attribution->getBibliographyID()));
@@ -1378,7 +1425,7 @@
 //      $bibRML = getBibliographyRML($attribution->getBibliography(true));
     }
     if ($attribution->getGroupID()) {
-      $label = $entityLookup['term']['idByCode']['atb_group_id']['englabel'];
+      $label = $entityLookup['term']['idByCode']['atb_group_id']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'group');
       $rml .= openXMLNode($label);
       $rml .= makeXMLNode('link',array('entity' => 'attributiongroup','id'=>$attribution->getGroupID()));
@@ -1386,7 +1433,7 @@
 //      $grpRML = getBibliographyRML($attribution->getGroup(true));
     }
     if (count($attribution->getTypes()) > 0){
-      $label = $entityLookup['term']['idByCode']['atb_types']['englabel'];
+      $label = $entityLookup['term']['idByCode']['atb_types']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'types');
       $rml .= makeXMLNode($label,$attribution->getTypes(true));
 //      foreach($attribution->getTypes() as $type) {
@@ -1395,7 +1442,7 @@
 //      $rml .= closeXMLNode($label);
     }
     if ($attribution->getDetail()) {
-      $label = $entityLookup['term']['idByCode']['atb_detail']['englabel'];
+      $label = $entityLookup['term']['idByCode']['atb_detail']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'detail');
       $rml .= makeXMLNode($label,null,$attribution->getDetail());
     }
@@ -1430,14 +1477,10 @@
   function getOwnerRML($prefix,$ownerID) {
   global $fullnameLookup, $entityLookup;
     $rml = "";
-    $name = (array_key_exists($ownerID,$fullnameLookup) ? $fullnameLookup[$ownerID] : "unknown");
-    $label = $entityLookup['term']['idByCode'][$prefix.'_owner_id']['englabel'];
+    $xml = (array_key_exists($ownerID,$fullnameLookup) ? $fullnameLookup[$ownerID] : "unknown");
+    $label = $entityLookup['term']['idByCode'][$prefix.'_owner_id']['englabel'];//warning term trm_code dependency
     $label = ($label?$label:'owner');
-    $label2 = $entityLookup['term']['idByCode']['ugr_name']['englabel'];
-    $label2 = ($label2?$label2:'name');
-    $rml .= openXMLNode($label,array('entity' => 'usergroup'));
-    $rml .= makeXMLNode($label2,null,$name);
-    $rml .= closeXMLNode($label);
+    $rml .= makeXMLNode($label,array('entity' => 'usergroup'), $xml,true,false);
     return $rml;
   }
 
@@ -1445,13 +1488,11 @@
   global $fullnameLookup,$entityLookup;
     $rml = "";
     if (is_array($visibilityIDs) && count($visibilityIDs) > 0){
-      $label = $entityLookup['term']['idByCode'][$prefix.'_visibility_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode'][$prefix.'_visibility_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'visibility');
-      $label2 = $entityLookup['term']['idByCode']['ugr_name']['englabel'];
-      $label2 = ($label2?$label2:'fullname');
       $rml .= openXMLNode($label,array('entity' => 'usergroup'));
       foreach ($visibilityIDs as $id) {
-        $rml .= makeXMLNode($label2,null,(array_key_exists($id,$fullnameLookup) ? $fullnameLookup[$id] : "unknown"));
+        $rml .= (array_key_exists($id,$fullnameLookup) ? $fullnameLookup[$id] : "<unknown/>");
       }
       $rml .= closeXMLNode($label);
     }
@@ -1462,7 +1503,7 @@
     global $entityLookup;
     $rml = "";
     if (is_array($annotationIDs) && count($annotationIDs) > 0){
-      $label = $entityLookup['term']['idByCode'][$prefix.'_annotation_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode'][$prefix.'_annotation_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'annotations');
       $rml .= openXMLNode($label);
       foreach ($annotationIDs as $id) {//todo expand to output annotation info.
@@ -1477,7 +1518,7 @@
     global $entityLookup;
     $rml = "";
     if (is_array($attributionIDs) && count($attributionIDs) > 0){
-      $label = $entityLookup['term']['idByCode'][$prefix.'_attribution_ids']['englabel'];
+      $label = $entityLookup['term']['idByCode'][$prefix.'_attribution_ids']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'attributions');
       $rml .= openXMLNode($label);
       foreach ($attributionIDs as $id) {

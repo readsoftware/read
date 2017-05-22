@@ -60,12 +60,12 @@
 
   include_once(dirname(__FILE__).'/utilRML.php');
 
+  error_reporting(E_ERROR);
   $textRML = null;
   $textCKN = (array_key_exists('ckn',$_REQUEST)? $_REQUEST['ckn']:null);
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $textRML = calcEditionRML($ednID, $textCKN);
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
-error_reporting(E_ERROR);
   $textRMLDoc = new DOMDocument('1.0','utf-8');
   $suc = $textRMLDoc->loadXML($textRML);
   if (!$suc){
