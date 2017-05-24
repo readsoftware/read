@@ -75,21 +75,21 @@
                         </title>
                         <respStmt>
                             <resp>editor</resp>
-                            <persName ref="#SB">
-                                <forename>Stefan</forename>
+                            <persName ref="#AS">
+                                <forename>Andrea</forename>
                                 <surname>Baums</surname>
                             </persName>
                         </respStmt>
                     </titleStmt>
                     <publicationStmt>
-                        <authority>Early Inscriptions of Āndhradeśa</authority>
+                        <authority>Buddhist Manuscripts from Gandhāra</authority>
                         <idno type="filename"><xsl:value-of select="$text/Inv"/>.xml</idno>
                     </publicationStmt>
                     <sourceDesc>
                         <msDesc>
                             <msIdentifier>
-                                <institution>EFEO</institution>
-                                <idno xml:id="inv-eiad">EIAD <xsl:value-of select="substring($text/Inv,5)"/></idno>
+                                <institution>BAdW/LMU</institution>
+                                <idno xml:id="inv-eiad"><xsl:value-of select="$text/Inv"/></idno>
                             </msIdentifier>
                             <msContents>
                                 <msItem>
@@ -629,13 +629,15 @@
             <xsl:when test="DisplayValue = '|'"><pc>|</pc></xsl:when>
             <xsl:when test="DisplayValue = ':'"><pc>:</pc></xsl:when-->
             <xsl:when test="contains('‧×∈⌇◯○◦•·∙☒☸❀❉–—|:',DisplayValue)">
-                <pc>
-                    <xsl:call-template name="convertTCM">
-                        <!--xsl:with-param name="tcmString" select="replace(replace(replace($transcr,'ʔi','ï'),'ʔu','ü'),'ʔ','')"/-->
-                        <xsl:with-param name="tcmString" select="Transcription"/>
-                        <xsl:with-param name="lbNode" select="$lbrNode"/>
-                    </xsl:call-template>
-                </pc>
+                <xsl:variable name="preTCM" select="substring-before(Transcription,DisplayValue)"/>
+                <xsl:variable name="postTCM" select="substring-after(Transcription,DisplayValue)"/>
+                <xsl:variable name="transc" select="concat($preTCM,'&lt;pc&gt;',DisplayValue,'&lt;/pc&gt;',$postTCM)"/>
+
+                <xsl:call-template name="convertTCM">
+                    <!--xsl:with-param name="tcmString" select="replace(replace(replace($transcr,'ʔi','ï'),'ʔu','ü'),'ʔ','')"/-->
+                    <xsl:with-param name="tcmString" select="$transc"/>
+                    <xsl:with-param name="lbNode" select="$lbrNode"/>
+                </xsl:call-template>
             </xsl:when>
             <xsl:when test="DisplayValue = '+'">
                 <gap reason="lost" extent="1" unit="akṣara"/>
@@ -671,7 +673,7 @@
                                 </xsl:call-template>
                             </xsl:otherwise>
                         </xsl:choose>
-                        
+
                     </xsl:variable>
                     <!-- process TCM and missing -->
                     <xsl:variable name="transcr1">

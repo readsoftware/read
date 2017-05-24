@@ -34,16 +34,16 @@
     $isCmdLineLaunch = true;
     // handle command-line queries
     $ARGV = array();
-    for ($i = 0;$i < count($argv);++$i) {
-        if ($argv[$i][0] === '-') {
-            if (@$argv[$i + 1] && $argv[$i + 1][0] != '-') {
-                $ARGV[$argv[$i]] = $argv[$i + 1];
+    for ($i = 0;$i < count(@$argv);++$i) {
+        if (@$argv[$i][0] === '-') {
+            if (@$argv[$i + 1] && @$argv[$i + 1][0] != '-') {
+                $ARGV[@$argv[$i]] = @$argv[$i + 1];
                 ++$i;
             } else {
-                $ARGV[$argv[$i]] = true;
+                $ARGV[@$argv[$i]] = true;
             }
         } else {
-            array_push($ARGV, $argv[$i]);
+            array_push($ARGV, @$argv[$i]);
         }
     }
     if (@$ARGV['-db']) $_REQUEST["db"] = $ARGV['-db'];
@@ -88,12 +88,14 @@
   $epiXML = str_replace('&lt;','<',$epiXML);//fixup angle brackets for ab element
   $epiXML = str_replace('&gt;','>',$epiXML);//remove any blank xmlns statements
   $testDoc = new DOMDocument('1.0','utf-8');
-  $testDoc->loadXML($epiXML);
+  $testDoc->loadXML(str_replace('\n','',$epiXML));
+  set_error_handler("errorHandler");
   if (!isset($isCmdLineLaunch) && !$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {
     header("Content-type: text/javascript;  charset=utf-8");
-    echo "transformation with 'rml2EpiDoc.xsl' failed validation against 'tei-epidoc.rng'";
+    error_log("transformation with 'rml2EpiDoc.xsl' failed validation against 'tei-epidoc.rng'");
     return;
   }
+  restore_error_handler();
   $epiXML = "<?xml version='1.0' encoding='UTF-8'?>"."\n".
             '<?xml-model'." ".'href="http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>'."\n".
             '<?xml-model'." ".'href="http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>'."\n".
@@ -125,3 +127,33 @@ function returnXMLErrorMsgPage($msg) {
     }
    error_log("errored transform ".$msg);
 }
+
+function errorHandler($errno, $errmsg, $file, $line)
+{
+    if (!(error_reporting() & $errno)) {
+//        return;
+    }
+
+    switch ($errno) {
+    case E_USER_ERROR:
+        error_log("validation ERROR[$errno]:  $errmsg  validation error on line $line in file $file Aborting...");
+        exit(1);
+        break;
+
+    case E_USER_WARNING:
+        error_log("validation WARNING[$errno]:  $errmsg ");
+        break;
+
+    case E_USER_NOTICE:
+        error_log("validation NOTICE[$errno]:  $errmsg ");
+        break;
+
+    default:
+        error_log("Unknown error type: [$errno] on line $line in file $file - $errmsg");
+        break;
+    }
+
+    /* Don't execute PHP internal error handler */
+    return true;
+}
+?>

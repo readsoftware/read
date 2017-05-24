@@ -1347,7 +1347,14 @@ EDITORS.WordlistVE.prototype = {
     html = '<h3 class="wordListTitle edn'+edition.id+'">'+edition.value+' Word List</h3>';
     for (i=0; i<entities.length; i++) {
       word = entities[i];
-      html += '<div class="wordlistentry"><span class="word '+word.tag+'" srch="'+word.value+'">' + word.transcr.replace(/ʔ/g,'') + ' ' + word.locLabel + '</span></div>';
+      if (word && word.tag && word.value && word.transcr && word.locLabel) {
+        html += '<div class="wordlistentry"><span class="word '+word.tag+'" srch="'+word.value+'">' + word.transcr.replace(/ʔ/g,'') + ' ' + word.locLabel + '</span></div>';
+      } else {
+        DEBUG.log('err',"Genreating html for wordlist found incomplete word data "+word.tag+
+                  (!word.value ? " missing word value":"")+
+                  (!word.transcr ? " missing word trascription":"")+
+                  (!word.locLabel ? " missing word location label":""));
+      }
     }
     this.contentDiv.html(html);
     this.addEventHandlers(this.contentDiv);
