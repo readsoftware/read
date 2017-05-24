@@ -578,7 +578,8 @@ EDITORS.ImageVE.prototype = {
                             imgVE.dataMgr.updateLocalCache(data,null);
                             if (data.entities.removeprop && data.entities.removeprop.seg) {
                               for (segID in data.entities.removeprop.seg) {
-                                if (data.entities.removeprop.seg[segID][0] == 'ordinal') {
+                                if (data.entities.removeprop.seg[segID][0] == 'ordinal' &&
+                                    imgVE.polygonLookup['seg'+segID]) {
                                   polygon = imgVE.polygons[imgVE.polygonLookup['seg'+segID]-1];
                                   if (polygon.order) {
                                     delete polygon.order;

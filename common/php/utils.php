@@ -2076,6 +2076,113 @@ function checkEditionHealth($ednID, $verbose = true) {
   return $retStr;
 }
 
+
+/**
+* merge data from ordinal tagged image segments of one or more baselines (order by baseline id then ordinal)
+* into the segments of the db starting in segment id order.
+*
+* @param int array $blnIDs of baseline ids to scope the set of segments to merge from
+* @param boolean $deleteAfterMerge indicating whethter to delete the segment from the db after merging it's data
+*
+* @return mixed array of $success, $errors strings, array warnings strings and $log string.
+*/
+
+function reorderSegments($blnIDs = null, $deleteAfterMerge = true) {
+  $dbMgr = new DBManager();
+  $retVal = array();
+  $errors = array();
+  $warnings = array();
+  $log = "Start reorder morphying process.\n";
+  // get an ordered list of segment IDs for the base lines supplied or for the entire database.
+  $query = "select seg_id, seg_baseline_ids[1] as blnID, substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int as ord from segment where seg_scratch like '%blnOrdinal%' and seg_image_pos is not null";
+  if (isset($data['blnIDs'])) {
+    $query .= " and seg_baseline_ids[1] = ANY(".$data['blnIDs'].") order by blnID,ord";//todo needs to be changed for cross baseline segmentation
+  } else {
+    $query .= " order by blnID,ord";
+  }
+  $log .= "query = '$query'\n";
+  $dbMgr->query($query);
+  $ordSegIDs = array();
+  $usedOrdSegIDs = array();
+  $ordCnt = $dbMgr->getRowCount();
+  if ($ordCnt == 0) {
+    array_push($errors,"no ordinals found in scratch of any segments");
+  } else {
+    $lastOrd = null;
+    while ($row = $dbMgr->fetchResultRow()) {
+      if ($lastOrd == $row['ord']) {
+        $msg = " found duplicate ordinal ".$row['ord']." on segment ".$row['seg_id'];
+        $log .= $msg."\n";
+        array_push($warnings,$msg);
+      }
+      $lastOrd = $row['ord'];
+      array_push($ordSegIDs, $row['seg_id']);
+    }
+  }
+
+  if (count($errors) == 0) {
+    $segments = new Segments(null,'seg_id',null,null);
+    if ($segments->getError()) {
+      array_push($errors,"Error loading segments error: ".$segments->getError());
+    } else if ($segments->getCount() < ($ordCnt * 2)) {
+      array_push($errors,"Error segment count mismatch database segment count (".$segments->getCount().") should be at least twice the count ($ordCnt) of ordered segments");
+    } else {
+      foreach ($ordSegIDs as $segID) {
+        $srcSegment = $segments->searchKey($segID);
+        $trgSegment = $segments->current();
+        if (!$srcSegment) {
+          array_push($errors,"unable to find source segment for seg:$segID");
+        } else if ($srcSegment->isReadonly()) {
+//          array_push($errors,"source segment for seg:$segID is read only");
+        }
+        if (!$trgSegment) {
+          array_push($errors,"no target segment for seg:$segID");
+        } else if ($trgSegment->isReadonly()) {
+//          array_push($errors,"target segment for seg:$segID is read only");
+        }
+        if (count($errors)) {
+          break;
+        }
+        $trgSegID = $trgSegment->getID();
+        $log .= "Attempting to merge data from source seg$segID into target seg$trgSegID.\n";
+        $trgSegment->setBaselineIDs($srcSegment->getBaselineIDs());
+        $trgSegment->setImageBoundary($srcSegment->getImageBoundary());
+        if ($trgSegment->getStringPos()) {
+          $trgSegment->setStringPos(null);
+        }
+        $trgSegment->save();
+        if ($trgSegment->hasError()) {
+          array_push($errors,"Error saving target segment id = ".$trgSegment->getID()." errors - ".join(",",$trgSegment->getErrors()));
+          break;
+        }
+        $srcSegment->markForDelete();
+        if ($srcSegment->hasError()) {
+          array_push($errors,"Error deleting source segment id = ".$srcSegment->getID()." errors - ".join(",",$srcSegment->getErrors()));
+          break;
+        }
+        array_push($usedOrdSegIDs, $srcSegment->getID());
+        $log .= "Successfully merged data from source seg$segID into target seg$trgSegID.\n";
+        $segments->next();
+      }
+      if ($deleteAfterMerge && count($errors) == 0) {//can remove ordinal segments, todo check if there is overlap in source and target segments
+        $query = "delete from segment where seg_id in (".join(",",$usedOrdSegIDs).")";
+        $dbMgr->query($query);
+      }
+    }
+  }
+  $retVal["success"] = false;
+  if (count($errors)) {
+    $retVal["errors"] = $errors;
+  } else {
+    $retVal["success"] = true;
+  }
+  if (count($warnings)) {
+    $retVal["warnings"] = $warnings;
+  }
+  $retVal["log"] = $log;
+  return $retVal;
+}
+
 /**
 * validate the structure of tokens or compounds
 *

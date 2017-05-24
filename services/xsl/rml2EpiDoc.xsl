@@ -66,7 +66,7 @@
     <xsl:variable name="text" select="/rml/entities/text"/>
 
     <xsl:template match="/">
-        <TEI xmlns:ns="http://www.tei-c.org/ns/1.0">
+        <TEI xmlns="http://www.tei-c.org/ns/1.0">
             <teiHeader>
                 <fileDesc>
                     <titleStmt>
@@ -83,13 +83,13 @@
                     </titleStmt>
                     <publicationStmt>
                         <authority>Buddhist Manuscripts from Gandhāra</authority>
-                        <idno type="filename"><xsl:value-of select="$text/Inv"/>.xml</idno>
+                        <idno type="filename"><xsl:value-of select="$text/CKN"/>.xml</idno>
                     </publicationStmt>
                     <sourceDesc>
                         <msDesc>
                             <msIdentifier>
                                 <institution>BAdW/LMU</institution>
-                                <idno xml:id="inv-eiad"><xsl:value-of select="$text/Inv"/></idno>
+                                <idno xml:id="inv-eiad"><xsl:value-of select="$text/CKN"/></idno>
                             </msIdentifier>
                             <msContents>
                                 <msItem>
