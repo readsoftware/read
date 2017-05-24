@@ -93,7 +93,7 @@
   if (!isset($isCmdLineLaunch) && !$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {
     header("Content-type: text/javascript;  charset=utf-8");
     error_log("transformation with 'rml2EpiDoc.xsl' failed validation against 'tei-epidoc.rng'");
-    return;
+//    return;
   }
   restore_error_handler();
   $epiXML = "<?xml version='1.0' encoding='UTF-8'?>"."\n".
