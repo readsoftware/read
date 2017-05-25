@@ -103,6 +103,11 @@ div.editContainer.showTokenSep .toksep {
   background-color: lightblue;
 }
 
+#textEditPage .editContainer.ordNumberingMode {
+  padding: 4px;
+  background-color: blue;
+}
+
 #textEditPage .tcmedit {
   background-color: #e5e5e5;
 }

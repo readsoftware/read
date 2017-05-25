@@ -147,7 +147,7 @@ EDITORS.EditionVE.prototype = {
         } else {
           //show link ordinal button
           this.linkOrdBtnDiv.show();
-          alert("Auto Linking for a range of segments requires you to select the first syllable (or ctrl+dblclick a range of syllables) and then click 'Finish Linking' button.");
+          alert("Auto linking for a range of segments requires you to select the start-point syllable in the edition and then click the 'Finish Linking' button");
         }
       }
     }

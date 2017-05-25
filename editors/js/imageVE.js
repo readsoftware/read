@@ -183,7 +183,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
   if (!this.image) {
     this.image = new Image();
   }
-  this.image.crossOrigin = 'Anonymous';//allow cross origin images
+  this.image.crossOrigin = 'anonymous';//allow cross origin images
   this.crossSize = 10;
   if (this.image.width == 0 || this.image.height == 0) { // image not loaded
     this.image.onload = function(e) {
@@ -439,7 +439,7 @@ EDITORS.ImageVE.prototype = {
             return;
           }
         }
-        alert("Please select a syllable cluster or segment for segment #" + selectedSeg);
+        alert("Please select a syllable to link this segment to.");
         imgVE.linkSource = selectedSeg;
         $('.editContainer').trigger('linkRequest',[imgVE.id,selectedSeg]);
       }else{
@@ -556,7 +556,8 @@ EDITORS.ImageVE.prototype = {
           switch (imgVE.orderSegMode) {
             case 'off':
               //ask user if continue or restart
-              if (!confirm("Press OK to continue numbering segments from "+ imgVE.nextSegOrdinal + ". Press cancel to restart numbering at 1.")) {
+              if (!confirm("Press OK to continue numbering from "+ imgVE.nextSegOrdinal +
+                           ". Press cancel to remove all nos. and restart numbering at 1.")) {
                 //restart - call service to clear seg ordinals with success update cache, set nextOrdinal = 1 and redraw
                 savedata["cmd"] = "clearOrdinals";
                 savedata["blnID"] = imgVE.blnEntity.id;
@@ -619,12 +620,14 @@ EDITORS.ImageVE.prototype = {
                 imgVE.drawImage();
                 imgVE.drawImagePolygons();
               }
+              $(imgVE.editDiv).addClass('ordNumberingMode');
               break;
             case 'setting':
             case 'resetting':
             case 'on':
               // set state off
               imgVE.orderSegMode = "off";
+              $(imgVE.editDiv).removeClass('ordNumberingMode');
               //update btn html
               $(this).html("Off");
               // redraw

@@ -291,7 +291,7 @@ MANAGERS.DataManager.prototype = {
       for (prefix in propremovals) {
         for (entID in propremovals[prefix]) {
           for (index in propremovals[prefix][entID]) {
-            propName = propremovals[prefix][index];
+            propName = propremovals[prefix][entID][index];
             if (this.entities[prefix] && this.entities[prefix][entID] && this.entities[prefix][entID][propName] ) {
               delete this.entities[prefix][entID][propName];
               DEBUG.log("data","removed " + prefix + entID + " entity's "+ propName + " property");
