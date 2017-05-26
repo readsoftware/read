@@ -72,9 +72,9 @@ if (!$data) {
     array_push($errors,"unknown edition");
   }
 
+  $endSclGID = $startSclGID = $sclIDs = null;
   if (count($errors) == 0) {
     //start syllable (- end syllable) - sclIDs if 1 then start if 2 then start stop if more set of selected syllables
-    $endSclGID = $startSclGID = $sclIDs = null;
     if (isset($data['sclIDs'])) {//get  SyllableIDs
       $sclIDs = $data['sclIDs'];
       if (!is_array($sclIDs)) {

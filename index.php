@@ -91,6 +91,7 @@
     <script type="text/javascript">
       var sktSort = ('<?=USESKTSORT?>' == "0" || !'<?=USESKTSORT?>')?false:true,
           maxUploadSize = parseInt(<?=MAX_UPLOAD_SIZE?>),
+          linkToSyllablePattern = '<?=defined("LINKSYLPATTERN")?LINKSYLPATTERN:""?>',
           progressInputName='<?php echo ini_get("session.upload_progress.name"); ?>',
           dbName = '<?=DBNAME?>', basepath="<?=SITE_BASE_PATH?>";
     </script>

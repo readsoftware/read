@@ -714,6 +714,26 @@ EDITORS.ImageVE.prototype = {
       });
     }
 
+    if (this.blnEntity && linkToSyllablePattern) {
+      var btnAutoLinkPatternName = this.id+'AutoLinkPattern';
+      this.autoLinkPatternBtnDiv = $('<div class="toolbuttondiv">' +
+                              '<button class="toolbutton" id="'+btnAutoLinkPatternName +
+                                '" title="Auto link using pattern '+linkToSyllablePattern+'">Pattern Link</button>'+
+                              '<div class="toolbuttonlabel">'+linkToSyllablePattern+'</div>'+
+                             '</div>');
+      $('#'+btnAutoLinkPatternName,this.autoLinkPatternBtnDiv).unbind('click')
+                                 .bind('click',function(e) {
+        var blnID = imgVE.blnEntity.id, defaultMode;
+        if (imgVE.nextSegOrdinal && imgVE.nextSegOrdinal > 1) {
+          mode = 0;// 0 = auto immediate return - just need the edition
+          imgVE.autoLinkPatternMode = true;
+          $('.editContainer').trigger('autoLinkOrdRequest',[imgVE.id,blnID,mode]);
+        } else {
+          alert("Please order segments first");
+        }
+      });
+    }
+
     if (this.blnEntity) {
       var btnShowSegName = this.id+'ShowSeg';
       this.showSegBtnDiv = $('<div class="toolbuttondiv">' +
@@ -810,6 +830,9 @@ EDITORS.ImageVE.prototype = {
                   .append(this.deleteSegBtnDiv)
                   .append(this.orderSegBtnDiv)
                   .append(this.autoLinkOrdBtnDiv);
+      if (this.autoLinkPatternBtnDiv) {
+        this.editToolbar.append(this.autoLinkPatternBtnDiv);
+      }
     }
     this.layoutMgr.registerEditToolbar(this.id,this.editToolbar);
   },
@@ -1829,8 +1852,9 @@ EDITORS.ImageVE.prototype = {
         return;
       }
       DEBUG.log("event","link abort recieved by imageVE in "+imgVE.id+" from "+senderID+" with requestSource "+ requestSource);
-      if (imgVE.autoLinkOrdMode && requestSource == imgVE.blnEntity.id) {
+      if ((imgVE.autoLinkOrdMode || imgVE.autoLinkPatternMode) && requestSource == imgVE.blnEntity.id) {
         imgVE.autoLinkOrdMode = false;
+        imgVE.autoLinkPatternMode = false;
       }
     };
 
@@ -1855,12 +1879,14 @@ EDITORS.ImageVE.prototype = {
       DEBUG.log("event","link abort recieved by imageVE in "+imgVE.id+" from "+senderID+" with requestSource "+ requestSource +
                 " link to ednID -"+linkTargetEdition+
                 (sclIDs?"  syllable IDs -"+sclIDs.join():""));
-      if (imgVE.autoLinkOrdMode && requestSource == imgVE.blnEntity.id && linkTargetEdition) {
+      if ((imgVE.autoLinkOrdMode || imgVE.autoLinkPatternMode) && requestSource == imgVE.blnEntity.id && linkTargetEdition) {
         //in link mode and have edition info so call link service
         //sclIDs, segIDs, blnIDs, pattern and ednID
         savedata["ednID"] = linkTargetEdition;
         savedata["blnIDs"] = [imgVE.blnEntity.id];
-        if (sclIDs) {
+        if (imgVE.autoLinkPatternMode) {// use pattern
+          savedata["pattern"] = linkToSyllablePattern;
+        } else if (sclIDs) {
           savedata["sclIDs"] = sclIDs;
         }
         if (Object.keys(imgVE.selectedPolygons).length) {

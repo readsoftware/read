@@ -25,7 +25,8 @@
   if(!defined("USERNAME")) define("USERNAME","postgres");
   if(!defined("PASSWORD")) define("PASSWORD","password");
   if(!defined("USECACHE")) define("USECACHE",false);
-  if(!defined("USESKTSORT")) define("USESKTSORT",'1');
+//  if(!defined("LINKSYLPATTERN")) define("LINKSYLPATTERN","L1:S1,L5+5:S1");
+//  if(!defined("USESKTSORT")) define("USESKTSORT",'1');
   if(!defined("MAX_UPLOAD_SIZE")) {
     $maxUpload = intval(ini_get("upload_max_filesize"));
     $maxPost = intval(ini_get("post_max_size"));
