@@ -183,7 +183,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
   if (!this.image) {
     this.image = new Image();
   }
-  this.image.crossOrigin = 'anonymous';//allow cross origin images
+//  this.image.crossOrigin = 'anonymous';//allow cross origin images
   this.crossSize = 10;
   if (this.image.width == 0 || this.image.height == 0) { // image not loaded
     this.image.onload = function(e) {
