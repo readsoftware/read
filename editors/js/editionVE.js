@@ -3569,6 +3569,10 @@ mergeLine: function (direction,cbError) {
                   e.stopImmediatePropagation();
                   return false;//eat all other keys
                 }
+              } else {
+                UTILITY.beep();
+                e.stopImmediatePropagation();
+                return false;
               }
             }
             break;
