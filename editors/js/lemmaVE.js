@@ -1881,7 +1881,11 @@ EDITORS.LemmaVE.prototype = {
     if (Object.keys(relEntGIDsByType).length) {
       for (i in relEntGIDsByType) {
         linkType = this.dataMgr.getTermFromID(i);
-        relTypeUIDiv =$('<div class="relUISection expand"><span class="btnRelUIExpander"/><span class="relUIHeader">'+linkType+'</span></div>');
+        if (linkType == "See") {
+          relTypeUIDiv =$('<div class="relUISection expand"><span class="btnRelUIExpander"/><span class="relUIHeader">'+linkType+'</span></div>');
+        } else {
+          relTypeUIDiv =$('<div class="relUISection"><span class="btnRelUIExpander"/><span class="relUIHeader">'+linkType+'</span></div>');
+        }
         displayUI.append(relTypeUIDiv);
         relEntIDs = relEntGIDsByType[i];
         entities = [];

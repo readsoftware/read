@@ -311,12 +311,16 @@
         </surface>
     </xsl:template>
     <xsl:template match="gap" mode="compress">
-        <xsl:if test="not(@reason=preceding-sibling::gap[1]/@reason) or not(preceding-sibling::node()[1][self::gap])">
+        <xsl:if test="not(@reason=preceding-sibling::gap[1]/@reason and @unit=preceding-sibling::gap[1]/@unit) or not(preceding-sibling::node()[1][self::gap])">
             <gap>
                 <xsl:variable name="start" select="count(preceding-sibling::gap)" />
-                <xsl:variable name="end" select="count(following-sibling::gap[not(@reason=current()/@reason)][1]/preceding-sibling::gap)" />
+                <xsl:variable name="end" select="count(following-sibling::gap[not(@reason=current()/@reason and @unit=current()/@unit)][1]/preceding-sibling::gap)" />
+                <xsl:variable name="endPart" select="count(following-sibling::gap[@unit='akṣarapart'])" />
                 <xsl:variable name="n">
                     <xsl:choose>
+                        <xsl:when test="@unit='akṣarapart'">
+                            <xsl:value-of select="$endPart - $start"/>
+                        </xsl:when>
                         <xsl:when test="$end">
                             <xsl:value-of select="$end - $start - 1"/>
                         </xsl:when>
