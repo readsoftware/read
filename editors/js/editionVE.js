@@ -5496,19 +5496,20 @@ mergeLine: function (direction,cbError) {
               lineHTML += graLU.fnMarker;
             }
             //check for split syllable token break or compound token break
-            if (graLU.boundary &&
-                (!(this.repType == "diplomatic" && grapheme.txtcrit && grapheme.txtcrit.indexOf("R") > -1) ||
-                  graLU.boundary.indexOf('linebreak') != -1)) {
-              //if group close grp node and add to html
-              if (grpHTML) {
-                lineHTML += grpHTML+ '</span>';
-                grpHTML = '';
+            if (graLU.boundary) {
+              if (!(this.repType == "diplomatic" && grapheme.txtcrit && grapheme.txtcrit.indexOf("R") > -1) ||
+                  graLU.boundary.indexOf('linebreak') != -1) {
+                //if group close grp node and add to html
+                if (grpHTML) {
+                  lineHTML += grpHTML+ '</span>';
+                  grpHTML = '';
+                }
+                //add break node to html
+                lineHTML += graLU.boundary;
               }
-              //add break node to html
-              lineHTML += graLU.boundary;
             }
           }
-          if (prevGraIsVowelCarrier && grapheme.value == "a") {
+          if (grapheme.value == "a" && !(graLU && (graLU.boundary || graLU.postTCM))) {
             previousA = true;
             previousGraTCMS = grapheme.txtcrit;
           } else {
