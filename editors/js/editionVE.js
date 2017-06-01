@@ -5453,7 +5453,7 @@ mergeLine: function (direction,cbError) {
               graTemp = grapheme.value;
               graTemp = graTemp[0].toUpperCase() + (graTemp.length > 1? graTemp.substring(1):"");
               grpHTML += graTemp;
-            } else if (j==1 && prevGraIsVowelCarrier && previousA && previousGraTCMS == grapheme.txtcrit) {
+            } else if (j==1 && prevGraIsVowelCarrier && previousA) {
               if (grapheme.value == 'i') {
                 grpHTML += "ï";
               }else if (grapheme.value == 'u') {
