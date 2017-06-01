@@ -303,7 +303,7 @@ EDITORS.tcmEditor.prototype = {
           }
         }
         //for elem text, map str to map until string is done pushing id to graIDs
-        grpStr = elem.textContent;
+        grpStr = elem.textContent.replace(/ï/,'i').replace(/ü/,'u');
         context = elem.className.replace(/grpGra/,"")
                                 .replace(/ord\d+/,"")
                                 .replace(/ordL\d+/,"")

@@ -5410,6 +5410,7 @@ mergeLine: function (direction,cbError) {
                 //add preTCM html node
                 lineHTML += graLU.preTCM.replace(/⟨\*/g,"").replace(/[⟨⟩]/g,"");
               }
+              previousA = false;
             }
             //if no group find context and start grapheme group
             if (!grpHTML) {
