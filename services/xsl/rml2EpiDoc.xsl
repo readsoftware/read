@@ -998,7 +998,7 @@
                     </xsl:call-template>
                 </xsl:when>
                 <xsl:when test="contains($tcmString,'=')">
-                    <xsl:value-of select="substring-before($tcmString,'=')"  disable-output-escaping="yes" /><lb><xsl:attribute name="xml:id"><xsl:value-of select="concat('seq',$lbNode/seqID)"/></xsl:attribute><xsl:attribute name="n"><xsl:value-of select="$lbNode/@ord"/></xsl:attribute></lb><xsl:value-of select="substring-after($tcmString,'=')" disable-output-escaping="yes" />
+                    <xsl:value-of select="substring-before($tcmString,'=')"  disable-output-escaping="yes" /><lb><xsl:attribute name="xml:id"><xsl:value-of select="concat('seq',$lbNode/seqID)"/></xsl:attribute><xsl:attribute name="n"><xsl:value-of select="$lbNode/lineN"/></xsl:attribute></lb><xsl:value-of select="substring-after($tcmString,'=')" disable-output-escaping="yes" />
                 </xsl:when>
                 <xsl:otherwise><xsl:value-of select="$tcmString"  disable-output-escaping="yes" /></xsl:otherwise>
             </xsl:choose>
