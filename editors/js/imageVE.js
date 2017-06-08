@@ -1186,14 +1186,14 @@ EDITORS.ImageVE.prototype = {
 * @param refViewCorner
 */
 
-  findVisiblePoly: function (refViewCorner) {
+  findNearestPoly: function (refType,visibleOnly) {
     var imgVE = this,
         x = imgVE.vpLoc.x * imgVE.image.width / imgVE.navCanvas.width,
         y = imgVE.vpLoc.y * imgVE.image.height / imgVE.navCanvas.height,
         xmax = (imgVE.vpSize.width + imgVE.vpLoc.x) * imgVE.image.width / imgVE.navCanvas.width,
         ymax = (imgVE.vpSize.height + imgVE.vpLoc.y) * imgVE.image.height / imgVE.navCanvas.height,
         xpos,ypos,candidatePoly = null, minDist = 1000, i, polygon, dist;
-    switch (refViewCorner) {
+    switch (refType) {
       case "bottomleft":
           xpos = x;
           ypos = ymax;
@@ -1201,6 +1201,10 @@ EDITORS.ImageVE.prototype = {
       case "bottomright":
           xpos = xmax;
           ypos = ymax;
+        break;
+      case "topline":
+          xpos = x;
+          ypos = y;
         break;
       case "topleft":
           xpos = x;
@@ -1218,9 +1222,13 @@ EDITORS.ImageVE.prototype = {
       xctr = polygon.center[0];
       yctr = polygon.center[1];
       //if visible
-      if ( !isNaN(xctr) && !isNaN(yctr) && x <= xctr && xctr <= xmax&& y <= yctr && yctr <= ymax) {
+      if ( !visibleOnly || !isNaN(xctr) && !isNaN(yctr) && x <= xctr && xctr <= xmax&& y <= yctr && yctr <= ymax) {
         //find distance
-        dist = Math.sqrt((xctr - xpos)*(xctr - xpos)+(yctr - ypos)*(yctr - ypos));
+        if (refType == "topline") {//use absolute y delta
+          dist = Math.sqrt((xctr - xpos)*(xctr - xpos)+(yctr - ypos)*(yctr - ypos));
+        } else {
+          dist = Math.abs(yctr - ypos);
+        }
         //if distance is min the save as candidate
         if (dist < minDist) {
           candidatePoly = polygon;
@@ -1228,7 +1236,7 @@ EDITORS.ImageVE.prototype = {
         }
       }
     }
-    DEBUG.log("data","Found visible Segment #"+candidatePoly.label+" in "+refViewCorner);
+    DEBUG.log("data","Found visible Segment #"+(candidatePoly?candidatePoly.label:"none found")+" in "+refType + visibleOnly?" only visible":"");
     return candidatePoly;
   },
 
@@ -1406,8 +1414,16 @@ EDITORS.ImageVE.prototype = {
           $(imgVE.navCanvas).unbind("mousemove touchmove");
           $(imgVE.navCanvas).unbind("mouseup touchend");
           if ($('body').hasClass('synchScroll')) {
-            poly = imgVE.findVisiblePoly('topright');
-            $('.editContainer').trigger('synchronize',[imgVE.id,poly.label,0]);
+            poly = imgVE.findNearestPoly('topleft',true);
+            if (!poly) {
+              poly = imgVE.findNearestPoly('topright',true);
+            }
+            if (!poly) {
+              poly = imgVE.findNearestPoly('topline',false);
+            }
+            if (poly) {
+              $('.editContainer').trigger('synchronize',[imgVE.id,poly.label,0]);
+            }
           }
         });
 
@@ -2274,10 +2290,13 @@ EDITORS.ImageVE.prototype = {
       if (senderID == imgVE.id) {
         return;
       }
+      DEBUG.log("event","synchronize recieved by imageVE in "+imgVE.id+" from "+senderID+" with anchor segID "+ anchorSegID+" and visibility fraction "+visFraction);
       var top, polygon, index;
       //find segment's polygon
       index = imgVE.polygonLookup[anchorSegID];
-      if (index) {
+      if (!index) {//non image segment id so ignore it
+        return;
+      } else {
         polygon = imgVE.polygons[-1+index];
       }
       if (polygon && polygon.label == anchorSegID) {
