@@ -2286,27 +2286,45 @@ EDITORS.ImageVE.prototype = {
 * @param visFraction
 */
 
-    function synchronizeHandler(e,senderID, anchorSegID, visFraction) {
+    function synchronizeHandler(e,senderID, anchorSegID, visFraction, imgPosData) {
       if (senderID == imgVE.id) {
         return;
       }
       DEBUG.log("event","synchronize recieved by imageVE in "+imgVE.id+" from "+senderID+" with anchor segID "+ anchorSegID+" and visibility fraction "+visFraction);
-      var top, polygon, index;
+      var top, polygon, deltaPolygon, index, syncSegTag, yOffset = 0;
+      if (imgPosData) {
+        syncSegTag = "seg"+imgPosData.segID;
+      } else {
+        return;
+      }
       //find segment's polygon
-      index = imgVE.polygonLookup[anchorSegID];
-      if (!index) {//non image segment id so ignore it
+      index = imgVE.polygonLookup[syncSegTag];
+      if (!index) {//non image segment id for this imageVE so ignore it
         return;
       } else {
         polygon = imgVE.polygons[-1+index];
       }
-      if (polygon && polygon.label == anchorSegID) {
+      if (imgPosData.deltaSegID) {
+        index = imgVE.polygonLookup[imgPosData.deltaSegID];
+        if (index) {
+          deltaPolygon = imgVE.polygons[-1+index];
+        }
+      }
+      if (polygon && polygon.label == syncSegTag) {
         polygon = polygon.polygon;
-        top = polygon[0][1] + visFraction * (polygon[2][1] - polygon[0][1]);
+        if (deltaPolygon && imgPosData.deltaFactor) {
+          deltaPolygon = deltaPolygon.polygon;
+          top = polygon[0][1] + imgPosData.deltaFactor * (deltaPolygon[0][1] - polygon[0][1]);
+        } else {
+          top = polygon[0][1] + imgPosData.segHeightFactor * (polygon[2][1] - polygon[0][1]);
+        }
       }
       //calculate position for segment polygon
-      imgVE.eraseNavPanel();
-      imgVE.moveViewportToImagePosY(top);
-      imgVE.draw();
+      if (top) {
+        imgVE.eraseNavPanel();
+        imgVE.moveViewportToImagePosY(top);
+        imgVE.draw();
+      }
     };
 
     $(imgVE.editDiv).unbind('synchronize').bind('synchronize', synchronizeHandler);

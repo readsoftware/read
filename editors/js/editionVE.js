@@ -110,6 +110,7 @@ EDITORS.EditionVE.prototype = {
     this.setTagView();
     this.calcEditionRenderMappings();
     this.renderEdition();
+    this.calcLineScrollDataBySegLookups();
     this.componentLinkMode = false;
   },
 
@@ -4508,7 +4509,7 @@ mergeLine: function (direction,cbError) {
         mdTarget = null;
         mmTarget = null;
         return false;
-      } else if (!e.ctrlKey) {
+      } else if (!e.ctrlKey && !(eTarget.id && eTarget.id.match(/textContent/) && sRange.commonAncestorContainer == sRange.startContainer)) {
         $(".selected",ednVE.contentDiv).removeClass("selected");
         $('.editContainer').trigger('updateselection',[ednVE.id,[""]]);
       }
@@ -4527,18 +4528,21 @@ mergeLine: function (direction,cbError) {
 */
 
     function veScrollHandler(e) {
-      var top = this.scrollTop, i=1, maxLine = 500, grpGra, segID, lineFraction;
+      var top = this.scrollTop, i=1, maxLine = 800, grpGra, segTag, lineFraction, imgScrollData;
       if (!ednVE.supressSynchOnce) {
-        DEBUG.log("data","scroll");
+        DEBUG.log("event","scroll editionVE");
         if ($('body').hasClass('synchScroll')) {
           for (i; i<maxLine; i++) {
             grpGra = $(this).find('.grpGra.ordL'+i+':first');
             if (grpGra && grpGra.length ==1) {
               grpGra = grpGra.get(0);
               if (grpGra.offsetTop <= top && grpGra.offsetTop + grpGra.offsetHeight > top) {
-                segID = grpGra.className.match(/seg\d+/)[0];
-                lineFraction = (top - grpGra.offsetTop)/grpGra.offsetHeight;
-                $('.editContainer').trigger('synchronize',[ednVE.id,segID,lineFraction]);
+                segTag = grpGra.className.match(/seg\d+/)[0];
+                if (segTag) {//sync only if segID
+                  lineFraction = (top - grpGra.offsetTop)/grpGra.offsetHeight;
+                  imgScrollData = ednVE.getImageScrollData(segTag,lineFraction);
+                  $('.editContainer').trigger('synchronize',[ednVE.id,segTag,lineFraction, imgScrollData]);
+                }
                 break;
               }
             }
@@ -4960,6 +4964,107 @@ mergeLine: function (direction,cbError) {
       for (var j=0; j<cnt; j++) {
         if (physLineSeqIDs[j] && physLineSeqIDs[j].indexOf('seq:') == 0) {//validate that this is a sequence
           this.calcLineGraphemeLookups((physLineSeqIDs[j]).substr(4));
+        }
+      }
+    }
+  },
+
+  /**
+  *
+  */
+
+  /**
+  * create data for positioning the image relative to the edition position
+  *
+  * @param segTag string indicating the segment tag of the first syllable on the top visible line
+  * @param lineFraction float indicating the fraction of the top line showing
+  */
+  getImageScrollData : function(segTag,lineFraction) {
+    var segID=segTag.substring(3), lineSegData = this.scrollDataBySegID[segID], imgData = {};
+    if (lineSegData) {
+      if (lineSegData.imgBlnID) { //on line with link to image baseline
+        imgData['segID'] = segID;
+        imgData['segHeightFactor'] = lineFraction;
+      } else {//on line with transcription segment link translate to image segment
+        if (lineSegData.prevImgSegID) {//anchor to previous image segment
+          imgData['segID'] = lineSegData.prevImgSegID;
+          if (lineSegData.nextImgSegID) {// calc percent delta between img Segment top position
+            imgData['deltaSegID'] = lineSegData.nextImgSegID;
+            //calc percent
+            imgData['deltaFactor'] = (lineSegData.cntPrevLinesToImgSeg + lineFraction)/this.scrollDataBySegID[lineSegData.prevImgSegID].cntNextLinesToImgSeg;
+            imgData['segHeightFactor'] = lineSegData.cntPrevLinesToImgSeg + lineFraction;
+          } else {//segment after last image seg, so estimate a segment height delta to postion
+            //calc add delta segHeight multiplier
+            imgData['segHeightFactor'] = lineSegData.cntPrevLinesToImgSeg + lineFraction;
+          }
+        } else if (lineSegData.nextImgSegID) {//anchor to next image segment
+          imgData['segID'] = lineSegData.nextImgSegID;
+          //calc subtract delta segHeight multiplier
+          imgData['segHeightFactor'] = lineSegData.cntToFirstLineSeg - this.scrollDataBySegID[lineSegData.nextImgSegID].cntToFirstLineSeg + lineFraction;
+        } else {// no ref image segment so do not sync image
+          return null;
+        }
+      }
+      return imgData;
+    }
+    return null;
+  },
+
+  /**
+  * calculate scroll data by segID lookup to maintain the data need to calculate the next position
+  *
+  */
+  calcLineScrollDataBySegLookups : function() {
+    if ( this.physSeq && this.physSeq.entityIDs && this.physSeq.entityIDs.length) {
+      var physLineSeqIDs = this.physSeq.entityIDs,
+          cnt = physLineSeqIDs.length, i, j, segID, lastSegID, prevImgSegID,
+          lineSeq, segment, scrollDataIndex,
+          blnID, syllable, lineCnt = 0, imgSegLineCnt = 0;
+          this.scrollDataBySegID = {};
+      //for each physical line find the first syllable's segment
+      for (var j=0; j<cnt; j++) {
+        if (physLineSeqIDs[j] && physLineSeqIDs[j].indexOf('seq:') == 0) {//validate that this is a sequence
+          lineSeq = this.dataMgr.getEntityFromGID(physLineSeqIDs[j]);
+          if (lineSeq && lineSeq.entityIDs && lineSeq.entityIDs.length) {
+            syllable = this.dataMgr.getEntityFromGID(lineSeq.entityIDs[0]);
+            if (syllable.segID) {
+              segID = syllable.segID;
+              this.scrollDataBySegID[segID] = {
+                index:j+1,
+                cntPrevLinesToSeg:lineCnt
+              };
+              if (prevImgSegID) {
+                this.scrollDataBySegID[segID]['prevImgSegID'] = prevImgSegID;
+                this.scrollDataBySegID[prevImgSegID]['nextImgSegID'] = segID;
+                this.scrollDataBySegID[segID]['cntPrevLinesToImgSeg'] = imgSegLineCnt;
+              } else {//no image segs before this, could be transcription segs
+                this.scrollDataBySegID[segID]['cntToFirstLineSeg'] = imgSegLineCnt;
+              }
+              segment =  this.dataMgr.getEntity('seg',segID);
+              if (segment && segment.boundary) {//img segment link
+                if (prevImgSegID) {
+                  this.scrollDataBySegID[prevImgSegID]['cntNextLinesToImgSeg'] = imgSegLineCnt;
+                } else {//patch the previous segs to point to this imgSeg
+                  for (scrollDataIndex in this.scrollDataBySegID) {
+                    if ( segID != scrollDataIndex) {
+                      this.scrollDataBySegID[scrollDataIndex]["nextImgSegID"] = segID;
+                    }
+                  }
+                }
+                this.scrollDataBySegID[segID]['imgBlnID'] = segment.baselineIDs[0]; //warning doesn't handle split segments
+                imgSegLineCnt = 0;
+                prevImgSegID = segID;
+              }
+              imgSegLineCnt++;
+              lineCnt = 0;
+            } else { //no seg so count line and skip
+              lineCnt++;
+              imgSegLineCnt++;
+            }
+          } else { //no syllables so count line and skip
+            lineCnt++;
+            imgSegLineCnt++;
+          }
         }
       }
     }
