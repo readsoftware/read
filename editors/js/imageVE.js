@@ -1165,7 +1165,7 @@ EDITORS.ImageVE.prototype = {
 */
 
   moveViewportToImagePosY: function(posY) {
-    this.vpLoc.y = posY * this.navCanvas.height / this.image.height;
+    this.vpLoc.y = Math.max(0, Math.min(posY * this.navCanvas.height / this.image.height, this.vpMaxLoc.y));
     this.vpLastLoc.y = this.vpLoc.y;
   },
 
