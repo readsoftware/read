@@ -146,7 +146,7 @@ if (!$data) {
   $decomp = null;//required
   if ( isset($data['decomp'])) {//get decomposition string
     $decomp = $data['decomp'];
-    $mCnt = preg_match("/([aiïüueo]+)(?:([\s-‐])([aiïüueo]+))?/",$decomp,$decompParts);
+    $mCnt = preg_match("/([aiïüueo’]+)(?:([\s-‐])([aiïüueo’]+))?/",$decomp,$decompParts);
     if ($mCnt == 1 && $decomp == array_shift($decompParts)) {
       $decomp = join(":",$decompParts);
     } else {
@@ -392,7 +392,15 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
     }else { // only updated
       $sandhiGraID = $graID;
       addUpdateEntityReturnData('gra',$grapheme->getID(),'decomp',preg_replace("/\:/",'',$grapheme->getDecomposition()));
-    }
+      $token1->getValue(true);
+      $token2->getValue(true);
+      $token1->save();
+      $token2->save();
+      addUpdateEntityReturnData('tok',$token1->getID(),'value',$token1->getValue());
+      addUpdateEntityReturnData('tok',$token1->getID(),'transcr',$token1->getTranscription());
+      addUpdateEntityReturnData('tok',$token2->getID(),'value',$token2->getValue());
+      addUpdateEntityReturnData('tok',$token2->getID(),'transcr',$token2->getTranscription());
+   }
   }
 }
 

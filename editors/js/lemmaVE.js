@@ -1772,9 +1772,12 @@ EDITORS.LemmaVE.prototype = {
     var lemmaVE = this,
         value, linkTypeID = (this.linkTypeID),
         valueEditable = (this.prefix == "lem" && this.entity && !this.entity.readonly),
-        seeAlsoLinkTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["seealso-linkagetype"],
+        seeLinkTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["see-linkagetype"],//warning! term dependency
         treeLinkTypeName = this.id+'linktypetree';
     DEBUG.traceEntry("createLinkTypeUI");
+    if (!linkTypeID) {
+      linkTypeID = seeLinkTypeID;
+    }
     value = this.dataMgr.getTermFromID(linkTypeID);
     //create UI container
     this.linkTypeUI = $('<div class="linkTypeUI"></div>');
@@ -1801,7 +1804,7 @@ EDITORS.LemmaVE.prototype = {
         $('div.valueLabelDiv',this.linkTypeUI).unbind("click").bind("click",function(e) {
           lemmaVE.linkTypeUI.addClass("edit");
           //init tree to current type
-          var curItem = $('#trm'+(lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeAlsoLinkTypeID), lemmaVE.linkTypeTree),
+          var curItem = $('#trm'+(lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeLinkTypeID), lemmaVE.linkTypeTree),
               offset = 0;
           if (curItem && curItem.length) {
             curItem = curItem.get(0);
@@ -1850,7 +1853,7 @@ EDITORS.LemmaVE.prototype = {
         });
         //attach event handlers
         $('span.addButton',lemmaVE.linkTypeUI).unbind("click").bind("click",function(e) {
-            var linkTypeID = lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeAlsoLinkTypeID;
+            var linkTypeID = lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeLinkTypeID;
             if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.setLinkRelatedMode) {
               lemmaVE.wordlistVE.setLinkRelatedMode(true);
             }
