@@ -4586,6 +4586,29 @@ mergeLine: function (direction,cbError) {
     $(this.editDiv).unbind('synchronize').bind('synchronize', synchronizeHandler);
 
 
+    /**
+    * handle 'baselineLoaded' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string blnID Identifies the baseline loaded
+    */
+
+    function baselineLoadedHandler(e,senderID, blnID) {
+      if (senderID == ednVE.id) {
+        return;
+      }
+      var baseline = ednVE.dataMgr.getEntity('bln',blnID);
+      DEBUG.log("event","baselineLoaded received by editionVE in "+ednVE.id+" from "+senderID+" with blnID "+ blnID);
+      if (baseline && baseline.textIDs &&
+          baseline.textIDs.length &&
+          baseline.textIDs.indexOf(ednVE.edition.txtID) > -1) {
+        ednVE.calcLineScrollDataBySegLookups();
+      }
+    };
+
+    $(this.editDiv).unbind('baselineLoaded').bind('baselineLoaded', baselineLoadedHandler);
+
 
 /**
 * set syllable selection

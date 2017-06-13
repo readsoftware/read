@@ -971,6 +971,8 @@ MANAGERS.LayoutManager.prototype = {
                 !this.dataMgr.baselineForIDUnavailable(blnID) &&
                 !this.dataMgr.isBaselineLoaded(blnID)) {
               this.dataMgr.loadBaseline(blnID,function() {
+                              //trigger message that baseline loaded
+                              layoutMgr.notifyEditors("baselineLoaded",[paneID,blnID]);
                               layoutMgr.loadPaneContent(tag,paneID);
                             });
             }
@@ -1003,6 +1005,8 @@ MANAGERS.LayoutManager.prototype = {
                 !this.dataMgr.baselineForIDUnavailable(blnID) &&
                 !this.dataMgr.isBaselineLoaded(blnID)) {
               this.dataMgr.loadBaseline(blnID,function() {
+                              //trigger message that baseline loaded
+                              layoutMgr.notifyEditors("baselineLoaded",[paneID,blnID]);
                               layoutMgr.loadPaneContent(tag,paneID);
                             });
               DEBUG.traceExit("layoutMgr.loadPaneContent"," entTag "+ tag + " for "+paneID);
@@ -1014,7 +1018,9 @@ MANAGERS.LayoutManager.prototype = {
     } else if (entTag && entTag.match(/^bln/) && !this.dataMgr.isBaselineLoaded(entTag.substr(3))){
       if (!this.dataMgr.baselineForIDUnavailable(entTag.substr(3))) {
         this.dataMgr.loadBaseline(entTag.substr(3),function() {
-                        layoutMgr.loadPaneContent(tag,paneID);
+                      //trigger message that baseline loaded
+                      layoutMgr.notifyEditors("baselineLoaded",[paneID,entTag.substr(3)]);
+                      layoutMgr.loadPaneContent(tag,paneID);
                       });
       }
       DEBUG.traceExit("layoutMgr.loadPaneContent"," entTag "+ tag + " for "+paneID);
