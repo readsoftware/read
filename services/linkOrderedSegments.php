@@ -206,13 +206,13 @@ if (!$data) {
       }
     }
 
-    $blnID = $blnIDs[0];//currently only deal with one baseline at a time.
+    //currently only deal with one baseline at a time.
     //create query for ordered set of segments
     // get an ordered list of segment IDs for the base lines supplied or for the entire database.
     $query = "select seg_id, seg_baseline_ids[1] as blnID, substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int as ord".
              " from segment".
              " where substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int is not null and seg_image_pos is not null";
-             " and seg_baseline_ids[1] = $blnID";
+             " and seg_baseline_ids[1] in (".join(',',$blnIDs).") ";
     if ($startSegOrd || $endSegOrd) {
       if ($startSegOrd && is_numeric($startSegOrd)) {
         $startSegOrd = intval($startSegOrd);

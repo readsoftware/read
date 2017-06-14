@@ -144,7 +144,7 @@ EDITORS.EditionVE.prototype = {
         delete this.pendingAutoLinkOrdBln;
         delete this.pendingAutoLinkOrdMode;
         if (this.autoLinkOrdMode == "default") {//send the edition info back to the request
-          $('.editContainer').trigger('autoLinkOrdReturn',[this.id,this.autoLinkOrdBln,this.edition.id]);
+          $('.editContainer').trigger('autoLinkOrdReturn',[this.id,this.autoLinkOrdBln,this.edition.id],null,null);
         } else {
           //show link ordinal button
           this.linkOrdBtnDiv.show();
@@ -948,7 +948,10 @@ EDITORS.EditionVE.prototype = {
                              '</div>');
       $('#'+btnLinkOrdName,this.linkOrdBtnDiv).unbind('click')
                                  .bind('click',function(e) {
-        var ednID = ednVE.edition.id,sclIDs=[],sclGIDs = ednVE.getSelectionOrdEntityGIDs('scl'),index,pos;
+        var ednID = ednVE.edition.id,sclIDs=[],
+            text = ednVE.dataMgr.getEntity('txt',ednVE.edition.txtID),
+            blnIDs = text.blnIDs,
+            sclGIDs = ednVE.getSelectionOrdEntityGIDs('scl'),index,pos;
         if (ednVE.autoLinkOrdMode) {
           if (!sclGIDs) {
             sclGIDs = ednVE.getSelectionEntityGIDs();
@@ -959,7 +962,7 @@ EDITORS.EditionVE.prototype = {
               sclIDs.push((sclGIDs[index]).substr(pos));
             }
           }
-          $('.editContainer').trigger('autoLinkOrdReturn',[ednVE.id,ednVE.autoLinkOrdBln,ednID,sclIDs]);
+          $('.editContainer').trigger('autoLinkOrdReturn',[ednVE.id,ednVE.autoLinkOrdBln,ednID,sclIDs,blnIDs]);
         }
       });
 

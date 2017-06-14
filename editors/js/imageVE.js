@@ -1887,22 +1887,23 @@ EDITORS.ImageVE.prototype = {
     * @param string array sclIDs identifing the start and/or stop or set of syllables to use for ordinal linking
     */
 
-    function autoLinkOrdReturnHandler(e,senderID, requestSource, linkTargetEdition, sclIDs) {
+    function autoLinkOrdReturnHandler(e,senderID, requestSource, linkTargetEdition, sclIDs, blnIDs) {
       var savedata ={},segID,segIDs;
       if (senderID == imgVE.id) {
         return;
       }
       DEBUG.log("event","link abort recieved by imageVE in "+imgVE.id+" from "+senderID+" with requestSource "+ requestSource +
                 " link to ednID -"+linkTargetEdition+
-                (sclIDs?"  syllable IDs -"+sclIDs.join():""));
+                (blnIDs && blnIDs.length?"  baseline IDs -"+blnIDs.join():"") +
+                (sclIDs && sclIDs.length ?"  syllable IDs -"+sclIDs.join():""));
       if ((imgVE.autoLinkOrdMode || imgVE.autoLinkPatternMode) && requestSource == imgVE.blnEntity.id && linkTargetEdition) {
         //in link mode and have edition info so call link service
         //sclIDs, segIDs, blnIDs, pattern and ednID
         savedata["ednID"] = linkTargetEdition;
-        savedata["blnIDs"] = [imgVE.blnEntity.id];
+        savedata["blnIDs"] = (blnIDs && blnIDs.length?blnIDs:[imgVE.blnEntity.id]);
         if (imgVE.autoLinkPatternMode) {// use pattern
           savedata["pattern"] = linkToSyllablePattern;
-        } else if (sclIDs) {
+        } else if (sclIDs && sclIDs.length) {
           savedata["sclIDs"] = sclIDs;
         }
         if (Object.keys(imgVE.selectedPolygons).length) {
@@ -1934,8 +1935,10 @@ EDITORS.ImageVE.prototype = {
                 if (data.entities.update && data.entities.update.seg){
                   for (segID in data.entities.update.seg) {
                     polygon = imgVE.polygons[imgVE.polygonLookup["seg"+segID]-1];
-                    polygon.color = "green";
-                    polygon.linkIDs = data.entities.update.seg[segID]['sclIDs'];
+                    if (polygon) {
+                      polygon.color = "green";
+                      polygon.linkIDs = data.entities.update.seg[segID]['sclIDs'];
+                    }
                   }
                   redrawPolygons = true;
                 }
