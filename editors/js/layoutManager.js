@@ -1331,9 +1331,6 @@ MANAGERS.LayoutManager.prototype = {
                         '<a href="http://www.prakas.org/" target="_blank" title="Prakaś Foundation" class="logoLink">' +
                           '<img src="./common/images/logo_Prakas.png" alt="Prakaś logo" title="Prakaś Foundation">' +
                         '</a>' +
-                        '<a href="http://www.efeo.fr/" target="_blank" title="École française d’Extrême‐Orient" class="logoLink">' +
-                          '<img src="./common/images/logo_EFEO.png" alt="EFEO logo" title="École française d’Extrême‐Orient">' +
-                        '</a>' +
                         '<a href="http://www.sydney.edu.au/" target="_blank" title="University of Sydney" class="logoLink">' +
                           '<img src="./common/images/logo_USyd.png" alt="USyd logo" title="University of Sydney">' +
                         '</a>' +
