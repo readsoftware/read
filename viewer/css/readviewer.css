@@ -1,0 +1,45 @@
+.headline {
+  display: flex;
+  justify-content: center; /* align horizontal */
+  align-items: center; /* align vertical */
+  background-color:  rgb(214,214,204);
+  font-size: x-large;
+  font-weight: bold;
+  height: 40px;
+  border: 1px solid white;
+}
+
+.viewerHeaderLabel {
+  display: flex;
+  justify-content: left; /* align horizontal */
+  align-items: center; /* align vertical */
+  font-size: 18pt;
+  font-weight: bold;
+  background-color: inherit;
+  height: 40px;
+  padding-left: 25px;
+}
+
+.viewerHeader {
+  background-color: rgb(240,240,230);
+  height: 40px;
+  border: none;
+}
+
+.viewerContent {
+  border: 1px solid white;
+  overflow: hidden;
+  overflow-y: auto;
+  min-height:150px;
+  font-size: medium;
+  resize: vertical;
+}
+.viewer {
+  border: 1px solid white;
+  overflow: hidden;
+}
+#contentDockFrame {
+  border: 1px solid white;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
