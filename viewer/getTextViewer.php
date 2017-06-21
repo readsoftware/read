@@ -103,6 +103,7 @@
     <script src="/jqwidget/jqwidgets/jqxdropdownlist.js"></script>
     <script src="/jqwidget/jqwidgets/jqxlistbox.js"></script>
     <script src="/jqwidget/jqwidgets/jqxinput.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxtooltip.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcheckbox.js"></script>
     <script src="/jqwidget/jqwidgets/jqxvalidator.js"></script>
     <script src="/jqwidget/jqwidgets/jqxpanel.js"></script>
@@ -114,16 +115,18 @@
           progressInputName='<?php echo ini_get("session.upload_progress.name"); ?>',
           dbName = '<?=DBNAME?>',
           basepath="<?=SITE_BASE_PATH?>";
+      var testHtml = <?=$testHtml?>,
+            footnotes = {<?=$footnotes?>},
+            testTrans = <?=$testTrans?>,
+            transfootnotes = {<?=$transfootnotes?>},
+            testHtmlSmall = <?=$testHtmlSmall?>;
+
     </script>
     <script src="../editors/js/utility.js"></script>
     <script src="../editors/js/debug.js"></script>
-    <script src="../editors/js/paleoVE.js"></script>
-    <script src="../editors/js/frameV.js"></script>
     <script type="text/javascript">
       $(document).ready( function () {
-        var testHtml = <?=$testHtml?>,
-            testTrans = <?=$testTrans?>,
-            testHtmlSmall = <?=$testHtmlSmall?>,
+        var
 <?php
   if ($showImageView && count($blnIDs) > 0) {
 ?>
@@ -177,6 +180,35 @@
                                       collapseAnimationDuration:50});
             $textViewerContent.html(testHtml);
             $textViewerContent.height('150px');
+            if (footnotes && typeof footnotes == 'object' && Object.keys(footnotes).length > 0) {
+              var fnID, fnHTML, $fnSupMarker;
+              for (fnID in footnotes) {
+                fnHTML = footnotes[fnID];
+                $fnSupMarker = $('#'+fnID,$textViewerContent);
+                if ($fnSupMarker && $fnSupMarker.length == 1) {
+                  $fnSupMarker.jqxTooltip({ content: fnHTML, trigger: 'click',  autoHide: false, showArrow: false });
+                }
+              }
+            }
+            $textViewerContent.bind('click', function(e) {
+              var $lemmaShowing = $('.showinglemma',$textViewerContent);
+              if ($lemmaShowing && $lemmaShowing.length) {
+                $lemmaShowing.jqxTooltip('close');
+              }
+            });
+            $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
+              var $tooltip = $(this).jqxTooltip({ content: "Show lemma info for " + $(this).text(),
+                                                  trigger: 'click',
+                                                  autoHide: false,
+                                                  showArrow: false });
+                  $(this).bind('close', function(e) {
+                    $(this).jqxTooltip('destroy');
+                  });
+                  $(this).jqxTooltip('open');
+                  $(this).addClass('showinglemma');
+                  e.stopImmediatePropagation();
+                  return false;
+            });
 <?php
   if ($showTranslationView && $hasTranslation) {
 ?>
@@ -186,6 +218,17 @@
                                       collapseAnimationDuration:50});
             $transViewerContent.html(testTrans);
             $transViewerContent.height('150px');
+            if (transfootnotes && typeof transfootnotes == 'object' && Object.keys(transfootnotes).length > 0) {
+              var tfnID, tfnHTML, $tfnSupMarker;
+              for (tfnID in transfootnotes) {
+                tfnHTML = transfootnotes[tfnID];
+                $tfnSupMarker = $('#'+tfnID,$transViewerContent);
+                if ($tfnSupMarker && $tfnSupMarker.length == 1) {
+                  $tfnSupMarker.jqxTooltip({ content: tfnHTML, trigger: 'click',  autoHide: false, showArrow: false });
+                }
+              }
+            }
+
 <?php
   }
 ?>
