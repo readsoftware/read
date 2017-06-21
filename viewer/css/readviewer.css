@@ -64,14 +64,17 @@ font-weight: bold;
   content: " ";
 }
 .grpTok{
-  user-select: all;
-  -moz-user-select: all;
-  -ms-user-select: all;
-  -webkit-user-select: all;
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
 }
 .footnote {
   color:darkcyan;
   background: lightgrey;
+}
+.showing {
+  background: lightgreen !important;
 }
 .prose {
   padding-bottom: 10px;

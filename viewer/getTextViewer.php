@@ -181,19 +181,34 @@
             $textViewerContent.html(testHtml);
             $textViewerContent.height('150px');
             if (footnotes && typeof footnotes == 'object' && Object.keys(footnotes).length > 0) {
-              var fnID, fnHTML, $fnSupMarker;
-              for (fnID in footnotes) {
-                fnHTML = footnotes[fnID];
-                $fnSupMarker = $('#'+fnID,$textViewerContent);
-                if ($fnSupMarker && $fnSupMarker.length == 1) {
-                  $fnSupMarker.jqxTooltip({ content: fnHTML, trigger: 'click',  autoHide: false, showArrow: false });
-                }
-              }
+              $('.footnote',$textViewerContent).unbind('click').bind('click', function(e) {
+                var id = this.id, footnoteHtml;
+                  footnoteHtml = (footnotes[id]?footnotes[id]:"unable to find footnote text or empty footnote");
+                  $(this).jqxTooltip({content: footnoteHtml,
+                                      trigger: 'click',
+                                      autoHide: false,
+                                      showArrow: false });
+                  $('.showing').removeClass('showing');
+                  $(this).unbind('close').bind('close', function(e) {
+                    $('.showing').removeClass('showing');
+                    $(this).jqxTooltip('destroy');
+                  });
+                  $(this).jqxTooltip('open');
+                  $(this).addClass('showing');
+                  e.stopImmediatePropagation();
+                  return false;
+              });
             }
             $textViewerContent.bind('click', function(e) {
-              var $lemmaShowing = $('.showinglemma',$textViewerContent);
+              var $lemmaShowing = $('.showinglemma',$textViewerContent),
+                  $footnoteShowing = $('.showingfootnote');
               if ($lemmaShowing && $lemmaShowing.length) {
+                $lemmaShowing.removeClass('showing');
                 $lemmaShowing.jqxTooltip('close');
+              }
+              if ($footnoteShowing && $footnoteShowing.length) {
+                $footnoteShowing.removeClass('showing');
+                $footnoteShowing.jqxTooltip('close');
               }
             });
             $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
@@ -201,11 +216,13 @@
                                                   trigger: 'click',
                                                   autoHide: false,
                                                   showArrow: false });
-                  $(this).bind('close', function(e) {
+                  $('.showing').removeClass('showing');
+                  $(this).unbind('close').bind('close', function(e) {
+                    $('.showing').removeClass('showing');
                     $(this).jqxTooltip('destroy');
                   });
                   $(this).jqxTooltip('open');
-                  $(this).addClass('showinglemma');
+                  $(this).addClass('showing');
                   e.stopImmediatePropagation();
                   return false;
             });
@@ -218,15 +235,31 @@
                                       collapseAnimationDuration:50});
             $transViewerContent.html(testTrans);
             $transViewerContent.height('150px');
-            if (transfootnotes && typeof transfootnotes == 'object' && Object.keys(transfootnotes).length > 0) {
-              var tfnID, tfnHTML, $tfnSupMarker;
-              for (tfnID in transfootnotes) {
-                tfnHTML = transfootnotes[tfnID];
-                $tfnSupMarker = $('#'+tfnID,$transViewerContent);
-                if ($tfnSupMarker && $tfnSupMarker.length == 1) {
-                  $tfnSupMarker.jqxTooltip({ content: tfnHTML, trigger: 'click',  autoHide: false, showArrow: false });
-                }
+            $transViewerContent.bind('click', function(e) {
+              var $footnoteShowing = $('.showingfootnote');
+              if ($footnoteShowing && $footnoteShowing.length) {
+                $footnoteShowing.removeClass('showingfootnote');
+                $footnoteShowing.jqxTooltip('close');
               }
+            });
+            if (transfootnotes && typeof transfootnotes == 'object' && Object.keys(transfootnotes).length > 0) {
+              $('.footnote',$transViewerContent).unbind('click').bind('click', function(e) {
+                var id = this.id, footnoteHtml;
+                  footnoteHtml = (transfootnotes[id]?transfootnotes[id]:"unable to find footnote text or empty footnote");
+                  $(this).jqxTooltip({content: footnoteHtml,
+                                      trigger: 'click',
+                                      autoHide: false,
+                                      showArrow: false });
+                  $('.showing').removeClass('showing');
+                  $(this).unbind('close').bind('close', function(e) {
+                    $('.showing').removeClass('showing');
+                    $(this).jqxTooltip('destroy');
+                  });
+                  $(this).jqxTooltip('open');
+                  $(this).addClass('showing');
+                  e.stopImmediatePropagation();
+                  return false;
+              });
             }
 
 <?php
