@@ -31,8 +31,9 @@
   overflow: hidden;
   overflow-y: auto;
   min-height:150px;
-  font-size: medium;
+  font-size: large;
   resize: vertical;
+  padding-left: 20px;
 }
 .viewer {
   border: 1px solid white;
@@ -42,4 +43,42 @@
   border: 1px solid white;
   overflow-x: hidden;
   overflow-y: auto;
+}
+.linelabel{
+  color: rgb(160,160,160);
+}
+.secHeader.level3{
+  color: rgb(100,200,70);
+}
+.secHeader{
+margin-bottom: 10px;
+color: rgb(30,140,170);
+font-weight: bold;
+}
+.secTitle{
+margin-bottom: 10px;
+color: rgb(30,140,170);
+font-weight: bold;
+}
+.grpTok:before{
+  content: " ";
+}
+.grpTok{
+  user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  -webkit-user-select: all;
+}
+.footnote {
+  color:darkcyan;
+  background: lightgrey;
+}
+.prose {
+  padding-bottom: 10px;
+  overflow-wrap: break-word;
+  padding-right: 10px;
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
 }

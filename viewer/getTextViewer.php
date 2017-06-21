@@ -48,7 +48,10 @@
         returnXMLErrorMsgPage("unable to load edition - ".join(",",$edition->getErrors()));
       }
       $text = $edition->getText(true);
-      $title = $text->getCKN()." ∙ ".$text->getTitle();
+      if (!$text) {
+        returnXMLErrorMsgPage("invalid viewer request - access denied");
+      }
+      $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
     } else {
       returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
     }
@@ -119,37 +122,43 @@
     <script type="text/javascript">
       $(document).ready( function () {
         var testHtml = <?=$testHtml?>,
+            testTrans = <?=$testTrans?>,
+            testHtmlSmall = <?=$testHtmlSmall?>,
 <?php
   if ($showImageView && count($blnIDs) > 0) {
 ?>
             $imageViewer= $('#imageViewer'),
             $imageViewerHdr= $('#imageViewerHdr'),
-            $imageViewerContent= $('#imageViewerContent'),
+            $imageViewerContent= $('#imageViewerContent')
 
 <?php
   }
 ?>
+,
             $textViewer = $('#textViewer'),
             $textViewerHdr = $('#textViewerHdr'),
-            $textViewerContent = $('#textViewerContent'),
+            $textViewerContent = $('#textViewerContent')
 <?php
   if ($showTranslationView && $hasTranslation) {
 ?>
+,
             $transViewer = $('#transViewer'),
             $transViewerHdr = $('#transViewerHdr'),
-            $transViewerContent = $('#transViewerContent'),
+            $transViewerContent = $('#transViewerContent')
 <?php
   }
 ?>
 <?php
   if ($showChayaView && $hasChaya) {
 ?>
+,
             $chayaViewer = $('#chayaViewer'),
             $chayaViewerHdr = $('#chayaViewerHdr'),
-            $chayaViewerContent = $('#chayaViewerContent');
+            $chayaViewerContent = $('#chayaViewerContent')
 <?php
   }
 ?>
+;
 <?php
   if ($showImageView && count($blnIDs) > 0) {
 ?>
@@ -157,7 +166,7 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-            $imageViewerContent.html(testHtml);
+            $imageViewerContent.html(testHtmlSmall);
             $imageViewerContent.height('150px');
 <?php
   }
@@ -175,7 +184,7 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-            $transViewerContent.html(testHtml);
+            $transViewerContent.html(testTrans);
             $transViewerContent.height('150px');
 <?php
   }
