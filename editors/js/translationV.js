@@ -275,18 +275,22 @@ EDITORS.TranslationV.prototype = {
       var i, id;
       DEBUG.log("event","selection changed recieved by transV in "+transV.id+" from "+senderID+" selected ids "+ selectionIDs.join());
       $(".selected", transV.contentDiv).removeClass("selected");
-      $.each(selectionIDs, function(i,val) {
-        $('.'+val,transV.contentDiv).addClass("selected");
-        var entity = $('.'+val,transV.contentDiv),j;
-        if (entity && entity.length > 0) {
-          entity.addClass("selected");
-        } else {
-          entity = $('.'+entTag,transV.contentDiv);
-          if (entity && entity.length > 0) {
-            entity.addClass("selected");
+      if (selectionIDs && selectionIDs.length) {
+        $.each(selectionIDs, function(i,val) {
+          if (val && val.length) {
+            $('.'+val,transV.contentDiv).addClass("selected");
+            var entity = $('.'+val,transV.contentDiv),j;
+            if (entity && entity.length > 0) {
+              entity.addClass("selected");
+            } else {
+              entity = $('.'+entTag,transV.contentDiv);
+              if (entity && entity.length > 0) {
+                entity.addClass("selected");
+              }
+            }
           }
-        }
-      });
+        });
+      }
     };
 
     $(this.editDiv).unbind('updateselection').bind('updateselection', updateSelectionHandler);

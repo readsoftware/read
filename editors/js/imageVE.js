@@ -2223,9 +2223,13 @@ EDITORS.ImageVE.prototype = {
       }
       DEBUG.log("event","selection changed received by imageVE in "+imgVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
       imgVE.unselectAllPolygons();
-      $.each(selectionIDs, function(i,val) {
-         imgVE.selectPolygonByName(val);
-      });
+      if (selectionIDs && selectionIDs.length) {
+        $.each(selectionIDs, function(i,val) {
+          if (val && val.length) {
+           imgVE.selectPolygonByName(val);
+          }
+        });
+      }
       imgVE.linkMode = false;
       imgVE.drawImage();
       imgVE.drawImagePolygons();

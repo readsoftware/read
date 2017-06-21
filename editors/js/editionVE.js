@@ -3099,20 +3099,22 @@ mergeLine: function (direction,cbError) {
       var i, id;
       DEBUG.log("event","selection changed recieved by editionVE in "+ednVE.id+" from "+senderID+" selected ids "+ selectionGIDs.join());
       $(".selected", ednVE.contentDiv).removeClass("selected");
-      $.each(selectionGIDs, function(i,val) {
-        var entity ,j,entTag;
-        if (val) {
-          entity = $('.'+val,ednVE.contentDiv);
-          if (entity && entity.length > 0) {
-            entity.addClass("selected");
-          } else if (val.match(/^seq/) && ednVE.entTagsBySeqTag[val] && ednVE.entTagsBySeqTag[val].length) {
-            for (j in ednVE.entTagsBySeqTag[val]) {
-              entTag = ednVE.entTagsBySeqTag[val][j];
-              $('.'+entTag,ednVE.contentDiv).addClass("selected");
+      if (selectionGIDs && selectionGIDs.length) {
+        $.each(selectionGIDs, function(i,val) {
+          var entity ,j,entTag;
+          if (val && val.length) {
+            entity = $('.'+val,ednVE.contentDiv);
+            if (entity && entity.length > 0) {
+              entity.addClass("selected");
+            } else if (val.match(/^seq/) && ednVE.entTagsBySeqTag[val] && ednVE.entTagsBySeqTag[val].length) {
+              for (j in ednVE.entTagsBySeqTag[val]) {
+                entTag = ednVE.entTagsBySeqTag[val][j];
+                $('.'+entTag,ednVE.contentDiv).addClass("selected");
+              }
             }
           }
-        }
-      });
+        });
+      }
     };
 
     $(this.editDiv).unbind('updateselection').bind('updateselection', updateSelectionHandler);
