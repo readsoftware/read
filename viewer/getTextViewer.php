@@ -200,15 +200,10 @@
               });
             }
             $textViewerContent.bind('click', function(e) {
-              var $lemmaShowing = $('.showinglemma',$textViewerContent),
-                  $footnoteShowing = $('.showingfootnote');
-              if ($lemmaShowing && $lemmaShowing.length) {
-                $lemmaShowing.removeClass('showing');
-                $lemmaShowing.jqxTooltip('close');
-              }
-              if ($footnoteShowing && $footnoteShowing.length) {
-                $footnoteShowing.removeClass('showing');
-                $footnoteShowing.jqxTooltip('close');
+              var $showing = $('.showing');
+              if ($showing && $showing.length) {
+                $showing.removeClass('showing');
+                $showing.jqxTooltip('close');
               }
             });
             $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
@@ -236,10 +231,10 @@
             $transViewerContent.html(testTrans);
             $transViewerContent.height('150px');
             $transViewerContent.bind('click', function(e) {
-              var $footnoteShowing = $('.showingfootnote');
-              if ($footnoteShowing && $footnoteShowing.length) {
-                $footnoteShowing.removeClass('showingfootnote');
-                $footnoteShowing.jqxTooltip('close');
+              var $showing = $('.showing');
+              if ($showing && $showing.length) {
+                $showing.removeClass('showing');
+                $showing.jqxTooltip('close');
               }
             });
             if (transfootnotes && typeof transfootnotes == 'object' && Object.keys(transfootnotes).length > 0) {

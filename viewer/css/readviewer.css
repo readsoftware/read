@@ -16,13 +16,13 @@
   font-size: 18pt;
   font-weight: bold;
   background-color: inherit;
-  height: 40px;
+  height: 35px;
   padding-left: 25px;
 }
 
 .viewerHeader {
   background-color: rgb(240,240,230);
-  height: 40px;
+  height: 35px;
   border: none;
 }
 
