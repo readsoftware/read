@@ -34,6 +34,12 @@
   }
   define("CROP_IMAGE_SERVICE_PATH",SITE_BASE_PATH."/common/php/cropImagePoly.php");
 
+  //configure viewer for site
+  define("SHOWVIEWERCONTENTOUTLINE",false);
+  define("SHOWIMAGEVIEW",true);
+  define("SHOWTRANSLATIONVIEW",true);
+  define("SHOWCHAYAVIEW",false);
+
   $info = new SplFileInfo(SEGMENT_CACHE_BASE_PATH);
   if (!$info->isDir()) {
     $isDir = mkdir($info, 0775, true);

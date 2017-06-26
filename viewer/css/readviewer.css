@@ -46,6 +46,11 @@
 }
 .linelabel{
   color: rgb(160,160,160);
+  padding-right: 5px;
+}
+
+.grpTok .linelabel{
+  padding-right: 0px;
 }
 .secHeader.level3{
   color: rgb(100,200,70);
@@ -60,7 +65,7 @@ margin-bottom: 10px;
 color: rgb(30,140,170);
 font-weight: bold;
 }
-.grpTok:before{
+.grpTok:after{
   content: " ";
 }
 .grpTok{
@@ -72,6 +77,10 @@ font-weight: bold;
 .footnote {
   color:darkcyan;
   background: lightgrey;
+}
+.popupwrapperdiv{
+  max-width: 450px;
+  text-align: left;
 }
 .showing {
   background: lightgreen !important;

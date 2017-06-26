@@ -927,6 +927,15 @@
     }
 
     /**
+    * Get Entity unique Tag
+    *
+    * @return int returns the global prefix concatenated with the primary Key for the Entity
+    */
+    public function getEntityTag() {
+      return $this->getGlobalPrefix().$this->_id;
+    }
+
+    /**
     * Get Entity Type Code
     *
     * @return string identifying the class code for the Entity
