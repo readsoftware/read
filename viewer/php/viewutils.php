@@ -1,0 +1,427 @@
+<?php
+/**
+* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
+* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
+* at <https://github.com/readsoftware>.
+*
+* READ is free software: you can redistribute it and/or modify it under the terms of the
+* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+* or (at your option) any later version.
+*
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along with READ.
+* If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+* Utility functions for viewers
+*
+* @author      Stephen White  <stephenawhite57@gmail.com>
+* @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
+* @link        https://github.com/readsoftware
+* @version     1.0
+* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @package     READ Research Environment for Ancient Documents
+* @subpackage  Utility Classes
+*/
+
+
+require_once (dirname(__FILE__) . '/../../config.php');//get defines
+require_once (dirname(__FILE__) . '/../../common/php/DBManager.php');//get database interface
+require_once dirname(__FILE__) . '/../../model/entities/Terms.php';
+// add required for switchInfo
+require_once dirname(__FILE__) . '/../../model/entities/Graphemes.php';
+require_once dirname(__FILE__) . '/../../model/entities/SyllableClusters.php';
+require_once dirname(__FILE__) . '/../../model/entities/Tokens.php';
+require_once dirname(__FILE__) . '/../../model/entities/Compounds.php';
+require_once dirname(__FILE__) . '/../../model/entities/Baselines.php';
+require_once dirname(__FILE__) . '/../../model/entities/Editions.php';
+require_once dirname(__FILE__) . '/../../model/entities/Texts.php';
+require_once dirname(__FILE__) . '/../../model/entities/Lemmas.php';
+require_once dirname(__FILE__) . '/../../model/entities/Inflections.php';
+require_once dirname(__FILE__) . '/../../model/entities/Sequences.php';
+require_once dirname(__FILE__) . '/../../model/entities/JsonCache.php';
+require_once dirname(__FILE__) . '/../../model/entities/UserGroups.php';
+require_once dirname(__FILE__) . '/../../model/entities/AttributionGroup.php';
+require_once dirname(__FILE__) . '/../../model/entities/Attribution.php';
+
+
+/**
+* gets the editions Structural layout html
+*
+* calculates the structure view of this edition of the text with granularity of token,
+* embedded physical line markers and footnote markers
+*
+* @param int $ednID identified the edition to calculate
+* @param boolean $forceRecalc indicating whether to ignore cached values
+*
+* @returns mixed object with a string representing the html and a footnote lookup table
+*/
+function getEditionFootnoteText() {
+  global $fnRefTofnText;
+  return json_encode($fnRefTofnText);
+}
+
+/**
+* gets the editions Structural layout html
+*
+* calculates the structure view of this edition of the text with granularity of token,
+* embedded physical line markers and footnote markers
+*
+* @param int $ednID identified the edition to calculate
+* @param boolean $forceRecalc indicating whether to ignore cached values
+*
+* @returns mixed object with a string representing the html and a footnote lookup table
+*/
+function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
+  global $prevTCMS, $graID2LineHtmlMarkerlMap, $wordCnt, $fnRefTofnText, $typeIDs, $fnCnt;
+  $footnoteHtml = "";
+  $wordCnt = 0;
+  $graID2LineHtmlMarkerlMap = array();
+  $prevTCMS = "";
+  $fnRefTofnText = array();
+  $typeIDs = array();
+  $fnCnt = 0;
+  $edition = new Edition($ednID);
+  if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
+    array_push($warnings,"Warning need valid accessible edition id $ednID.");
+  } else {
+    $edSeqs = $edition->getSequences(true);
+    $seqPhys = $seqText = $textAnalysisSeq = null;
+    foreach ($edSeqs as $edSequence) {
+      $seqType = $edSequence->getType();
+      if (!$seqPhys && $seqType == "TextPhysical"){//warning!!!! term dependency
+        $seqPhys = $edSequence;
+      }
+      if (!$seqText && $seqType == "Text"){//warning!!!! term dependency
+        $seqText = $edSequence;
+      }
+      if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
+        $textAnalysisSeq = $edSequence;
+      }
+    }
+
+    function getEntityFootnotesHtml($entity) {
+      global $fnRefTofnText, $typeIDs, $fnCnt;
+      $fnHtml = "";
+      $entTag = $entity->getEntityTag();
+      if ($linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
+        foreach ($typeIDs as $typeID) {
+          if (array_key_exists($typeID,$linkedAnoIDsByType)) {
+            foreach ($linkedAnoIDsByType[$typeID] as $anoID) {
+              $annotation = new Annotation($anoID);
+              $anoText = $annotation->getText();
+              if ($anoText) {
+                $fnTag = "ano".$anoID;
+                $typeTag = "trm".$typeID;
+                $fnOrd = "ord$fnCnt";
+                $fnHtml .= "<sup id=\"$fnTag\" class=\"footnote $entTag $typeTag $fnOrd\" >n</sup>";
+                $fnRefTofnText[$fnTag] = $anoText;
+              }
+            }
+          }
+        }
+      }
+      return $fnHtml;
+    }
+
+    function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass = '') {
+      global $prevTCMS, $graID2LineHtmlMarkerlMap, $wordCnt;
+      $footnoteHtml = "";
+      $entGID = $entity->getGlobalID();
+      $prefix = substr($entGID,0,3);
+      $entID = substr($entGID,4);
+      $entTag = $prefix.$entID;
+      $wordParts = array();
+      $wordHtml = "";
+      $nextTCMS = "";
+      $tcms = "";
+      $prevGraIsVowelCarrier = false;
+      $previousA = null;
+      $tokIDs = null;
+
+      if ($entity && $prefix == 'cmp' && count($entity->getTokenIDs())) {
+        $tokIDs = $entity->getTokenIDs();
+      } else if ($entity && $prefix == 'tok'){
+        $tokIDs = array($entID);
+      } else {
+        error_log("err, rendering word html invalid GID $entGID");
+        return "";
+      }
+
+      if ($tokIDs) {
+        ++$wordCnt;
+        //open word span
+        $wordHtml .= '<span class="grpTok '.($ctxClass?$ctxClass.' ':'').$entTag.' ord'.$wordCnt.'">';
+        //for each token in word
+        $tokCnt = count($tokIDs);
+        for($i =0; $i < $tokCnt; $i++) {
+          $tokID = $tokIDs[$i];
+          $token = new Token($tokID);
+          $graIDs = $token->getGraphemeIDs();
+          $firstT = ($i==0);
+          $lastT = (1+$i == $tokCnt);
+          //for each grapheme in token
+          $graCnt = count($graIDs);
+          for($j=0; $j<$graCnt; $j++) {
+            $graID = $graIDs[$j];
+            $grapheme = new Grapheme($graID);
+            if (!$grapheme) {
+              error_log("err,calculating word html and grapheme not available for graID $graID");
+              $prevGraIsVowelCarrier = false;
+              continue;
+            }
+            if ($grapheme->getValue() == "ʔ") {
+              $prevGraIsVowelCarrier = true;
+              continue;
+            }
+            $firstG = ($j==0 || $j==1 && $prevGraIsVowelCarrier);
+            $lastG = (1+$j == $graCnt);
+            //check for TCM transition brackets
+            $tcms = $grapheme->getTextCriticalMark();
+            $postTCMBrackets = "";
+            $preTCMBrackets = "";
+            if ($prevTCMS != $tcms) {
+              list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
+            }
+
+            if ($postTCMBrackets && !($i == 0 && $j== 0)) {
+              $wordHtml .= $postTCMBrackets;
+            }
+            if ($footnoteHtml) {
+              $wordHtml .= $footnoteHtml;
+              $footnoteHtml = "";
+            }
+            if ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap)) {
+              if ( $i == 0 && $j== 0) {
+                $wordHtml = $graID2LineHtmlMarkerlMap[$graID].$wordHtml;
+              } else {
+                $wordHtml .= $graID2LineHtmlMarkerlMap[$graID];
+              }
+              $prevTCMS = "";//at a new physical line so reset TCM
+            }
+            if ($preTCMBrackets) {
+              $wordHtml .= $preTCMBrackets;
+            }
+            //add grapheme
+            $graTemp = $grapheme->getValue();
+            if ($j==1 && $prevGraIsVowelCarrier && $previousA && $prevTCMS == $tcms) {
+              if ($graTemp == 'i') {
+                $graTemp = "ï";
+              }else if ($graTemp == 'u') {
+                $graTemp = "ü";
+              }
+            }
+            $prevTCMS = $tcms;
+            $wordHtml .= $graTemp;
+            if ($prevGraIsVowelCarrier && $graTemp == "a") {
+              $previousA = true;
+            } else {
+              $previousA = false;
+            }
+            $prevGraIsVowelCarrier = false;
+          }//end for graphIDs
+          $footnoteHtml = getEntityFootnotesHtml($token);
+        }//end for token IDs
+        if ($nextToken) {//find tcm for first grapheme of next token to check for closing brackets
+          $nextGraIDs = $nextToken->getGraphemeIDs();
+          if (count($nextGraIDs) > 0) {
+            $nextGrapheme = new Grapheme($nextGraIDs[0]);
+            $nextTCMS = $nextGrapheme->getTextCriticalMark();
+            if ($nextTCMS != $tcms) {
+              $postTCMBrackets = "";
+              $preTCMBrackets = "";
+              list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($tcms,$nextTCMS,true);
+              $wordHtml .= $postTCMBrackets;
+            }
+          }
+        }
+        if ($isLastStructureWord && $prevTCMS && $prevTCMS != "S") {//close off any TCM
+          $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
+          $prevTCMS = "";//reset since we closed off TCMs for the structure.
+                         //This will ensure next structures output will have opening TCMs
+          if ($tcmBrackets) {
+            $wordHtml .= $tcmBrackets;
+          }
+        }
+        if ($prefix == "cmp") {//end of compound so add cmp entity footnotes
+          $footnoteHtml .= getEntityFootnotesHtml($entity);
+        }
+        if ($footnoteHtml) {
+          $wordHtml .= $footnoteHtml;
+          $footnoteHtml = "";
+        }
+        $wordHtml .= "</span>";
+        $wordHtml = preg_replace('/\/\/\//',"",$wordHtml); // remove edge indicator
+        $wordHtml = preg_replace('/_+/',"_",$wordHtml); // multple missing consonants
+        $wordHtml = preg_replace('/_([^\.])*/',".\\1",$wordHtml); // multple missing consonants
+  //      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
+      }
+      return $wordHtml;
+    }
+
+    function getStructHTML($sequence, $level) {
+      global $html, $edition, $seqEntGIDs;
+      $structureHtml = "";
+      $lvl = $level +1;
+      if ($sequence) {
+          $seqEntGIDs = $sequence->getEntityIDs();
+          $seqType = $sequence->getType();
+          $seqTag = $sequence->getEntityTag();
+      }
+      if (!$seqEntGIDs || count($seqEntGIDs) == 0) {
+        error_log("warn, Found empty structural sequence element seq".$sequence->getID()." for edition ".$edition->getDescription()." id=".$edition->getID());
+        return;
+      }
+      $seqLabel = $sequence->getLabel();
+      $seqSup = $sequence->getSuperScript();
+      $label = ($seqSup?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+      if ($label) {//output header div
+        $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$lvl.' '.$seqTag.'">'.$label.'</div>';
+        $structureHtml .= getEntityFootnotesHtml($sequence);
+      }
+      //open structure div
+      $structureHtml .= '<div class="section level'.$lvl.' '.$seqTag.' '.$seqType.' '.$seqTag.'">';
+      $cntGID = count($seqEntGIDs);
+      for ($i = 0; $i < $cntGID; $i++) {
+        $entGID = $seqEntGIDs[$i];
+        $prefix = substr($entGID,0,3);
+        $entID = substr($entGID,4);
+        $nextEntGID = $i+1<$cntGID?$seqEntGIDs[$i+1]:null;
+        $nextToken = null;
+        if ( $nextEntGID ) {
+          switch (substr($nextEntGID,0,3)) {
+            case 'cmp':
+              $nextToken = new Compound(substr($nextEntGID,4));
+              if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
+                error_log("Warning inaccessible entity id $nextEntGID skipped.");
+                $nextToken = null;
+                break;
+              } else {
+                $nextEntGID = $nextToken->getTokenIDs();
+                if ($nextEntGID && count($nextEntGID)) {
+                  $nextEntGID = "tok:".$nextEntGID[0];
+                } else {
+                  error_log("Warning inaccessible entity id ".$nextToken->getGlobalID()." skipped.");
+                  $nextToken = null;
+                  break;
+                }
+              }
+            case 'tok':
+              $nextToken = new Token(substr($nextEntGID,4));
+              if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
+                error_log("Warning inaccessible entity id $nextEntGID skipped.");
+                $nextToken = null;
+                break;
+              }
+          }
+        }
+        if ($prefix == 'seq') {
+          $subSequence = new Sequence($entID);
+          if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
+            error_log("Warning inaccessible sub-sequence id $entID skipped.");
+          } else {
+            $structureHtml .= getStructHTML($subSequence, $lvl);
+          }
+        } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
+          if ($prefix == 'cmp') {
+            $entity = new Compound($entID);
+          } else {
+            $entity = new Token($entID);
+          }
+          if (!$entity || $entity->hasError()) {//no word or unavailable so warn
+            error_log("Warning inaccessible word id $entGID skipped.");
+          } else {
+            $structureHtml .= getWordHtml($entity,$i+1 == $cntGID, $nextToken);
+          }
+        }else{
+          error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
+          continue;
+        }
+      }
+      if (!$label) {//output header div
+        $structureHtml .= getEntityFootnotesHtml($sequence);
+      }
+      $structureHtml .= '</div>';
+      return $structureHtml;
+    }
+
+    if (!$textAnalysisSeq || !$textAnalysisSeq->getEntityIDs() || count($textAnalysisSeq->getEntityIDs()) == 0) {
+      return false;
+    } else {//process analysis
+      //calculate  post grapheme id to physical line label map
+      if ($seqPhys && $seqPhys->getEntityIDs() && count($seqPhys->getEntityIDs()) > 0) {
+        foreach ($seqPhys->getEntities(true) as $physicalLineSeq) {
+          $sclGIDs = $physicalLineSeq->getEntityIDs();
+          if (count($sclGIDs) == 0 || strpos($sclGIDs[0],'scl:') != 0) {
+            array_push($warnings,"Found physical Line without syllables ".$physicalLineSeq->getGlobalID());
+            continue;
+          }
+          $syllable = new SyllableCluster(substr($sclGIDs[0],4));
+          if ($syllable->hasError()) {
+            array_push($warnings,"warning, error encountered while trying to open syllable ".$sclIDs[0]." for physical line ".$physicalLineSeq->getGlobalID()." - ".join(",",$syllable->getErrors()));
+            continue;
+          }
+          $graIDs = $syllable->getGraphemeIDs();
+          if (count($graIDs) == 0 ) {
+            array_push($warnings,"Found syllable without graphemes ".$sclIDs[0]);
+            continue;
+          }
+          $label = $physicalLineSeq->getLabel();
+          $seqTag = 'seq'.$physicalLineSeq->getID();
+          if (!$label) {
+            $label = $seqTag;
+          }
+          $lineHtml = "<span class=\"linelabel $seqTag\">[$label]</span>";
+          $lineHtml .= getEntityFootnotesHtml($physicalLineSeq);//add any line footnotes to end of label
+          if (strpos($syllable->getSortCode(),"0.19")=== 0 &&
+              strpos($syllable->getSortCode2(),"0.5")=== 0 &&
+              count($graIDs) > 1) { //begins with vowel carrier so choose second grapheme
+            $graID2LineHtmlMarkerlMap[$graIDs[1]] = $lineHtml;
+          } else {
+            $graID2LineHtmlMarkerlMap[$graIDs[0]] = $lineHtml;
+          }
+        }
+      }
+      $footnoteTypeID = Entity::getIDofTermParentLabel('FootNote-FootNoteType');//warning!!!! term dependency
+      $fnReconstrTypeID = Entity::getIDofTermParentLabel('Reconstruction-FootNote');//warning!!!! term dependency
+      $typeIDs = array($footnoteTypeID,$fnReconstrTypeID);
+      $html = "";
+      $fnCnt = 0;
+      $tokCnt = 0;
+      $fnRefTofnText = array();
+      //start to calculate rtf using each entity of the analysis container
+      foreach ($textAnalysisSeq->getEntityIDs() as $entGID) {
+        $prefix = substr($entGID,0,3);
+        $entID = substr($entGID,4);
+        if ($prefix == 'seq') {
+          $subSequence = new Sequence($entID);
+          if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
+            error_log("warn, Warning inaccessible sub-sequence id $entID skipped.");
+          } else {
+            $html .= getStructHtml($subSequence, 1);
+          }
+        } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
+          if ($prefix == 'cmp') {
+            $entity = new Compound($entID);
+          } else {
+            $entity = new Token($entID);
+          }
+          if (!$entity || $entity->hasError()) {//no word or unavailable so warn
+            error_log("warn, Warning inaccessible word id $entGID skipped.");
+          } else {
+            $html .= getWordHtml($entity,false,$prefix);
+          }
+        }else{
+          error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
+          continue;
+        }
+      }
+    }
+  }
+  return $html;
+}
+
+?>

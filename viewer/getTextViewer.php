@@ -36,6 +36,7 @@
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
   require_once (dirname(__FILE__) . '/../model/entities/EntityFactory.php');//get user access control
+  require_once (dirname(__FILE__) . '/php/viewutils.php');//get utilities for viewing
   require_once (dirname(__FILE__) . '/php/testdata.php');//get user access control
   $dbMgr = new DBManager();
   $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):$_REQUEST);
@@ -115,8 +116,8 @@
           progressInputName='<?php echo ini_get("session.upload_progress.name"); ?>',
           dbName = '<?=DBNAME?>',
           basepath="<?=SITE_BASE_PATH?>";
-      var testHtml = <?=$testHtml?>,
-            footnotes = {<?=$footnotes?>},
+      var testHtml = '<?=getEditionStructuralViewHtml($edition->getID());?>',
+            footnotes = <?=getEditionFootnoteText();?>,
             testTrans = <?=$testTrans?>,
             transfootnotes = {<?=$transfootnotes?>},
             testHtmlSmall = <?=$testHtmlSmall?>;
@@ -184,10 +185,9 @@
               $('.footnote',$textViewerContent).unbind('click').bind('click', function(e) {
                 var id = this.id, footnoteHtml;
                   footnoteHtml = (footnotes[id]?footnotes[id]:"unable to find footnote text or empty footnote");
-                  $(this).jqxTooltip({content: footnoteHtml,
+                  $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
                                       trigger: 'click',
-                                      autoHide: false,
-                                      showArrow: false });
+                                      autoHide: false });
                   $('.showing').removeClass('showing');
                   $(this).unbind('close').bind('close', function(e) {
                     $('.showing').removeClass('showing');
@@ -209,8 +209,7 @@
             $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
               var $tooltip = $(this).jqxTooltip({ content: "Show lemma info for " + $(this).text(),
                                                   trigger: 'click',
-                                                  autoHide: false,
-                                                  showArrow: false });
+                                                  autoHide: false });
                   $('.showing').removeClass('showing');
                   $(this).unbind('close').bind('close', function(e) {
                     $('.showing').removeClass('showing');
