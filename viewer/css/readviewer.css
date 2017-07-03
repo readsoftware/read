@@ -52,13 +52,16 @@
 .grpTok .linelabel{
   padding-right: 0px;
 }
-.secHeader.level3{
+.secHeader.Paragraph{
   color: rgb(100,200,70);
 }
 .secHeader{
 margin-bottom: 10px;
 color: rgb(30,140,170);
 font-weight: bold;
+}
+.section{
+margin-bottom: 10px;
 }
 .secTitle{
 margin-bottom: 10px;
@@ -82,8 +85,11 @@ font-weight: bold;
   max-width: 450px;
   text-align: left;
 }
-.showing {
+sup.showing {
   background: lightgreen !important;
+}
+.grpTok.showing {
+  color: rgb(50,200,50) !important;
 }
 .prose {
   padding-bottom: 10px;
@@ -93,4 +99,21 @@ font-weight: bold;
   -moz-user-select: none;
   -ms-user-select: none;
   -webkit-user-select: none;
+}
+.lemmaentry .lemmaheadword{
+  padding-right: 5px;
+  font-weight: bold;
+  font-style: italic;
+}
+.lemmaentry .lemmapos{
+  padding-right: 5px;
+}
+.lemmaentry .etymology{
+  padding-right: 5px;
+}
+.lemmaentry .gloss{
+  padding-right: 5px;
+}
+.lemmaentry .selectedinflection{
+  padding-right: 5px;
 }

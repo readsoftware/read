@@ -44,7 +44,9 @@
     returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
   } else {
     if ( isset($data['ednID'])) {//required
-      $edition = new Edition($data['ednID']);
+      $ednID = $data['ednID'];
+      $glossaryEntTag = "edn".$ednID;
+      $edition = new Edition($ednID);
       if ($edition->hasError()) {
         returnXMLErrorMsgPage("unable to load edition - ".join(",",$edition->getErrors()));
       }
@@ -55,6 +57,9 @@
       $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
     } else {
       returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
+    }
+    if ( isset($data['catID'])) {//optional override
+      $glossaryEntTag = "cat".$data['catID'];
     }
   }
   $showContentOutline = defined("SHOWVIEWERCONTENTOUTLINE")?SHOWVIEWERCONTENTOUTLINE:true;
@@ -119,6 +124,7 @@
       var testHtml = '<?=getEditionStructuralViewHtml($edition->getID());?>',
             footnotes = <?=getEditionFootnoteText();?>,
             testTrans = <?=$testTrans?>,
+            glossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>,
             transfootnotes = {<?=$transfootnotes?>},
             testHtmlSmall = <?=$testHtmlSmall?>;
 
@@ -180,6 +186,7 @@
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
             $textViewerContent.html(testHtml);
+//            $textViewerContent.html(testHtmlSmall);
             $textViewerContent.height('150px');
             if (footnotes && typeof footnotes == 'object' && Object.keys(footnotes).length > 0) {
               $('.footnote',$textViewerContent).unbind('click').bind('click', function(e) {
@@ -207,18 +214,40 @@
               }
             });
             $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
-              var $tooltip = $(this).jqxTooltip({ content: "Show lemma info for " + $(this).text(),
-                                                  trigger: 'click',
-                                                  autoHide: false });
-                  $('.showing').removeClass('showing');
-                  $(this).unbind('close').bind('close', function(e) {
-                    $('.showing').removeClass('showing');
-                    $(this).jqxTooltip('destroy');
-                  });
-                  $(this).jqxTooltip('open');
-                  $(this).addClass('showing');
-                  e.stopImmediatePropagation();
-                  return false;
+              var classes = $(this).attr("class"), entTag, entTags, lemTag, lemmaInfo, entGlossInfo
+                  popupHtml = "No lemma info for " + $(this).text();
+              if ( entTags = classes.match(/cmp\d+/)) {//use first cmp tag for tool tip
+                entTag = entTags[0];
+              } else {
+                 entTag = classes.match(/tok\d+/)
+              }
+              if (entTag && glossaryLookup[entTag]) {
+                entGlossInfo = glossaryLookup[entTag];
+                if (entGlossInfo['lemTag']) {
+                  lemmaInfo = glossaryLookup[entGlossInfo['lemTag']];
+                  if (lemmaInfo && lemmaInfo['entry']) {
+                    popupHtml = lemmaInfo['entry'];
+                    if (entGlossInfo['infHtml']) {
+                      popupHtml += entGlossInfo['infHtml'];
+                    }
+                    if (lemmaInfo['attestedHtml']) {
+                      popupHtml += "<br/>"+lemmaInfo['attestedHtml'];
+                    }
+                  }
+                }
+              }
+              $(this).jqxTooltip({ content: '<div class="popupwrapperdiv">'+popupHtml+"</div>",
+                                   trigger: 'click',
+                                   autoHide: false });
+              $('.showing').trigger('close'); //close other
+              $(this).unbind('close').bind('close', function(e) {
+                $('.showing').removeClass('showing');
+                $(this).jqxTooltip('destroy');
+              });
+              $(this).jqxTooltip('open');
+              $(this).addClass('showing');
+              e.stopImmediatePropagation();
+              return false;
             });
 <?php
   if ($showTranslationView && $hasTranslation) {
