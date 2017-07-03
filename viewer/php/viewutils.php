@@ -43,25 +43,309 @@ require_once dirname(__FILE__) . '/../../model/entities/Lemmas.php';
 require_once dirname(__FILE__) . '/../../model/entities/Inflections.php';
 require_once dirname(__FILE__) . '/../../model/entities/Sequences.php';
 require_once dirname(__FILE__) . '/../../model/entities/JsonCache.php';
+require_once dirname(__FILE__) . '/../../model/entities/Catalogs.php';
 require_once dirname(__FILE__) . '/../../model/entities/UserGroups.php';
 require_once dirname(__FILE__) . '/../../model/entities/AttributionGroup.php';
 require_once dirname(__FILE__) . '/../../model/entities/Attribution.php';
 
 
 /**
-* gets the editions Structural layout html
+* gets the editions footnote lookup html as json
 *
-* calculates the structure view of this edition of the text with granularity of token,
-* embedded physical line markers and footnote markers
-*
-* @param int $ednID identified the edition to calculate
-* @param boolean $forceRecalc indicating whether to ignore cached values
-*
-* @returns mixed object with a string representing the html and a footnote lookup table
+* @returns string json representing the lookup for footnotes of this  object with a string representing the html and a footnote lookup table
 */
 function getEditionFootnoteText() {
   global $fnRefTofnText;
   return json_encode($fnRefTofnText);
+}
+
+/**
+* gets the editions glossary lookup html
+*
+*/
+function getEditionGlossaryLookup($entTag) {
+  $catID = null;
+  if (substr($entTag,0,3) == "cat") {
+    $catID = substr($entTag,3);
+  } else if (substr($entTag,0,3) == "edn") {
+    $glossaryTypeID = Entity::getIDofTermParentLabel('glossary-catalogtype'); //term dependency
+    $catalogs = new Catalogs(substr($entTag,3)." = ANY(cat_edition_ids) and cat_type_id = $glossaryTypeID","cat_id",null,null);
+    if (!$catalogs->getError() && $catalogs->getCount() > 0) {
+      $catalog = $catalogs->current();
+      $catID = $catalog->getID();
+    }
+  }
+  if ($catID) {
+    return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID));
+  }
+  return "";
+}
+
+/**
+* returns footnotes of an entity as Html fragment
+*
+* @param object $entity that can be annotated
+*/
+function getEntityFootnotesHtml($entity) {
+  global $fnRefTofnText, $typeIDs, $fnCnt;
+  $fnHtml = "";
+  $entTag = $entity->getEntityTag();
+  if ($linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
+    foreach ($typeIDs as $typeID) {
+      if (array_key_exists($typeID,$linkedAnoIDsByType)) {
+        foreach ($linkedAnoIDsByType[$typeID] as $anoID) {
+          $annotation = new Annotation($anoID);
+          $anoText = $annotation->getText();
+          if ($anoText) {
+            $fnTag = "ano".$anoID;
+            $typeTag = "trm".$typeID;
+            $fnOrd = "ord$fnCnt";
+            $fnHtml .= "<sup id=\"$fnTag\" class=\"footnote $entTag $typeTag $fnOrd\" >n</sup>";
+            $fnRefTofnText[$fnTag] = $anoText;
+          }
+        }
+      }
+    }
+  }
+  return $fnHtml;
+}
+
+/**
+* returns the Html for a word
+*
+* @param object $entity Compound or Token
+* @param boolean $isLastStructureWord
+* @param object or null $nextToken
+* @param string $ctxClass is added to the class attribute of the html node
+* @return string Html representing the $entity
+*/
+function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass = '') {
+  global $prevTCMS, $graID2LineHtmlMarkerlMap, $wordCnt;
+  $footnoteHtml = "";
+  $entGID = $entity->getGlobalID();
+  $prefix = substr($entGID,0,3);
+  $entID = substr($entGID,4);
+  $entTag = $prefix.$entID;
+  $wordParts = array();
+  $wordHtml = "";
+  $nextTCMS = "";
+  $tcms = "";
+  $prevGraIsVowelCarrier = false;
+  $previousA = null;
+  $tokIDs = null;
+
+  if ($entity && $prefix == 'cmp' && count($entity->getTokenIDs())) {
+    $tokIDs = $entity->getTokenIDs();
+  } else if ($entity && $prefix == 'tok'){
+    $tokIDs = array($entID);
+  } else {
+    error_log("err, rendering word html invalid GID $entGID");
+    return $wordHtml;
+  }
+
+  if ($tokIDs) {
+    ++$wordCnt;
+    //open word span
+    $wordHtml .= '<span class="grpTok '.($ctxClass?$ctxClass.' ':'').$entTag.' ord'.$wordCnt.'">';
+    //for each token in word
+    $tokCnt = count($tokIDs);
+    for($i =0; $i < $tokCnt; $i++) {
+      $tokID = $tokIDs[$i];
+      $token = new Token($tokID);
+      $graIDs = $token->getGraphemeIDs();
+      $firstT = ($i==0);
+      $lastT = (1+$i == $tokCnt);
+      //for each grapheme in token
+      $graCnt = count($graIDs);
+      for($j=0; $j<$graCnt; $j++) {
+        $graID = $graIDs[$j];
+        $grapheme = new Grapheme($graID);
+        if (!$grapheme) {
+          error_log("err,calculating word html and grapheme not available for graID $graID");
+          $prevGraIsVowelCarrier = false;
+          continue;
+        }
+        if ($grapheme->getValue() == "ʔ") {
+          $prevGraIsVowelCarrier = true;
+          continue;
+        }
+        $firstG = ($j==0 || $j==1 && $prevGraIsVowelCarrier);
+        $lastG = (1+$j == $graCnt);
+        //check for TCM transition brackets
+        $tcms = $grapheme->getTextCriticalMark();
+        $postTCMBrackets = "";
+        $preTCMBrackets = "";
+        if ($prevTCMS != $tcms) {
+          list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
+        }
+
+        if ($postTCMBrackets && !($i == 0 && $j== 0)) {
+          $wordHtml .= $postTCMBrackets;
+        }
+        if ($footnoteHtml) {
+          $wordHtml .= $footnoteHtml;
+          $footnoteHtml = "";
+        }
+        if ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap)) {
+          if ( $i == 0 && $j== 0) {
+            $wordHtml = $graID2LineHtmlMarkerlMap[$graID].$wordHtml;
+          } else {
+            $wordHtml .= $graID2LineHtmlMarkerlMap[$graID];
+          }
+          $prevTCMS = "";//at a new physical line so reset TCM
+        }
+        if ($preTCMBrackets) {
+          $wordHtml .= $preTCMBrackets;
+        }
+        //add grapheme
+        $graTemp = $grapheme->getValue();
+        if ($j==1 && $prevGraIsVowelCarrier && $previousA && $prevTCMS == $tcms) {
+          if ($graTemp == 'i') {
+            $graTemp = "ï";
+          }else if ($graTemp == 'u') {
+            $graTemp = "ü";
+          }
+        }
+        $prevTCMS = $tcms;
+        $wordHtml .= $graTemp;
+        if ($prevGraIsVowelCarrier && $graTemp == "a") {
+          $previousA = true;
+        } else {
+          $previousA = false;
+        }
+        $prevGraIsVowelCarrier = false;
+      }//end for graphIDs
+      $footnoteHtml = getEntityFootnotesHtml($token);
+    }//end for token IDs
+    if ($nextToken) {//find tcm for first grapheme of next token to check for closing brackets
+      $nextGraIDs = $nextToken->getGraphemeIDs();
+      if (count($nextGraIDs) > 0) {
+        $nextGrapheme = new Grapheme($nextGraIDs[0]);
+        $nextTCMS = $nextGrapheme->getTextCriticalMark();
+        if ($nextTCMS != $tcms) {
+          $postTCMBrackets = "";
+          $preTCMBrackets = "";
+          list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($tcms,$nextTCMS,true);
+          $wordHtml .= $postTCMBrackets;
+        }
+      }
+    }
+    if ($isLastStructureWord && $prevTCMS && $prevTCMS != "S") {//close off any TCM
+      $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
+      $prevTCMS = "";//reset since we closed off TCMs for the structure.
+                     //This will ensure next structures output will have opening TCMs
+      if ($tcmBrackets) {
+        $wordHtml .= $tcmBrackets;
+      }
+    }
+    if ($prefix == "cmp") {//end of compound so add cmp entity footnotes
+      $footnoteHtml .= getEntityFootnotesHtml($entity);
+    }
+    if ($footnoteHtml) {
+      $wordHtml .= $footnoteHtml;
+      $footnoteHtml = "";
+    }
+    $wordHtml .= "</span>";
+    $wordHtml = preg_replace('/\/\/\//',"",$wordHtml); // remove edge indicator
+    $wordHtml = preg_replace('/_+/',"_",$wordHtml); // multple missing consonants
+    $wordHtml = preg_replace('/_([^\.])*/',".\\1",$wordHtml); // multple missing consonants
+//      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
+  }
+  return $wordHtml;
+}
+
+/**
+* returns the html for a nested structure
+*
+* recursively calls itself for substructures
+*
+* @param object $sequence has a structure type containing other structures or entities
+* @param int $level indicate the level of nest in the structural hierarchy
+*/
+function getStructHTML($sequence, $level) {
+  global $html, $edition, $seqEntGIDs;
+  $structureHtml = "";
+  $lvl = $level +1;
+  if ($sequence) {
+      $seqEntGIDs = $sequence->getEntityIDs();
+      $seqType = $sequence->getType();
+      $seqTag = $sequence->getEntityTag();
+  }
+  if (!$seqEntGIDs || count($seqEntGIDs) == 0) {
+    error_log("warn, Found empty structural sequence element seq".$sequence->getID()." for edition ".$edition->getDescription()." id=".$edition->getID());
+    return;
+  }
+  $seqLabel = $sequence->getLabel();
+  $seqSup = $sequence->getSuperScript();
+  $label = ($seqSup?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+  if ($label) {//output header div
+    $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$lvl.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
+    $structureHtml .= getEntityFootnotesHtml($sequence);
+  }
+  //open structure div
+  $structureHtml .= '<div class="section level'.$lvl.' '.$seqTag.' '.$seqType.' '.$seqTag.'">';
+  $cntGID = count($seqEntGIDs);
+  for ($i = 0; $i < $cntGID; $i++) {
+    $entGID = $seqEntGIDs[$i];
+    $prefix = substr($entGID,0,3);
+    $entID = substr($entGID,4);
+    $nextEntGID = $i+1<$cntGID?$seqEntGIDs[$i+1]:null;
+    $nextToken = null;
+    if ( $nextEntGID ) {
+      switch (substr($nextEntGID,0,3)) {
+        case 'cmp':
+          $nextToken = new Compound(substr($nextEntGID,4));
+          if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
+            error_log("Warning inaccessible entity id $nextEntGID skipped.");
+            $nextToken = null;
+            break;
+          } else {
+            $nextEntGID = $nextToken->getTokenIDs();
+            if ($nextEntGID && count($nextEntGID)) {
+              $nextEntGID = "tok:".$nextEntGID[0];
+            } else {
+              error_log("Warning inaccessible entity id ".$nextToken->getGlobalID()." skipped.");
+              $nextToken = null;
+              break;
+            }
+          }
+        case 'tok':
+          $nextToken = new Token(substr($nextEntGID,4));
+          if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
+            error_log("Warning inaccessible entity id $nextEntGID skipped.");
+            $nextToken = null;
+            break;
+          }
+      }
+    }
+    if ($prefix == 'seq') {
+      $subSequence = new Sequence($entID);
+      if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
+        error_log("Warning inaccessible sub-sequence id $entID skipped.");
+      } else {
+        $structureHtml .= getStructHTML($subSequence, $lvl);
+      }
+    } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
+      if ($prefix == 'cmp') {
+        $entity = new Compound($entID);
+      } else {
+        $entity = new Token($entID);
+      }
+      if (!$entity || $entity->hasError()) {//no word or unavailable so warn
+        error_log("Warning inaccessible word id $entGID skipped.");
+      } else {
+        $structureHtml .= getWordHtml($entity,$i+1 == $cntGID, $nextToken);
+      }
+    }else{
+      error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
+      continue;
+    }
+  }
+  if (!$label) {//output header div
+    $structureHtml .= getEntityFootnotesHtml($sequence);
+  }
+  $structureHtml .= '</div>';
+  return $structureHtml;
 }
 
 /**
@@ -103,250 +387,6 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
       }
     }
 
-    function getEntityFootnotesHtml($entity) {
-      global $fnRefTofnText, $typeIDs, $fnCnt;
-      $fnHtml = "";
-      $entTag = $entity->getEntityTag();
-      if ($linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
-        foreach ($typeIDs as $typeID) {
-          if (array_key_exists($typeID,$linkedAnoIDsByType)) {
-            foreach ($linkedAnoIDsByType[$typeID] as $anoID) {
-              $annotation = new Annotation($anoID);
-              $anoText = $annotation->getText();
-              if ($anoText) {
-                $fnTag = "ano".$anoID;
-                $typeTag = "trm".$typeID;
-                $fnOrd = "ord$fnCnt";
-                $fnHtml .= "<sup id=\"$fnTag\" class=\"footnote $entTag $typeTag $fnOrd\" >n</sup>";
-                $fnRefTofnText[$fnTag] = $anoText;
-              }
-            }
-          }
-        }
-      }
-      return $fnHtml;
-    }
-
-    function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass = '') {
-      global $prevTCMS, $graID2LineHtmlMarkerlMap, $wordCnt;
-      $footnoteHtml = "";
-      $entGID = $entity->getGlobalID();
-      $prefix = substr($entGID,0,3);
-      $entID = substr($entGID,4);
-      $entTag = $prefix.$entID;
-      $wordParts = array();
-      $wordHtml = "";
-      $nextTCMS = "";
-      $tcms = "";
-      $prevGraIsVowelCarrier = false;
-      $previousA = null;
-      $tokIDs = null;
-
-      if ($entity && $prefix == 'cmp' && count($entity->getTokenIDs())) {
-        $tokIDs = $entity->getTokenIDs();
-      } else if ($entity && $prefix == 'tok'){
-        $tokIDs = array($entID);
-      } else {
-        error_log("err, rendering word html invalid GID $entGID");
-        return "";
-      }
-
-      if ($tokIDs) {
-        ++$wordCnt;
-        //open word span
-        $wordHtml .= '<span class="grpTok '.($ctxClass?$ctxClass.' ':'').$entTag.' ord'.$wordCnt.'">';
-        //for each token in word
-        $tokCnt = count($tokIDs);
-        for($i =0; $i < $tokCnt; $i++) {
-          $tokID = $tokIDs[$i];
-          $token = new Token($tokID);
-          $graIDs = $token->getGraphemeIDs();
-          $firstT = ($i==0);
-          $lastT = (1+$i == $tokCnt);
-          //for each grapheme in token
-          $graCnt = count($graIDs);
-          for($j=0; $j<$graCnt; $j++) {
-            $graID = $graIDs[$j];
-            $grapheme = new Grapheme($graID);
-            if (!$grapheme) {
-              error_log("err,calculating word html and grapheme not available for graID $graID");
-              $prevGraIsVowelCarrier = false;
-              continue;
-            }
-            if ($grapheme->getValue() == "ʔ") {
-              $prevGraIsVowelCarrier = true;
-              continue;
-            }
-            $firstG = ($j==0 || $j==1 && $prevGraIsVowelCarrier);
-            $lastG = (1+$j == $graCnt);
-            //check for TCM transition brackets
-            $tcms = $grapheme->getTextCriticalMark();
-            $postTCMBrackets = "";
-            $preTCMBrackets = "";
-            if ($prevTCMS != $tcms) {
-              list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
-            }
-
-            if ($postTCMBrackets && !($i == 0 && $j== 0)) {
-              $wordHtml .= $postTCMBrackets;
-            }
-            if ($footnoteHtml) {
-              $wordHtml .= $footnoteHtml;
-              $footnoteHtml = "";
-            }
-            if ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap)) {
-              if ( $i == 0 && $j== 0) {
-                $wordHtml = $graID2LineHtmlMarkerlMap[$graID].$wordHtml;
-              } else {
-                $wordHtml .= $graID2LineHtmlMarkerlMap[$graID];
-              }
-              $prevTCMS = "";//at a new physical line so reset TCM
-            }
-            if ($preTCMBrackets) {
-              $wordHtml .= $preTCMBrackets;
-            }
-            //add grapheme
-            $graTemp = $grapheme->getValue();
-            if ($j==1 && $prevGraIsVowelCarrier && $previousA && $prevTCMS == $tcms) {
-              if ($graTemp == 'i') {
-                $graTemp = "ï";
-              }else if ($graTemp == 'u') {
-                $graTemp = "ü";
-              }
-            }
-            $prevTCMS = $tcms;
-            $wordHtml .= $graTemp;
-            if ($prevGraIsVowelCarrier && $graTemp == "a") {
-              $previousA = true;
-            } else {
-              $previousA = false;
-            }
-            $prevGraIsVowelCarrier = false;
-          }//end for graphIDs
-          $footnoteHtml = getEntityFootnotesHtml($token);
-        }//end for token IDs
-        if ($nextToken) {//find tcm for first grapheme of next token to check for closing brackets
-          $nextGraIDs = $nextToken->getGraphemeIDs();
-          if (count($nextGraIDs) > 0) {
-            $nextGrapheme = new Grapheme($nextGraIDs[0]);
-            $nextTCMS = $nextGrapheme->getTextCriticalMark();
-            if ($nextTCMS != $tcms) {
-              $postTCMBrackets = "";
-              $preTCMBrackets = "";
-              list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($tcms,$nextTCMS,true);
-              $wordHtml .= $postTCMBrackets;
-            }
-          }
-        }
-        if ($isLastStructureWord && $prevTCMS && $prevTCMS != "S") {//close off any TCM
-          $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
-          $prevTCMS = "";//reset since we closed off TCMs for the structure.
-                         //This will ensure next structures output will have opening TCMs
-          if ($tcmBrackets) {
-            $wordHtml .= $tcmBrackets;
-          }
-        }
-        if ($prefix == "cmp") {//end of compound so add cmp entity footnotes
-          $footnoteHtml .= getEntityFootnotesHtml($entity);
-        }
-        if ($footnoteHtml) {
-          $wordHtml .= $footnoteHtml;
-          $footnoteHtml = "";
-        }
-        $wordHtml .= "</span>";
-        $wordHtml = preg_replace('/\/\/\//',"",$wordHtml); // remove edge indicator
-        $wordHtml = preg_replace('/_+/',"_",$wordHtml); // multple missing consonants
-        $wordHtml = preg_replace('/_([^\.])*/',".\\1",$wordHtml); // multple missing consonants
-  //      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
-      }
-      return $wordHtml;
-    }
-
-    function getStructHTML($sequence, $level) {
-      global $html, $edition, $seqEntGIDs;
-      $structureHtml = "";
-      $lvl = $level +1;
-      if ($sequence) {
-          $seqEntGIDs = $sequence->getEntityIDs();
-          $seqType = $sequence->getType();
-          $seqTag = $sequence->getEntityTag();
-      }
-      if (!$seqEntGIDs || count($seqEntGIDs) == 0) {
-        error_log("warn, Found empty structural sequence element seq".$sequence->getID()." for edition ".$edition->getDescription()." id=".$edition->getID());
-        return;
-      }
-      $seqLabel = $sequence->getLabel();
-      $seqSup = $sequence->getSuperScript();
-      $label = ($seqSup?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
-      if ($label) {//output header div
-        $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$lvl.' '.$seqTag.'">'.$label.'</div>';
-        $structureHtml .= getEntityFootnotesHtml($sequence);
-      }
-      //open structure div
-      $structureHtml .= '<div class="section level'.$lvl.' '.$seqTag.' '.$seqType.' '.$seqTag.'">';
-      $cntGID = count($seqEntGIDs);
-      for ($i = 0; $i < $cntGID; $i++) {
-        $entGID = $seqEntGIDs[$i];
-        $prefix = substr($entGID,0,3);
-        $entID = substr($entGID,4);
-        $nextEntGID = $i+1<$cntGID?$seqEntGIDs[$i+1]:null;
-        $nextToken = null;
-        if ( $nextEntGID ) {
-          switch (substr($nextEntGID,0,3)) {
-            case 'cmp':
-              $nextToken = new Compound(substr($nextEntGID,4));
-              if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
-                error_log("Warning inaccessible entity id $nextEntGID skipped.");
-                $nextToken = null;
-                break;
-              } else {
-                $nextEntGID = $nextToken->getTokenIDs();
-                if ($nextEntGID && count($nextEntGID)) {
-                  $nextEntGID = "tok:".$nextEntGID[0];
-                } else {
-                  error_log("Warning inaccessible entity id ".$nextToken->getGlobalID()." skipped.");
-                  $nextToken = null;
-                  break;
-                }
-              }
-            case 'tok':
-              $nextToken = new Token(substr($nextEntGID,4));
-              if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
-                error_log("Warning inaccessible entity id $nextEntGID skipped.");
-                $nextToken = null;
-                break;
-              }
-          }
-        }
-        if ($prefix == 'seq') {
-          $subSequence = new Sequence($entID);
-          if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
-            error_log("Warning inaccessible sub-sequence id $entID skipped.");
-          } else {
-            $structureHtml .= getStructHTML($subSequence, $lvl);
-          }
-        } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
-          if ($prefix == 'cmp') {
-            $entity = new Compound($entID);
-          } else {
-            $entity = new Token($entID);
-          }
-          if (!$entity || $entity->hasError()) {//no word or unavailable so warn
-            error_log("Warning inaccessible word id $entGID skipped.");
-          } else {
-            $structureHtml .= getWordHtml($entity,$i+1 == $cntGID, $nextToken);
-          }
-        }else{
-          error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
-          continue;
-        }
-      }
-      if (!$label) {//output header div
-        $structureHtml .= getEntityFootnotesHtml($sequence);
-      }
-      $structureHtml .= '</div>';
-      return $structureHtml;
-    }
 
     if (!$textAnalysisSeq || !$textAnalysisSeq->getEntityIDs() || count($textAnalysisSeq->getEntityIDs()) == 0) {
       return false;
@@ -424,4 +464,644 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
   return $html;
 }
 
+function getWordTagToLocationLabelMap($catalog, $refreshWordMap) {
+  $textTypeTrmID = Entity::getIDofTermParentLabel('text-sequencetype'); //term dependency
+  $physTextTypeTrmID = Entity::getIDofTermParentLabel('textphysical-sequencetype'); //term dependency
+  $catID = $catalog->getID();
+  if (!$refreshWordMap && array_key_exists("cache-cat$catID",$_SESSION) &&
+        array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID"])) {
+    return $_SESSION["cache-cat$catID"]['wrdTag2LocLabel'];
+  }
+  $editionIDs = $catalog->getEditionIDs();
+  $wrdTag2LocLabel = array();
+  $sclTagToLabel = array();
+  $ednLblBySeqTag = array();
+  $seqTag2EdnTag = array();
+  foreach ($editionIDs as $ednID) {
+    $txtSeqGIDs = array();
+    $physSeqGIDs = array();
+    $ednLabel = '';
+    $ednTag = 'edn'.$ednID;
+    $edition = new Edition($ednID);
+    if (!$edition->hasError()) {
+      $text = $edition->getText(true);
+      if ($text && !$text->hasError()) {
+        $ednLabel = $text->getRef();
+        if (!$ednLabel) {
+          $ednLabel='t'.$text->getID();
+        }
+      }
+      $ednSequences = $edition->getSequences(true);
+      //for edition find token sequences and find physical sequences and create sclID to label
+      foreach ($ednSequences as $ednSequence) {
+        if ($ednSequence->getTypeID() == $textTypeTrmID) {//term dependency
+          $txtSeqGIDs = array_merge($txtSeqGIDs,$ednSequence->getEntityIDs());
+        }
+        if ($ednSequence->getTypeID() == $physTextTypeTrmID) {//term dependency
+          $physSeqGIDs = array_merge($physSeqGIDs,$ednSequence->getEntityIDs());
+        }
+      }
+    } else {
+      error_log("error loading edition $ednID : ".$edition->getErrors(true));
+      continue;
+    }
+    if ($txtSeqGIDs && count($txtSeqGIDs)) {// capture each text token sequence once
+      foreach ($txtSeqGIDs as $txtSeqGID) {
+        $tag = preg_replace("/:/","",$txtSeqGID);
+        if (array_key_exists($tag,$ednLblBySeqTag)) {// use label from first edition found with this sequence tag, should never happened if single edition per text
+          continue;
+        }
+        $ednLblBySeqTag[$tag] = $ednLabel;//todo: this overwrites the edition, ?? do we need to associate a line sequence with a primary edition for the reuse case??
+        $seqTag2EdnTag[$tag] = $ednTag;
+      }
+    }
+    if ($physSeqGIDs && count($physSeqGIDs)) {// capture each physical line sequence once
+      foreach ($physSeqGIDs as $physSeqGID) {
+        $sequence = new Sequence(substr($physSeqGID,4));
+        $label = $sequence->getSuperScript();
+        if (!$label) {
+          $label = $sequence->getLabel();
+        }
+        if (!$label) {
+          $label = 'seq'.$sequence->getID();
+        }
+        $sclGIDs = $sequence->getEntityIDs();
+        if ($label && count($sclGIDs)) {//create lookup for location of word span B11-B12
+          foreach ($sclGIDs as $sclGID) {
+            $tag = preg_replace("/:/","",$sclGID);
+            $sclTagToLabel[$tag] = $label;
+          }
+        }
+      }
+    }
+    if ($ednLblBySeqTag && count($ednLblBySeqTag) > 0) {
+      //for each token sequence
+      foreach ($ednLblBySeqTag as $ednSeqTag => $ednLabel) {
+        if ($ednLabel) {
+          $ednLabel .= ":";
+        }
+        $ednTag = $seqTag2EdnTag[$ednSeqTag];
+        $sequence = new Sequence(substr($ednSeqTag,3));
+        $defLabel = $ednLabel . ($sequence->getSuperScript()?$sequence->getSuperScript():($sequence->getLabel()?$sequence->getLabel():$ednSeqTag));
+        $words = $sequence->getEntities(true);
+        if ($words->getCount() == 0) {
+          error_log("no words for sequence $ednSeqTag having edition label $ednLabel");
+          continue;
+        }else{
+          //error_log("words for sequence $ednSeqTag having edition label $ednLabel include ".join(',',$words->getKeys()));
+        }
+        //calculate a location label for each word and add to $wrdTag2LocLabel
+        foreach ($words as $word) {
+          $fSclID = $lSclID = null;
+          $prefix = $word->getEntityTypeCode();
+          $id = $word->getID();
+          $wtag = $prefix.$id;
+          if ($word->getSortCode() >= 0.7) {
+             continue;
+          }
+          // find first and last SclID for word to calc attested form location
+          if ($prefix == 'cmp') {
+            $tokenSet = $word->getTokens();
+            $tokens = $tokenSet->getEntities();
+            $fToken = $tokens[0];
+            $sclIDs = $fToken->getSyllableClusterIDs();
+            if (count($sclIDs) > 0) {
+              $fSclID = $sclIDs[0];
+              $sclTag = 'scl'.$fSclID;
+              if ( array_key_exists($sclTag,$sclTagToLabel)) {
+                $label = $sclTagToLabel[$sclTag];
+              } else {
+                $tokID = $fToken->getID();
+                error_log("no start label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                $label = null;
+              }
+            }
+            if ($label) {
+              $lToken = $tokens[count($tokens)-1];
+              $sclIDs = $lToken->getSyllableClusterIDs();
+              if (count($sclIDs) > 0) {
+                $lSclID = $sclIDs[count($sclIDs)-1];
+                $sclTag = 'scl'.$lSclID;
+                if ( array_key_exists($sclTag,$sclTagToLabel)) {
+                  $label2 = $sclTagToLabel[$sclTag];
+                } else {
+                  $tokID = $lToken->getID();
+                  error_log("no end label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                  $label2 = null;
+                }
+                if($label2 && $label2 != $label) {
+                  $label .= "-" . $label2;
+                }
+              }
+              $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
+            } else {
+              $wrdTag2LocLabel[$wtag] = $defLabel;
+            }
+          } else if ($prefix == 'tok') {
+            $sclIDs = $word->getSyllableClusterIDs();
+            if (count($sclIDs) > 0) {
+              $fSclID = $sclIDs[0];
+              $sclTag = 'scl'.$fSclID;
+              if ( array_key_exists($sclTag,$sclTagToLabel)) {
+                $label = $sclTagToLabel[$sclTag];
+              } else {
+                error_log("no start label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                $label = null;
+              }
+            } else {
+              error_log("no syllable IDs found for ".$word->getGlobalID()." processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+              $label = null;
+            }
+            if ($label) {
+              $lSclID = $sclIDs[count($sclIDs)-1];
+              $sclTag = 'scl'.$lSclID;
+              if ( array_key_exists($sclTag,$sclTagToLabel)) {
+                $label2 = $sclTagToLabel[$sclTag];
+              } else {
+                error_log("no end label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                $label2 = null;
+              }
+              if($label2 && $label2 != $label) {
+                $label .= "-" . $label2;
+              }
+              $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
+            } else {
+              $wrdTag2LocLabel[$wtag] = $defLabel;
+            }
+          }
+        }
+      }
+    }
+  }
+  $_SESSION["cache-cat$catID"]['wrdTag2LocLabel'] = $wrdTag2LocLabel;
+  return $wrdTag2LocLabel;
+}
+
+function formatEtym($lemmaEtymString) {
+  $formattedEtyms = "";
+  $etyms = explode(",",$lemmaEtymString);
+  $isFirst = true;
+  foreach ($etyms as $etym) {
+    preg_match("/\s*(Skt|P)\.?\:?\s*(.+)/",$etym,$matches);
+    if (!$isFirst) {
+      $formattedEtyms .= ", ";
+    } else {
+      $isFirst = false;
+    }
+    if (count($matches) == 3) {
+      $formattedEtyms .= "<span class=\"etymlangcode\">".$matches[1]."</span><span class=\"etymvalue\">".$matches[2]."</span>";
+    }
+  }
+  return $formattedEtyms;
+}
+
+
+function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useTranscription = true, $hideHyphens = true) {
+  $catalog = new Catalog($catID);
+  if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
+    error_log("Warning need valid catalog id $catID.");
+    return array();
+  } else {
+    $glossaryCommentTypeID = Entity::getIDofTermParentLabel('glossary-commentarytype'); //term dependency
+    $cmpTokTag2LocLabel = getWordTagToLocationLabelMap($catalog,$refreshWordMap);
+    $entTag2GlossaryHtml = array();
+    $lemmas = new Lemmas("lem_catalog_id = $catID and not lem_owner_id = 1","lem_sort_code,lem_sort_code2",null,null);
+    if ($lemmas->getCount() > 0) {
+      $lemIDs = array();
+      foreach($lemmas as $lemma) {
+        $hasAttestations = false;
+        $lemGID = $lemma->getGlobalID();
+        $lemTag = 'lem'.$lemma->getID();
+        $lemHtml = "<div class=\"lemmaentry $lemTag\"><span class=\"lemmaheadword\">";
+        if ($lemmaOrder = $lemma->getHomographicOrder()) {
+          $lemHtml .= $lemmaOrder;
+        }
+        $lemmaValue = preg_replace('/ʔ/','',$lemma->getValue());
+        $lemHtml .= $lemmaValue."</span><span class=\"lemmapos\">";
+        $lemmaGenderID = $lemma->getGender();
+        $lemmaPosID = $lemma->getPartOfSpeech();
+        $lemmaPos = $lemmaPosID && Entity::getTermFromID($lemmaPosID) ? Entity::getTermFromID($lemmaPosID) : '';
+        if ($lemmaPos) {
+          $isVerb = ($lemmaPos == 'v.');
+        }
+        $lemmaSposID = $lemma->getSubpartOfSpeech();
+        $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
+        if ($lemmaGenderID) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
+          $lemHtml .=  Entity::getTermFromID($lemmaGenderID).($lemmaCF[2]==2?'(?)':'');
+        } else if ($lemmaSposID) {
+          $lemHtml .=  Entity::getTermFromID($lemmaSposID).($lemmaCF[1]==2?'(?)':'');
+        }else if ($lemmaPos) {
+          $lemHtml .=  $lemmaPos.($lemmaCF[0]==2?'(?)':'');
+        }
+        $lemHtml .= "</span>";
+        if ($lemmaEtym = $lemma->getDescription()) {
+          //replace embedded HTML markup
+          $lemHtml .= "<span class=\"etymology\">";
+          $lemHtml .= formatEtym($lemmaEtym)."</span>";
+        }
+        if ($lemmaGloss = $lemma->getTranslation()) {
+          //replace embedded HTML markup
+          $lemHtml .= "<span class=\"gloss\">\"$lemmaGloss\"</span>";
+        }
+        if ( $linkedAnoIDsByType = $lemma->getLinkedAnnotationsByType()) {
+          if (array_key_exists($glossaryCommentTypeID,$linkedAnoIDsByType)) {
+            $lemmaCommentary = "";
+            foreach ($linkedAnoIDsByType[$glossaryCommentTypeID] as $anoID) {
+              $annotation = new Annotation($anoID);
+              $comment = $annotation->getText();
+              if ($comment) {
+                $lemmaCommentary .= "<span class=\"lemmacomment\">($comment)</span>";
+              }
+            }
+            if ($lemmaCommentary) {
+              $lemHtml .= $lemmaCommentary;
+            }
+          }
+        }
+        $entTag2GlossaryHtml[$lemTag] = array('entry' => $lemHtml);
+        $lemmaComponents = $lemma->getComponents(true);
+        if ($lemmaComponents && $lemmaComponents->getCount()) {
+          $hasAttestations = true; // signal see also
+          $groupedForms = array();
+          $pattern = array("/ʔ/","/°/","/\/\/\//","/#/","/◊/");
+          $replacement = array("","","","","");
+          foreach ($lemmaComponents as $lemmaComponent) {
+            $entPrefix = $lemmaComponent->getEntityTypeCode();
+            $entID = $lemmaComponent->getID();
+            $entTag = $entPrefix.$entID;
+            if ($entPrefix == 'inf') {//inflections
+              $inflection = $lemmaComponent;
+              $infTag = $entTag;
+              //calculate inflection string
+              //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
+              $ingCF = $inflection->getCertainty();
+              $case = $inflection->getCase();
+              $gen = $inflection->getGender();
+              $num = $inflection->getGramaticalNumber();
+              $vper = $inflection->getVerbalPerson();
+              $vvoice = $inflection->getVerbalVoice();
+              $vtense = $inflection->getVerbalTense();
+              $vmood = $inflection->getVerbalMood();
+              $conj2 = $inflection->getSecondConjugation();
+              $infString = '';
+              if ($isVerb) { //term dependency
+                if ($vmood) {
+                  $vtensemood = Entity::getTermFromID($vmood).($ingCF[2]==2?'(?)':'');
+                  $infString .= "<span class=\"inflectdescript\">$vtensemood</span>";
+                } else if ($vtense) {
+                  $vtensemood = Entity::getTermFromID($vtense).($ingCF[0]==2?'(?)':'');
+                  $infString .= "<span class=\"inflectdescript\">$vtensemood</span>";
+                } else {
+                  $vtensemood = '?';
+                }
+                if (!array_key_exists($vtensemood,$groupedForms)) {
+                  $groupedForms[$vtensemood] = array();
+                }
+                if ($num) {
+                  $num = Entity::getTermFromID($num).($ingCF[4]==2?'(?)':'');
+                  $infString .= "<span class=\"inflectdescript\">$num</span>";
+                } else {
+                  $num = '?';
+                }
+                if (!array_key_exists($num,$groupedForms[$vtensemood])) {
+                  $groupedForms[$vtensemood][$num] = array();
+                }
+                if ($vper) {
+                  $vper = Entity::getTermFromID($vper).($ingCF[6]==2?'(?)':'');
+                  $infString .= "<span class=\"inflectdescript\">$vper</span>";
+                } else {
+                  $vper = '?';
+                }
+                if (!array_key_exists($vper,$groupedForms[$vtensemood][$num])) {
+                  $groupedForms[$vtensemood][$num][$vper] = array();
+                }
+                if ($conj2) {
+                  $conj2 = Entity::getTermFromID($conj2).($ingCF[7]==2?'(?)':'');
+                  $infString .= "<span class=\"inflectdescript\">$conj2</span>";
+                } else {
+                  $conj2 = '?';
+                }
+                if (!array_key_exists($conj2,$groupedForms[$vtensemood][$num][$vper])) {
+                  $groupedForms[$vtensemood][$num][$vper][$conj2] = array();
+                }
+                $node = &$groupedForms[$vtensemood][$num][$vper][$conj2];
+              } else {
+                if ($gen) {
+                  $gen = Entity::getTermFromID($gen).($ingCF[3]==2?'(?)':'');
+                  if (!$lemmaGenderID){//handle noun supress infection gender output
+                    $infString .= "<span class=\"inflectdescript\">$gen</span>";
+                  }
+                } else {
+                  $gen = '?';
+                }
+                if (!array_key_exists($gen,$groupedForms)) {
+                  $groupedForms[$gen] = array();
+                }
+                if ($num) {
+                  $num = Entity::getTermFromID($num).($ingCF[4]==2?'(?)':'');
+                } else {
+                  $num = '?';
+                }
+                if (!array_key_exists($num,$groupedForms[$gen])) {
+                  $groupedForms[$gen][$num] = array();
+                }
+                if ($case) {
+                  $case = Entity::getTermFromID($case).($ingCF[5]==2?'(?)':'');
+                  $infString .= "<span class=\"inflectdescript\">$case</span>";
+                } else {
+                  $case = '?';
+                }
+                if (!array_key_exists($case,$groupedForms[$gen][$num])) {
+                  $groupedForms[$gen][$num][$case] = array();
+                }
+                if ($num) {
+                  $infString .= "<span class=\"inflectdescript\">$num</span>";
+                }
+                if ($conj2) {
+                  $conj2 = Entity::getTermFromID($conj2).($ingCF[7]==2?'(?)':'');
+                  $infString .= "<span class=\"inflectdescript\">$conj2</span>";
+                } else {
+                  $conj2 = '?';
+                }
+                if (!array_key_exists($conj2,$groupedForms[$gen][$num][$case])) {
+                  $groupedForms[$gen][$num][$case][$conj2] = array();
+                }
+                $node = &$groupedForms[$gen][$num][$case][$conj2];
+              }
+              $inflectionComponents = $inflection->getComponents(true);
+              foreach ($inflectionComponents as $inflectionComponent) {
+                if ($useTranscription) {
+                  $value = $inflectionComponent->getTranscription();
+                } else {
+                  $value = $inflectionComponent->getValue();
+                }
+                if ($hideHyphens) {
+                  $value = preg_replace("/\-/","",$value);
+                }
+                $value = preg_replace($pattern,$replacement,$value);
+                $sc = $inflectionComponent->getSortCode();
+                $entTag = preg_replace("/:/","",$inflectionComponent->getGlobalID());
+                $entTag2GlossaryHtml[$entTag] = array('lemTag' => $lemTag,
+                                                      'infTag'=> $infTag,
+                                                      'infHtml'=> $infString);
+                $attestedCommentary = "";
+                if ( $linkedAnoIDsByType = $inflectionComponent->getLinkedAnnotationsByType()) {
+                  if (array_key_exists($glossaryCommentTypeID,$linkedAnoIDsByType)) {
+                    foreach ($linkedAnoIDsByType[$glossaryCommentTypeID] as $anoID) {
+                      $annotation = new Annotation($anoID);
+                      $comment = $annotation->getText();
+                      if ($comment) {
+                        if ($attestedCommentary) {
+                          $attestedCommentary .= " ";
+                        }
+                        $attestedCommentary .= $comment;
+                      }
+                    }
+                  }
+                }
+                $loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?" (".$attestedCommentary.")":"");
+                //accumulate locations
+                if (!array_key_exists($sc,$node)) {
+                  $node[$sc] = array('value'=>
+                                       array($value =>
+                                              array('loc'=>
+                                                     array())));
+                } else if (!array_key_exists($value,$node[$sc]['value'])) {
+                  $node[$sc]['value'][$value] =  array('loc'=>
+                                                        array());
+                }
+                if (array_key_exists($loc,$node[$sc]['value'][$value]['loc'])) {
+                  $node[$sc]['value'][$value]['loc'][$loc] += 1;
+                } else {
+                  $node[$sc]['value'][$value]['loc'][$loc] = 1;
+                }
+              }
+            } else { //un-inflected form
+              if ($useTranscription) {
+                $value = $lemmaComponent->getTranscription();
+              } else {
+                $value = $lemmaComponent->getValue();
+              }
+              if (!$value) {
+                continue;
+              }
+              if ($hideHyphens) {
+                $value = preg_replace("/\-/","",$value);
+              }
+              $value = preg_replace($pattern,$replacement,$value);
+              $sc = $lemmaComponent->getSortCode();
+              $entTag = preg_replace("/:/","",$lemmaComponent->getGlobalID());
+              $entTag2GlossaryHtml[$entTag] = array('lemTag' => $lemTag);
+              $attestedCommentary = "";
+              if ( $linkedAnoIDsByType = $lemmaComponent->getLinkedAnnotationsByType()) {
+                if (array_key_exists($glossaryCommentTypeID,$linkedAnoIDsByType)) {
+                  foreach ($linkedAnoIDsByType[$glossaryCommentTypeID] as $anoID) {
+                    $annotation = new Annotation($anoID);
+                    $comment = $annotation->getText();
+                    if ($comment) {
+                      if ($attestedCommentary) {
+                        $attestedCommentary .= " ";
+                      }
+                      $attestedCommentary .= $comment;
+                    }
+                  }
+                }
+              }
+              $loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?" (".$attestedCommentary.")":"");
+              if (! array_key_exists('?',$groupedForms)) {
+                $groupedForms['?'] = array();
+              }
+              if (! array_key_exists('?',$groupedForms['?'])) {
+                $groupedForms['?']['?'] = array();
+              }
+              if (! array_key_exists('?',$groupedForms['?']['?'])) {
+                $groupedForms['?']['?']['?'] = array();
+              }
+              if (! array_key_exists('?',$groupedForms['?']['?']['?'])) {
+                $groupedForms['?']['?']['?']['?'] = array();
+              }
+              $node = &$groupedForms['?']['?']['?']['?'];
+              // accumulate locations
+              if (! array_key_exists($sc,$node)) {
+                $node[$sc] = array('value'=>
+                                     array($value =>
+                                            array('loc'=>
+                                                   array())));
+              } else if (! array_key_exists($value,$node[$sc]['value'])) {
+                $node[$sc]['value'][$value] =  array('loc'=>
+                                                     array());
+              }
+              if (array_key_exists($loc,$node[$sc]['value'][$value]['loc'])) {
+                $node[$sc]['value'][$value]['loc'][$loc] += 1;
+              } else {
+                $node[$sc]['value'][$value]['loc'][$loc] = 1;
+              }
+            }
+          }
+          if ($isVerb) {
+            $displayOrder1 = array('pres.','pres.(?)','Indic.','Indic.(?)','opt.','opt.(?)','impv.','impv.(?)','fut.','fut.(?)','perf.','perf.(?)','pret.','pret.(?)','?');
+            $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
+            $displayOrder3 = array('1st','1st(?)','2nd','2nd(?)','3rd','3rd(?)','?');
+            $displayOrder4 = array('inf.','inf.(?)','abs.','abs.(?)','?');
+          } else {
+            $displayOrder1 = array('m.','m.(?)','mn.','mn.(?)','n.','n.(?)','mnf.','mnf.(?)','nf.','nf.(?)','f.','f.(?)','mf.','mf.(?)','?');
+            $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
+            $displayOrder3 = array('nom.','nom.(?)','acc.','acc.(?)','instr.','instr.(?)','dat.','dat.(?)','dat/gen.','dat/gen.(?)','abl.','abl.(?)','gen.','gen.(?)','loc.','loc.(?)','voc.','voc.(?)','?');
+            $displayOrder4 = array('desid.','desid.(?)','intens.','intens.(?)','?');
+          }
+          $firstComponent = true;
+          $attestedHtml = "<div class=\"attestedforms $lemTag\">";
+          foreach ($displayOrder1 as $key1) {
+            if (!array_key_exists($key1,$groupedForms)){
+              continue;
+            }
+            $isFirstKey1 = true;
+            foreach ($displayOrder2 as $key2) {
+              if (!array_key_exists($key2,$groupedForms[$key1])){
+                continue;
+              }
+              foreach ($displayOrder3 as $key3) {
+                if (!array_key_exists($key3,$groupedForms[$key1][$key2])){
+                  continue;
+                }
+                foreach ($displayOrder4 as $key4) {
+                  if (!array_key_exists($key4,$groupedForms[$key1][$key2][$key3])){
+                    continue;
+                  }
+                  if ($firstComponent) {
+                    $firstComponent = false;
+                  } else {
+                    $attestedHtml .= "; ";
+                  }
+                  if ($isFirstKey1) {
+                    $isFirstKey1 = false;
+                    if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {
+                      if ($lemmaPos != 'adv.' && $lemmaPos != 'ind.'){ //term dependency
+                        $attestedHtml .= "<span class=\"inflectdescript\">unclear: </span>";
+                      }
+                    } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 != '?') {
+                      $attestedHtml .= "<span class=\"inflectdescript\">$key4</span>";
+                    } else if (!$lemmaGenderID){//handle noun supress infection gender output
+                      $attestedHtml .= "<span class=\"inflectdescript\">$key1</span>";
+                    }
+                  }
+                  if ($key1 != '?' || $key1 == '?' && ($key2 != '?' || $key3 != '?')) {
+                    $attestedHtml .= "<span class=\"inflectdescript\">$key3</span>";
+                    $attestedHtml .= "<span class=\"inflectdescript\">$key2</span>";
+                  }
+                  $grpNode = $groupedForms[$key1][$key2][$key3][$key4];
+                  ksort($grpNode);
+                  $isFirstNode = true;
+                  foreach ($grpNode as $sc => $formInfo) {
+                    if ($isFirstNode) {
+                      $isFirstNode = false;
+                    } else {
+                      $attestedHtml .= ", ";
+                    }
+                    $isFirstForm = true;
+                    foreach ($formInfo['value'] as $formTranscr => $locInfo) {
+                      if ($isFirstForm) {
+                        $isFirstForm = false;
+                      } else {
+                        $attestedHtml .= ", ";
+                      }
+                      $attestedHtml .= "<span class=\"attestedform\">$formTranscr</span>";
+                      ksort($locInfo['loc']);
+                      $isFirstLoc = true;
+                      foreach ($locInfo['loc'] as $formLoc => $cntLoc) {
+                        if ($isFirstLoc) {
+                          $isFirstLoc = false;
+                        } else {
+                          $attestedHtml .= ",";
+                        }
+                        $attestedHtml .= "<span class=\"attestedformloc\">".$formLoc.($cntLoc>1?" [".$cntLoc."×]":"")."</span>";
+                      }
+                    }
+                    //$rtf .= $endStyle.$eol;
+                  }
+                }
+              }
+            }
+          }
+          $attestedHtml .= "</div>";
+          $entTag2GlossaryHtml[$lemTag]['attestedHtml'] = $attestedHtml;
+        }
+        $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
+        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LinkageType');
+        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LinkageType');
+        $relatedHtml = "";
+        if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
+          $isFirst = true;
+          $linkText = 'see';
+          if ($hasAttestations) {
+            $linkText = 'See also';
+          }
+          $seeLinks = array();
+          foreach ($relatedGIDsByLinkType[$seeLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            if ($entity && !$entity->hasError()) {
+              if (method_exists($entity,'getValue')) {
+                $value = preg_replace($pattern,$replacement,$entity->getValue());
+              } else {
+                continue;
+              }
+              if (method_exists($entity,'getSortCode')) {
+                $sort = $entity->getSortCode();
+              } else {
+                $sort = substr($linkGID,4);
+              }
+              $seeLinks[$sort] = $value;
+            }
+          }
+          if (count($seeLinks)) {
+            ksort($seeLinks,SORT_NUMERIC);
+            foreach ($seeLinks as $sort => $value) {
+              if ($isFirst) {
+                $isFirst = false;
+                $relatedHtml .= $linkText." ".$value;
+              }else{
+                $relatedHtml .= ",".$value;
+              }
+            }
+          }
+          $relatedHtml .= ".";
+        }
+        $cfLinks = array();
+        if ($relatedGIDsByLinkType && array_key_exists($cfLinkTypeID,$relatedGIDsByLinkType)) {
+          $isFirst = true;
+          $linkText = 'Cf.';
+          foreach ($relatedGIDsByLinkType[$cfLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            if ($entity && !$entity->hasError()) {
+              if (method_exists($entity,'getValue')) {
+                $value = utf8ToRtf(preg_replace('/ʔ/','',$entity->getValue()));
+              } else {
+                $value = $linkGID;
+              }
+              if (method_exists($entity,'getSortCode')) {
+                $sort = $entity->getSortCode();
+              } else {
+                $sort = substr($linkGID,4);
+              }
+              $cfLinks[$sort] = $value;
+            }
+          }
+          if (count($cfLinks)) {
+            ksort($cfLinks,SORT_NUMERIC);
+            foreach ($cfLinks as $sort => $value) {
+              if ($isFirst) {
+                $isFirst = false;
+                $relatedHtml .= $linkText." ".$value;
+              }else{
+                $relatedHtml .= ",".$value;
+              }
+            }
+          }
+          $relatedHtml .= ".";
+        }
+      }
+    }
+    return $entTag2GlossaryHtml;
+  }
+}
 ?>
