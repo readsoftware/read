@@ -63,7 +63,7 @@ function getEditionFootnoteText() {
 * gets the editions glossary lookup html
 *
 */
-function getEditionGlossaryLookup($entTag) {
+function getEditionGlossaryLookup($entTag,  $refreshWordMap = false) {
   $catID = null;
   if (substr($entTag,0,3) == "cat") {
     $catID = substr($entTag,3);
@@ -76,7 +76,7 @@ function getEditionGlossaryLookup($entTag) {
     }
   }
   if ($catID) {
-    return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID));
+    return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $refreshWordMap));
   }
   return "";
 }
@@ -464,7 +464,7 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
   return $html;
 }
 
-function getWordTagToLocationLabelMap($catalog, $refreshWordMap) {
+function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
   $textTypeTrmID = Entity::getIDofTermParentLabel('text-sequencetype'); //term dependency
   $physTextTypeTrmID = Entity::getIDofTermParentLabel('textphysical-sequencetype'); //term dependency
   $catID = $catalog->getID();
@@ -488,7 +488,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap) {
       if ($text && !$text->hasError()) {
         $ednLabel = $text->getRef();
         if (!$ednLabel) {
-          $ednLabel='t'.$text->getID();
+//          $ednLabel='t'.$text->getID();
         }
       }
       $ednSequences = $edition->getSequences(true);
