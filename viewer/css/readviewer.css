@@ -111,9 +111,24 @@ sup.showing {
 .lemmaentry .etymology{
   padding-right: 5px;
 }
+.etymology .etymvalue{
+  font-style: italic;
+  padding-left: 5px;
+}
 .lemmaentry .gloss{
   padding-right: 5px;
 }
 .lemmaentry .selectedinflection{
   padding-right: 5px;
+}
+.attestedforms{
+  margin-top: 8px;
+}
+.attestedforms .inflectdescript{
+  padding-right: 5px;
+}
+.attestedforms .attestedform{
+  padding-right: 5px;
+}
+.attestedforms .attestedformloc{
 }
