@@ -124,7 +124,7 @@
       var testHtml = '<?=getEditionStructuralViewHtml($edition->getID());?>',
             footnotes = <?=getEditionFootnoteText();?>,
             testTrans = <?=$testTrans?>,
-            glossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>,
+            glossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag,true)?>,
             transfootnotes = {<?=$transfootnotes?>},
             testHtmlSmall = <?=$testHtmlSmall?>;
 
