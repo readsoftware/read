@@ -54,16 +54,30 @@ require_once dirname(__FILE__) . '/../../model/entities/Attribution.php';
 *
 * @returns string json representing the lookup for footnotes of this  object with a string representing the html and a footnote lookup table
 */
-function getEditionFootnoteText() {
+function getEditionFootnoteTextLookup() {
   global $fnRefTofnText;
   return json_encode($fnRefTofnText);
+}
+
+/**
+* gets the editions translation footnote lookup html as json
+*
+* @returns string json representing the lookup for footnotes of this  object with a string representing the html and a footnote lookup table
+*/
+function getEditionTranslationFootnoteTextLookup() {
+  global $tfnRefToTfnText;
+  if ($tfnRefToTfnText) {
+    return json_encode($tfnRefToTfnText);
+  } else {
+    return "{}";
+  }
 }
 
 /**
 * gets the editions glossary lookup html
 *
 */
-function getEditionGlossaryLookup($entTag,  $refreshWordMap = false) {
+function getEditionGlossaryLookup($entTag,  $refresh = false) {
   $catID = null;
   if (substr($entTag,0,3) == "cat") {
     $catID = substr($entTag,3);
@@ -76,10 +90,387 @@ function getEditionGlossaryLookup($entTag,  $refreshWordMap = false) {
     }
   }
   if ($catID) {
-    return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $refreshWordMap));
+    return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $refresh));
   }
   return "";
 }
+
+/**
+* processed embedded footnotes and line markers
+*
+* footnotes are replaced by a superscript marker with reference id and the footnote text
+* is aded to a global lookup with the same reference id. Line markers are validated and
+* and placed into a span element with the corresponding entity tag for selection
+*
+* @param mixed $transText
+* @param mixed $entTag
+*
+* @return string processed translation text with any needed Html
+*/
+function processTranslationText($transText, $entTag) {
+  global $tfnRefToTfnText, $tfnCnt, $lineLabel2SeqTagMap, $fnPreMarker;
+  $transHtml = "";
+  //process embedded footnotes
+  $fnStartIndex = strpos($transText,"((");
+  $fnStopIndex = strpos($transText,"))");
+  while ($fnStartIndex !== false && $fnStopIndex !== false) {
+    $transHtml .= substr($transText,0,$fnStartIndex);//capture string before embedded footnote
+    $fnText = substr($transText,2+$fnStartIndex, $fnStopIndex-$fnStartIndex-2);//extract footnote
+    if ($fnText && strlen($fnText)) {//if we have a footnote
+      $tfnCnt++;
+      $tfnTag = $fnPreMarker.$tfnCnt;
+      $fnOrd = "$tfnCnt";
+      $transHtml .= "<sup id=\"$tfnTag\" class=\"footnote $entTag embedded $fnOrd\" >n</sup>";
+      $sepIndex = strpos($fnText,':');
+      if ($sepIndex !== false) {
+        $fnText = trim(substr($fnText,$sepIndex+1));
+      }
+      if (json_encode($fnText) == false) {
+        $temp = preg_replace('/“/','"', $fnText);
+        $temp = preg_replace('/”/','"', $temp);
+        if (json_encode($temp) == false) {
+          $tfnRefToTfnText[$tfnTag] = json_last_error_msg();
+        } else {
+          $tfnRefToTfnText[$tfnTag] = $temp;
+        }
+      } else {
+        $tfnRefToTfnText[$tfnTag] = $fnText;
+      }
+    }
+    $transText = substr($transText,2+$fnStopIndex);//capture everything after the embedded footnote
+    //check for more embedded footnotes.
+    $fnStartIndex = strpos($transText,"((");
+    $fnStopIndex = strpos($transText,"))");
+  }
+  $transHtml .= $transText;
+  //process embedded line markers
+  $transText = $transHtml;
+  $transHtml = "";
+  $lnStartIndex = strpos($transText,"[[");
+  $lnStopIndex = strpos($transText,"]]");
+  while ($lnStartIndex !== false && $lnStopIndex !== false) {
+    $transHtml .= substr($transText,0,$lnStartIndex);//capture string before embedded line marker
+    $lnLabel = substr($transText,2+$lnStartIndex, $lnStopIndex-$lnStartIndex-4);//extract line label
+    if ($lnLabel && array_key_exists($lnLabel,$lineLabel2SeqTagMap)) {//if label is in lookup
+      $seqTag = $lineLabel2SeqTagMap[$lnLabel];
+      $transHtml .= "<span class=\"linelabel $seqTag\">[$lnLabel]</span>";
+    } else {//invalid line marker so leave it as is
+      $transHtml .= substr($transText,$lnStartIndex, $lnStopIndex-$lnStartIndex);
+    }
+    $transText = substr($transText,2+$lnStopIndex);//capture everything after the embedded line marker
+    //check for more embedded line markers.
+    $lnStartIndex = strpos($transText,"[[");
+    $lnStopIndex = strpos($transText,"]]");
+  }
+  $transHtml .= $transText;
+  return $transHtml;
+}
+
+/**
+* gets annotations for the type of translation being calculated
+*
+* calls helper to processed embedded footnotes  and line markers
+*
+* @param mixed $entity
+*
+* @return string translation with embedded html
+*/
+function getEntityTranslation($entity) {
+  global $translationTypeID;
+  $transText = "";
+  $entTag = $entity->getEntityTag();
+  if ( $linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
+    if (array_key_exists($translationTypeID,$linkedAnoIDsByType)) {
+      foreach ($linkedAnoIDsByType[$translationTypeID] as $anoID) {
+        $annotation = new Annotation($anoID);
+        if ($annotation && !$annotation->hasError()) {
+          $anoText = $annotation->getText();
+          if ($anoText) {
+            $transText .= $anoText;
+          }
+        }
+        break;//only get the first
+      }
+      if ($transText) {
+        $transText = processTranslationText($transText,$entTag);
+      }
+    }
+  }
+  return $transText;
+}
+
+
+/**
+* returns the Html for a word's translation or nothing
+*
+* @param object $entity Compound or Token
+*
+* @return string Html representing the translation of $entity or empty string
+*/
+function getWordTransHtml($entity) {
+  global $graID2LineHtmlMarkerlMap, $wordCnt;
+  $footnoteHtml = "";
+  $entGID = $entity->getGlobalID();
+  $prefix = substr($entGID,0,3);
+  $entID = substr($entGID,4);
+  $entTag = $prefix.$entID;
+  $wordParts = array();
+  $wordHtml = "";
+  $tokIDs = null;
+
+  if ($entity && $prefix == 'cmp' && count($entity->getTokenIDs())) {
+    $wordHtml = getEntityTranslation($entity);
+    if ($wordHtml) { // has translation
+      return $wordHtml;
+    } else if (count($entity->getTokenIDs())) {
+      $tokIDs = $entity->getTokenIDs();
+    }
+  } else if ($entity && $prefix == 'tok'){
+    $tokIDs = array($entID);
+  } else {
+    error_log("err, rendering word translation invalid GID $entGID");
+  }
+
+  if ($tokIDs) {
+    //for each token in word
+    $tokCnt = count($tokIDs);
+    for($i =0; $i < $tokCnt; $i++) {
+      $tokID = $tokIDs[$i];
+      $token = new Token($tokID);
+      $transRFT = getEntityTranslation($token);
+      if ($transRFT) { // has translation
+        $wordHtml .= $transRFT;
+      }
+    }
+  }
+  return $wordHtml;
+}
+
+
+/**
+* finds the list of annotation types for a nested sequences
+*
+* recursively calls itself for subsequences
+*
+* @param object $sequence has a structure type containing other structures or entities
+*
+* @return int array of term ids for annotationtypes
+*/
+function getSequenceAnnotationTypes($sequence) {
+  global $edition,$annoTypeIDs;
+  $seqEntGIDs = $sequence->getEntityIDs();
+  if (!$seqEntGIDs || count($seqEntGIDs) == 0) {
+    error_log("warn, Found empty structural sequence element seq".$sequence->getID()." for edition ".$edition->getDescription()." id=".$edition->getID());
+    return;
+  }
+  if ( $linkedAnoIDsByType = $sequence->getLinkedAnnotationsByType()) {
+    $annoTypeIDs = array_unique(array_merge($annoTypeIDs,array_keys($linkedAnoIDsByType)));
+  }
+  foreach ($seqEntGIDs as $entGID) {
+    $prefix = substr($entGID,0,3);
+    $entID = substr($entGID,4);
+    if ($prefix == 'seq') {
+      $subSequence = new Sequence($entID);
+      if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
+        error_log("Warning inaccessible sub-sequence id $entGID skipped.");
+      } else {
+        getSequenceAnnotationTypes($subSequence);
+      }
+    }
+  }
+}
+
+/**
+* finds the list of annotation types for a nested sequences
+*
+* recursively calls itself for subsequences
+*
+* @param object $sequence has a structure type containing other structures or entities
+*
+* @return int array of term ids for annotationtypes
+*/
+function getEditionAnnotationTypes($ednID) {
+  global $edition,$annoTypeIDs;
+  $seqEntGIDs = array();
+  $annoTypeIDs = array();
+  $edition = new Edition($ednID);
+  if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
+    array_push($warnings,"Warning need valid accessible edition id $ednID.");
+  } else {
+    $edSeqs = $edition->getSequences(true);
+    $textAnalysisSeq = null;
+    foreach ($edSeqs as $edSequence) {
+      $seqType = $edSequence->getType();
+      if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
+        $textAnalysisSeq = $edSequence;
+      }
+    }
+    if ($textAnalysisSeq && $textAnalysisSeq->getEntityIDs() && count($textAnalysisSeq->getEntityIDs()) > 0) {
+      getSequenceAnnotationTypes($textAnalysisSeq);
+    }
+  }
+  return $annoTypeIDs;
+}
+
+/**
+* returns the html for a nested structure translations
+*
+* recursively calls itself for substructures
+*
+* @param object $sequence has a structure type containing other structures or entities
+* @param int $level indicate the level of nest in the structural hierarchy
+*/
+function getStructTransHtml($sequence, $level) {
+  global $edition, $preMarker;
+  $seqEntGIDs = array();
+  $structureHtml = "";
+  $lvl = $level +1;
+  if ($sequence) {
+      $seqEntGIDs = $sequence->getEntityIDs();
+      $seqType = $sequence->getType();
+      $seqTag = $sequence->getEntityTag();
+  }
+  if (!$seqEntGIDs || count($seqEntGIDs) == 0) {
+    error_log("warn, Found empty structural sequence element seq".$sequence->getID()." for edition ".$edition->getDescription()." id=".$edition->getID());
+    return;
+  }
+  $seqLabel = $sequence->getLabel();
+  $seqSup = $sequence->getSuperScript();
+  $label = ($seqSup?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+  if ($label) {//output header div
+    $structureHtml .= '<div id="'.$preMarker.$seqTag.'" class="secHeader level'.$lvl.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
+  }
+  //open structure div
+  $structureHtml .= '<div class="section level'.$lvl.' '.$seqTag.' '.$seqType.' '.$seqTag.'">';
+  $structTransHtml = getEntityTranslation($sequence);
+  if ($structTransHtml) {
+    $structureHtml .= $structTransHtml;
+  } else {
+    foreach ($seqEntGIDs as $entGID) {
+      $prefix = substr($entGID,0,3);
+      $entID = substr($entGID,4);
+      if ($prefix == 'seq') {
+        $subSequence = new Sequence($entID);
+        if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
+          error_log("Warning inaccessible sub-sequence id $entGID skipped.");
+        } else {
+          $structureHtml .= getStructTransHtml($subSequence, $lvl);
+        }
+      } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
+        if ($prefix == 'cmp') {
+          $entity = new Compound($entID);
+        } else {
+          $entity = new Token($entID);
+        }
+        if (!$entity || $entity->hasError()) {//no word or unavailable so warn
+          error_log("Warning inaccessible word id $entGID skipped.");
+        } else {
+          $structureHtml .= getWordTransHtml($entity);
+        }
+      }else{
+        error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
+        continue;
+      }
+    }
+  }
+  $structureHtml .= '</div>';
+  return $structureHtml;
+}
+
+/**
+* gets the editions Structural Translation/Chaya html
+*
+* calculates the structure view of this edition's translation/chaya annotations stopping at depth frist node
+* with annotation, also process embedded physical line markers and footnote markers
+*
+* @param int $ednID identifies the edition to calculate
+* @param int $annoTypeID identifies the type of translation to calculate
+* @param boolean $forceRecalc indicating whether to ignore cached values
+*
+* @returns mixed object with a string representing the html and a footnote lookup table
+*/
+function getEditionStructuralTranslationHtml($ednID, $annoTypeID = null, $forceRecalc = false) {
+  global $lineLabel2SeqTagMap, $tfnRefToTfnText, $tfnCnt, $translationTypeID, $preMarker, $fnPreMarker;
+  $lineLabel2SeqTagMap = array();
+  $tfnRefToTfnText = array();
+  $tfnCnt = 0;
+  $html = "";
+  $edition = new Edition($ednID);
+  if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
+    array_push($warnings,"Warning need valid accessible edition id $ednID.");
+  } else {
+    $edSeqs = $edition->getSequences(true);
+    $seqPhys = $seqText = $textAnalysisSeq = null;
+    foreach ($edSeqs as $edSequence) {
+      $seqType = $edSequence->getType();
+      if (!$seqPhys && $seqType == "TextPhysical"){//warning!!!! term dependency
+        $seqPhys = $edSequence;
+      }
+      if (!$seqText && $seqType == "Text"){//warning!!!! term dependency
+        $seqText = $edSequence;
+      }
+      if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
+        $textAnalysisSeq = $edSequence;
+      }
+    }
+
+    if (!$textAnalysisSeq || !$textAnalysisSeq->getEntityIDs() || count($textAnalysisSeq->getEntityIDs()) == 0) {
+      return false;
+    } else {//process analysis
+      //calculate  label to seqTag lookup incase there are embedded line labels of the form [[label]]map
+      if ($seqPhys && $seqPhys->getEntityIDs() && count($seqPhys->getEntityIDs()) > 0) {
+        foreach ($seqPhys->getEntities(true) as $physicalLineSeq) {
+          $label = $physicalLineSeq->getLabel();
+          $seqTag = 'seq'.$physicalLineSeq->getID();
+          if (!$label) {
+            $label = $seqTag;
+          }
+          $lineLabel2SeqTagMap[$label] = $seqTag;
+        }
+      }
+      if ($annoTypeID) {
+        $translationTypeID = $annoTypeID;
+        $transType = (Entity::getTermFromID($annoTypeID) != "Translation"?Entity::getTermFromID($annoTypeID):"Generic");//warning!!!! term dependency
+        $preMarker = substr(strtolower($transType),0,1);
+        $fnPreMarker = $preMarker.'fn';
+      } else {
+        $transType = "Generic";
+        $translationTypeID = Entity::getIDofTermParentLabel('Translation-AnnotationType');//warning!!!! term dependency
+        $preMarker = 't';
+        $fnPreMarker = 'tfn';
+      }
+      //start to calculate html using each entity of the analysis container
+      foreach ($textAnalysisSeq->getEntityIDs() as $entGID) {
+        $prefix = substr($entGID,0,3);
+        $entID = substr($entGID,4);
+        if ($prefix == 'seq') {
+          $subSequence = new Sequence($entID);
+          if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
+            error_log("warn, Warning inaccessible sub-sequence id $entID skipped.");
+          } else {
+            $html .= getStructTransHtml($subSequence, 1);
+          }
+        } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
+          if ($prefix == 'cmp') {
+            $entity = new Compound($entID);
+          } else {
+            $entity = new Token($entID);
+          }
+          if (!$entity || $entity->hasError()) {//no word or unavailable so warn
+            error_log("warn, Warning inaccessible word id $entGID skipped.");
+          } else {
+            $html .= getWordTransHtml($entity,false);
+          }
+        }else{
+          error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
+          continue;
+        }
+      }
+    }
+  }
+  return json_encode($html);
+}
+
 
 /**
 * returns footnotes of an entity as Html fragment
@@ -263,7 +654,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
 * @param int $level indicate the level of nest in the structural hierarchy
 */
 function getStructHTML($sequence, $level) {
-  global $html, $edition, $seqEntGIDs;
+  global $edition;
   $structureHtml = "";
   $lvl = $level +1;
   if ($sequence) {
@@ -387,7 +778,6 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
       }
     }
 
-
     if (!$textAnalysisSeq || !$textAnalysisSeq->getEntityIDs() || count($textAnalysisSeq->getEntityIDs()) == 0) {
       return false;
     } else {//process analysis
@@ -452,7 +842,7 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
           if (!$entity || $entity->hasError()) {//no word or unavailable so warn
             error_log("warn, Warning inaccessible word id $entGID skipped.");
           } else {
-            $html .= getWordHtml($entity,false,$prefix);
+            $html .= getWordHtml($entity,false);
           }
         }else{
           error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
@@ -461,7 +851,7 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
       }
     }
   }
-  return $html;
+  return json_encode($html);
 }
 
 function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {

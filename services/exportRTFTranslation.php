@@ -297,7 +297,7 @@
         $tokID = $tokIDs[$i];
         $token = new Token($tokID);
         $transRFT = getEntityTranslation($token);
-        if (!$transRFT) { // has translation
+        if ($transRFT) { // has translation
           if (!$outputtingProse) { // open prose section
             $rtf .= $proseStyle;
             $outputtingProse = true;

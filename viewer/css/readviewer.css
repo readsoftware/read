@@ -108,6 +108,9 @@ sup.showing {
 .lemmaentry .lemmapos{
   padding-right: 5px;
 }
+.lemmaentry .lemmacomment{
+  padding-right: 5px;
+}
 .lemmaentry .etymology{
   padding-right: 5px;
 }
@@ -117,6 +120,7 @@ sup.showing {
 }
 .lemmaentry .gloss{
   padding-right: 5px;
+  word-wrap: break-word;
 }
 .lemmaentry .selectedinflection{
   padding-right: 5px;

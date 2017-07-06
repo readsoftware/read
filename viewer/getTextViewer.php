@@ -68,9 +68,10 @@
   $showChayaView = defined("SHOWCHAYAVIEW")?SHOWCHAYAVIEW:true;
 
   //TODO add code to ensure that baseline/images exist, translation exist and CHAYA exist
+  $edAnnoTypes = getEditionAnnotationTypes($edition->getID());
   $blnIDs = array(1);
-  $hasTranslation = true;
-  $hasChaya = true;
+  $hasTranslation = in_array(Entity::getIDofTermParentLabel('translation-annotationtype'),$edAnnoTypes);
+  $hasChaya = in_array(Entity::getIDofTermParentLabel('chaya-translation'),$edAnnoTypes);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -121,12 +122,24 @@
           progressInputName='<?php echo ini_get("session.upload_progress.name"); ?>',
           dbName = '<?=DBNAME?>',
           basepath="<?=SITE_BASE_PATH?>";
-      var testHtml = '<?=getEditionStructuralViewHtml($edition->getID());?>',
-            footnotes = <?=getEditionFootnoteText();?>,
-            testTrans = <?=$testTrans?>,
-            glossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag,true)?>,
-            transfootnotes = {<?=$transfootnotes?>},
-            testHtmlSmall = <?=$testHtmlSmall?>;
+      var edStructHtml = <?=getEditionStructuralViewHtml($edition->getID())?>,
+          edFootnotes = <?=getEditionFootnoteTextLookup()?>,
+          edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>,
+<?php
+  if ($showTranslationView && $hasTranslation) {
+?>
+          transStructHtml = <?=getEditionStructuralTranslationHtml($edition->getID())?>,
+          transFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>,
+<?php
+  }
+  if ($showChayaView && $hasChaya) {
+?>
+          chayaStructHtml = <?=getEditionStructuralTranslationHtml($edition->getID(), Entity::getIDofTermParentLabel('chaya-translation'))?>,
+          chayaFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>,
+<?php
+  }
+?>
+          testHtmlSmall = <?=$testHtmlSmall?>;
 
     </script>
     <script src="../editors/js/utility.js"></script>
@@ -185,13 +198,12 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-            $textViewerContent.html(testHtml);
-//            $textViewerContent.html(testHtmlSmall);
+            $textViewerContent.html(edStructHtml);
             $textViewerContent.height('150px');
-            if (footnotes && typeof footnotes == 'object' && Object.keys(footnotes).length > 0) {
+            if (edFootnotes && typeof edFootnotes == 'object' && Object.keys(edFootnotes).length > 0) {
               $('.footnote',$textViewerContent).unbind('click').bind('click', function(e) {
                 var id = this.id, footnoteHtml;
-                  footnoteHtml = (footnotes[id]?footnotes[id]:"unable to find footnote text or empty footnote");
+                  footnoteHtml = (edFootnotes[id]?edFootnotes[id]:"unable to find footnote text or empty footnote");
                   $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
                                       trigger: 'click',
                                       autoHide: false });
@@ -221,10 +233,10 @@
               } else {
                  entTag = classes.match(/tok\d+/)
               }
-              if (entTag && glossaryLookup[entTag]) {
-                entGlossInfo = glossaryLookup[entTag];
+              if (entTag && edGlossaryLookup[entTag]) {
+                entGlossInfo = edGlossaryLookup[entTag];
                 if (entGlossInfo['lemTag']) {
-                  lemmaInfo = glossaryLookup[entGlossInfo['lemTag']];
+                  lemmaInfo = edGlossaryLookup[entGlossInfo['lemTag']];
                   if (lemmaInfo && lemmaInfo['entry']) {
                     popupHtml = lemmaInfo['entry'];
                     if (entGlossInfo['infHtml']) {
@@ -256,7 +268,7 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-            $transViewerContent.html(testTrans);
+            $transViewerContent.html(transStructHtml);
             $transViewerContent.height('150px');
             $transViewerContent.bind('click', function(e) {
               var $showing = $('.showing');
@@ -265,11 +277,11 @@
                 $showing.jqxTooltip('close');
               }
             });
-            if (transfootnotes && typeof transfootnotes == 'object' && Object.keys(transfootnotes).length > 0) {
+            if (transFootnotes && typeof transFootnotes == 'object' && Object.keys(transFootnotes).length > 0) {
               $('.footnote',$transViewerContent).unbind('click').bind('click', function(e) {
                 var id = this.id, footnoteHtml;
-                  footnoteHtml = (transfootnotes[id]?transfootnotes[id]:"unable to find footnote text or empty footnote");
-                  $(this).jqxTooltip({content: footnoteHtml,
+                  footnoteHtml = (transFootnotes[id]?transFootnotes[id]:"unable to find footnote text or empty footnote");
+                  $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
                                       trigger: 'click',
                                       autoHide: false,
                                       showArrow: false });
@@ -295,8 +307,35 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-            $chayaViewerContent.html(testHtml);
+            $chayaViewerContent.html(chayaStructHtml);
             $chayaViewerContent.height('150px');
+            $chayaViewerContent.bind('click', function(e) {
+              var $showing = $('.showing');
+              if ($showing && $showing.length) {
+                $showing.removeClass('showing');
+                $showing.jqxTooltip('close');
+              }
+            });
+            if (chayaFootnotes && typeof chayaFootnotes == 'object' && Object.keys(chayaFootnotes).length > 0) {
+              $('.footnote',$chayaViewerContent).unbind('click').bind('click', function(e) {
+                var id = this.id, footnoteHtml;
+                  footnoteHtml = (chayaFootnotes[id]?chayaFootnotes[id]:"unable to find footnote text or empty footnote");
+                  $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
+                                      trigger: 'click',
+                                      autoHide: false,
+                                      showArrow: false });
+                  $('.showing').removeClass('showing');
+                  $(this).unbind('close').bind('close', function(e) {
+                    $('.showing').removeClass('showing');
+                    $(this).jqxTooltip('destroy');
+                  });
+                  $(this).jqxTooltip('open');
+                  $(this).addClass('showing');
+                  e.stopImmediatePropagation();
+                  return false;
+              });
+            }
+
 <?php
   }
 ?>
