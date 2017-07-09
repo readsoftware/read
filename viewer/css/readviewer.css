@@ -133,6 +133,7 @@ sup.showing {
 }
 .attestedforms .attestedform{
   padding-right: 5px;
+  font-style: italic;
 }
 .attestedforms .attestedformloc{
 }
