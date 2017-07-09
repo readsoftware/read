@@ -566,24 +566,24 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
         $tcms = $grapheme->getTextCriticalMark();
         $postTCMBrackets = "";
         $preTCMBrackets = "";
-        if ($prevTCMS != $tcms) {
-          list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
-        }
-
-        if ($postTCMBrackets && !($i == 0 && $j== 0)) {
-          $wordHtml .= $postTCMBrackets;
-        }
-        if ($footnoteHtml) {
-          $wordHtml .= $footnoteHtml;
-          $footnoteHtml = "";
-        }
         if ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap)) {
-          if ( $i == 0 && $j== 0) {
+          if ( $i == 0 && $firstG) {
             $wordHtml = $graID2LineHtmlMarkerlMap[$graID].$wordHtml;
           } else {
             $wordHtml .= $graID2LineHtmlMarkerlMap[$graID];
           }
           $prevTCMS = "";//at a new physical line so reset TCM
+        }
+        if ($prevTCMS != $tcms) {
+          list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
+        }
+
+        if ($postTCMBrackets && !($i == 0 || $firstG)) {
+          $wordHtml .= $postTCMBrackets;
+        }
+        if ($footnoteHtml) {
+          $wordHtml .= $footnoteHtml;
+          $footnoteHtml = "";
         }
         if ($preTCMBrackets) {
           $wordHtml .= $preTCMBrackets;
@@ -636,10 +636,10 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
       $wordHtml .= $footnoteHtml;
       $footnoteHtml = "";
     }
-    $wordHtml .= "</span>";
     $wordHtml = preg_replace('/\/\/\//',"",$wordHtml); // remove edge indicator
     $wordHtml = preg_replace('/_+/',"_",$wordHtml); // multple missing consonants
-    $wordHtml = preg_replace('/_([^\.])*/',".\\1",$wordHtml); // multple missing consonants
+    $wordHtml = preg_replace('/_([^\.])*/',".$1",$wordHtml); // multple missing consonants
+    $wordHtml .= "</span>";
 //      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
   }
   return $wordHtml;
@@ -674,7 +674,7 @@ function getStructHTML($sequence, $level) {
     $structureHtml .= getEntityFootnotesHtml($sequence);
   }
   //open structure div
-  $structureHtml .= '<div class="section level'.$lvl.' '.$seqTag.' '.$seqType.' '.$seqTag.'">';
+  $structureHtml .= '<div class="section level'.$lvl.' '.$seqTag.' '.$seqType.'">';
   $cntGID = count($seqEntGIDs);
   for ($i = 0; $i < $cntGID; $i++) {
     $entGID = $seqEntGIDs[$i];
@@ -1062,12 +1062,12 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
         $hasAttestations = false;
         $lemGID = $lemma->getGlobalID();
         $lemTag = 'lem'.$lemma->getID();
-        $lemHtml = "<div class=\"lemmaentry $lemTag\"><span class=\"lemmaheadword\">";
+        $lemHtml = "<div class=\"lemmaentry $lemTag\">";
         if ($lemmaOrder = $lemma->getHomographicOrder()) {
-          $lemHtml .= $lemmaOrder;
+          $lemHtml .= "<sup class=\"homographic\">".$lemmaOrder."</sup>";
         }
         $lemmaValue = preg_replace('/ʔ/','',$lemma->getValue());
-        $lemHtml .= $lemmaValue."</span><span class=\"lemmapos\">";
+        $lemHtml .= "<span class=\"lemmaheadword\">".$lemmaValue."</span><span class=\"lemmapos\">";
         $lemmaGenderID = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
         $lemmaPos = $lemmaPosID && Entity::getTermFromID($lemmaPosID) ? Entity::getTermFromID($lemmaPosID) : '';
