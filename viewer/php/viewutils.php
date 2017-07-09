@@ -566,6 +566,9 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
         $tcms = $grapheme->getTextCriticalMark();
         $postTCMBrackets = "";
         $preTCMBrackets = "";
+        if ($prevTCMS != $tcms) {
+          list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
+        }
         if ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap)) {
           if ( $i == 0 && $firstG) {
             $wordHtml = $graID2LineHtmlMarkerlMap[$graID].$wordHtml;
@@ -574,11 +577,8 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
           }
           $prevTCMS = "";//at a new physical line so reset TCM
         }
-        if ($prevTCMS != $tcms) {
-          list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
-        }
 
-        if ($postTCMBrackets && !($i == 0 || $firstG)) {
+        if ($postTCMBrackets && !($i == 0 && $firstG)) {
           $wordHtml .= $postTCMBrackets;
         }
         if ($footnoteHtml) {
@@ -638,7 +638,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
     }
     $wordHtml = preg_replace('/\/\/\//',"",$wordHtml); // remove edge indicator
     $wordHtml = preg_replace('/_+/',"_",$wordHtml); // multple missing consonants
-    $wordHtml = preg_replace('/_([^\.])*/',".$1",$wordHtml); // multple missing consonants
+    $wordHtml = preg_replace('/_/',".",$wordHtml); // multple missing consonants
     $wordHtml .= "</span>";
 //      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
   }
