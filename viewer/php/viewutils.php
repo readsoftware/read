@@ -851,6 +851,23 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
       }
     }
   }
+  $sourceHtml = "";
+  $attributions = $edition->getAttributions(true);
+  if ($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
+    $isFrist = true;
+    $sourceHtml = "<div class=\"source edn1\"><span class=\"sourcelabel\">Source:</span>";
+    foreach ($attributions as $attribution) {
+      $atbID = $attribution->getID();
+      $title = $attribution->getTitle();
+      if ($isFrist) {
+        $sourceHtml .= "<span class=\"sourceitem atb$atbID\">$title";
+      } else {
+        $sourceHtml .= ",</span><span class=\"sourceitem atb$atbID\">$title";
+      }
+    }
+    $sourceHtml .= "</span></div>";
+  }
+  $html .= $sourceHtml;
   return json_encode($html);
 }
 
