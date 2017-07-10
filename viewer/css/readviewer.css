@@ -135,5 +135,11 @@ sup.showing {
   padding-right: 5px;
   font-style: italic;
 }
-.attestedforms .attestedformloc{
+.linkScroll{
+  border: none;
+  background-color: inherit;
+  color: rgba(155,155,155,0.5);
+}
+.syncScroll .linkScroll{
+  color: rgba(155,155,155,1);
 }
