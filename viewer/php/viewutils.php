@@ -1049,7 +1049,7 @@ function formatEtym($lemmaEtymString) {
   $etyms = explode(",",$lemmaEtymString);
   $isFirst = true;
   foreach ($etyms as $etym) {
-    preg_match("/\s*(Skt|P)\.?\:?\s*(.+)/",$etym,$matches);
+    preg_match("/\s*(Skt|P|BHS|G|S)\.?\:?\s*(.+)/",$etym,$matches);
     if (!$isFirst) {
       $formattedEtyms .= ", ";
     } else {

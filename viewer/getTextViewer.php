@@ -115,6 +115,7 @@
     <script src="/jqwidget/jqwidgets/jqxvalidator.js"></script>
     <script src="/jqwidget/jqwidgets/jqxpanel.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtree.js"></script>
+    <script src="../editors/js/debug.js"></script>
     <script type="text/javascript">
       var sktSort = ('<?=USESKTSORT?>' == "0" || !'<?=USESKTSORT?>')?false:true,
           maxUploadSize = parseInt(<?=MAX_UPLOAD_SIZE?>),
@@ -140,6 +141,85 @@
   }
 ?>
           testHtmlSmall = <?=$testHtmlSmall?>;
+
+/**
+* handle 'scroll' event for content div
+*
+* @param object e System event object
+*
+* @returns true|false
+*/
+
+    function viewScrollHandler(e) {
+      var top = this.scrollTop + this.offsetTop, viewHeight = this.offsetHeight, minY, hdrSeqTag = null, $secHdrDivs,
+          lineSeqTag = null, $lineLblSpans, lineFraction = 0, hdrFraction = 0, imgScrollData = null;
+      e.stopImmediatePropagation();
+      if (!this.supressSynchOnce) {
+        DEBUG.log("event","scroll view top = "+top+" height = "+viewHeight);
+        minY = 10000;
+        $lineLblSpans = $(this).find('span.linelabel');
+        if ($lineLblSpans.length) {
+          $lineLblSpans.each(function(index,lblSpan) {
+            if (lblSpan.offsetTop + lblSpan.offsetHeight > top) { //visible
+              if (lblSpan.offsetTop < minY) {
+                lineSeqTag = lblSpan.className.match(/seq\d+/)[0];
+                minY = lblSpan.offsetTop;
+                lineFraction = (top - lblSpan.offsetTop)/lblSpan.offsetHeight;
+              }
+            }
+          });
+        }
+        minY = 10000;
+        $secHdrDivs = $(this).find('div.secHeader');
+        if ($secHdrDivs.length) {
+          $secHdrDivs.each(function(index,secDiv) {
+            if (secDiv.offsetTop + secDiv.offsetHeight> top) { //visible
+              if (secDiv.offsetTop < minY) {
+                hdrSeqTag = secDiv.className.match(/seq\d+/)[0];
+                minY = secDiv.offsetTop;
+                hdrFraction = (top - secDiv.offsetTop)/secDiv.offsetHeight;
+              }
+            }
+          });
+        }
+//        imgScrollData = this.getImageScrollData(segTag,lineFraction);
+        $('.viewerContent').trigger('synchronize',[this.id,lineSeqTag,lineFraction,hdrSeqTag,hdrFraction,viewHeight,imgScrollData]);
+      } else {
+        delete this.supressSynchOnce;
+      }
+      return false;
+    };
+
+    /**
+    * handle 'synchronize' event for edit div
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending view pane for recursion control
+    * @param string anchorTag tag of anchor sequence
+    * @param number visFraction Fraction of display viewed relative to the anchor entity
+    */
+
+    function synchronizeHandler(e,senderID,lineSeqTag,lineFraction,hdrSeqTag,hdrFraction,scrViewHeight,imgScrollData) {
+      var $view = $(this), viewHeight = this.offsetHeight, $anchorElem, scrollElem, yAdjust, visFraction, newTop;
+      if (senderID == this.id || !$view.hasClass('syncScroll')) {
+        return;
+      }
+      DEBUG.log("event","synch request recieved by "+this.id+" from "+senderID+" with lseqID "+ lineSeqTag + (lineFraction?" with lfraction" + lineFraction:""));
+      DEBUG.log("event","synch request recieved by "+this.id+" from "+senderID+" with hseqID "+ hdrSeqTag + (hdrFraction?" with hfraction" + hdrFraction:""));
+      $anchorElem = $('span.linelabel.'+lineSeqTag+':first',$view);
+      visFraction = lineFraction;
+      if (!$anchorElem || !$anchorElem.length) {
+        $anchorElem = $('div.secHeader.'+hdrSeqTag+':first',$view);
+        visFraction = hdrFraction;
+      }
+      if ($anchorElem && $anchorElem.length ==1) {
+        scrollElem = $anchorElem.get(0);
+        newTop = scrollElem.offsetTop - this.offsetTop + scrollElem.offsetHeight * visFraction;
+        this.supressSynchOnce = true;
+        $view.scrollTop(newTop);
+      }
+    };
+
 
     </script>
     <script src="../editors/js/utility.js"></script>
@@ -189,7 +269,7 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-            $imageViewerContent.html(testHtmlSmall);
+//            $imageViewerContent.html(testHtmlSmall);
             $imageViewerContent.height('150px');
 <?php
   }
@@ -206,6 +286,7 @@
                   footnoteHtml = (edFootnotes[id]?edFootnotes[id]:"unable to find footnote text or empty footnote");
                   $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
                                       trigger: 'click',
+                                      showArrow: false,
                                       autoHide: false });
                   $('.showing').removeClass('showing');
                   $(this).unbind('close').bind('close', function(e) {
@@ -250,6 +331,7 @@
               }
               $(this).jqxTooltip({ content: '<div class="popupwrapperdiv">'+popupHtml+"</div>",
                                    trigger: 'click',
+                                   showArrow: false,
                                    autoHide: false });
               $('.showing').trigger('close'); //close other
               $(this).unbind('close').bind('close', function(e) {
@@ -261,6 +343,13 @@
               e.stopImmediatePropagation();
               return false;
             });
+
+            //assign handler for all syllable elements
+            $textViewerContent.unbind("scroll").bind("scroll", viewScrollHandler);
+
+            $textViewerContent.unbind('synchronize').bind('synchronize', synchronizeHandler);
+
+
 <?php
   if ($showTranslationView && $hasTranslation) {
 ?>
@@ -297,6 +386,10 @@
               });
             }
 
+            //assign handler for all syllable elements
+            $transViewerContent.unbind("scroll").bind("scroll", viewScrollHandler);
+
+            $transViewerContent.unbind('synchronize').bind('synchronize', synchronizeHandler);
 <?php
   }
 ?>
@@ -336,6 +429,10 @@
               });
             }
 
+            //assign handler for all syllable elements
+            $chayaViewerContent.unbind("scroll").bind("scroll", viewScrollHandler);
+
+            $chayaViewerContent.unbind('synchronize').bind('synchronize', synchronizeHandler);
 <?php
   }
 ?>
@@ -357,14 +454,14 @@
 
     <div id="textViewer" class="viewer">
       <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel">Text</div></div>
-      <div id="textViewerContent" class="viewerContent">test</div>
+      <div id="textViewerContent" class="viewerContent syncScroll">test</div>
     </div>
 <?php
   if ($showTranslationView && $hasTranslation) {
 ?>
     <div id="transViewer" class="viewer">
       <div id="transViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel">Translation</div></div>
-      <div id="transViewerContent" class="viewerContent">test</div>
+      <div id="transViewerContent" class="viewerContent syncScroll">test</div>
     </div>
 <?php
   }
@@ -374,7 +471,7 @@
 ?>
     <div id="chayaViewer" class="viewer">
       <div id="chayaViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel">Chāyā</div></div>
-      <div id="chayaViewerContent" class="viewerContent">test</div>
+      <div id="chayaViewerContent" class="viewerContent syncScroll">test</div>
     </div>
 <?php
   }
