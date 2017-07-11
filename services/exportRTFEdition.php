@@ -334,7 +334,8 @@
               }else if ($typ != "VowelModifier"){
                 $sclRTF .= "+";
               }
-            } else if ($j==1 && $prevGraIsVowelCarrier && $previousA && $prevTCMS == $tcms) {
+            } else if ($j==1 && $prevGraIsVowelCarrier && $previousA &&
+                        ($prevTCMS == $tcms || (!$prevTCMS|| $prevTCMS == "S") && (!$tcms|| $tcms == "S"))) {
               $graVal = $grapheme->getValue();
               if ($graVal == 'i') {
                 $sclRTF .= utf8ToRtf("ï");
@@ -347,7 +348,7 @@
               $sclRTF .=  utf8ToRtf($graVal);
             }
             $prevTCMS = $tcms;
-            if ($prevGraIsVowelCarrier && $graVal == "a") {
+            if ($graVal == "a") {
               $previousA = true;
             } else {
               $previousA = false;

@@ -136,6 +136,7 @@ sup.showing {
   font-style: italic;
 }
 .linkScroll{
+  cursor: pointer;
   border: none;
   background-color: inherit;
   color: rgba(155,155,155,0.5);

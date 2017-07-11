@@ -590,7 +590,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
         }
         //add grapheme
         $graTemp = $grapheme->getValue();
-        if ($j==1 && $prevGraIsVowelCarrier && $previousA && $prevTCMS == $tcms) {
+        if ($prevGraIsVowelCarrier && $previousA && ($prevTCMS == $tcms || (!$prevTCMS|| $prevTCMS == "S") && (!$tcms|| $tcms == "S"))) {
           if ($graTemp == 'i') {
             $graTemp = "ï";
           }else if ($graTemp == 'u') {
@@ -599,7 +599,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
         }
         $prevTCMS = $tcms;
         $wordHtml .= $graTemp;
-        if ($prevGraIsVowelCarrier && $graTemp == "a") {
+        if ($graTemp == "a") {
           $previousA = true;
         } else {
           $previousA = false;
@@ -1130,8 +1130,8 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
         if ($lemmaComponents && $lemmaComponents->getCount()) {
           $hasAttestations = true; // signal see also
           $groupedForms = array();
-          $pattern = array("/ʔ/","/°/","/\/\/\//","/#/","/◊/");
-          $replacement = array("","","","","");
+          $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/");
+          $replacement = array("aï","aü","","","","","");
           foreach ($lemmaComponents as $lemmaComponent) {
             $entPrefix = $lemmaComponent->getEntityTypeCode();
             $entID = $lemmaComponent->getID();

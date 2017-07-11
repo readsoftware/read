@@ -5967,7 +5967,10 @@ mergeLine: function (direction,cbError) {
                   graTemp = grapheme.value;
                   graTemp = graTemp[0].toUpperCase() + (graTemp.length > 1? graTemp.substring(1):"");
                   grpHTML += graTemp;
-                } else if (j==1 && prevGraIsVowelCarrier && previousA && previousGraTCMS == grapheme.txtcrit) {
+                } else if (prevGraIsVowelCarrier && previousA &&
+                          (previousGraTCMS == grapheme.txtcrit ||
+                           (!previousGraTCMS|| previousGraTCMS == "S") &&
+                           (!grapheme.txtcrit|| grapheme.txtcrit == "S"))) {
                   if (grapheme.value == 'i') {
                     grpHTML += "ï";
                   }else if (grapheme.value == 'u') {
@@ -6014,7 +6017,7 @@ mergeLine: function (direction,cbError) {
                 }
               }
             }
-            if (prevGraIsVowelCarrier && grapheme.value == "a") {
+            if (grapheme.value == "a") {
               previousA = true;
               previousGraTCMS = grapheme.txtcrit;
             } else {
