@@ -673,7 +673,8 @@ EDITORS.WordlistVE.prototype = {
   calcWordEntryHtml: function (wordTag) {
     var word = this.dataMgr.getEntityFromGID(wordTag), wordHTML = "";
     if (word && word.value) {
-      wordHTML = '<div class="wordlistentry"><span class="word '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value.replace(/ʔ/g,'')+'">' +
+      wordHTML = '<div class="wordlistentry"><span class="word '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+
+                      word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                       (!word.transcr?'MISSING':word.transcr.replace(/ʔ/g,'').replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨')) +
                       ' ' + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) + '</span></div>';
     }
@@ -829,7 +830,7 @@ EDITORS.WordlistVE.prototype = {
                   continue;
                 }
                 curForm = word.value;
-                html += (j>0?', ':' ') + word.value.replace(/ʔ/g,'');
+                html += (j>0?', ':' ') + word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'');
               }
               html += '</span>';
             }
@@ -853,9 +854,11 @@ EDITORS.WordlistVE.prototype = {
                       }
                     }
                   }
-                  html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value+'">' +
+                  html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +
+                          '" srch="'+word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                           (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                          ' ' + word.transcr.replace(/ʔ/g,'') + (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                          ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                          (wordAnno?' ('+wordAnno+')':"") + '</span>';
                 }
               }
             } else {
@@ -872,9 +875,11 @@ EDITORS.WordlistVE.prototype = {
                     }
                   }
                 }
-                html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value+'">' +
+                html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+
+                        word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                         (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                        ' ' + word.transcr.replace(/ʔ/g,'') + (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                        ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                        (wordAnno?' ('+wordAnno+')':"") + '</span>';
               }
             }
           }
@@ -894,9 +899,11 @@ EDITORS.WordlistVE.prototype = {
                   }
                 }
               }
-              html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value+'">' +
+              html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+
+                      word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                       (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                      ' ' + word.transcr.replace(/ʔ/g,'') + (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                      ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                      (wordAnno?' ('+wordAnno+')':"") + '</span>';
             }
           }
         }
@@ -1348,7 +1355,10 @@ EDITORS.WordlistVE.prototype = {
     for (i=0; i<entities.length; i++) {
       word = entities[i];
       if (word && word.tag && word.value && word.transcr && word.locLabel) {
-        html += '<div class="wordlistentry"><span class="word '+word.tag+'" srch="'+word.value+'">' + word.transcr.replace(/ʔ/g,'') + ' ' + word.locLabel + '</span></div>';
+        html += '<div class="wordlistentry"><span class="word '+word.tag+'" srch="'+
+                word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                word.transcr.replace(/aʔi/g,'aï') + word.transcr.replace(/aʔu/g,'aü') + word.transcr.replace(/ʔ/g,'') +
+                ' ' + word.locLabel + '</span></div>';
       } else {
         DEBUG.log('err',"Genreating html for wordlist found incomplete word data "+word.tag+
                   (!word.value ? " missing word value":"")+

@@ -382,7 +382,8 @@
           }
           //add grapheme
           $graTemp = $grapheme->getValue();
-          if ($j==1 && $prevGraIsVowelCarrier && $previousA && $prevTCMS == $tcms) {
+          if ($prevGraIsVowelCarrier && $previousA &&
+                        ($prevTCMS == $tcms || (!$prevTCMS|| $prevTCMS == "S") && (!$tcms|| $tcms == "S"))) {
             if ($graTemp == 'i') {
               $graTemp = "ï";
             }else if ($graTemp == 'u') {
@@ -393,7 +394,7 @@
           if (strpos($tcms,"Sd") === false) {
             $wordRTF .= $graTemp;
           }
-          if ($prevGraIsVowelCarrier && $graTemp == "a") {
+          if ($graTemp == "a") {
             $previousA = true;
           } else {
             $previousA = false;

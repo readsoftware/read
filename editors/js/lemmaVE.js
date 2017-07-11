@@ -187,7 +187,7 @@ EDITORS.LemmaVE.prototype = {
 
   createValueUI: function() {
     var lemmaVE = this,
-        value = this.isLemma ? this.entity.value.replace(/ʔ/g,''):this.entity.transcr.replace(/ʔ/g,'');
+        value = this.isLemma ? this.entity.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,''):this.entity.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'');
     DEBUG.traceEntry("createValueUI");
     //create UI container
     this.valueUI = $('<div class="valueUI"></div>');
@@ -279,7 +279,7 @@ EDITORS.LemmaVE.prototype = {
   createCompoundAnalysisUI: function() {
     var lemmaVE = this,
         value = (this.entity.compAnalysis?this.entity.compAnalysis:"Compound Analysis"),
-        editValue = (this.entity.compAnalysis?this.entity.compAnalysis:this.entity.value.replace(/ʔ/g,''));
+        editValue = (this.entity.compAnalysis?this.entity.compAnalysis:this.entity.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,''));
     DEBUG.traceEntry("createCompoundAnalysisUI");
     //create UI container
     this.compUI = $('<div class="compUI"></div>');
@@ -581,7 +581,7 @@ EDITORS.LemmaVE.prototype = {
         }
       }
     }
-    if (nodeLookup[key].value  != lemmaVE.entity.value.replace(/ʔ/g,'')) {
+    if (nodeLookup[key].value  != lemmaVE.entity.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')) {
       alert("Compound Analysis compound does not match constituents, please correct before saving.");
       return false;
     }
@@ -1449,7 +1449,8 @@ EDITORS.LemmaVE.prototype = {
         }
         attestedEntry = $('<div class="attestedentry">' +
                             '<span class="attestedformloc '+attested.tag+'">' + (attested.locLabel?attested.locLabel:"$nbsp;") + '</span>'+
-                            '<span class="attestedform '+attested.tag+'">' + attested.transcr.replace(/ʔ/g,'') + '</span>'+
+                            '<span class="attestedform '+attested.tag+'">' +
+                            attested.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') + '</span>'+
                             (infVal?'<span class="inflection '+attested.tag+'">' + infVal + '</span>':'') +
                             '<span class="attestedui '+attested.tag+'">' +
                             '<span class="attestedannoui"><span class="attestedannobtn '+attested.tag+'"' + ' title="'+attestedAnno+'"' + '>' +
