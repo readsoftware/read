@@ -127,12 +127,19 @@ sup.showing {
 }
 .attestedforms{
   margin-top: 8px;
+  border-top: solid 1px grey;
+}
+.inflectdescript {
+  padding-right: 5px;
+}
+.attestedformloc {
+  padding-left: 5px;
 }
 .attestedforms .inflectdescript{
-  padding-right: 5px;
+  color: darkgrey;
+  font-weight: bold;
 }
 .attestedforms .attestedform{
-  padding-right: 5px;
   font-style: italic;
 }
 .linkScroll{

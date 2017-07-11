@@ -569,6 +569,9 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
         if ($prevTCMS != $tcms) {
           list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
         }
+        if ($postTCMBrackets && !($i == 0 && $firstG)) {
+          $wordHtml .= $postTCMBrackets;
+        }
         if ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap)) {
           if ( $i == 0 && $firstG) {
             $wordHtml = $graID2LineHtmlMarkerlMap[$graID].$wordHtml;
@@ -578,9 +581,6 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
           $prevTCMS = "";//at a new physical line so reset TCM
         }
 
-        if ($postTCMBrackets && !($i == 0 && $firstG)) {
-          $wordHtml .= $postTCMBrackets;
-        }
         if ($footnoteHtml) {
           $wordHtml .= $footnoteHtml;
           $footnoteHtml = "";
@@ -778,6 +778,10 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
       }
     }
 
+    $footnoteTypeID = Entity::getIDofTermParentLabel('FootNote-FootNoteType');//warning!!!! term dependency
+    $fnReconstrTypeID = Entity::getIDofTermParentLabel('Reconstruction-FootNote');//warning!!!! term dependency
+    $typeIDs = array($footnoteTypeID,$fnReconstrTypeID);
+    $fnRefTofnText = array();
     if (!$textAnalysisSeq || !$textAnalysisSeq->getEntityIDs() || count($textAnalysisSeq->getEntityIDs()) == 0) {
       return false;
     } else {//process analysis
@@ -815,13 +819,9 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
           }
         }
       }
-      $footnoteTypeID = Entity::getIDofTermParentLabel('FootNote-FootNoteType');//warning!!!! term dependency
-      $fnReconstrTypeID = Entity::getIDofTermParentLabel('Reconstruction-FootNote');//warning!!!! term dependency
-      $typeIDs = array($footnoteTypeID,$fnReconstrTypeID);
       $html = "";
       $fnCnt = 0;
       $tokCnt = 0;
-      $fnRefTofnText = array();
       //start to calculate rtf using each entity of the analysis container
       foreach ($textAnalysisSeq->getEntityIDs() as $entGID) {
         $prefix = substr($entGID,0,3);
@@ -997,7 +997,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
                   $label2 = null;
                 }
                 if($label2 && $label2 != $label) {
-                  $label .= "-" . $label2;
+                  $label .= "—" . $label2;
                 }
               }
               $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
@@ -1029,7 +1029,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
                 $label2 = null;
               }
               if($label2 && $label2 != $label) {
-                $label .= "-" . $label2;
+                $label .= "—" . $label2;
               }
               $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
             } else {
@@ -1104,7 +1104,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
         if ($lemmaEtym = $lemma->getDescription()) {
           //replace embedded HTML markup
           $lemHtml .= "<span class=\"etymology\">";
-          $lemHtml .= formatEtym($lemmaEtym)."</span>";
+          $lemHtml .= formatEtym($lemmaEtym).",</span>";
         }
         if ($lemmaGloss = $lemma->getTranslation()) {
           //replace embedded HTML markup
@@ -1125,6 +1125,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
             }
           }
         }
+        $lemHtml .= "</div>";
         $entTag2GlossaryHtml[$lemTag] = array('entry' => $lemHtml);
         $lemmaComponents = $lemma->getComponents(true);
         if ($lemmaComponents && $lemmaComponents->getCount()) {
@@ -1418,13 +1419,13 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                       foreach ($locInfo['loc'] as $formLoc => $cntLoc) {
                         if ($isFirstLoc) {
                           $isFirstLoc = false;
+                          $attestedHtml .= "<span class=\"attestedformloc\">".$formLoc.($cntLoc>1?" [".$cntLoc."×]":"");
                         } else {
-                          $attestedHtml .= ",";
+                          $attestedHtml .= ",</span><span class=\"attestedformloc\">".$formLoc.($cntLoc>1?" [".$cntLoc."×]":"");
                         }
-                        $attestedHtml .= "<span class=\"attestedformloc\">".$formLoc.($cntLoc>1?" [".$cntLoc."×]":"")."</span>";
                       }
+                      $attestedHtml .= "</span>";
                     }
-                    //$rtf .= $endStyle.$eol;
                   }
                 }
               }

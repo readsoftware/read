@@ -274,6 +274,14 @@
 <?php
   }
 ?>
+            function closeAllPopups(e) {
+              var $showing = $('.showing');
+              if ($showing && $showing.length) {
+                $showing.removeClass('showing');
+                $showing.jqxTooltip('close'); //close other
+              }
+            }
+
             $textViewer.jqxExpander({expanded:true,
                                       showArrow: false,
                                       expandAnimationDuration:50,
@@ -282,15 +290,14 @@
             $textViewerContent.height('150px');
             if (edFootnotes && typeof edFootnotes == 'object' && Object.keys(edFootnotes).length > 0) {
               $('.footnote',$textViewerContent).unbind('click').bind('click', function(e) {
-                var id = this.id, footnoteHtml;
+                var id = this.id, footnoteHtml, $showing;
                   footnoteHtml = (edFootnotes[id]?edFootnotes[id]:"unable to find footnote text or empty footnote");
                   $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
                                       trigger: 'click',
                                       showArrow: false,
                                       autoHide: false });
-                  $('.showing').removeClass('showing');
+                  closeAllPopups();
                   $(this).unbind('close').bind('close', function(e) {
-                    $('.showing').removeClass('showing');
                     $(this).jqxTooltip('destroy');
                   });
                   $(this).jqxTooltip('open');
@@ -299,13 +306,7 @@
                   return false;
               });
             }
-            $textViewerContent.bind('click', function(e) {
-              var $showing = $('.showing');
-              if ($showing && $showing.length) {
-                $showing.removeClass('showing');
-                $showing.jqxTooltip('close');
-              }
-            });
+            $textViewerContent.unbind('click').bind('click', closeAllPopups);
             $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
               var classes = $(this).attr("class"), entTag, entTags, lemTag, lemmaInfo, entGlossInfo
                   popupHtml = "No lemma info for " + $(this).text();
@@ -324,18 +325,17 @@
                       popupHtml += entGlossInfo['infHtml'];
                     }
                     if (lemmaInfo['attestedHtml']) {
-                      popupHtml += "<br/>"+lemmaInfo['attestedHtml'];
+                      popupHtml += lemmaInfo['attestedHtml'];
                     }
                   }
                 }
               }
+              closeAllPopups();
               $(this).jqxTooltip({ content: '<div class="popupwrapperdiv">'+popupHtml+"</div>",
                                    trigger: 'click',
                                    showArrow: false,
                                    autoHide: false });
-              $('.showing').trigger('close'); //close other
               $(this).unbind('close').bind('close', function(e) {
-                $('.showing').removeClass('showing');
                 $(this).jqxTooltip('destroy');
               });
               $(this).jqxTooltip('open');
@@ -371,13 +371,7 @@
                                       collapseAnimationDuration:50});
             $transViewerContent.html(transStructHtml);
             $transViewerContent.height('150px');
-            $transViewerContent.bind('click', function(e) {
-              var $showing = $('.showing');
-              if ($showing && $showing.length) {
-                $showing.removeClass('showing');
-                $showing.jqxTooltip('close');
-              }
-            });
+            $transViewerContent.unbind('click').bind('click', closeAllPopups);
             if (transFootnotes && typeof transFootnotes == 'object' && Object.keys(transFootnotes).length > 0) {
               $('.footnote',$transViewerContent).unbind('click').bind('click', function(e) {
                 var id = this.id, footnoteHtml;
@@ -386,9 +380,8 @@
                                       trigger: 'click',
                                       autoHide: false,
                                       showArrow: false });
-                  $('.showing').removeClass('showing');
+                  closeAllPopups();
                   $(this).unbind('close').bind('close', function(e) {
-                    $('.showing').removeClass('showing');
                     $(this).jqxTooltip('destroy');
                   });
                   $(this).jqxTooltip('open');
@@ -414,13 +407,7 @@
                                       collapseAnimationDuration:50});
             $chayaViewerContent.html(chayaStructHtml);
             $chayaViewerContent.height('150px');
-            $chayaViewerContent.bind('click', function(e) {
-              var $showing = $('.showing');
-              if ($showing && $showing.length) {
-                $showing.removeClass('showing');
-                $showing.jqxTooltip('close');
-              }
-            });
+            $chayaViewerContent.unbind('click').bind('click',closeAllPopups);
             if (chayaFootnotes && typeof chayaFootnotes == 'object' && Object.keys(chayaFootnotes).length > 0) {
               $('.footnote',$chayaViewerContent).unbind('click').bind('click', function(e) {
                 var id = this.id, footnoteHtml;
@@ -429,9 +416,8 @@
                                       trigger: 'click',
                                       autoHide: false,
                                       showArrow: false });
-                  $('.showing').removeClass('showing');
+                  closeAllPopups();
                   $(this).unbind('close').bind('close', function(e) {
-                    $('.showing').removeClass('showing');
                     $(this).jqxTooltip('destroy');
                   });
                   $(this).jqxTooltip('open');
