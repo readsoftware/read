@@ -997,7 +997,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
                   $label2 = null;
                 }
                 if($label2 && $label2 != $label) {
-                  $label .= "—" . $label2;
+                  $label .= "&ndash;" . $label2;
                 }
               }
               $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
@@ -1029,7 +1029,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
                 $label2 = null;
               }
               if($label2 && $label2 != $label) {
-                $label .= "—" . $label2;
+                $label .= "&ndash;" . $label2;
               }
               $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
             } else {
@@ -1049,7 +1049,7 @@ function formatEtym($lemmaEtymString) {
   $etyms = explode(",",$lemmaEtymString);
   $isFirst = true;
   foreach ($etyms as $etym) {
-    preg_match("/\s*(Skt|P|BHS|G|S)\.?\:?\s*(.+)/",$etym,$matches);
+    preg_match("/\s*(Skt|Pkt|Vedic|P|BHS|G|S)\.?\:?\s*(.+)/",$etym,$matches);
     if (!$isFirst) {
       $formattedEtyms .= ", ";
     } else {
@@ -1108,7 +1108,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
         }
         if ($lemmaGloss = $lemma->getTranslation()) {
           //replace embedded HTML markup
-          $lemHtml .= "<span class=\"gloss\">\"$lemmaGloss\"</span>";
+          $lemHtml .= "<span class=\"gloss\">&ldquo;$lemmaGloss&rdquo;</span>";
         }
         if ( $linkedAnoIDsByType = $lemma->getLinkedAnnotationsByType()) {
           if (array_key_exists($glossaryCommentTypeID,$linkedAnoIDsByType)) {
