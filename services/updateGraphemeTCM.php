@@ -277,6 +277,10 @@
       }
       $syllable->setGraphemeIDs($newGraIDs);
       $syllable->save();
+      $newSclID = $syllable->getID();
+      foreach ($newGraIDs as $newGraID) {
+        addUpdateEntityReturnData('gra',$newGraID,'sclID',$newSclID);
+      }
       if ($syllable->hasError()) {
         array_push($errors,"error saving syllable '".$syllable->getValue()."' - ".$syllable->getErrors(true));
       } else if ($sclID != $syllable->getID()) { //cloned

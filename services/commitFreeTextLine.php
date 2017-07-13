@@ -343,6 +343,10 @@
       if (count($syllables)) {
         foreach ($syllables as $syllable) {
           addNewEntityReturnData('scl',$syllable);
+          $sclID = $syllable->getID();
+          foreach ($syllable->getGraphemeIDs() as $graID) {
+            addUpdateEntityReturnData('gra',$graID,'sclID',$sclID);
+          }
         }
       }
       $segments = $parser->getSegments();

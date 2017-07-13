@@ -454,6 +454,9 @@ if (count($errors) == 0) {
           addNewEntityReturnData('scl',$syllableClone);
           $oldSclID = $syllable->getID();
           $newSclID = $syllableClone->getID();
+          foreach ($newGraIDs as $newGraID) {
+            addUpdateEntityReturnData('gra',$newGraID,'sclID',$newSclID);
+          }
           if ($syllableClone->hasError()) {
             array_push($errors,"error cloning syllable '".$syllableClone->getValue()."' - ".$syllableClone->getErrors(true));
           } else if ($physLineSeq == null){

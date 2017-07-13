@@ -342,6 +342,9 @@
         $newSyllable->save();
         addNewEntityReturnData('scl',$newSyllable);
         $newSclID = $newSyllable->getID();
+        foreach ($newSylGraIDs as $newSylGraID) {
+          addUpdateEntityReturnData('gra',$newSylGraID,'sclID',$newSclID);
+        }
         if ($newSyllable->hasError()) {
           array_push($errors,"error creating syllable '".$newSyllable->getValue()."' - ".$newSyllable->getErrors(true));
         }else{// update container hierarchy clone as needed

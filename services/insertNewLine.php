@@ -294,6 +294,10 @@
       $newSyllable->save();
       addNewEntityReturnData('scl',$newSyllable);
       $newSclGID = $newSyllable->getGlobalID();
+      $newSclID = $newSyllable->getID();
+      foreach ($newSylGraIDs as $newSylGraID) {
+        addUpdateEntityReturnData('gra',$newSylGraID,'sclID',$newSclID);
+      }
       if ($newSyllable->hasError()) {
         array_push($errors,"error creating new syllable '".$newSyllable->getValue()."' - ".$newSyllable->getErrors(true));
       }else{

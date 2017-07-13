@@ -328,6 +328,10 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
       $clonedSyllable->setGraphemeIDs($newGraIDs);
       $clonedSyllable->save();
       addNewEntityReturnData('scl',$clonedSyllable);
+      $newSclID = $clonedSyllable->getID();
+      foreach ($newGraIDs as $newSylGraID) {
+        addUpdateEntityReturnData('gra',$newSylGraID,'sclID',$newSclID);
+      }
       //update physical line seq with cloned scl
       $physLineSeq = null;
       foreach($seqPhys->getEntities(true) as $edPhysLineSeq) {
