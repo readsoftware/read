@@ -1357,17 +1357,25 @@ EDITORS.LemmaVE.prototype = {
             prefix = infEntIDs[j].substring(0,3);
             id = infEntIDs[j].substring(4);
             entity = this.dataMgr.getEntity(prefix,id);
-            entity.tag = infEntIDs[j].replace(':','');
-            entity.gid = infEntIDs[j];
-            entities.push(entity);
-            infMap[entity.tag] = infID;
+            if (entity) {
+              entity.tag = infEntIDs[j].replace(':','');
+              entity.gid = infEntIDs[j];
+              entities.push(entity);
+              infMap[entity.tag] = infID;
+            } else {
+              DEBUG.log('err',"inflection inf:"+infID+" lemma lem:"+entity.id+" has component that doesn't load "+prefix+id);
+            }
           }
         } else {// add to set with no inflection mapping
           entity = this.dataMgr.getEntity(prefix,id);
-          entity.tag = entIDs[i].replace(':','');
-          entity.gid = entIDs[i];
-          entities.push(entity);
-          infMap[entity.tag] = 0;
+          if (entity) {
+            entity.tag = entIDs[i].replace(':','');
+            entity.gid = entIDs[i];
+            entities.push(entity);
+            infMap[entity.tag] = 0;
+          } else {
+              DEBUG.log('err',"lemma lem:"+entity.id+" has component that doesn't load "+prefix+id);
+            }
         }
       }
       entities.sort(UTILITY.compareEntities);
