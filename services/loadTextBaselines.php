@@ -301,7 +301,6 @@
         case 'tok':
           $entities['tok'][$entID] = array( 'value'=> $entity->getValue(),
                                  'transcr' => $entity->getTranscription(),
-                                 'trans' => $entity->getTranslation(),
                                  'attrIDs' => $entity->getAttributionIDs(),
                                  'affix' => $entity->getNominalAffix(),
                                  'sort' => $entity->getSortCode(),

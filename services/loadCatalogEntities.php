@@ -311,7 +311,6 @@
                                      'id' => $tokID,
                                      'transcr' => $token->getTranscription(),
                                      'readonly' => $token->isReadonly(),
-                                     'trans' => $token->getTranslation(),
                                      'affix' => $token->getNominalAffix(),
                                      'sort' => $token->getSortCode(),
                                      'sort2' => $token->getSortCode2(),

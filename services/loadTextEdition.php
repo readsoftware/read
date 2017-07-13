@@ -528,8 +528,8 @@
                                        'id' => $tokID,
                                        'modStamp' => $token->getModificationStamp(),
                                        'transcr' => $token->getTranscription(),
+                                       'affix' => $token->getNominalAffix(),
                                        'readonly' => $token->isReadonly(),
-                                       'trans' => $token->getTranslation(),
                                        'sort' => $token->getSortCode(),
                                        'sort2' => $token->getSortCode2(),
                                        'syllableClusterIDs' => array());

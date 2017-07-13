@@ -56,7 +56,6 @@
     */
     private   $_value,
               $_transcription,
-              $_translation,
               $_grapheme_ids = array(),
               $_graphemes,
               $_nom_affix,
@@ -90,7 +89,6 @@
         $this->_id=@$arg['tok_id'] ? $arg['tok_id']:NULL;
         $this->_value=@$arg['tok_value'] ? $arg['tok_value']:NULL;
         $this->_transcription=@$arg['tok_transcription'] ? $arg['tok_transcription']:NULL;
-        $this->_translation=@$arg['tok_translation'] ? $arg['tok_translation']:NULL;
         $this->_grapheme_ids=@$arg['tok_grapheme_ids'] ? $arg['tok_grapheme_ids']:NULL;
         $this->_nom_affix=@$arg['tok_nom_affix'] ? $arg['tok_nom_affix']:NULL;
         $this->_sort_code=@$arg['tok_sort_code'] ? $arg['tok_sort_code']:NULL;
@@ -145,9 +143,6 @@
       }
       if (count($this->_transcription)) {
         $this->_data['tok_transcription'] = $this->_transcription;
-      }
-      if (count($this->_translation)) {
-        $this->_data['tok_translation'] = $this->_translation;
       }
       if ($this->_nom_affix) {
         $this->_data['tok_nom_affix'] = $this->_nom_affix;
@@ -313,15 +308,6 @@
     }
 
     /**
-    * Get Token's translation
-    *
-    * @return string translation of this token or NULL
-    */
-    public function getTranslation() {
-      return $this->_translation;
-    }
-
-    /**
     * Get Token's grapheme unique IDs
     *
     * @param boolean $asString determines where to return as a string (default = false)
@@ -458,19 +444,6 @@
         $this->setDataKeyValuePair("tok_transcription",$transcription);
       }
       $this->_transcription = $transcription;
-    }
-
-    /**
-    * Set Token's translation
-    *
-    * @param string translation of this token or NULL
-    */
-    public function setTranslation($translation) {
-      if($this->_translation != $translation) {
-        $this->_dirty = true;
-        $this->setDataKeyValuePair("tok_translation",$translation);
-      }
-      $this->_translation = $translation;
     }
 
     /**

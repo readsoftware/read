@@ -16,44 +16,18 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-* saveEntityData
+* saveSandhi
 *
-* saves entity data for passed entity data structure of the form
+* saves sandhi  grapheme data and updates models depending on implied command add, remove or update
 *
-* {"tableprefix or tablename": array of records
-*                   where each record is an array of columnName:value pairs
-*                             where id column is required even new records of the form prefix:newID,
-* }
-*
-* {"tok":[{"tok_id":355,"tok_grapheme_ids":"{594,595,596,597,598}"},
-*         {"tok_id":"new14","tok_grapheme_ids":"{595,596,599,600,601}"}]
-* }
-*
-* return json format:  //whole record data returned due to multi-user editing  ?? should datestamp affect save
-*
-* { "entityName" : {
-*           "total" : #entityRecords,
-*           "success": true or false,   //if errors encountered false is returned
-*           "columns": array of columnNames for the records returned
-*           "records" : array of records where each record is an array of column values in "columns" order
-*    }
-* }
-*
-* { "token" : {
-*           "total" : 2,
-*           "success": true,
-*           "columns": ["tok_id","tok_value"," ...,"tok_scratch"],
-*           "records" : [[355,"putra",.....,"\"CKN\":\"CKI02661\""],
-*                        [1209,"putre",.....,"\"CKN\":\"CKI02661\""]]
-*    }
-* }
+** }
 * @author      Stephen White  <stephenawhite57@gmail.com>
 * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
 * @link        https://github.com/readsoftware
 * @version     1.0
 * @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
 * @package     READ Research Environment for Ancient Documents
-* @subpackage  Utility Classes
+* @subpackage  Services
 */
 define('ISSERVICE',1);
 ini_set("zlib.output_compression_level", 5);
@@ -130,7 +104,7 @@ if (!$data) {
     array_push($errors,"unaccessable edition");
   }
   $graTag = null;//required
-  if ( isset($data['graTag'])) {//get reference SyllableClusterGID
+  if ( isset($data['graTag'])) {//get grapheme tag
     $graTag = $data['graTag'];
     $graID = substr($graTag,3);
   } else {
@@ -146,9 +120,9 @@ if (!$data) {
   $decomp = null;//required
   if ( isset($data['decomp'])) {//get decomposition string
     $decomp = $data['decomp'];
-    $mCnt = preg_match("/([aiïüueo’]+)(?:([\s-‐])([aiïüueo’]+))?/",$decomp,$decompParts);
-    if ($mCnt == 1 && $decomp == array_shift($decompParts)) {
-      $decomp = join(":",$decompParts);
+    $matchCnt = preg_match("/([aiïüueo’]+)(?:([\s-‐])([aiïüueo’]+))?/",$decomp,$decompParts);
+    if ($matchCnt == 1 && $decomp == array_shift($decompParts)) {
+      $decomp = join(":",$decompParts);// create decomp sting of form tok1endvowel:sep:tok2startvowel
     } else {
       array_push($errors,"invalid parameter to save sandhi ");
     }
@@ -199,7 +173,7 @@ if (count($errors) == 0 && $graID && $decomp !== null) {
         $cmd = 'change';
       }
     } else {
-      $cmd = "NOP";
+      $cmd = "NOP";//original same as new so nothing to do
     }
   }
 }
@@ -207,9 +181,9 @@ if (count($errors) == 0 && $graID && $decomp !== null) {
 //find token(s) and validate commands
 $token1 = $token2 = null;
 if (count($errors) == 0 && $graID && $cmd && $cmd != "NOP" ) {
-  if ( $cmd == "add" && $prefix && $prefix == 'tok') {
+  if ( $cmd == "add" && $prefix && $prefix == 'tok') {//reference entity is tok
     $token1 = new Token($id);
-  } else if ($tokIDs && is_array($tokIDs) && count($tokIDs) > 0) {
+  } else if ($tokIDs && is_array($tokIDs) && count($tokIDs) > 0) {//called with passed token id(s)
     $token1 = new Token($tokIDs[0]);
     if (count($tokIDs) >1) {
       $token2 = new Token($tokIDs[1]);
@@ -280,6 +254,9 @@ if (count($errors) == 0 && $graID && $cmd && $cmd != "NOP" ) {
     }
     $token1 = $firstToken;
     $token2 = $secToken;
+    if (!$token1 || !$token2) {
+      array_push($errors,"error missing token information for graID $graID with command $cmd");
+    }
   } else {
     array_push($errors,"error missing token information for graID $graID");
   }
@@ -304,14 +281,14 @@ if (count($errors) == 0 && $graID && $cmd && $cmd != "NOP" ) {
   }
 }
 
-//modify grapheme and syllable if needed
+//modify grapheme and syllable (with physical line) if needed
 if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
   $oldPhysLineSeqGID = null;
   $newGraIDs = array();
   if ($grapheme->isReadonly()){
     $syllable = null;
     //find syllable
-    if ( $prefix && $prefix == 'scl') {
+    if ( $prefix && $prefix == 'scl') {//reference is syllable
       $syllable = new SyllableCluster($id);
     } else if ( array_key_exists('scl',$ctxLookup)) {
       $sclID = $ctxLookup['scl'][0];
@@ -331,10 +308,10 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
       $origSclGID = $syllable->getGlobalID();
       $origSyllableGraIDs = $syllable->getGraphemeIDs();
       $origSyllableGraphemes = $syllable->getGraphemes(true);
-      //clone syllable
+      //clone syllable  TODO determine if case for not cloning syllable (owned with readonly grapheme)
       $clonedSyllable = $syllable->cloneEntity($defAttrIDs,$defVisIDs);
       //clone graphemes
-      foreach ($origSyllableGraphemes as $grapheme) {
+      foreach ($origSyllableGraphemes as $grapheme) {//copy all grapheme and set decomp for clone of ref grapheme
         $newGrapheme = $grapheme->cloneEntity($defAttrIDs,$defVisIDs);
         if ($graID == $grapheme->getID()) {//set the decomposition of the sandhi grapheme
           $newGrapheme->setDecomposition($decomp);
@@ -383,6 +360,8 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
           addUpdateEntityReturnData('seq',$physLineSeq->getID(),'entityIDs',$physLineSeq->getEntityIDs());
         }
       }
+    } else {
+      array_push($errors,"error unable to find syllable for readonly grapheme ID $graID - cannot save sandhi information");
     }
   } else {// save decomp
     $grapheme->setDecomposition($decomp);
@@ -392,21 +371,25 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
     }else { // only updated
       $sandhiGraID = $graID;
       addUpdateEntityReturnData('gra',$grapheme->getID(),'decomp',preg_replace("/\:/",'',$grapheme->getDecomposition()));
-      $token1->getValue(true);
-      $token2->getValue(true);
-      $token1->save();
-      $token2->save();
-      addUpdateEntityReturnData('tok',$token1->getID(),'value',$token1->getValue());
-      addUpdateEntityReturnData('tok',$token1->getID(),'transcr',$token1->getTranscription());
-      addUpdateEntityReturnData('tok',$token2->getID(),'value',$token2->getValue());
-      addUpdateEntityReturnData('tok',$token2->getID(),'transcr',$token2->getTranscription());
-   }
+      if ($token1 && $cmd == "update") {
+        $token1->getValue(true);
+        $token1->save();
+        addUpdateEntityReturnData('tok',$token1->getID(),'value',$token1->getValue());
+        addUpdateEntityReturnData('tok',$token1->getID(),'transcr',$token1->getTranscription());
+      }
+      if ($token2 && $cmd == "update") {
+        $token2->getValue(true);
+        $token2->save();
+        addUpdateEntityReturnData('tok',$token2->getID(),'value',$token2->getValue());
+        addUpdateEntityReturnData('tok',$token2->getID(),'transcr',$token2->getTranscription());
+      }
+    }
   }
 }
 
 // adjust tokens depending on command
 //for add we need to split token using new graphemes if syllable cloned
-if ( count($errors) == 0 && $cmd == "add") {
+if ( count($errors) == 0 && $cmd == "add" && $token1) {
   //capture GID so we can find where to update heirarchy
   $replaceTokCmpGID = $token1->getGlobalID();
   if ($token1->isReadonly()) {
@@ -448,7 +431,7 @@ if ( count($errors) == 0 && $cmd == "add") {
   $prependTokGID4TextDiv = null;
   $appendTokGID4TextDiv = null;
   $topLevelCmpGID = null;
-  //check for co$prependTokGID4TextDivmpound creation
+  //check for compound creation
   if ($decompParts[1] != " ") {//create compound for split token
     $createCmp = new Compound();
     $createCmp->setComponentIDs($replacementTokCmpGIDs);
