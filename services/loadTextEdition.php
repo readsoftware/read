@@ -585,6 +585,10 @@
                 if ($grapheme->getDecomposition()) {
                    $entities['gra'][$graID]['decomp'] = preg_replace("/:/",'',$grapheme->getDecomposition());
                 }
+                $entities['gra'][$graID]['sclID'] = @$gra2SclMap[$graID];
+                if (!$entities['gra'][$graID]['sclID']) {
+                  unset($entities['gra'][$graID]['sclID']);
+                }
                 $AnoIDs = $grapheme->getAnnotationIDs();
                 if (count($AnoIDs) > 0) {
                   $entities['gra'][$graID]['annotationIDs'] = $AnoIDs;
