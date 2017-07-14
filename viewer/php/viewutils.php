@@ -60,6 +60,16 @@ function getEditionFootnoteTextLookup() {
 }
 
 /**
+* gets the editions footnote lookup html as json
+*
+* @returns string json representing the lookup for footnotes of this  object with a string representing the html and a footnote lookup table
+*/
+function getEditionTOCHtml() {
+  global $editionTOCHtml;
+  return $editionTOCHtml;
+}
+
+/**
 * gets the editions translation footnote lookup html as json
 *
 * @returns string json representing the lookup for footnotes of this  object with a string representing the html and a footnote lookup table
@@ -654,7 +664,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
 * @param int $level indicate the level of nest in the structural hierarchy
 */
 function getStructHTML($sequence, $level) {
-  global $edition;
+  global $edition, $editionTOCHtml;
   $structureHtml = "";
   $lvl = $level +1;
   if ($sequence) {
@@ -672,6 +682,13 @@ function getStructHTML($sequence, $level) {
   if ($label) {//output header div
     $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$lvl.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
     $structureHtml .= getEntityFootnotesHtml($sequence);
+    switch ($seqType) {
+      case "Chapter": //warning term dependency
+      case "Section": //warning term dependency
+      case "Paragraph": //warning term dependency
+        $editionTOCHtml .= '<div id="toc'.$seqTag.'" class="tocEntry level'.$lvl.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
+        break;
+    }
   }
   //open structure div
   $structureHtml .= '<div class="section level'.$lvl.' '.$seqTag.' '.$seqType.'">';
@@ -751,11 +768,12 @@ function getStructHTML($sequence, $level) {
 * @returns mixed object with a string representing the html and a footnote lookup table
 */
 function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
-  global $prevTCMS, $graID2LineHtmlMarkerlMap, $wordCnt, $fnRefTofnText, $typeIDs, $fnCnt;
+  global $prevTCMS, $graID2LineHtmlMarkerlMap, $wordCnt, $fnRefTofnText, $typeIDs, $fnCnt, $editionTOCHtml;
   $footnoteHtml = "";
   $wordCnt = 0;
   $graID2LineHtmlMarkerlMap = array();
   $prevTCMS = "";
+  $editionTOCHtml = "";
   $fnRefTofnText = array();
   $typeIDs = array();
   $fnCnt = 0;

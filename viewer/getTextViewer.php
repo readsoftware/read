@@ -127,6 +127,11 @@
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,
           edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>,
 <?php
+  if ($showContentOutline) {
+?>
+          tocHtml = '<?=getEditionTOCHtml()?>',
+<?php
+  }
   if ($showTranslationView && $hasTranslation) {
 ?>
           transStructHtml = <?=getEditionStructuralTranslationHtml($edition->getID())?>,
@@ -227,20 +232,28 @@
     <script type="text/javascript">
       $(document).ready( function () {
         var
-<?php
-  if ($showImageView && count($blnIDs) > 0) {
-?>
-            $imageViewer= $('#imageViewer'),
-            $imageViewerHdr= $('#imageViewerHdr'),
-            $imageViewerContent= $('#imageViewerContent')
-
-<?php
-  }
-?>
-,
             $textViewer = $('#textViewer'),
             $textViewerHdr = $('#textViewerHdr'),
             $textViewerContent = $('#textViewerContent')
+<?php
+  if ($showContentOutline) {
+?>
+,
+            $tocNavPanel= $('#tocNavPanel'),
+            $tocNavButton= $('.tocNavButton')
+<?php
+  }
+?>
+<?php
+  if ($showImageView && count($blnIDs) > 0) {
+?>
+,
+            $imageViewer= $('#imageViewer'),
+            $imageViewerHdr= $('#imageViewerHdr'),
+            $imageViewerContent= $('#imageViewerContent')
+<?php
+  }
+?>
 <?php
   if ($showTranslationView && $hasTranslation) {
 ?>
@@ -263,8 +276,39 @@
 ?>
 ;
 <?php
+  if ($showContentOutline) {
+?>
+//initialise toc
+            $tocNavPanel.html(tocHtml);
+            $('.tocEntry',$tocNavPanel).unbind('click').bind('click', function(e) {
+              var $body = $('body'),classes = $(this).attr("class"), tocID, seqTag;
+              tocID = $(this).attr('id');
+              seqTag = tocID.substring(3);
+              $body.removeClass('showTOC');
+              $('.viewerContent').trigger('synchronize',[tocID,null,0,seqTag,0,null,null]);
+              e.stopImmediatePropagation();
+              return false;
+            });
+
+            $tocNavButton.unbind('click').bind('click', function(e) {
+              var $body = $('body');
+              if ($body.hasClass('showTOC')) {
+                $body.removeClass('showTOC');
+              } else {
+                $body.addClass('showTOC');
+              }
+              e.stopImmediatePropagation();
+              return false;
+            });
+
+
+<?php
+  }
+?>
+<?php
   if ($showImageView && count($blnIDs) > 0) {
 ?>
+//initialise imageViewer
             $imageViewer.jqxExpander({expanded:true,
                                       showArrow: false,
                                       expandAnimationDuration:50,
@@ -275,13 +319,17 @@
   }
 ?>
             function closeAllPopups(e) {
-              var $showing = $('.showing');
+              var $showing = $('.showing'), $body = $('body');
               if ($showing && $showing.length) {
                 $showing.removeClass('showing');
                 $showing.jqxTooltip('close'); //close other
               }
+              if ($body.hasClass('showTOC')) {
+                $body.removeClass('showTOC');
+              }
             }
 
+//initialise textViewer
             $textViewer.jqxExpander({expanded:true,
                                       showArrow: false,
                                       expandAnimationDuration:50,
@@ -365,6 +413,7 @@
 <?php
   if ($showTranslationView && $hasTranslation) {
 ?>
+//initialise transViewer
             $transViewer.jqxExpander({expanded:true,
                                       showArrow: false,
                                       expandAnimationDuration:50,
@@ -401,6 +450,7 @@
 <?php
   if ($showChayaView && $hasChaya) {
 ?>
+//initialise chayaViewer
             $chayaViewer.jqxExpander({expanded:true,
                                       showArrow: false,
                                       expandAnimationDuration:50,
@@ -438,7 +488,18 @@
     </script>
   </head>
 <body>
-  <div class="headline"><?=$title?></div>
+<?php
+  if ($showContentOutline) {
+?>
+  <div id="tocNavPanel" class="tocNavPanel"></div>
+  <div class="headline"><div class="tocNavButton" title="Table of Contents">&#9776;</div><div class="titleDiv"><?=$title?></div></div>
+<?php
+  } else {
+?>
+  <div class="headline"><div class="titleDiv"><?=$title?></div></div>
+<?php
+  }
+?>
 <?php
   if ($showImageView && count($blnIDs) > 0) {
 ?>

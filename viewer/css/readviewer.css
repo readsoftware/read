@@ -1,6 +1,5 @@
 .headline {
   display: flex;
-  justify-content: center; /* align horizontal */
   align-items: center; /* align vertical */
   background-color:  rgb(214,214,204);
   font-size: x-large;
@@ -153,4 +152,35 @@ sup.showing {
 }
 .syncScroll .linkScroll{
   color: rgba(155,155,155,1);
+}
+body.showTOC .tocNavPanel {
+  display: block;
+}
+.tocNavPanel{
+  position: absolute;
+  top: 35px;
+  left: 15px;
+  display: none;
+  width: auto;
+  background-color: #a5a5a5;
+  max-height: 90%;
+  overflow-y: auto;
+  padding: 8px;
+  padding-right: 25px;
+}
+.tocEntry{
+  cursor: pointer;
+}
+.tocEntry:hover{
+  background-color: lightgrey;
+}
+.tocNavButton{
+  margin-left: 15px;
+  background-color: transparent;
+  color: grey;
+  cursor: pointer;
+}
+.titleDiv{
+  text-align: center;
+  width: 100%;
 }

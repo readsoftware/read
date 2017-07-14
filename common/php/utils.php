@@ -2076,6 +2076,171 @@ function checkEditionHealth($ednID, $verbose = true) {
   return $retStr;
 }
 
+/**
+* check the health of the catalog
+*
+* walk through all entities of this catalog and validate linked entities
+*
+* @param int $catID catalog ID
+* @param boolean $verbose indicate the level of output information.
+*/
+
+function checkGlossaryHealth($catID, $verbose = true) {
+  global $hltherrors, $hlthwarnings, $hlthgra2TokGID, $hlthtokGID2CtxLabel, $hlthtokGraphemeIDs;
+
+  $retStr = "";
+  $hltherrors = array();
+  $hlthwarnings = array();
+  $lemTag2Value = array();
+  $hlthgra2TokGID = array();
+  $hlthtokGID2CtxLabel = array();
+  $tokCmp2LemGID = array();
+  $tokCmp2InfGID = array();
+  $lemIDs = array();
+  $infIDs = array();
+  $tokCmpGIDs = array();
+  $processedTokIDs = array();
+  $catalog = null;
+  if ($catID) {
+    $catalog = new Catalog($catID);
+  }
+  if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
+    array_push($hlthwarnings,"Usage = testGlossaryLinks.php?db=dbnameGoesHere&catID=idOfCatalogGlossaryGoesHere.");
+ } else {
+    $termInfo = getTermInfoForLangCode('en');
+    $glossaryCatalogTypeID = $termInfo['idByTerm_ParentLabel']['glossary-catalogtype'];//term dependency
+    $textSeqTypeID = $termInfo['idByTerm_ParentLabel']['text-sequencetype'];//term dependency
+    $textDivSeqTypeID = $termInfo['idByTerm_ParentLabel']['textdivision-text'];//term dependency
+    $textPhysSeqTypeID = $termInfo['idByTerm_ParentLabel']['textphysical-sequencetype'];//term dependency
+    $linePhysSeqTypeID = $termInfo['idByTerm_ParentLabel']['linephysical-textphysical'];//term dependency
+    $imageBaselineTypeID = $termInfo['idByTerm_ParentLabel']['image-baselinetype'];//term dependency
+    $transBaselineTypeID = $termInfo['idByTerm_ParentLabel']['transcription-baselinetype'];//term dependency
+    $catID = $catalog->getID();
+    $lemmas = new Lemmas("lem_cat_id = $catID",'lem_id',null,null);
+    if ($lemmas && $lemmas->getCount()>0) {
+      if ($verbose) {
+        array_push($hltherrors,"**************** Processing Glossary Lemmas ***************************");
+      }
+      foreach ($lemmas as $lemma) {
+        $lemID = $lemma->getID();
+        $lemValue = $lemma->getValue();
+        $lemTag2Value["lem$lemID"] = $catID;
+        if ($lemma->isMarkedDelete()) {
+          array_push($hltherrors,"Error glossary (cat:$catID) has lemma ($lemValue/lem$lemID) that is marked for delete.");
+          //ToDo  add code to add <a> for a service to correct the issue.
+        } else {//save to check components
+          array_push($lemIDs,$lemID);
+        }
+      }
+      //process lemma components
+      if ($verbose) {
+        array_push($hltherrors,"**************** Processing Lemma Components ***************************");
+      }
+      if ($lemIDs && count($lemIDs) > 0) {
+        $lemmas->rewind();
+        foreach ($lemmas as $lemma) {
+          $entGIDs = $lemma->getComponentIDs();
+          if (count($entGIDs) == 0) {
+            array_push($hltherrors,"Warning lemma ($lemValue/lem$lemID) that is has no attested forms.");
+            continue;
+          }
+          $lemValue = $lemma->getValue();
+          $lemTag = $lemma->getEntityTag();
+          $components = $lemma->getComponents(true);
+          $components->setAutoAdvance(false); // make sure the iterator doesn't prefetch
+          foreach ($components as $component) {
+            $entTypeID = $component->getEntityTypeCode();
+            $entTag = $component->getEntityTag();
+            if ($component->isMarkedDeleted()) {
+              array_push($hltherrors,"Lemma ($lemValue/$lemTag) has component $entTag that is marked for delete.");
+              continue;
+            }
+            if ($entTypeID == "inf") {
+              if (!@$infIDs[$component->getID()]) {
+                $infIDs[$component->getID()] = $lemTag;
+              } else {
+                array_push($hltherrors,"Inflection $entTag already a component of ".$infIDs[$component->getID()]);
+              }
+            } else {
+              if (!@$tokCmpGIDs[$component->getID()]) {
+                $tokCmpGIDs[$component->getID()] = $lemTag;
+              } else {
+                array_push($hltherrors,"Token/Compound $entTag already a component of ".$tokCmpGIDs[$component->getID()]);
+              }
+            }
+          }
+        }
+        if ($verbose) {
+          array_push($hltherrors,"**************** Processing Tokens and Compounds ***************************");
+        }
+        if ($tokCmpGIDs && count($tokCmpGIDs) > 0) {
+          foreach ($tokCmpGIDs as $tokCmpGID) {
+            $containerTag = $tokCmpGIDs[$tokCmpGID];
+            $ctxMessage = "Containing Entity ($containerTag)";
+            validateTokCmp($tokCmpGID,$ctxMessage,$tokCmpGID);
+          }
+        }
+        //check syllable vs token graIDs
+        if ($verbose) {
+          array_push($hltherrors,"**************** Checking graIDs match for syllable and tokens ***************************");
+        }
+        while ($graID = array_shift($sclGraphemeIDs)) {
+          $index = array_search($graID,$hlthtokGraphemeIDs);
+          if ($index === false) {//syllable grapheme not found in any token
+            //find sclGID
+            $sclGID = $gra2SclGID[$graID];
+            //find seqGID and label
+            $seqGID = $gid2SeqMap[$sclGID];
+            $seqLabel = $seqGID2Label[$seqGID];
+            //write out error message
+            array_push($hltherrors,"Error Physical Line Sequence ($seqLabel/$seqGID) has syllable ($sclGID) with grapheme (gra:$graID) that is not contained in a token.");
+          } else {
+            array_splice($hlthtokGraphemeIDs,$index,1);
+          }
+        }
+        if (count($hlthtokGraphemeIDs)) {//we have token graphemes that are not in a syllable
+          foreach ($hlthtokGraphemeIDs as $graID) {
+            //find the token GID
+            $tokGID = $hlthgra2TokGID[$graID];
+            //find the token context
+            $ctxLabel = $hlthtokGID2CtxLabel[$tokGID];
+            //write out error message
+            array_push($hltherrors,"Error $ctxLabel has token ($tokGID) that has a grapheme (gra:$graID) that is not in a syllable.");
+          }
+        }
+      }
+    }
+  }
+  if ($verbose) {
+    $retStr .= "\t\t\t Health Report for (edn$ednID) - ".$edition->getDescription()."\n\n";
+  }
+
+  if (count($hlthwarnings) > 0) {
+    if ($verbose) {
+      $retStr .= "WARNING:\n";
+    }
+    foreach ($hlthwarnings as $warning) {
+      $retStr .= $warning."\n";
+    }
+  }
+  if (count($hltherrors) > 0) {
+    if ($verbose) {
+      $retStr .= "ERRORS:\n";
+    }
+    foreach ($hltherrors as $error) {
+      $retStr .= $error."\n";
+    }
+  }
+  if (count($hlthwarnings) == 0 && count($hltherrors) == 0) {
+    $retStr .= " Edition links check ok for edition (edn$ednID).";
+  }
+  if ($verbose) {
+    $retStr .= "\t\t\t End of Health Report for (edn$ednID) - ".$edition->getDescription()."\n\n";
+  }
+
+  return $retStr;
+}
+
 
 /**
 * merge data from ordinal tagged image segments of one or more baselines (order by baseline id then ordinal)
@@ -2196,7 +2361,7 @@ function validateTokCmp ($tokCmpGID, $ctxMessage, $topTokCmpGID) {
   $entity = EntityFactory::createEntityFromGlobalID($tokCmpGID);
   if (!$entity || $entity->hasError()) {
     array_push($hltherrors,"Error Unable to create tok/cmp ($tokCmpGID) located in $ctxMessage.".
-                ($entity->hasError()?"Errors: ".$entity->getErrors(true):""));
+                ($entity->hasError()?"Errors: ".$entity->getErrors(true):EntityFactory::$error));
   } else {
     if ($entity->isMarkedDelete()) {
       array_push($hltherrors,"Error $ctxMessage has token/compound link ($tokCmpGID) that is marked for delete.");
