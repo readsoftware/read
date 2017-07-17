@@ -260,7 +260,18 @@
     * @return int array foreign key to usergroups that can view an entity
     */
     public function getDefaultVisibilityIDs() {
-      return $this->getScratchProperty('defaultVisibilityIDs');
+      $defVisIDs = $this->getScratchProperty('defaultVisibilityIDs');
+      if (!$defVisIDs && defined('DEFAULTVISIBILITY')) {//check if installation default is set in config.php
+        $dbMgr = new DBManager();
+        $dbMgr->query("SELECT * FROM usergroup WHERE ugr_name = '".DEFAULTVISIBILITY."' LIMIT 1");
+        $row = $dbMgr->fetchResultRow(0);
+        if(!$row || !array_key_exists('ugr_id',$row)) {
+          error_log("unable to query for usergroup name = ".DEFAULTVISIBILITY);
+        }else{
+          $defVisIDs = array($row['ugr_id']);
+        }
+      }
+      return $defVisIDs;
     }
 
    /**

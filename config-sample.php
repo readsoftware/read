@@ -24,6 +24,7 @@
   if(!defined("DBSERVERNAME")) define("DBSERVERNAME","localhost");
   if(!defined("USERNAME")) define("USERNAME","postgres");
   if(!defined("PASSWORD")) define("PASSWORD","password");
+  if(!defined("DEFAULTVISIBILITY")) define("DEFAULTVISIBILITY","Users");
   if(!defined("USECACHE")) define("USECACHE",false);
 //  if(!defined("LINKSYLPATTERN")) define("LINKSYLPATTERN","L1:S1,L5+5:S1");
 //  if(!defined("USESKTSORT")) define("USESKTSORT",'1');
