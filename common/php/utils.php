@@ -35,7 +35,7 @@ require_once dirname(__FILE__) . '/../../model/entities/Terms.php';
 require_once dirname(__FILE__) . '/../../model/entities/SyllableClusters.php';
 require_once dirname(__FILE__) . '/../../model/entities/Tokens.php';
 require_once dirname(__FILE__) . '/../../model/entities/Compounds.php';
-require_once dirname(__FILE__) . '/../../model/entities/inflections.php';
+require_once dirname(__FILE__) . '/../../model/entities/Inflections.php';
 require_once dirname(__FILE__) . '/../../model/entities/Lemmas.php';
 require_once dirname(__FILE__) . '/../../model/entities/Editions.php';
 require_once dirname(__FILE__) . '/../../model/entities/Texts.php';
@@ -2087,6 +2087,7 @@ function checkEditionHealth($ednID, $verbose = true) {
 * @param boolean $verbose indicate the level of output information.
 */
 
+
 function checkGlossaryHealth($catID, $verbose = true) {
   global $hltherrors, $hlthwarnings, $hlthgra2TokGID, $hlthtokGID2CtxLabel, $hlthtokGraphemeIDs;
 
@@ -2163,32 +2164,25 @@ function checkGlossaryHealth($catID, $verbose = true) {
         $lemmas->rewind();
         foreach ($lemmas as $lemma) {
           $entGIDs = $lemma->getComponentIDs();
+          $lemValue = $lemma->getValue();
           if (count($entGIDs) == 0) {
-            array_push($hltherrors,"Warning lemma ($lemValue/lem$lemID) that is has no attested forms.");
+            array_push($hlthwarnings,"Warning lemma ($lemValue/lem$lemID) that is has no attested forms.");
             continue;
           }
-          $lemValue = $lemma->getValue();
           $lemTag = $lemma->getEntityTag();
-          $components = $lemma->getComponents(true);
-//          $components->setAutoAdvance(false); // make sure the iterator doesn't prefetch
-          foreach ($components as $component) {
-            $entTypeID = $component->getEntityTypeCode();
-            $entTag = $component->getEntityTag();
-            if ($component->isMarkedDelete()) {
-              array_push($hltherrors,"Lemma ($lemValue/$lemTag) has component $entTag that is marked for delete.");
-              continue;
-            }
+          foreach ($entGIDs as $entGID) {
+            $entTypeID = substr($entGID,0,3);
             if ($entTypeID == "inf") {
-              if (!@$infIDs[$component->getID()]) {
-                $infIDs[$component->getID()] = $lemTag;
+              if (!@$infIDs[$entGID]) {
+                $infIDs[$entGID] = $lemTag;
               } else {
-                array_push($hltherrors,"Inflection $entTag already a component of ".$infIDs[$component->getID()]);
+                array_push($hltherrors,"Inflection $entGID already a component of ".$infIDs[$entGID]);
               }
             } else {
-              if (!@$tokCmpGIDs[$entTag]) {
-                $tokCmpGIDs[$entTag] = $lemTag;
+              if (!@$tokCmpGIDs[$entGID]) {
+                $tokCmpGIDs[$entGID] = $lemTag;
               } else {
-                array_push($hltherrors,"Token/Compound $entTag already a component of ".$tokCmpGIDs[$entTag]);
+                array_push($hltherrors,"Processing Token/Compound $entGID for $lemTag already a component of ".$tokCmpGIDs[$entGID]);
               }
             }
           }
@@ -2197,25 +2191,28 @@ function checkGlossaryHealth($catID, $verbose = true) {
           array_push($hltherrors,"**************** Processing Inflections ***************************");
         }
         if ($infIDs && count($infIDs) > 0) {
-          foreach ($infIDs as $infID => $lemTag) {
-            $inflection = new Inflection($infID);
+          foreach ($infIDs as $infGID => $lemTag) {
+            $inflection = new Inflection(substr($infGID,4));
+            if (!$inflection || $inflection->hasError()) {
+              array_push($hltherrors,"Error Unable to create inflection ($infGID) for lemma $lemTag.".
+                          (($inflection && $inflection->hasError())?"Errors: ".$inflection->getErrors(true):""));
+              continue;
+            }
+            if ($inflection->isMarkedDelete()) {
+              array_push($hltherrors,"Lemma ($lemValue/$lemTag) has inflection $entGID that is marked for delete.");
+              continue;
+            }
             $infTag = $inflection->getEntityTag();
-            $components = $inflection->getComponents(true);
-            if (!$components || $components->getCount() == 0) {
+            $entGIDs = $inflection->getComponentIDs();
+            if (!$entGIDs || count($entGIDs) == 0) {
               array_push($hltherrors,"Lemma ($lemTag) has inflection $infTag that has no attested forms.");
               continue;
             }
-            foreach ($components as $component) {
-              $entTag = $component->getEntityTag();
-              if ($component->isMarkedDelete()) {
-                array_push($hltherrors,"Lemma ($lemTag) has inflection $infTag with attested form $entTag marked for delete.");
-                continue;
+            foreach ($entGIDs as $entGID) {
+              if (!@$tokCmpGIDs[$entGID]) {
+                $tokCmpGIDs[$entGID] = $infTag;
               } else {
-                if (!@$tokCmpGIDs[$entTag]) {
-                  $tokCmpGIDs[$entTag] = $infTag;
-                } else {
-                  array_push($hltherrors,"Processing Token/Compound $entTag for $infTag (of $lemTag) which is already a component of ".$tokCmpGIDs[$entTag]);
-                }
+                array_push($hltherrors,"Processing Token/Compound $entGID for $infTag (of $lemTag) which is already a component of ".$tokCmpGIDs[$entGID]);
               }
             }
           }
@@ -2224,10 +2221,13 @@ function checkGlossaryHealth($catID, $verbose = true) {
           array_push($hltherrors,"**************** Processing Tokens and Compounds ***************************");
         }
         if ($tokCmpGIDs && count($tokCmpGIDs) > 0) {
-          foreach ($tokCmpGIDs as $tokCmpTag => $lemTag) {
-            $containerTag = $tokCmpGIDs[$tokCmpTag];
-            $ctxMessage = "Containing Entity ($containerTag)";
-            validateTokCmp($tokCmpTag,$ctxMessage,$tokCmpTag);
+          foreach ($tokCmpGIDs as $tokCmpGID => $cntTag) {
+            if (strlen($tokCmpGID)< 4) {
+              array_push($hltherrors,"TokGIDs has invalid tag for Container $cntTag.");
+              continue;
+            }
+            $ctxMessage = "Containing Entity ($cntTag)";
+            validateTokCmp($tokCmpGID,$ctxMessage,$tokCmpGID);
           }
         }
       }
@@ -2383,7 +2383,7 @@ function validateTokCmp ($tokCmpGID, $ctxMessage, $topTokCmpGID) {
   $entity = EntityFactory::createEntityFromGlobalID($tokCmpGID);
   if (!$entity || $entity->hasError()) {
     array_push($hltherrors,"Error Unable to create tok/cmp ($tokCmpGID) located in $ctxMessage.".
-                ($entity->hasError()?"Errors: ".$entity->getErrors(true):EntityFactory::$error));
+                (($entity && $entity->hasError())?"Errors: ".$entity->getErrors(true):EntityFactory::$error));
   } else {
     if ($entity->isMarkedDelete()) {
       array_push($hltherrors,"Error $ctxMessage has token/compound link ($tokCmpGID) that is marked for delete.");
