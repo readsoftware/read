@@ -35,6 +35,8 @@ require_once dirname(__FILE__) . '/../../model/entities/Terms.php';
 require_once dirname(__FILE__) . '/../../model/entities/SyllableClusters.php';
 require_once dirname(__FILE__) . '/../../model/entities/Tokens.php';
 require_once dirname(__FILE__) . '/../../model/entities/Compounds.php';
+require_once dirname(__FILE__) . '/../../model/entities/inflections.php';
+require_once dirname(__FILE__) . '/../../model/entities/Lemmas.php';
 require_once dirname(__FILE__) . '/../../model/entities/Editions.php';
 require_once dirname(__FILE__) . '/../../model/entities/Texts.php';
 require_once dirname(__FILE__) . '/../../model/entities/Sequences.php';
@@ -2116,7 +2118,7 @@ function checkGlossaryHealth($catID, $verbose = true) {
     $imageBaselineTypeID = $termInfo['idByTerm_ParentLabel']['image-baselinetype'];//term dependency
     $transBaselineTypeID = $termInfo['idByTerm_ParentLabel']['transcription-baselinetype'];//term dependency
     $catID = $catalog->getID();
-    $lemmas = new Lemmas("lem_cat_id = $catID",'lem_id',null,null);
+    $lemmas = new Lemmas("lem_catalog_id = $catID",'lem_id',null,null);
     if ($lemmas && $lemmas->getCount()>0) {
       if ($verbose) {
         array_push($hltherrors,"**************** Processing Glossary Lemmas ***************************");
@@ -2128,8 +2130,29 @@ function checkGlossaryHealth($catID, $verbose = true) {
         if ($lemma->isMarkedDelete()) {
           array_push($hltherrors,"Error glossary (cat:$catID) has lemma ($lemValue/lem$lemID) that is marked for delete.");
           //ToDo  add code to add <a> for a service to correct the issue.
+          continue;
         } else {//save to check components
           array_push($lemIDs,$lemID);
+        }
+        $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
+        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LinkageType');
+        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LinkageType');
+        $relatedNode = null;
+        if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
+          foreach ($relatedGIDsByLinkType[$seeLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            if (!$entity || $entity->hasError() || $entity->isMarkedDelete()) {
+              array_push($hltherrors,"Lemma ($lemValue/lem$lemID) has link to invalid entity $linkGID.");
+            }
+          }
+        }
+        if ($relatedGIDsByLinkType && array_key_exists($cfLinkTypeID,$relatedGIDsByLinkType)) {
+          foreach ($relatedGIDsByLinkType[$cfLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            if (!$entity || $entity->hasError() || $entity->isMarkedDelete()) {
+              array_push($hltherrors,"Lemma ($lemValue/lem$lemID) has link to invalid entity $linkGID.");
+            }
+          }
         }
       }
       //process lemma components
@@ -2147,11 +2170,11 @@ function checkGlossaryHealth($catID, $verbose = true) {
           $lemValue = $lemma->getValue();
           $lemTag = $lemma->getEntityTag();
           $components = $lemma->getComponents(true);
-          $components->setAutoAdvance(false); // make sure the iterator doesn't prefetch
+//          $components->setAutoAdvance(false); // make sure the iterator doesn't prefetch
           foreach ($components as $component) {
             $entTypeID = $component->getEntityTypeCode();
             $entTag = $component->getEntityTag();
-            if ($component->isMarkedDeleted()) {
+            if ($component->isMarkedDelete()) {
               array_push($hltherrors,"Lemma ($lemValue/$lemTag) has component $entTag that is marked for delete.");
               continue;
             }
@@ -2162,10 +2185,37 @@ function checkGlossaryHealth($catID, $verbose = true) {
                 array_push($hltherrors,"Inflection $entTag already a component of ".$infIDs[$component->getID()]);
               }
             } else {
-              if (!@$tokCmpGIDs[$component->getID()]) {
-                $tokCmpGIDs[$component->getID()] = $lemTag;
+              if (!@$tokCmpGIDs[$entTag]) {
+                $tokCmpGIDs[$entTag] = $lemTag;
               } else {
-                array_push($hltherrors,"Token/Compound $entTag already a component of ".$tokCmpGIDs[$component->getID()]);
+                array_push($hltherrors,"Token/Compound $entTag already a component of ".$tokCmpGIDs[$entTag]);
+              }
+            }
+          }
+        }
+        if ($verbose) {
+          array_push($hltherrors,"**************** Processing Inflections ***************************");
+        }
+        if ($infIDs && count($infIDs) > 0) {
+          foreach ($infIDs as $infID => $lemTag) {
+            $inflection = new Inflection($infID);
+            $infTag = $inflection->getEntityTag();
+            $components = $inflection->getComponents(true);
+            if (!$components || $components->getCount() == 0) {
+              array_push($hltherrors,"Lemma ($lemTag) has inflection $infTag that has no attested forms.");
+              continue;
+            }
+            foreach ($components as $component) {
+              $entTag = $component->getEntityTag();
+              if ($component->isMarkedDelete()) {
+                array_push($hltherrors,"Lemma ($lemTag) has inflection $infTag with attested form $entTag marked for delete.");
+                continue;
+              } else {
+                if (!@$tokCmpGIDs[$entTag]) {
+                  $tokCmpGIDs[$entTag] = $infTag;
+                } else {
+                  array_push($hltherrors,"Processing Token/Compound $entTag for $infTag (of $lemTag) which is already a component of ".$tokCmpGIDs[$entTag]);
+                }
               }
             }
           }
@@ -2174,45 +2224,17 @@ function checkGlossaryHealth($catID, $verbose = true) {
           array_push($hltherrors,"**************** Processing Tokens and Compounds ***************************");
         }
         if ($tokCmpGIDs && count($tokCmpGIDs) > 0) {
-          foreach ($tokCmpGIDs as $tokCmpGID) {
-            $containerTag = $tokCmpGIDs[$tokCmpGID];
+          foreach ($tokCmpGIDs as $tokCmpTag => $lemTag) {
+            $containerTag = $tokCmpGIDs[$tokCmpTag];
             $ctxMessage = "Containing Entity ($containerTag)";
-            validateTokCmp($tokCmpGID,$ctxMessage,$tokCmpGID);
-          }
-        }
-        //check syllable vs token graIDs
-        if ($verbose) {
-          array_push($hltherrors,"**************** Checking graIDs match for syllable and tokens ***************************");
-        }
-        while ($graID = array_shift($sclGraphemeIDs)) {
-          $index = array_search($graID,$hlthtokGraphemeIDs);
-          if ($index === false) {//syllable grapheme not found in any token
-            //find sclGID
-            $sclGID = $gra2SclGID[$graID];
-            //find seqGID and label
-            $seqGID = $gid2SeqMap[$sclGID];
-            $seqLabel = $seqGID2Label[$seqGID];
-            //write out error message
-            array_push($hltherrors,"Error Physical Line Sequence ($seqLabel/$seqGID) has syllable ($sclGID) with grapheme (gra:$graID) that is not contained in a token.");
-          } else {
-            array_splice($hlthtokGraphemeIDs,$index,1);
-          }
-        }
-        if (count($hlthtokGraphemeIDs)) {//we have token graphemes that are not in a syllable
-          foreach ($hlthtokGraphemeIDs as $graID) {
-            //find the token GID
-            $tokGID = $hlthgra2TokGID[$graID];
-            //find the token context
-            $ctxLabel = $hlthtokGID2CtxLabel[$tokGID];
-            //write out error message
-            array_push($hltherrors,"Error $ctxLabel has token ($tokGID) that has a grapheme (gra:$graID) that is not in a syllable.");
+            validateTokCmp($tokCmpTag,$ctxMessage,$tokCmpTag);
           }
         }
       }
     }
   }
   if ($verbose) {
-    $retStr .= "\t\t\t Health Report for (edn$ednID) - ".$edition->getDescription()."\n\n";
+    $retStr .= "\t\t\t Health Report for (cat$catID) - ".$catalog->getTitle()."\n\n";
   }
 
   if (count($hlthwarnings) > 0) {
@@ -2232,10 +2254,10 @@ function checkGlossaryHealth($catID, $verbose = true) {
     }
   }
   if (count($hlthwarnings) == 0 && count($hltherrors) == 0) {
-    $retStr .= " Edition links check ok for edition (edn$ednID).";
+    $retStr .= " Catalog links check ok for catalog (cat$catID).";
   }
   if ($verbose) {
-    $retStr .= "\t\t\t End of Health Report for (edn$ednID) - ".$edition->getDescription()."\n\n";
+    $retStr .= "\t\t\t End of Health Report for (cat$catID) - ".$catalog->getTitle()."\n\n";
   }
 
   return $retStr;
