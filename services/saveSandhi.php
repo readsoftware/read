@@ -310,6 +310,7 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
       $origSyllableGraphemes = $syllable->getGraphemes(true);
       //clone syllable  TODO determine if case for not cloning syllable (owned with readonly grapheme)
       $clonedSyllable = $syllable->cloneEntity($defAttrIDs,$defVisIDs);
+      $newSyllableID = $clonedSyllable->getID();
       //clone graphemes
       foreach ($origSyllableGraphemes as $grapheme) {//copy all grapheme and set decomp for clone of ref grapheme
         $newGrapheme = $grapheme->cloneEntity($defAttrIDs,$defVisIDs);
@@ -318,6 +319,7 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
         }
         $newGrapheme->save();
         addNewEntityReturnData('gra',$newGrapheme);
+        addUpdateEntityReturnData('gra',$newGrapheme->getID(),'sclID',$newSyllableID);
         if ($graID == $grapheme->getID()) {//capture the sandhi graID
           $sandhiGraID = $newGrapheme->getID();
         }
