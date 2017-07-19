@@ -227,8 +227,8 @@ if (count($errors) == 0) {
     } else if ($addEntityGID && $edition) {
       $skip = false;
       if (strpos($addEntityGID,'seq')!== false){ //adding sequence to sequence check nesting level and loops
-        $skip = checkInContainment($addEntityGID,$seqGID,$edition->getSequenceIDs(),6);
-        array_push($warnings,"warning reference loop detected or level constraint exceeded, cancel component add of $addEntityGID to sequence '".$sequence->getLabel());
+        $skip = checkInContainment($addEntityGID,$seqGID,$edition->getSequenceIDs(),8);
+        array_push($warnings,"warning reference loop detected or level constraint (8) exceeded, cancel component add of $addEntityGID to sequence '".$sequence->getLabel());
       }
       if (!$skip) {
         $entityIDs = $sequence->getEntityIDs();

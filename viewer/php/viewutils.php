@@ -102,7 +102,7 @@ function getEditionGlossaryLookup($entTag,  $refresh = false) {
   if ($catID) {
     return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $refresh));
   }
-  return "";
+  return "{}";
 }
 
 /**
@@ -685,7 +685,6 @@ function getStructHTML($sequence, $level) {
     switch ($seqType) {
       case "Chapter": //warning term dependency
       case "Section": //warning term dependency
-      case "Paragraph": //warning term dependency
         $editionTOCHtml .= '<div id="toc'.$seqTag.'" class="tocEntry level'.$lvl.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
         break;
     }
@@ -826,8 +825,9 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
           if (!$label) {
             $label = $seqTag;
           }
-          $lineHtml = "<span class=\"linelabel $seqTag\">[$label]</span>";
+          $lineHtml = "<span class=\"linelabel $seqTag\">[$label]";
           $lineHtml .= getEntityFootnotesHtml($physicalLineSeq);//add any line footnotes to end of label
+          $lineHtml .= "</span>";
           if (strpos($syllable->getSortCode(),"0.19")=== 0 &&
               strpos($syllable->getSortCode2(),"0.5")=== 0 &&
               count($graIDs) > 1) { //begins with vowel carrier so choose second grapheme
@@ -1185,7 +1185,6 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 }
                 if ($num) {
                   $num = Entity::getTermFromID($num).($ingCF[4]==2?'(?)':'');
-                  $infString .= "<span class=\"inflectdescript\">$num</span>";
                 } else {
                   $num = '?';
                 }
@@ -1200,6 +1199,9 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 }
                 if (!array_key_exists($vper,$groupedForms[$vtensemood][$num])) {
                   $groupedForms[$vtensemood][$num][$vper] = array();
+                }
+                if ($num) {
+                  $infString .= "<span class=\"inflectdescript\">$num</span>";
                 }
                 if ($conj2) {
                   $conj2 = Entity::getTermFromID($conj2).($ingCF[7]==2?'(?)':'');
