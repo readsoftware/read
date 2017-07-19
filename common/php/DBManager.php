@@ -58,6 +58,7 @@
             $_query,
             $_results,
             $_rowCount = 0,
+            $_affectedRowCount = 0,
             $_queryResultSynchNeeded = true,
             $_error;
 
@@ -133,10 +134,12 @@
 //error_log("time=$ttime for q= ".$query);
       if($this->_results) {
         $this->_rowCount = pg_num_rows($this->_results);
+        $this->_affectedRowCount = pg_affected_rows($this->_results);
         $this->_query = $query;
         $this->_queryResultSynchNeeded = false;
       }else{
         $this->_rowCount = 0;
+        $this->_affectedRowCount = 0;
         $this->_query = $query;
       }
       $this->_error = pg_last_error($this->_dbHandle);
@@ -289,9 +292,18 @@
     }
 
     /**
-    * Get query string
+    * Get affected row count
     *
-    * @return string returns the query string
+    * @return int returns the number of affected rows
+    */
+    public function getAffectedRowCount() {
+      return $this->_affectedRowCount;
+    }
+
+    /**
+    * Get row count
+    *
+    * @return int returns the number of result rows
     */
     public function getRowCount() {
       return $this->_rowCount;

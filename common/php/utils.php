@@ -2045,6 +2045,101 @@ function checkEditionHealth($ednID, $verbose = true) {
             array_push($hltherrors,"Error $ctxLabel has token ($tokGID) that has a grapheme (gra:$graID) that is not in a syllable.");
           }
         }
+        //process structure sequences
+        if ($verbose) {
+          array_push($hltherrors,"**************** Processing Structural Analysis Sequences ***************************");
+        }
+        if ($structuralSeqIDs && count($structuralSeqIDs) > 0) {
+          $processedSeqIDs = array();
+          while ($seqID = array_shift($structuralSeqIDs)) {
+            $sequence = new Sequence($seqID);
+            if ($sequence->hasError()) {
+              array_push($hltherrors,"Error Strucutral Sequence (seq:$seqID) cannot be loaded. Error:".$sequence->getErrors(true));
+              continue;
+            }
+            $seqGID = $sequence->getGlobalID();
+            $seqLabel = $sequence->getLabel()?$sequence->getLabel():$sequence->getSuperScript();
+            $seqGID2Label[$seqGID] = $seqLabel;
+            if ($sequence->isMarkedDelete()) {
+              array_push($hltherrors,"Error Structural Sequence ($seqLabel/seq:$seqID) is marked for delete.");
+              //ToDo:  add code to add <a> for a service to correct the issue.
+            }
+            $seqEntityGIDs = $sequence->getEntityIDs();
+            if (!$seqEntityGIDs || count($seqEntityGIDs) == 0) {
+              array_push($hltherrors,"Error Strucutral Sequence (seq:$seqID) has no entity ids.");
+              continue;
+            }
+            foreach ($seqEntityGIDs as $seqEntityGID) {
+              $prefix =substr($seqEntityGID,0,3);
+              switch ($prefix) {
+                case 'seq':
+                  $subSeqID = substr($seqEntityGID,4);
+                  $subsequence = new Sequence($subSeqID);
+                  if ($subsequence->hasError()) {
+                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has subsequence $seqEntityGID with loading error. Error:".$subsequence->getErrors(true));
+                    continue;
+                  }
+                  $subSeqLabel = $subsequence->getLabel()?$subsequence->getLabel():$subsequence->getSuperScript();
+                  $seqGID2Label[$seqEntityGID] = $subSeqLabel;
+                  if ($sequence->isMarkedDelete()) {
+                    array_push($hltherrors,"Error Structural Sequence ($subSeqLabel/$seqEntityGID) is marked for delete.");
+                    continue;
+                    //ToDo:  add code to add <a> for a service to correct the issue.
+                  }
+                  if ( $seqGID == $seqEntityGID ) {//recursion
+                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has $seqEntityGID as contained entity (recursion)");
+                  } else {
+                    if (array_key_exists($seqEntityGID,$processedSeqIDs)) {
+                      array_push($hlthwarnings,"Warning Strucutral Sequence ($seqLabel/$seqGID) has child $subSeqLabel/$seqEntityGID already processed as child of ".join(",",$processedSeqIDs[$seqEntityGID]));
+                      array_push($processedSeqIDs[$seqEntityGID],$seqGID);
+                    } else {
+                      if (!in_array($subSeqID,$structuralSeqIDs)) {
+                        array_push($structuralSeqIDs,$subSeqID); //walk tree
+                      }
+                      $processedSeqIDs[$seqEntityGID] = array($seqGID);
+                    }
+                  }
+                  break;
+                case 'tok':
+                  if (!in_array($seqEntityGID,$tokCmpGIDs)) {// structure with non edition tok/cmp
+                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) contains token $seqEntityGID which is not part of the edition.");
+                    $token = new Token(substr($seqEntityGID,4));
+                    if ($token->hasError()) {
+                      array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has token $seqEntityGID with loading error. Error:".$token->getErrors(true));
+                      continue;
+                    }
+                    if ($token->isMarkedDelete()) {
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has token $seqEntityGID which is marked for delete.");
+                      continue;
+                      //ToDo:  add code to add <a> for a service to correct the issue.
+                    }
+                    if (count($token->getGraphemeIDs())==0) {
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has token $seqEntityGID which has no graphemes.");
+                    }
+                  }
+                  break;
+                case 'cmp':
+                  if (!in_array($seqEntityGID,$tokCmpGIDs)) {// structure with non edition tok/cmp
+                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) contains compound $seqEntityGID which is not part of the edition.");
+                    $compound = new Compound(substr($seqEntityGID,4));
+                    if ($compound->hasError()) {
+                      array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has compound $seqEntityGID with loading error. Error:".$compound->getErrors(true));
+                      continue;
+                    }
+                    if ($compound->isMarkedDelete()) {
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has compound $seqEntityGID which is marked for delete.");
+                      continue;
+                      //ToDo:  add code to add <a> for a service to correct the issue.
+                    }
+                    if (count($compound->getComponentIDs())==0) {
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has compound $seqEntityGID which has no components.");
+                    }
+                  }
+                  break;
+              }//end switch
+            }//end for each seqGIDs
+          }//end while seqID
+        }
       }
     }
   }
@@ -2165,11 +2260,11 @@ function checkGlossaryHealth($catID, $verbose = true) {
         foreach ($lemmas as $lemma) {
           $entGIDs = $lemma->getComponentIDs();
           $lemValue = $lemma->getValue();
+          $lemTag = $lemma->getEntityTag();
           if (count($entGIDs) == 0) {
-            array_push($hlthwarnings,"Warning lemma ($lemValue/lem$lemID) that is has no attested forms.");
+            array_push($hlthwarnings,"Warning lemma ($lemValue/$lemTag) that is has no attested forms.");
             continue;
           }
-          $lemTag = $lemma->getEntityTag();
           foreach ($entGIDs as $entGID) {
             $entTypeID = substr($entGID,0,3);
             if ($entTypeID == "inf") {
@@ -2390,6 +2485,9 @@ function validateTokCmp ($tokCmpGID, $ctxMessage, $topTokCmpGID) {
       //ToDo:  add code to add <a> for a service to correct the issue.
     } else {// process each token or compound depth first
       $label = $entity->getValue();
+      if(!$label || strlen($label) == 0) {
+        array_push($hltherrors,"Error tok/cmp ($tokCmpGID) located in $ctxMessage has no value.");
+      }
       $newCtxMessage = "$ctxMessage, token/compound ($label/$tokCmpGID)";
       $prefix = $entity->getEntityTypeCode();
       if ($prefix == "cmp") {//process components
@@ -2535,4 +2633,86 @@ function findSclGIDsFromPattern($pattern,$sclGIDsByLinePostion) {
   }
   return $sclGIDs;
 }
+
+function getUserGroupIDforName($name) {
+  $dbMgr = new DBManager();
+  $dbMgr->query("select ugr_id from usergroup where ugr_name = '$name';");
+  $row = $dbMgr->fetchResultRow();
+  return $row?$row['ugr_id']:null;
+}
+
+
+function changeVisibility($prefix,$table,$ids,$vis,$owner) {
+  $dbMgr = new DBManager();
+  if ($table == 'usergroup') {
+    return null;
+  }
+  $query = "update $table set $prefix"."_visibility_ids='$vis'";
+  if($ids && count($ids) >0 || $owner) {
+    if ($ids && $owner) {
+      $query .= " where $prefix"."_id in (".join(",",$ids).") and $prefix"."_owner_id=$owner";
+    }else if ($ids) {
+      $query .= " where $prefix"."_id in (".join(",",$ids).")";
+    } else if ($ids && $owner) {
+      $query .= " where $prefix"."_owner_id=$owner";
+    }
+  }
+  $query .= ";";
+  $dbMgr->query($query);
+  $cnt = $dbMgr->getAffectedRowCount();
+  return $cnt?$cnt:null;
+}
+
+
+function changeOwner($prefix,$table,$ids,$newOwner,$oldOwner) {
+  $dbMgr = new DBManager();
+  if ($table == 'usergroup') {
+    return null;
+  }
+  $query = "update $table set $prefix"."_owner_id='$newOwner'";
+  if($oldOwner) {
+    $query .= " where $prefix"."_owner_id=$oldOwner";
+  }
+  $query .= ";";
+  $dbMgr->query($query);
+  $cnt = $dbMgr->getAffectedRowCount();
+  return $cnt?$cnt:null;
+}
+
+$prefixToTableName = array(
+          "col" => "collection",
+          "itm" => "item",
+          "prt" => "part",
+          "frg" => "fragment",
+          "img" => "image",
+          "spn" => "span",
+          "srf" => "surface",
+          "txt" => "text",
+          "tmd" => "textmetadata",
+          "mcx" => "materialcontext",
+          "bln" => "baseline",
+          "seg" => "segment",
+          "run" => "run",
+          "lin" => "line",
+          "scl" => "syllablecluster",
+          "gra" => "grapheme",
+          "tok" => "token",
+          "cmp" => "compound",
+          "lem" => "lemma",
+          "inf" => "inflection",
+          "trm" => "term",
+          "prn" => "propernoun",
+          "cat" => "catalog",
+          "seq" => "sequence",
+          "lnk" => "link",
+          "edn" => "edition",
+          "bib" => "bibliography",
+          "ano" => "annotation",
+          "atb" => "attribution",
+          "atg" => "attributiongroup",
+          "ugr" => "usergroup",
+          "dat" => "date",
+          "era" => "era"
+);
+
 ?>

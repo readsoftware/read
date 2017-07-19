@@ -337,7 +337,7 @@ EDITORS.ImgVE.prototype = {
         //check file size and extensions supported
         if(this.files && this.files[0] &&
             this.files[0].size && this.files[0].size > maxUploadSize) {
-          if (confirm("File exceeds maximum upload filesize. Would you like to choose antoher file?")) {
+          if (confirm("File exceeds maximum upload filesize ("+maxUploadSize+"). Would you like to choose another file?")) {
             $(this).click();
           }
           return;

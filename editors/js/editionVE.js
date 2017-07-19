@@ -2304,7 +2304,9 @@ mergeLine: function (direction,cbError) {
                 " and context "+ JSON.stringify(deletedata));
     DEBUG.log("data","before deleteLine sequence dump\n" + DEBUG.dumpSeqData(this.physSeq.id,0,1,ednVE.lookup.gra));
     DEBUG.log("data","before deleteLine sequence dump\n" + DEBUG.dumpSeqData(delLineSeqGID.substring(4),0,1,ednVE.lookup.gra));
-    DEBUG.log("data","before deleteLine sequence dump\n" + DEBUG.dumpSeqData(this.textSeq.id,0,1,ednVE.lookup.gra));
+    if ( this.textSeq) {// freetext line exclude
+      DEBUG.log("data","before deleteLine sequence dump\n" + DEBUG.dumpSeqData(this.textSeq.id,0,1,ednVE.lookup.gra));
+    }
     //call service with ednID, ord position and line label
     $.ajax({
         type:"POST",
@@ -2326,7 +2328,9 @@ mergeLine: function (direction,cbError) {
                 ednVE.textSeq = ednVE.dataMgr.getEntity('seq',data['newTextSeqID']);
               }
               DEBUG.log("data","after deleteLine sequence dump\n" + DEBUG.dumpSeqData(ednVE.physSeq.id,0,1,ednVE.lookup.gra));
-              DEBUG.log("data","after deleteLine sequence dump\n" + DEBUG.dumpSeqData(ednVE.textSeq.id,0,1,ednVE.lookup.gra));
+              if ( this.textSeq) { // freetext line exclude
+                DEBUG.log("data","after deleteLine sequence dump\n" + DEBUG.dumpSeqData(ednVE.textSeq.id,0,1,ednVE.lookup.gra));
+              }
               if (typeof ednVE.sclEd != "undefined" && trgSclID) {
                 ednVE.sclEd.moveToSyllable(trgSclID,'caretAtStart');
               } else if (trgFreetextNode) {
