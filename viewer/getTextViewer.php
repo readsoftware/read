@@ -45,6 +45,8 @@
   } else {
     if ( isset($data['ednID'])) {//required
       $ednID = $data['ednID'];
+      $ednIDs = explode(",",$ednID);
+      $ednID = $ednIDs[0];
       $glossaryEntTag = "edn".$ednID;
       $edition = new Edition($ednID);
       if ($edition->hasError()) {
@@ -123,7 +125,7 @@
           progressInputName='<?php echo ini_get("session.upload_progress.name"); ?>',
           dbName = '<?=DBNAME?>',
           basepath="<?=SITE_BASE_PATH?>";
-      var edStructHtml = <?=getEditionStructuralViewHtml($edition->getID())?>,
+      var edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs)?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,
           edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>,
 <?php
@@ -134,13 +136,13 @@
   }
   if ($showTranslationView && $hasTranslation) {
 ?>
-          transStructHtml = <?=getEditionStructuralTranslationHtml($edition->getID())?>,
+          transStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs)?>,
           transFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>,
 <?php
   }
   if ($showChayaView && $hasChaya) {
 ?>
-          chayaStructHtml = <?=getEditionStructuralTranslationHtml($edition->getID(), Entity::getIDofTermParentLabel('chaya-translation'))?>,
+          chayaStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs, Entity::getIDofTermParentLabel('chaya-translation'))?>,
           chayaFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>,
 <?php
   }

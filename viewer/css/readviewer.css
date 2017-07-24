@@ -81,6 +81,7 @@ font-weight: bold;
 .footnote {
   color:darkcyan;
   background: lightgrey;
+  cursor: pointer;
 }
 .popupwrapperdiv{
   max-width: 450px;
@@ -180,6 +181,12 @@ body.showTOC .tocNavPanel {
   background-color: transparent;
   color: grey;
   cursor: pointer;
+}
+.partBoundary{
+  margin-left: 15px;
+  background-color: transparent;
+  color: grey;
+  font-size: smaller;
 }
 .titleDiv{
   text-align: center;
