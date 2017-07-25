@@ -187,6 +187,7 @@ body.showTOC .tocNavPanel {
   color: rgb(148,138,84);
   font-size: smaller;
   margin-top: 20px;
+  margin-bottom: 20px;
 }
 .boundaryNote{
   margin-left: 5px;
@@ -198,6 +199,7 @@ body.showTOC .tocNavPanel {
 .secHeader.FreeText {
   color: rgb(148,138,84);
   font-weight: unset;
+  font-size: smaller;
 }
 .section.Sentence {
   display: inline;
