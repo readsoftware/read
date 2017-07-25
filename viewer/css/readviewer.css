@@ -183,14 +183,21 @@ body.showTOC .tocNavPanel {
   cursor: pointer;
 }
 .partBoundary{
-  margin-left: 15px;
   background-color: transparent;
-  color: grey;
+  color: rgb(148,138,84);
   font-size: smaller;
+  margin-top: 20px;
+}
+.boundaryNote{
+  margin-left: 5px;
 }
 .titleDiv{
   text-align: center;
   width: 100%;
+}
+.secHeader.FreeText {
+  color: rgb(148,138,84);
+  font-weight: unset;
 }
 .section.Sentence {
   display: inline;

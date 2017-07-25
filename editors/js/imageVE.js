@@ -15,7 +15,7 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-* editors imageViewer object
+* editors imageViewerEditor object
 *
 * @author      Stephen White  <stephenawhite57@gmail.com>
 * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
