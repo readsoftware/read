@@ -201,6 +201,9 @@ body.showTOC .tocNavPanel {
   font-weight: unset;
   font-size: smaller;
 }
+#chayaViewerContent .section:not(.Chapter) {
+  font-style: italic;
+}
 .section.Sentence {
   display: inline;
 }
