@@ -940,23 +940,20 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
     if ($curStructHeaderbyLevel[$curStructLevel]['sup'] == str_replace("(","",str_replace(")","",$seqSup))) {
       $label = null;
     } else {//sibling so signal output of section Header
-      $label = ($seqSup?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+      $label = (($seqSup && $seqType == "Chapter")?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
     }
     //close section div
     $structureHtml .= "</div>";
   } else {// new struct is deeper case
-    $label = ($seqSup?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+    $label = (($seqSup && $seqType == "Chapter")?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
   }
   if ($label) {//output header div and toc info
     $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$level.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
     $structureHtml .= getEntityFootnotesHtml($sequence);
-    switch ($seqType) {
-      case "Chapter": //warning term dependency
-      case "Section": //warning term dependency
+    if ($seqType == "Chapter") { //warning term dependency
         $editionTOCHtml .= '<div id="toc'.$seqTag.'" class="tocEntry level'.$level.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
         $curStructHeaderbyLevel[$level] = array('sup'=>$seqSup,'label'=> $seqLabel);
-        break;
-    }
+     }
   }
   //open structure div
   $structureHtml .= '<div class="section level'.$level.' '.$seqTag.' '.$seqType.'">';

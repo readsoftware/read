@@ -1509,7 +1509,7 @@ EDITORS.ImageVE.prototype = {
       var key = e.which == null?String.fromCharCode(e.keyCode):
                 (e.which != 0 )?String.fromCharCode(e.which):null;
 //      alert('-keypress img in imageVE '+key);
-      if (key == '+') {
+      if (key == '+' || key == '=') {
         imgVE.zoomCenter.call(imgVE,-1);
       } else if (key == '-'){
         imgVE.zoomCenter.call(imgVE,1);
@@ -2417,6 +2417,7 @@ EDITORS.ImageVE.prototype = {
   drawNavPanel: function(alpha) {+
     this.navContext.save();
     this.navContext.globalAlpha = alpha;
+    this.navContext.imageSmoothingEnabled = false;
     this.navContext.drawImage(this.image,//draw scaled image into pan window
       0, 0,
       this.image.width,
@@ -2436,6 +2437,7 @@ EDITORS.ImageVE.prototype = {
   drawImage: function() {
     var width = this.image.width * this.vpSize.width / this.navCanvas.width,
         height = this.image.height * this.vpSize.height / this.navCanvas.height;//BUG index calcs < 0
+    this.imgContext.imageSmoothingEnabled = false;
     this.imgContext.drawImage(this.image,
       this.vpLoc.x * this.image.width / this.navCanvas.width,
       this.vpLoc.y * this.image.height / this.navCanvas.height,

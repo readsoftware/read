@@ -9,7 +9,7 @@
 }
 
 .viewerHeaderLabel {
-  display: flex;
+  display: inline-flex;
   justify-content: left; /* align horizontal */
   align-items: center; /* align vertical */
   font-size: 18pt;
@@ -19,9 +19,14 @@
   padding-left: 25px;
 }
 
+.headerDiv {
+  width: 100%;
+}
+
 .viewerHeader {
   background-color: rgb(240,240,230);
   height: 35px;
+  width: 100%;
   border: none;
 }
 
@@ -51,7 +56,7 @@
 .grpTok .linelabel{
   padding-right: 0px;
 }
-.secHeader.Paragraph{
+.secHeader.Paragraph, .secHeader.Pāda{
   color: rgb(100,210,210);
 }
 .secHeader{
@@ -182,6 +187,7 @@ body.showTOC .tocNavPanel {
   color: grey;
   cursor: pointer;
 }
+
 .partBoundary{
   background-color: transparent;
   color: rgb(148,138,84);
@@ -189,27 +195,63 @@ body.showTOC .tocNavPanel {
   margin-top: 20px;
   margin-bottom: 20px;
 }
+
 .boundaryNote{
   margin-left: 5px;
 }
+
 .titleDiv{
   text-align: center;
   width: 100%;
 }
+
 .secHeader.FreeText {
   color: rgb(148,138,84);
   font-weight: unset;
   font-size: smaller;
 }
+
 #chayaViewerContent .section:not(.Chapter) {
   font-style: italic;
 }
+
+.secHeader.Sentence {
+  display: inline;
+}
+
 .section.Sentence {
   display: inline;
 }
+
+.section.Stanza {
+  margin-bottom: 0px;
+}
+
 .section.Item {
   margin-bottom: 0px;
 }
-.section.Pada {
+
+.section.Pāda {
   margin-bottom: 0px;
+}
+
+.zoomButton {
+  width: 50%;
+  height: auto;
+  font-size: 20pt;
+  font-weight: bold;
+  display: inline-flex;
+
+}
+
+.zoomUI {
+  height: 100%;
+  float: right;
+  display: inline-flex;
+  margin-right: 15px;
+}
+
+.filename {
+  display: inline-flex;
+  padding-left: 20px;
 }
