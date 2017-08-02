@@ -129,8 +129,10 @@ if (!$data) {
           $seqPhys = $edSequence;
           foreach ($seqPhys->getEntities(true) as $lineSequence) {
             $lineSclGIDs = $lineSequence->getEntityIDs();
-            array_push($linesOfSclGIDs,$lineSclGIDs);
-            $orderedSclGIDs = array_merge($orderedSclGIDs,$lineSclGIDs);
+            if ($lineSclGIDs && is_array($lineSclGIDs)) {
+              array_push($linesOfSclGIDs,$lineSclGIDs);
+              $orderedSclGIDs = array_merge($orderedSclGIDs,$lineSclGIDs);
+            }
           }
         }
       }
