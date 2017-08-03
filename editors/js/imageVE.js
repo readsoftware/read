@@ -1547,7 +1547,7 @@ EDITORS.ImageVE.prototype = {
         //hittest for target polygons
         var hitPolyIndices = imgVE.hitTestPolygons(x,y);
         //unselect existing if no ctrl key pressed
-        if (!e.ctrlKey) {
+        if (!(e.ctrlKey || e.metaKey)) {
           imgVE.selectedPolygons = {};
           // save shift click rectagular size of first hitTest polygon so works for only dblclick polygon
           index = hitPolyIndices[0];
@@ -1612,7 +1612,7 @@ EDITORS.ImageVE.prototype = {
       }
       if (imgVE.orderSegMode == "resetting" || imgVE.orderSegMode == "setting") { //(re)setting segment(s) ordinal so ignore clicks
         return;
-      } else if (e.shiftKey && !(e.ctrlKey || e.altKey)) {
+      } else if (e.shiftKey && !(e.ctrlKey || e.metaKey || e.altKey)) {
         var w = imgVE.aPolyW ? imgVE.aPolyW:20,
             wL = Math.round(w/2), wR = w - wL, //split size accounting for odd size
             h = imgVE.aPolyH ? imgVE.aPolyH:20,
@@ -1682,7 +1682,7 @@ EDITORS.ImageVE.prototype = {
                 }
             });
           }
-      } else if (e.ctrlKey && !(e.shiftKey || e.altKey)) { //user selecting or finishing drag navigation
+      } else if ((e.ctrlKey || e.metaKey) && !(e.shiftKey || e.altKey)) { //user selecting or finishing drag navigation
           //set cursor back to pointer ???
           //hittest for target polygons
           var hitPolyIndices = imgVE.hitTestPolygons(x,y);
@@ -1726,7 +1726,7 @@ EDITORS.ImageVE.prototype = {
     imgVE.rbRect,imgVE.drgStart,imgVE.rbImageData = null;
     $(imgVE.imgCanvas).unbind("mousedown touchstart").bind("mousedown touchstart", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgVE.id);
-      if (e.ctrlKey) { //user wants to drag navigation
+      if ((e.ctrlKey || e.metaKey)) { //user wants to drag navigation
         //set cursor to grabbing and flag dragnavigation
         imgVE.imgCanvas.style.cursor = 'pointer';
         imgVE.dragnav = 'down';
@@ -1751,7 +1751,7 @@ EDITORS.ImageVE.prototype = {
 
     $(imgVE.imgCanvas).unbind("mousemove touchmove").bind("mousemove touchmove", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgVE.id);
-      if (e.ctrlKey && e.buttons == 1) { // ctrl+left mouse button with move user is drag navigation
+      if ((e.ctrlKey || e.metaKey) && e.buttons == 1) { // ctrl+left mouse button with move user is drag navigation
         imgVE.dragnav = 'move';
         imgVE.imgCanvas.style.cursor = 'grabbing';
         //adjust picture postion
@@ -1787,7 +1787,7 @@ EDITORS.ImageVE.prototype = {
 
     $(imgVE.imgCanvas).unbind("mouseup touchend").bind("mouseup touchend", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgVE.id);
-      if (e.ctrlKey) { // || isDragNavigation ) { //user ending drag navigation
+      if ((e.ctrlKey || e.metaKey)) { // || isDragNavigation ) { //user ending drag navigation
         //close flag
         //reset cursor to grab if ctrl else to pointer
         if (imgVE.dragnav == 'move') {
