@@ -2115,7 +2115,7 @@ EDITORS.ImageVE.prototype = {
           return;
         }
         sclOldSegID = imgVE.dataMgr.entities['scl'][sclID]['segID'];
-        oldIsTransSeg = (imgVE.dataMgr.entities['seg'][sclOldSegID]['stringpos'] && imgVE.dataMgr.entities['seg'][sclOldSegID]['stringpos'].length);
+        oldIsTransSeg = (imgVE.dataMgr.entities['seg'][sclOldSegID] && imgVE.dataMgr.entities['seg'][sclOldSegID]['stringpos'] && imgVE.dataMgr.entities['seg'][sclOldSegID]['stringpos'].length);
         savedata['scl'] = [{scl_id:sclID,scl_segment_id:segID}];
         if (oldIsTransSeg) {
           scratch = (imgVE.dataMgr.entities['scl'][sclID]['scratch']?JSON.parse(imgVE.dataMgr.entities['scl'][1]['scratch']):{});
