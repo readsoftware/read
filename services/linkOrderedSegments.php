@@ -137,14 +137,15 @@ if (!$data) {
         }
       }
       if ($startSclGID) {//range specified so trim $orderedSclGIDsusing the start and end gids
-        $startIndex = array_search($startSclGID,$orderedSclGIDs);
+        $sclGIDs = $orderedSclGIDs;
+        $startIndex = array_search($startSclGID,$sclGIDs);
         if ($startIndex) {
-          array_splice($orderedSclGIDs,0,$startIndex);
+          array_splice($sclGIDs,0,$startIndex);
         }
-        if ( $endSclGID) {
-          $endIndex = array_search($endSclGID,$orderedSclGIDs);
+        if ($endSclGID) {
+          $endIndex = array_search($endSclGID,$sclGIDs);
           if ($endIndex) {
-             array_splice($orderedSclGIDs,$endIndex+1);
+             array_splice($sclGIDs,$endIndex+1);
           }
         }
       } else if ($patterns) {// use patterns to compose an ordered list of syllables
@@ -153,9 +154,6 @@ if (!$data) {
           $sclGIDs = array_merge($sclGIDs,findSclGIDsFromPattern($pattern,$linesOfSclGIDs));
         }
         // Create linkSclIDs array
-      }
-      if (!$sclGIDs || count($sclGIDs) == 0) {//use entire ordered set
-        $sclGIDs = $orderedSclGIDs;
       }
       $sclIDs = preg_replace("/scl\:/","",$sclGIDs);
     }
@@ -213,7 +211,7 @@ if (!$data) {
     // get an ordered list of segment IDs for the base lines supplied or for the entire database.
     $query = "select seg_id, seg_baseline_ids[1] as blnID, substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int as ord".
              " from segment".
-             " where substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int is not null and seg_image_pos is not null";
+             " where substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int is not null and seg_image_pos is not null".
              " and seg_baseline_ids[1] in (".join(',',$blnIDs).") ";
     if ($startSegOrd || $endSegOrd) {
       if ($startSegOrd && is_numeric($startSegOrd)) {
@@ -240,22 +238,39 @@ if (!$data) {
       }
     }
   }
-
+  $segCnt = count($ordSegIDs);
   // verify syllable ownership
-  $syllables = new SyllableClusters("scl_id in (".join(",",$sclIDs).")",null,null,null);
-  foreach ($syllables as $syllable) {
+  $orderedSyllables = array();;
+  foreach ($sclIDs as $sclID) {
+    $syllable = new SyllableCluster($sclID);
     if ($syllable->isReadonly()) {
       array_push($errors,"link to readonly syllables is not allowed");
       break;
     }
+    array_push($orderedSyllables,$syllable);
+    if (--$segCnt == 0) {//only check and accumulate those to be matched with a segment
+      break;
+    }
   }
-  if (count($errors) == 0 && $syllables->getCount()) {
-    while (count($sclIDs) && count($ordSegIDs)) {
-      $sclID = array_shift($sclIDs);
+  if (count($errors) == 0 && count($orderedSyllables)> 0) {
+    while (count($orderedSyllables) && count($ordSegIDs)) {
       $segID = array_shift($ordSegIDs);
       $segment = new Segment($segID);
       if ($segment && !$segment->hasError()) {
-        $syllable = $syllables->searchKey($sclID);
+        $syllable = array_shift($orderedSyllables);
+        $sclID = $syllable->getID();
+        $segSclIDs = $segment->getSyllableIDs();
+        if (count($segSclIDs) > 0) {
+          foreach ($segSclIDs as $segSclID) {
+            if ($segSclID != $sclID && in_array("scl:$segSclID",$orderedSclGIDs)) {//found a syllable already link to this segment so unlink it if possible
+              $otherLinkedSyllable = new SyllableCluster($segSclID);
+              if ($otherLinkedSyllable && !$otherLinkedSyllable->hasError() && !$otherLinkedSyllable->isReadonly()) {
+                $otherLinkedSyllable->setSegmentID(null);
+                $otherLinkedSyllable->save();
+              }
+            }
+          }
+        }
         if($syllable) {
           $syllable->setSegmentID($segID);
           $syllable->save();
@@ -263,7 +278,7 @@ if (!$data) {
             array_push($errors,"Error saving syllable id = ".$syllable->getID()." errors - ".join(",",$syllable->getErrors()));
             break;
           } else {
-            addUpdateEntityReturnData("seg",$segment->getID(),"sclIDs",$segment->getSyllableIDs());
+            addUpdateEntityReturnData("seg",$segment->getID(),"sclIDs",$segment->getSyllableIDs(true));
             addUpdateEntityReturnData("scl",$syllable->getID(),"segID",$syllable->getSegmentID());
           }
         }

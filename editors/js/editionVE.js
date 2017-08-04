@@ -2851,7 +2851,13 @@ mergeLine: function (direction,cbError) {
       if (senderID == ednVE.id) {
         return;
       }
-      DEBUG.log("event","link request recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource);
+      DEBUG.log("event","autolinkOrd request recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource);
+      if (ednVE.linkMode && !ednVE.autoLink) {//left in link mode, ok to change to autolinkOrd
+        ednVE.linkMode = false;
+      } else if ((ednVE.linkMode && ednVE.autoLink)) {
+        DEBUG.log("err","edition editor in autolink scl to seg mode aborting autolinkord request from source "+ linkSource);
+        $('.editContainer').trigger('autoLinkOrdAbort',[this.id,this.autoLinkOrdBln]);
+      }
       ednVE.pendingAutoLinkOrdBln= linkSource;
       ednVE.pendingAutoLinkOrdMode = (mode == 0?"default":(mode == 1?"start":(mode == 2?"startstop":"multi")));
       //if bln is linked to this text then show highlight
@@ -2870,7 +2876,7 @@ mergeLine: function (direction,cbError) {
     * @param string linkEditionID identifies the edition being linked to
     */
 
-    function autoLinkOrdCompleteHandler(e,senderID, linkSource, linkEditionID) {
+    function autoLinkOrdCompleteHandler(e,senderID, linkSource, linkEditionID, linkedSclsSegID) {
       if (senderID == ednVE.id) {
         return;
       }
@@ -6271,6 +6277,9 @@ mergeLine: function (direction,cbError) {
               segID = ednVE.dataMgr.entities.scl[sclID[1]].segID;
               if (segID) {
                 elem.className = elem.className.replace(/seg\d+/,"seg"+ segID);
+                elem.className = elem.className.replace(/noseg/,"");
+              } else {
+                elem.className = elem.className.replace(/seg\d+/,"noseg");
               }
             }
         });
