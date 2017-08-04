@@ -440,6 +440,31 @@ function getTranslatedPoly($points,$newOrigX, $newOrigY, $forceSerial = false) {
 }
 
 /**
+* calculate center of a polygon set of points and return array of int x y
+*
+* @param int array $points of the form [x1,y1,x2,y2,...,xn,yn] or [[x1,y1],[x2,y2],...,[xn,yn]]
+* @return NULL|array of int x y
+*/
+function getPolygonCenter($points) {
+  $cnt = count($points); // find number of points
+  if(!$cnt || $cnt < 3 || !is_array($points)) return null;
+  $center_x = $center_y = 0;
+  if ( is_array($points[0]) && count($points[0]) === 2) {//tuples
+    for($i=0;$i<$cnt;$i++){
+      $center_x += $points[$i][0];
+      $center_y += $points[$i][1];
+    }
+  }else{
+    for($i=0;$i<$cnt;){
+      $center_x += $points[$i];
+      $center_y += $points[$i+1];
+      $i +=2;
+    }
+  }
+  return array(round($center_x/$cnt),round($center_y/$cnt));
+}
+
+/**
 * calculate bound rect for array of points
 *
 * @param int array $points of the form [x1,y1,x2,y2,...,xn,yn] or [[x1,y1],[x2,y2],...,[xn,yn]]
@@ -467,6 +492,30 @@ function getBoundingRect($points) {
     }
   }
   return array($x1,$y1,$x2,$y1,$x2,$y2,$x1,$y2);
+}
+
+/**
+* converts an array of $points of the form [x1,y1,x2,y2,...,xn,yn] to [[x1,y1],[x2,y2],...,[xn,yn]]
+*
+* @param int array $points of the form [x1,y1,x2,y2,...,xn,yn]
+* @return NULL|array of int tuples (points) of the form [[x1,y1],[x2,y2],...,[xn,yn]]
+*/
+function pointsArray2ArrayOfTuples($points) {
+  $cnt = count($points); // find number of points
+  if(!$cnt) return null;
+  if ( is_array($points) ) {
+    if ( is_array($points[0]) && count($points[0]) === 2) {//tuples
+      return $points;
+    }else if ((count($points)%2)===0){//even number
+      $tuples = array();
+      for($i=0;$i<$cnt;){
+        array_push($tuples,array($points[$i],$points[$i+1]));
+        $i +=2;
+      }
+      return $tuples;
+    }
+  }
+  return null;
 }
 
 
@@ -499,12 +548,13 @@ function loadURLContent($url,$raw = false) {
   $data = curl_exec($ch);
 
   $error = curl_error($ch);
-  curl_close($ch);
   if ($error) {
     $code = intval(curl_getinfo($ch, CURLINFO_HTTP_CODE));
     error_log("$error ($code)" . " url = ". $url);
+    curl_close($ch);
     return false;
   } else if (!$data || preg_match("/401 Unauthorized/",$data)) {
+    curl_close($ch);
     if (preg_match("/37\.252\.124\.228/",$data) || !$data) {
       $path = preg_replace("/^.*images/",DOCUMENT_ROOT."/images",$url);
       $data = file_get_contents($path);
@@ -518,6 +568,7 @@ function loadURLContent($url,$raw = false) {
       }
     }
   } else {
+    curl_close($ch);
     if($data){
       if ($raw) {
         return $data;

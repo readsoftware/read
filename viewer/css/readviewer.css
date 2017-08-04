@@ -221,6 +221,7 @@ body.showTOC .tocNavPanel {
 
 .section.Sentence {
   display: inline;
+  padding-right: 5px;
 }
 
 .section.Stanza {

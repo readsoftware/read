@@ -70,6 +70,59 @@ function getEditionTOCHtml() {
 }
 
 /**
+* gets the bounding rects for token or compond of the editions
+*
+* @returns string json representing the lookup for bounding rectangles of a word
+*/
+function getPolygonByBaselineEntityTagLookup() {
+  global $polysByBlnTagTokCmpTag;
+  if ($polysByBlnTagTokCmpTag) {
+    return json_encode($polysByBlnTagTokCmpTag);
+  } else {
+    return "{}";
+  }
+}
+
+/**
+* gets the baseline and position of entities of the editions
+*
+* @returns string json representing the lookup for baseline and position by entity tag
+*/
+function getBaselinePosByEntityTagLookup() {
+  global $blnPosByEntTag;
+  if ($blnPosByEntTag) {
+    return json_encode($blnPosByEntTag);
+  } else {
+    return "{}";
+  }
+}
+
+/**
+* gets the editions image urls as json
+*
+* @returns string json representing the lookup for image urls by image tag and baseline tag
+*/
+function getImageBaselineURLLookup() {
+  global $imgURLsbyBlnImgTag;
+  $ret = array('bln'=>array(),'img'=>array());
+  if ($imgURLsbyBlnImgTag) {
+    if (count($imgURLsbyBlnImgTag['bln'])) {
+      ksort($imgURLsbyBlnImgTag['bln']);
+      foreach ($imgURLsbyBlnImgTag['bln'] as $sort=>$blnInfo) {
+        $ret['bln'][$blnInfo['tag']] = $blnInfo['url'];
+      }
+    }
+    if (count($imgURLsbyBlnImgTag['img'])) {
+      ksort($imgURLsbyBlnImgTag['img']);
+      foreach ($imgURLsbyBlnImgTag['img'] as $sort=>$blnInfo) {
+        $ret['img'][$blnInfo['tag']] = $blnInfo['url'];
+      }
+    }
+  }
+  return json_encode($ret);
+}
+
+/**
 * gets the editions translation footnote lookup html as json
 *
 * @returns string json representing the lookup for footnotes of this  object with a string representing the html and a footnote lookup table
@@ -335,9 +388,9 @@ function getStructTransHtml($sequence, $addBoundaryHtml = false) {
   $seqEntGIDs = array();
   $structureHtml = "";
   if ($sequence) {
-      $seqEntGIDs = $sequence->getEntityIDs();
-      $seqType = $sequence->getType();
-      $seqTag = $sequence->getEntityTag();
+    $seqEntGIDs = $sequence->getEntityIDs();
+    $seqType = $sequence->getType();
+    $seqTag = $sequence->getEntityTag();
   }
   if (!$seqEntGIDs || count($seqEntGIDs) == 0) {
     error_log("warn, Found empty structural sequence element seq".$sequence->getID()." for edition ".$edition->getDescription()." id=".$edition->getID());
@@ -435,7 +488,7 @@ function getStructTransHtml($sequence, $addBoundaryHtml = false) {
 */
 function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forceRecalc = false) {
   global $edition,$lineLabel2SeqTagMap, $tfnRefToTfnText, $tfnCnt, $translationTypeID,
-         $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel,$preMarker, $fnPreMarker;
+  $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel,$preMarker, $fnPreMarker;
   $seqBoundaryMarkerHtmlLookup = array();
   $curStructHeaderbyLevel = array();
   $lineLabel2SeqTagMap = array();
@@ -452,7 +505,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
     $edition = new Edition($ednID);
     if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
       array_push($warnings,"Warning need valid accessible edition id $ednID. Skipping.".
-                  ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
+        ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
     } else {
       $edSeqIDs = $edition->getSequenceIDs();
       if (count($edSeqIDs) == 0) {//no sequences so warn and skip
@@ -464,7 +517,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
         $edSequence = new Sequence($edSeqID);
         if (!$edSequence || $edSequence->hasError()) {//no sequence or unavailable so warn
           array_push($warnings,"Warning unable to load edition $ednID's sequence seq:$edSeqID. Skipping.".
-                      ($edSequence->hasError()?" Error: ".join(",",$edSequence->getErrors()):""));
+            ($edSequence->hasError()?" Error: ".join(",",$edSequence->getErrors()):""));
         } else {
           $seqType = $edSequence->getType();
           $componentIDs = $edSequence->getEntityIDs();
@@ -511,7 +564,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
         $physicalLineSeq = new Sequence(substr($physicalLineSeqGID,4));
         if (!$physicalLineSeq || $physicalLineSeq->hasError()) {//no $physicalLineSeqIDsequence or unavailable so warn
           array_push($warnings,"Warning unable to load edition $ednID's physicalline sequence seq:$physicalLineSeqGID. Skipping.".
-                      ($physicalLineSeq->hasError()?" Error: ".join(",",$physicalLineSeq->getErrors()):""));
+            ($physicalLineSeq->hasError()?" Error: ".join(",",$physicalLineSeq->getErrors()):""));
         } else {
           $label = $physicalLineSeq->getLabel();
           $seqTag = 'seq'.$physicalLineSeq->getID();
@@ -752,6 +805,77 @@ function getEntityFootnotesHtml($entity) {
 }
 
 /**
+* returns array of polygons for a word
+*
+* @param object $token
+* @param string $entTag for the entity containing this token
+* @param boolean $isFinalToken defining this is last token of $entTag entity
+*
+*/
+function addWordPolygonsToEntityLookup($token, $entTag, $isFinalToken) {
+  global $sclTag2BlnPolyMap, $blnPosByEntTag, $polysByBlnTagTokCmpTag, $sclTagLineStart, $curPoints, $curBlnTag;
+  $sclIDs = $token->getSyllableClusterIDs();
+  if (count($sclIDs) > 0) {
+    //for each syllable of a token
+    $blnTag = $polygons = $segPolygon = null;
+    if ($curBlnTag == null) {
+        $curPoints = array();
+    }
+    foreach ($sclIDs as $sclID) {
+      //get bln from calculated map
+      $sclTag = 'scl'.$sclID;
+      $segPoints = array();
+      if (array_key_exists($sclTag,$sclTag2BlnPolyMap)) {
+        list($blnTag,$polygons) = $sclTag2BlnPolyMap[$sclTag];//todo adjust for cross baseline syllables
+        if ($polygons && count($polygons) > 0) {
+          $polygon = $polygons[0];
+          if (is_a($polygon,'Polygon')) {
+            $segPoints = $polygon->getBoundingRect();
+          } else {
+            $segPoints = getBoundingRect($polygon);
+          }
+        }
+      }
+      //if switching baseline or spanning new line then close current polygon and clear current points.
+      if( $curBlnTag && $curBlnTag != $blnTag || in_array($sclTag, $sclTagLineStart)) {
+        if (count($curPoints) > 0) {//existing point accumulation so save bounding bbox
+          if (!array_key_exists($curBlnTag,$polysByBlnTagTokCmpTag)) {
+            $polysByBlnTagTokCmpTag[$curBlnTag] = array($entTag => array(pointsArray2ArrayOfTuples(getBoundingRect($curPoints))));
+          } else if (!array_key_exists($entTag,$polysByBlnTagTokCmpTag[$curBlnTag])) {
+            $polysByBlnTagTokCmpTag[$curBlnTag][$entTag] = array(pointsArray2ArrayOfTuples(getBoundingRect($curPoints)));
+          } else {
+            array_push($polysByBlnTagTokCmpTag[$curBlnTag][$entTag],pointsArray2ArrayOfTuples(getBoundingRect($curPoints)));
+          }
+          $curPoints = array();
+        }
+        $curBlnTag = $blnTag;
+      } else if (!$curBlnTag) {
+        $curBlnTag = $blnTag;
+      }
+      // aggregate segment points
+
+      $curPoints = array_merge($curPoints,$segPoints);
+    }
+    //if final token then store points as bndRect tuples and store entity baseline position data
+    if ($isFinalToken && $curBlnTag) {
+      if (!array_key_exists($curBlnTag,$polysByBlnTagTokCmpTag)) {
+        $polysByBlnTagTokCmpTag[$curBlnTag] = array($entTag => array(pointsArray2ArrayOfTuples(getBoundingRect($curPoints))));
+      } else if (!array_key_exists($entTag,$polysByBlnTagTokCmpTag[$curBlnTag])) {
+        $polysByBlnTagTokCmpTag[$curBlnTag][$entTag] = array(pointsArray2ArrayOfTuples(getBoundingRect($curPoints)));
+      } else {
+        array_push($polysByBlnTagTokCmpTag[$curBlnTag][$entTag],pointsArray2ArrayOfTuples(getBoundingRect($curPoints)));
+      }
+      $curPoints = array();
+      if (array_key_exists($curBlnTag,$polysByBlnTagTokCmpTag)
+          && array_key_exists($entTag,$polysByBlnTagTokCmpTag[$curBlnTag])) {
+        $entULPoints = $polysByBlnTagTokCmpTag[$curBlnTag][$entTag][0][0];
+        $blnPosByEntTag[$entTag] = array($blnTag => array('x'=>$entULPoints[0],'y'=>$entULPoints[1]));
+      }
+    }
+  }
+}
+
+/**
 * returns the Html for a word
 *
 * @param object $entity Compound or Token
@@ -793,6 +917,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
     for($i =0; $i < $tokCnt; $i++) {
       $tokID = $tokIDs[$i];
       $token = new Token($tokID);
+      addWordPolygonsToEntityLookup($token, $entTag, ($i == ($tokCnt - 1)));
       $graIDs = $token->getGraphemeIDs();
       $firstT = ($i==0);
       $lastT = (1+$i == $tokCnt);
@@ -874,7 +999,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
     if ($isLastStructureWord && $prevTCMS && $prevTCMS != "S") {//close off any TCM
       $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
       $prevTCMS = "";//reset since we closed off TCMs for the structure.
-                     //This will ensure next structures output will have opening TCMs
+      //This will ensure next structures output will have opening TCMs
       if ($tcmBrackets) {
         $wordHtml .= $tcmBrackets;
       }
@@ -890,7 +1015,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
     $wordHtml = preg_replace('/_+/',"_",$wordHtml); // multple missing consonants
     $wordHtml = preg_replace('/_/',".",$wordHtml); // multple missing consonants
     $wordHtml .= "</span>";
-//      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
+    //      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
   }
   return $wordHtml;
 }
@@ -904,12 +1029,12 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
 * @param int $level indicate the level of nest in the structural hierarchy
 */
 function getStructHTML($sequence, $addBoundaryHtml = false) {
-  global $edition, $editionTOCHtml, $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
+  global $edition, $editionTOCHtml, $seqBoundaryMarkerHtmlLookup, $polysByBlnTagTokCmpTag, $blnPosByEntTag, $curStructHeaderbyLevel;
   $structureHtml = "";
   if ($sequence) {
-      $seqEntGIDs = $sequence->getEntityIDs();
-      $seqType = $sequence->getType();
-      $seqTag = $sequence->getEntityTag();
+    $seqEntGIDs = $sequence->getEntityIDs();
+    $seqType = $sequence->getType();
+    $seqTag = $sequence->getEntityTag();
   }
   if (!$seqEntGIDs || count($seqEntGIDs) == 0) {
     error_log("warn, Found empty structural sequence element seq".$sequence->getID()." for edition ".$edition->getDescription()." id=".$edition->getID());
@@ -940,20 +1065,21 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
     if ($curStructHeaderbyLevel[$curStructLevel]['sup'] == str_replace("(","",str_replace(")","",$seqSup))) {
       $label = null;
     } else {//sibling so signal output of section Header
-      $label = (($seqSup && $seqType == "Chapter")?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+      $label = (($seqSup && $seqType !== "Section")?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
     }
     //close section div
     $structureHtml .= "</div>";
   } else {// new struct is deeper case
-    $label = (($seqSup && $seqType == "Chapter")?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+    $label = (($seqSup && $seqType !== "Section")?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
   }
   if ($label) {//output header div and toc info
-    $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$level.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
+    $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$level.' '.$seqType.' '.$seqTag.'">'.$label;
     $structureHtml .= getEntityFootnotesHtml($sequence);
+    $structureHtml .= '</div>';
     if ($seqType == "Chapter") { //warning term dependency
-        $editionTOCHtml .= '<div id="toc'.$seqTag.'" class="tocEntry level'.$level.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
-        $curStructHeaderbyLevel[$level] = array('sup'=>$seqSup,'label'=> $seqLabel);
-     }
+      $editionTOCHtml .= '<div id="toc'.$seqTag.'" class="tocEntry level'.$level.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
+      $curStructHeaderbyLevel[$level] = array('sup'=>$seqSup,'label'=> $seqLabel);
+    }
   }
   //open structure div
   $structureHtml .= '<div class="section level'.$level.' '.$seqTag.' '.$seqType.'">';
@@ -991,12 +1117,14 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
           }
       }
     }
+    $entTag = null;
     if ($prefix == 'seq') {
       $subSequence = new Sequence($entID);
       if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
         error_log("Warning inaccessible sub-sequence id $entID skipped.");
       } else {
         $structureHtml .= getStructHTML($subSequence);
+        $entTag = $subSequence->getEntityTag();
       }
     } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
       if ($prefix == 'cmp') {
@@ -1007,152 +1135,22 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
       if (!$entity || $entity->hasError()) {//no word or unavailable so warn
         error_log("Warning inaccessible word id $entGID skipped.");
       } else {
+        $entTag = $entity->getEntityTag();
         $structureHtml .= getWordHtml($entity,$i+1 == $cntGID, $nextToken);
       }
     }else{
       error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
       continue;
     }
-  }//edn for cntGID
+    if ($i == 0 && array_key_exists($entTag,$blnPosByEntTag)) {// first contained entity so if baseline position then copy for sequence.
+      $blnPosByEntTag[$seqTag] = $blnPosByEntTag[$entTag];
+    }
+  }//end for cntGID
   if (!$label) {//output header div
     $structureHtml .= getEntityFootnotesHtml($sequence);
   }
   $structureHtml .= '</div>';
   return $structureHtml;
-}
-
-/**
-* gets the editions Structural layout html
-*
-* calculates the structure view of this edition of the text with granularity of token,
-* embedded physical line markers and footnote markers
-*
-* @param int $ednID identified the edition to calculate
-* @param boolean $forceRecalc indicating whether to ignore cached values
-*
-* @returns mixed object with a string representing the html and a footnote lookup table
-*/
-function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
-  global $prevTCMS, $graID2LineHtmlMarkerlMap, $wordCnt, $fnRefTofnText, $typeIDs, $fnCnt, $editionTOCHtml;
-  $footnoteHtml = "";
-  $wordCnt = 0;
-  $graID2LineHtmlMarkerlMap = array();
-  $prevTCMS = "";
-  $editionTOCHtml = "";
-  $fnRefTofnText = array();
-  $typeIDs = array();
-  $fnCnt = 0;
-  $edition = new Edition($ednID);
-  if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
-    array_push($warnings,"Warning need valid accessible edition id $ednID.");
-  } else {
-    $edSeqs = $edition->getSequences(true);
-    $seqPhys = $seqText = $textAnalysisSeq = null;
-    foreach ($edSeqs as $edSequence) {
-      $seqType = $edSequence->getType();
-      if (!$seqPhys && $seqType == "TextPhysical"){//warning!!!! term dependency
-        $seqPhys = $edSequence;
-      }
-      if (!$seqText && $seqType == "Text"){//warning!!!! term dependency
-        $seqText = $edSequence;
-      }
-      if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
-        $textAnalysisSeq = $edSequence;
-      }
-    }
-
-    $footnoteTypeID = Entity::getIDofTermParentLabel('FootNote-FootNoteType');//warning!!!! term dependency
-    $fnReconstrTypeID = Entity::getIDofTermParentLabel('Reconstruction-FootNote');//warning!!!! term dependency
-    $typeIDs = array($footnoteTypeID,$fnReconstrTypeID);
-    $fnRefTofnText = array();
-    if (!$textAnalysisSeq || !$textAnalysisSeq->getEntityIDs() || count($textAnalysisSeq->getEntityIDs()) == 0) {
-      return false;
-    } else {//process analysis
-      //calculate  post grapheme id to physical line label map
-      if ($seqPhys && $seqPhys->getEntityIDs() && count($seqPhys->getEntityIDs()) > 0) {
-        foreach ($seqPhys->getEntities(true) as $physicalLineSeq) {
-          $sclGIDs = $physicalLineSeq->getEntityIDs();
-          if (count($sclGIDs) == 0 || strpos($sclGIDs[0],'scl:') != 0) {
-            array_push($warnings,"Found physical Line without syllables ".$physicalLineSeq->getGlobalID());
-            continue;
-          }
-          $syllable = new SyllableCluster(substr($sclGIDs[0],4));
-          if ($syllable->hasError()) {
-            array_push($warnings,"warning, error encountered while trying to open syllable ".$sclIDs[0]." for physical line ".$physicalLineSeq->getGlobalID()." - ".join(",",$syllable->getErrors()));
-            continue;
-          }
-          $graIDs = $syllable->getGraphemeIDs();
-          if (count($graIDs) == 0 ) {
-            array_push($warnings,"Found syllable without graphemes ".$sclIDs[0]);
-            continue;
-          }
-          $label = $physicalLineSeq->getLabel();
-          $seqTag = 'seq'.$physicalLineSeq->getID();
-          if (!$label) {
-            $label = $seqTag;
-          }
-          $lineHtml = "<span class=\"linelabel $seqTag\">[$label]";
-          $lineHtml .= getEntityFootnotesHtml($physicalLineSeq);//add any line footnotes to end of label
-          $lineHtml .= "</span>";
-          if (strpos($syllable->getSortCode(),"0.19")=== 0 &&
-              strpos($syllable->getSortCode2(),"0.5")=== 0 &&
-              count($graIDs) > 1) { //begins with vowel carrier so choose second grapheme
-            $graID2LineHtmlMarkerlMap[$graIDs[1]] = $lineHtml;
-          } else {
-            $graID2LineHtmlMarkerlMap[$graIDs[0]] = $lineHtml;
-          }
-        }
-      }
-      $html = "";
-      $fnCnt = 0;
-      $tokCnt = 0;
-      //start to calculate rtf using each entity of the analysis container
-      foreach ($textAnalysisSeq->getEntityIDs() as $entGID) {
-        $prefix = substr($entGID,0,3);
-        $entID = substr($entGID,4);
-        if ($prefix == 'seq') {
-          $subSequence = new Sequence($entID);
-          if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
-            error_log("warn, Warning inaccessible sub-sequence id $entID skipped.");
-          } else {
-            $html .= getStructHtml($subSequence);
-          }
-        } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
-          if ($prefix == 'cmp') {
-            $entity = new Compound($entID);
-          } else {
-            $entity = new Token($entID);
-          }
-          if (!$entity || $entity->hasError()) {//no word or unavailable so warn
-            error_log("warn, Warning inaccessible word id $entGID skipped.");
-          } else {
-            $html .= getWordHtml($entity,false);
-          }
-        }else{
-          error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
-          continue;
-        }
-      }
-    }
-  }
-  $sourceHtml = "";
-  $attributions = $edition->getAttributions(true);
-  if ($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
-    $isFrist = true;
-    $sourceHtml = "<div class=\"source edn1\"><span class=\"sourcelabel\">Source:</span>";
-    foreach ($attributions as $attribution) {
-      $atbID = $attribution->getID();
-      $title = $attribution->getTitle();
-      if ($isFrist) {
-        $sourceHtml .= "<span class=\"sourceitem atb$atbID\">$title";
-      } else {
-        $sourceHtml .= ",</span><span class=\"sourceitem atb$atbID\">$title";
-      }
-    }
-    $sourceHtml .= "</span></div>";
-  }
-  $html .= $sourceHtml;
-  return json_encode($html);
 }
 
 
@@ -1168,10 +1166,13 @@ function getEditionStructuralViewHtml($ednID, $forceRecalc = false) {
 * @returns mixed object with a string representing the html and a footnote lookup table
 */
 function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
-  global $edition, $prevTCMS, $graID2LineHtmlMarkerlMap, $wordCnt, $fnRefTofnText, $typeIDs, $fnCnt,
-         $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel, $editionTOCHtml;
+  global $edition, $prevTCMS, $graID2LineHtmlMarkerlMap, $sclTag2BlnPolyMap,
+  $wordCnt, $fnRefTofnText, $typeIDs, $fnCnt, $imgURLsbyBlnImgTag, $curBlnTag,
+  $sclTagLineStart, $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel,
+  $editionTOCHtml, $polysByBlnTagTokCmpTag, $blnPosByEntTag;
   $footnoteHtml = "";
   $wordCnt = 0;
+  $curBlnTag = null;
   $seqBoundaryMarkerHtmlLookup = array();
   $curStructHeaderbyLevel = array();
   $graID2LineHtmlMarkerlMap = array();
@@ -1189,24 +1190,46 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   $textDivSeqIDs = array();
   $analysisSeqIDs = array();
   $sourceNameLookup = array();
+  $polysByBlnTagTokCmpTag = array();
+  $blnPosByEntTag = array();
+  $sclTag2BlnPolyMap = array();
+  $sclTagLineStart = array();
+  $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
   $isFirstEdn = true;
   foreach ($ednIDs as $ednID) {//accumulate in order all subsequence for text, text physical and analysis
     $edition = new Edition($ednID);
     if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
       array_push($warnings,"Warning need valid accessible edition id $ednID. Skipping.".
-                  ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
+        ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
     } else {
       $edSeqIDs = $edition->getSequenceIDs();
       if (count($edSeqIDs) == 0) {//no sequences so warn and skip
         array_push($warnings,"Warning edition id $ednID has no sequences. Skipping.");
         continue;
       }
+      $text = $edition->getText(true);
+      if ($text && !$text->hasError()) {
+        $images = $text->getImages(true);
+        if ($images && $images->getCount() > 0) {
+          foreach ($images as $image) {
+            $tag = $image->getEntityTag();
+            $url = $image->getURL();
+            $ord = $image->getScratchProperty('ordinal');
+            if ($ord) {
+              $sort = $ord;
+            } else {
+              $sort = 1000 * intval($image->getID());
+            }
+            $imgURLsbyBlnImgTag['img'][$sort] = array('tag'=>$tag, 'url'=>$url);
+          }
+        }
+      }
       $seqPhys = $seqText = $textAnalysisSeq = null;
       foreach ($edSeqIDs as $edSeqID) {
         $edSequence = new Sequence($edSeqID);
         if (!$edSequence || $edSequence->hasError()) {//no sequence or unavailable so warn
           array_push($warnings,"Warning unable to load edition $ednID's sequence seq:$edSeqID. Skipping.".
-                      ($edSequence->hasError()?" Error: ".join(",",$edSequence->getErrors()):""));
+            ($edSequence->hasError()?" Error: ".join(",",$edSequence->getErrors()):""));
         } else {
           $seqType = $edSequence->getType();
           $componentIDs = $edSequence->getEntityIDs();
@@ -1253,7 +1276,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
         $physicalLineSeq = new Sequence(substr($physicalLineSeqGID,4));
         if (!$physicalLineSeq || $physicalLineSeq->hasError()) {//no $physicalLineSeqIDsequence or unavailable so warn
           array_push($warnings,"Warning unable to load edition $ednID's physicalline sequence seq:$physicalLineSeqGID. Skipping.".
-                      ($physicalLineSeq->hasError()?" Error: ".join(",",$physicalLineSeq->getErrors()):""));
+            ($physicalLineSeq->hasError()?" Error: ".join(",",$physicalLineSeq->getErrors()):""));
         } else {
           $seqType = $physicalLineSeq->getType();
           if ($seqType == "FreeText") {
@@ -1265,30 +1288,60 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
               array_push($warnings,"Warning edition $ednID's sequence seq:$physicalLineSeqGID is a physical Line without syllables ".$physicalLineSeq->getGlobalID());
               continue;
             }
-            $syllable = new SyllableCluster(substr($sclGIDs[0],4));
-            if ($syllable->hasError()) {
-              array_push($warnings,"warning, error encountered while trying to open syllable ".$sclIDs[0]." for physical line ".$physicalLineSeq->getGlobalID()." of edition $ednID - ".join(",",$syllable->getErrors()));
-              continue;
-            }
-            $graIDs = $syllable->getGraphemeIDs();
-            if (count($graIDs) == 0 ) {
-              array_push($warnings,"Found syllable without graphemes ".$sclIDs[0]." for physical line ".$physicalLineSeq->getGlobalID()." of edition $ednID");
-              continue;
-            }
-            $label = $physicalLineSeq->getLabel();
-            $seqTag = 'seq'.$physicalLineSeq->getID();
-            if (!$label) {
-              $label = $seqTag;
-            }
-            $lineHtml = "<span class=\"linelabel $seqTag\">[$label]";
-            $lineHtml .= getEntityFootnotesHtml($physicalLineSeq);//add any line footnotes to end of label
-            $lineHtml .= "</span>";
-            if (strpos($syllable->getSortCode(),"0.19")=== 0 &&
+            $isFirstScl = true;
+            foreach ($sclGIDs as $sclGID) {
+              $syllable = new SyllableCluster(substr($sclGID,4));
+              if ($syllable->hasError()) {
+                array_push($warnings,"warning, error encountered while trying to open syllable $sclGID for physical line ".$physicalLineSeq->getGlobalID()." of edition $ednID - ".join(",",$syllable->getErrors()));
+                continue;
+              }
+              $segment = $syllable->getSegment(true);
+              $sclTag = $syllable->getEntityTag();
+              $blnTag = null;
+              if ($segment && $polygons = $segment->getImageBoundary()) {//linked to image baseline
+                $segBaselines = $segment->getBaselines(true);//todo modify for cross baseline segemnts
+                if ($segBaselines && $segBaselines->getCount() > 0) {
+                  $segBaseline = $segBaselines->current();
+                  $blnTag = $segBaseline->getEntityTag();
+                  $url = $segBaseline->getURL();
+                  $ord = $segBaseline->getScratchProperty('ordinal');
+                  if ($ord) {
+                    $sort = $ord;
+                  } else {
+                    $sort = 1000 * intval($segBaseline->getID());
+                  }
+                  $imgURLsbyBlnImgTag['bln'][$sort] = array('tag'=>$blnTag, 'url'=>$url);
+                  $sclTag2BlnPolyMap[$sclTag] = array($blnTag,$polygons);
+                  $bRectPts = $polygons[0]->getBoundingRect();
+                }
+              }
+              if ($isFirstScl) {
+                $isFirstScl = false;
+                array_push($sclTagLineStart,$sclTag);
+                $graIDs = $syllable->getGraphemeIDs();
+                if (count($graIDs) == 0 ) {
+                  array_push($warnings,"Found syllable without graphemes $sclGID for physical line ".$physicalLineSeq->getGlobalID()." of edition $ednID");
+                  continue;
+                }
+                $label = $physicalLineSeq->getLabel();
+                $seqTag = $physicalLineSeq->getEntityTag();
+                if ($blnTag) {
+                  $blnPosByEntTag[$seqTag] = array($blnTag => array('x'=>$bRectPts[0],'y'=>$bRectPts[1]));
+                }
+                if (!$label) {
+                  $label = $seqTag;
+                }
+                $lineHtml = "<span class=\"linelabel $seqTag\">[$label]";
+                $lineHtml .= getEntityFootnotesHtml($physicalLineSeq);//add any line footnotes to end of label
+                $lineHtml .= "</span>";
+                if (strpos($syllable->getSortCode(),"0.19")=== 0 &&
                 strpos($syllable->getSortCode2(),"0.5")=== 0 &&
                 count($graIDs) > 1) { //begins with vowel carrier so choose second grapheme
-              $graID2LineHtmlMarkerlMap[$graIDs[1]] = $lineHtml;
-            } else {
-              $graID2LineHtmlMarkerlMap[$graIDs[0]] = $lineHtml;
+                  $graID2LineHtmlMarkerlMap[$graIDs[1]] = $lineHtml;
+                } else {
+                  $graID2LineHtmlMarkerlMap[$graIDs[0]] = $lineHtml;
+                }
+              }
             }
           }
         }
@@ -1353,7 +1406,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
   $physTextTypeTrmID = Entity::getIDofTermParentLabel('textphysical-sequencetype'); //term dependency
   $catID = $catalog->getID();
   if (!$refreshWordMap && array_key_exists("cache-cat$catID",$_SESSION) &&
-        array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID"])) {
+  array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID"])) {
     return $_SESSION["cache-cat$catID"]['wrdTag2LocLabel'];
   }
   $editionIDs = $catalog->getEditionIDs();
@@ -1372,7 +1425,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
       if ($text && !$text->hasError()) {
         $ednLabel = $text->getRef();
         if (!$ednLabel) {
-//          $ednLabel='t'.$text->getID();
+          //          $ednLabel='t'.$text->getID();
         }
       }
       $ednSequences = $edition->getSequences(true);
@@ -1441,7 +1494,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
           $id = $word->getID();
           $wtag = $prefix.$id;
           if ($word->getSortCode() >= 0.7) {
-             continue;
+            continue;
           }
           // find first and last SclID for word to calc attested form location
           if ($prefix == 'cmp') {
@@ -1565,6 +1618,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
         $lemmaGenderID = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
         $lemmaPos = $lemmaPosID && Entity::getTermFromID($lemmaPosID) ? Entity::getTermFromID($lemmaPosID) : '';
+        $isVerb = null;
         if ($lemmaPos) {
           $isVerb = ($lemmaPos == 'v.');
         }
@@ -1729,8 +1783,8 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 $sc = $inflectionComponent->getSortCode();
                 $entTag = preg_replace("/:/","",$inflectionComponent->getGlobalID());
                 $entTag2GlossaryHtml[$entTag] = array('lemTag' => $lemTag,
-                                                      'infTag'=> $infTag,
-                                                      'infHtml'=> $infString);
+                  'infTag'=> $infTag,
+                  'infHtml'=> $infString);
                 $attestedCommentary = "";
                 if ( $linkedAnoIDsByType = $inflectionComponent->getLinkedAnnotationsByType()) {
                   if (array_key_exists($glossaryCommentTypeID,$linkedAnoIDsByType)) {
@@ -1754,12 +1808,12 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 //accumulate locations
                 if (!array_key_exists($sc,$node)) {
                   $node[$sc] = array('value'=>
-                                       array($value =>
-                                              array('loc'=>
-                                                     array())));
+                    array($value =>
+                      array('loc'=>
+                        array())));
                 } else if (!array_key_exists($value,$node[$sc]['value'])) {
                   $node[$sc]['value'][$value] =  array('loc'=>
-                                                        array());
+                    array());
                 }
                 if (array_key_exists($loc,$node[$sc]['value'][$value]['loc'])) {
                   $node[$sc]['value'][$value]['loc'][$loc] += 1;
@@ -1819,12 +1873,12 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
               // accumulate locations
               if (! array_key_exists($sc,$node)) {
                 $node[$sc] = array('value'=>
-                                     array($value =>
-                                            array('loc'=>
-                                                   array())));
+                  array($value =>
+                    array('loc'=>
+                      array())));
               } else if (! array_key_exists($value,$node[$sc]['value'])) {
                 $node[$sc]['value'][$value] =  array('loc'=>
-                                                     array());
+                  array());
               }
               if (array_key_exists($loc,$node[$sc]['value'][$value]['loc'])) {
                 $node[$sc]['value'][$value]['loc'][$loc] += 1;

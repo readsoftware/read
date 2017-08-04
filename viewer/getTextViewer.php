@@ -71,7 +71,16 @@
 
   //TODO add code to ensure that baseline/images exist, translation exist and CHAYA exist
   $edAnnoTypes = getEditionAnnotationTypes($edition->getID());
-  $blnIDs = array(1);
+  //image test data
+  $blnIDs = array(663,665,664,666,667);
+  $imgURLsbyBlnImgTag1 = "{'bln663':'http://localhost/images/bc02/txt1/2_3_D_r.jpg',
+                          'bln665':'http://localhost/images/bc02/txt2/2_3_C_r.jpg',
+                          'bln664':'http://localhost/images/bc02/txt3/2_3_B_r.jpg',
+                          'bln666':'http://localhost/images/bc02/txt4/2_3_AGEFH_1F_r.jpg',
+                          'bln667':'http://localhost/images/bc02/txt5/2_1_BE_r.jpg',
+                          'img6':'http://localhost/images/bc02/txt6/2_1_ACD_r.jpg',
+                          'img7':'http://localhost/images/bc02/txt7/2_2_B_r.jpg'}";
+//end image test data
   $hasTranslation = in_array(Entity::getIDofTermParentLabel('translation-annotationtype'),$edAnnoTypes);
   $hasChaya = in_array(Entity::getIDofTermParentLabel('chaya-translation'),$edAnnoTypes);
 ?>
@@ -118,6 +127,7 @@
     <script src="/jqwidget/jqwidgets/jqxpanel.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtree.js"></script>
     <script src="../editors/js/debug.js"></script>
+    <script src="./js/imageViewer.js"></script>
     <script type="text/javascript">
       var sktSort = ('<?=USESKTSORT?>' == "0" || !'<?=USESKTSORT?>')?false:true,
           maxUploadSize = parseInt(<?=MAX_UPLOAD_SIZE?>),
@@ -132,6 +142,13 @@
   if ($showContentOutline) {
 ?>
           tocHtml = '<?=getEditionTOCHtml()?>',
+<?php
+  }
+  if ($showImageView &&  count($imgURLsbyBlnImgTag) > 0) {
+?>
+          urlBlnImgLookup = <?=getImageBaselineURLLookup()?>,
+          blnPosLookup = <?=getBaselinePosByEntityTagLookup()?>,
+          polysByBlnTagTokCmpTag = <?=getPolygonByBaselineEntityTagLookup()?>,
 <?php
   }
   if ($showTranslationView && $hasTranslation) {
@@ -236,6 +253,7 @@
         var
             $textViewer = $('#textViewer'),
             $textViewerHdr = $('#textViewerHdr'),
+            $textViewerHdrDiv= $('.headerDiv',$textViewerHdr),
             $textViewerContent = $('#textViewerContent')
 <?php
   if ($showContentOutline) {
@@ -250,8 +268,10 @@
   if ($showImageView && count($blnIDs) > 0) {
 ?>
 ,
+            imgViewer,
             $imageViewer= $('#imageViewer'),
             $imageViewerHdr= $('#imageViewerHdr'),
+            $imageViewerHdrDiv= $('.headerDiv',$imageViewerHdr),
             $imageViewerContent= $('#imageViewerContent')
 <?php
   }
@@ -262,6 +282,7 @@
 ,
             $transViewer = $('#transViewer'),
             $transViewerHdr = $('#transViewerHdr'),
+            $transViewerHdrDiv= $('.headerDiv',$transViewerHdr),
             $transViewerContent = $('#transViewerContent')
 <?php
   }
@@ -272,6 +293,7 @@
 ,
             $chayaViewer = $('#chayaViewer'),
             $chayaViewerHdr = $('#chayaViewerHdr'),
+            $chayaViewerHdrDiv= $('.headerDiv',$chayaViewerHdr),
             $chayaViewerContent = $('#chayaViewerContent')
 <?php
   }
@@ -317,6 +339,14 @@
                                       collapseAnimationDuration:50});
 //            $imageViewerContent.html(testHtmlSmall);
             $imageViewerContent.height('150px');
+            imgViewer = new VIEWERS.ImageViewer(
+                                                 { initViewPercent:100,
+                                                   id:'imageViewerContent',
+                                                   imgViewContainer: $imageViewerContent.get(0),
+                                                   imgViewHeaderDiv: $imageViewerHdrDiv,
+                                                   polygonLookup: polysByBlnTagTokCmpTag,
+                                                   urls: urlBlnImgLookup
+                                                 });
 <?php
   }
 ?>
@@ -380,6 +410,7 @@
                   }
                 }
               }
+              $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[entTag]]);
               closeAllPopups();
               $(this).jqxTooltip({ content: '<div class="popupwrapperdiv">'+popupHtml+"</div>",
                                    trigger: 'click',
@@ -393,6 +424,43 @@
               e.stopImmediatePropagation();
               return false;
             });
+    /**
+    * handle 'updateselection' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string array selectionGIDs Global entity ids if entities hovered
+    * @param string entTag Entity tag of selection
+    */
+
+    function updateSelectionHandler(e,senderID, selectionGIDs) {
+      if (senderID == $textViewerContent.attr('id')) {
+        return;
+      }
+      var i, id;
+      DEBUG.log("event","selection changed recieved by edition View in "+$textViewerContent.attr('id')+" from "+senderID+" selected ids "+ selectionGIDs.join());
+      closeAllPopups();
+      //$(".selected", ednVE.contentDiv).removeClass("selected");
+      if (selectionGIDs && selectionGIDs.length) {
+        $.each(selectionGIDs, function(i,val) {
+          var entity ,j,entTag;
+          if (val && val.length) {
+            entity = $('.'+val,$textViewerContent);
+            if (entity && entity.length > 0) {
+              entity.addClass("showing");
+            }
+//             else if (val.match(/^seq/) && ednVE.entTagsBySeqTag[val] && ednVE.entTagsBySeqTag[val].length) {
+//              for (j in ednVE.entTagsBySeqTag[val]) {
+//                entTag = ednVE.entTagsBySeqTag[val][j];
+//                $('.'+entTag,$textViewerContent).addClass("showing");
+//              }
+//            }
+          }
+        });
+      }
+    };
+
+            $textViewerContent.unbind('updateselection').bind('updateselection', updateSelectionHandler);
 
             //assign handler for all syllable elements
             $textViewerContent.unbind("scroll").bind("scroll", viewScrollHandler);
@@ -506,22 +574,22 @@
   if ($showImageView && count($blnIDs) > 0) {
 ?>
     <div id="imageViewer" class="viewer">
-      <div id="imageViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll off">&#x1F517;</button>Image</div></div>
-      <div id="imageViewerContent" class="viewerContent">test</div>
+      <div id="imageViewerHdr" class="viewerHeader"><div class="headerDiv"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll off">&#x1F517;</button>Image</div></div></div>
+      <div id="imageViewerContent" class="viewerContent"></div>
     </div>
 <?php
   }
 ?>
 
     <div id="textViewer" class="viewer syncScroll">
-      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div></div>
+      <div id="textViewerHdr" class="viewerHeader"><div class="headerDiv"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div></div></div>
       <div id="textViewerContent" class="viewerContent">test</div>
     </div>
 <?php
   if ($showTranslationView && $hasTranslation) {
 ?>
     <div id="transViewer" class="viewer syncScroll">
-      <div id="transViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Translation</div></div>
+      <div id="transViewerHdr" class="viewerHeader"><div class="headerDiv"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Translation</div></div></div>
       <div id="transViewerContent" class="viewerContent">test</div>
     </div>
 <?php
@@ -531,7 +599,7 @@
   if ($showChayaView && $hasChaya) {
 ?>
     <div id="chayaViewer" class="viewer syncScroll">
-      <div id="chayaViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Chāyā</div></div>
+      <div id="chayaViewerHdr" class="viewerHeader"><div class="headerDiv"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Chāyā</div></div></div>
       <div id="chayaViewerContent" class="viewerContent">test</div>
     </div>
 <?php
