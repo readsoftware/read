@@ -166,6 +166,17 @@
 ?>
           testHtmlSmall = <?=$testHtmlSmall?>;
 
+    function closeAllPopups(e) {
+      var $showing = $('.showing'), $body = $('body');
+      if ($showing && $showing.length) {
+        $showing.removeClass('showing');
+        $showing.jqxTooltip('close'); //close other
+      }
+      if ($body.hasClass('showTOC')) {
+        $body.removeClass('showTOC');
+      }
+    }
+
 /**
 * handle 'scroll' event for content div
 *
@@ -206,6 +217,7 @@
             }
           });
         }
+        closeAllPopups();
 //        imgScrollData = this.getImageScrollData(segTag,lineFraction);
         $('.viewerContent').trigger('synchronize',[this.id,lineSeqTag,lineFraction,hdrSeqTag,hdrFraction,viewHeight,imgScrollData]);
       } else {
@@ -349,17 +361,6 @@
 <?php
   }
 ?>
-            function closeAllPopups(e) {
-              var $showing = $('.showing'), $body = $('body');
-              if ($showing && $showing.length) {
-                $showing.removeClass('showing');
-                $showing.jqxTooltip('close'); //close other
-              }
-              if ($body.hasClass('showTOC')) {
-                $body.removeClass('showTOC');
-              }
-            }
-
 //initialise textViewer
             $textViewer.jqxExpander({expanded:true,
                                       showArrow: false,
@@ -385,7 +386,10 @@
                   return false;
               });
             }
-            $textViewerContent.unbind('click').bind('click', closeAllPopups);
+            $textViewerContent.unbind('click').bind('click', function(e) {
+              closeAllPopups();
+              $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[]]);
+            });
             $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
               var classes = $(this).attr("class"), entTag, entTags, lemTag, lemmaInfo, entGlossInfo
                   popupHtml = "No lemma info for " + $(this).text();
@@ -572,7 +576,7 @@
 <?php
   if ($showImageView && count($blnIDs) > 0) {
 ?>
-    <div id="imageViewer" class="viewer">
+    <div id="imageViewer" class="viewer syncScroll">
       <div id="imageViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll off">&#x1F517;</button>Image</div></div>
       <div id="imageViewerContent" class="viewerContent"></div>
     </div>

@@ -925,7 +925,7 @@ VIEWERS.ImageViewer.prototype = {
         //redraw
         imgV.drawImage();
         imgV.drawImagePolygons();
-        $('.editContainer').trigger('updateselection',[imgV.id,imgV.getSelectedPolygonLabels()]);
+        $('.viewerContent').trigger('updateselection',[imgV.id,imgV.getSelectedPolygonLabels()]);
     };
 
     imgV.imgCanvas.onclick = function (e){
@@ -1101,6 +1101,7 @@ VIEWERS.ImageViewer.prototype = {
         }
       }
       //calculate position for segment polygon
+      imgV.unselectAllPolygons();
       if (!newBln) {
         imgV.moveViewportToImagePosY(newTop);
         imgV.draw();
