@@ -109,13 +109,13 @@ function getImageBaselineURLLookup() {
     if (count($imgURLsbyBlnImgTag['bln'])) {
       ksort($imgURLsbyBlnImgTag['bln']);
       foreach ($imgURLsbyBlnImgTag['bln'] as $sort=>$blnInfo) {
-        $ret['bln'][$blnInfo['tag']] = $blnInfo['url'];
+        $ret['bln'][$blnInfo['tag']] = $blnInfo;
       }
     }
     if (count($imgURLsbyBlnImgTag['img'])) {
       ksort($imgURLsbyBlnImgTag['img']);
       foreach ($imgURLsbyBlnImgTag['img'] as $sort=>$blnInfo) {
-        $ret['img'][$blnInfo['tag']] = $blnInfo['url'];
+        $ret['img'][$blnInfo['tag']] = $blnInfo;
       }
     }
   }
@@ -869,7 +869,8 @@ function addWordPolygonsToEntityLookup($token, $entTag, $isFinalToken) {
       if (array_key_exists($curBlnTag,$polysByBlnTagTokCmpTag)
           && array_key_exists($entTag,$polysByBlnTagTokCmpTag[$curBlnTag])) {
         $entULPoints = $polysByBlnTagTokCmpTag[$curBlnTag][$entTag][0][0];
-        $blnPosByEntTag[$entTag] = array($blnTag => array('x'=>$entULPoints[0],'y'=>$entULPoints[1]));
+        $entLRPoints = $polysByBlnTagTokCmpTag[$curBlnTag][$entTag][0][2];
+        $blnPosByEntTag['word'][$entTag] = array('blnTag'=>$blnTag,'x'=>$entULPoints[0],'y'=>$entULPoints[1],'h'=>($entULPoints[1]-$entULPoints[1]));
       }
     }
   }
@@ -1125,6 +1126,7 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
       } else {
         $structureHtml .= getStructHTML($subSequence);
         $entTag = $subSequence->getEntityTag();
+        $entType = 'construct';
       }
     } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
       if ($prefix == 'cmp') {
@@ -1136,14 +1138,15 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
         error_log("Warning inaccessible word id $entGID skipped.");
       } else {
         $entTag = $entity->getEntityTag();
+        $entType = 'word';
         $structureHtml .= getWordHtml($entity,$i+1 == $cntGID, $nextToken);
       }
     }else{
       error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
       continue;
     }
-    if ($i == 0 && array_key_exists($entTag,$blnPosByEntTag)) {// first contained entity so if baseline position then copy for sequence.
-      $blnPosByEntTag[$seqTag] = $blnPosByEntTag[$entTag];
+    if ($i == 0 && array_key_exists($entTag,$blnPosByEntTag[$entType])) {// first contained entity so if baseline position then copy for sequence.
+      $blnPosByEntTag['construct'][$seqTag] = $blnPosByEntTag[$entType][$entTag];
     }
   }//end for cntGID
   if (!$label) {//output header div
@@ -1191,7 +1194,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   $analysisSeqIDs = array();
   $sourceNameLookup = array();
   $polysByBlnTagTokCmpTag = array();
-  $blnPosByEntTag = array();
+  $blnPosByEntTag = array('line'=>array(),'word'=>array(),'construct'=>array());
   $sclTag2BlnPolyMap = array();
   $sclTagLineStart = array();
   $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
@@ -1211,8 +1214,19 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
       if ($text && !$text->hasError()) {
         $images = $text->getImages(true);
         if ($images && $images->getCount() > 0) {
+          $sourceLookup = array();
           foreach ($images as $image) {
             $tag = $image->getEntityTag();
+            $attributions = $image->getAttributions(true);
+            if ($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
+              foreach ($attributions as $attribution) {
+                $atbID = $attribution->getID();
+                $title = $attribution->getTitle();
+                if (!array_key_exists($atbID,$sourceLookup)) {
+                  $sourceLookup[$atbID] = $title;
+                }
+              }
+            }
             $url = $image->getURL();
             $ord = $image->getScratchProperty('ordinal');
             if ($ord) {
@@ -1220,7 +1234,13 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
             } else {
               $sort = 1000 * intval($image->getID());
             }
-            $imgURLsbyBlnImgTag['img'][$sort] = array('tag'=>$tag, 'url'=>$url);
+            $imgURLsbyBlnImgTag['img'][$sort] = array('tag'=>$tag, 'url'=>$url, 'source'=>$sourceLookup);
+            $title = $image->getTitle()?$image->getTitle():substr($url,strrpos($url,'/')+1);//filename
+            $imgURLsbyBlnImgTag['img'][$sort]['title'] = $title;
+            if ($url) {
+              $info = pathinfo($url);
+              $imgURLsbyBlnImgTag['img'][$sort]['thumbUrl'] = $info['dirname']."/th".$info['basename'];
+            }
           }
         }
       }
@@ -1301,7 +1321,18 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
               if ($segment && $polygons = $segment->getImageBoundary()) {//linked to image baseline
                 $segBaselines = $segment->getBaselines(true);//todo modify for cross baseline segemnts
                 if ($segBaselines && $segBaselines->getCount() > 0) {
-                  $segBaseline = $segBaselines->current();
+                  $sourceLookup = array();
+                  $segBaseline = $segBaselines->current();//todo adjust code for cross baseline segments
+                  $attributions = $segBaseline->getAttributions(true);
+                  if ($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
+                    foreach ($attributions as $attribution) {
+                      $atbID = $attribution->getID();
+                      $title = $attribution->getTitle();
+                      if (!array_key_exists($atbID,$sourceLookup)) {
+                        $sourceLookup[$atbID] = $title;
+                      }
+                    }
+                  }
                   $blnTag = $segBaseline->getEntityTag();
                   $url = $segBaseline->getURL();
                   $ord = $segBaseline->getScratchProperty('ordinal');
@@ -1310,7 +1341,17 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
                   } else {
                     $sort = 1000 * intval($segBaseline->getID());
                   }
-                  $imgURLsbyBlnImgTag['bln'][$sort] = array('tag'=>$blnTag, 'url'=>$url);
+                  $imgURLsbyBlnImgTag['bln'][$sort] = array('tag'=>$blnTag, 'url'=>$url, 'source'=> $sourceLookup);
+                  $title = substr($url,strrpos($url,'/')+1);//filename
+                  $image = $segBaseline->getImage(true);
+                  if ($image && $image->getTitle()) {
+                    $title = $image->getTitle();
+                  }
+                  $imgURLsbyBlnImgTag['bln'][$sort]['title'] = $title;
+                  if ($url) {
+                    $info = pathinfo($url);
+                    $imgURLsbyBlnImgTag['bln'][$sort]['thumbUrl'] = $info['dirname']."/th".$info['basename'];
+                  }
                   $sclTag2BlnPolyMap[$sclTag] = array($blnTag,$polygons);
                   $bRectPts = $polygons[0]->getBoundingRect();
                 }
@@ -1326,7 +1367,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
                 $label = $physicalLineSeq->getLabel();
                 $seqTag = $physicalLineSeq->getEntityTag();
                 if ($blnTag) {
-                  $blnPosByEntTag[$seqTag] = array($blnTag => array('x'=>$bRectPts[0],'y'=>$bRectPts[1]));
+                  $blnPosByEntTag['line'][$seqTag] = array('blnTag'=>$blnTag,'x'=>$bRectPts[0],'y'=>$bRectPts[1],'h'=>($bRectPts[5]-$bRectPts[1]));
                 }
                 if (!$label) {
                   $label = $seqTag;

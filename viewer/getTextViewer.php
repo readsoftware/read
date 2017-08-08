@@ -219,8 +219,10 @@
     *
     * @param object e System event object
     * @param string senderID Identifies the sending view pane for recursion control
-    * @param string anchorTag tag of anchor sequence
-    * @param number visFraction Fraction of display viewed relative to the anchor entity
+    * @param string lineSeqTag tag of line sequence anchor nearest the top of the view
+    * @param number lineFraction is the fraction of display viewed relative to the anchor entity
+    * @param string hdrSeqTag tag of structure sequence anchor nearest the top of the view
+    * @param number hdrFraction is the fraction of display viewed relative to the structure anchor entity
     */
 
     function synchronizeHandler(e,senderID,lineSeqTag,lineFraction,hdrSeqTag,hdrFraction,scrViewHeight,imgScrollData) {
@@ -228,8 +230,8 @@
       if (senderID == this.id || !$view.parent().hasClass('syncScroll')) {
         return;
       }
-      DEBUG.log("event","synch request recieved by "+this.id+" from "+senderID+" with lseqID "+ lineSeqTag + (lineFraction?" with lfraction" + lineFraction:""));
-      DEBUG.log("event","synch request recieved by "+this.id+" from "+senderID+" with hseqID "+ hdrSeqTag + (hdrFraction?" with hfraction" + hdrFraction:""));
+//      DEBUG.log("event","synch request recieved by "+this.id+" from "+senderID+" with lseqID "+ lineSeqTag + (lineFraction?" with lfraction" + lineFraction:""));
+//      DEBUG.log("event","synch request recieved by "+this.id+" from "+senderID+" with hseqID "+ hdrSeqTag + (hdrFraction?" with hfraction" + hdrFraction:""));
       $anchorElem = $('span.linelabel.'+lineSeqTag+':first',$view);
       visFraction = lineFraction;
       if (!$anchorElem || !$anchorElem.length) {
@@ -253,7 +255,6 @@
         var
             $textViewer = $('#textViewer'),
             $textViewerHdr = $('#textViewerHdr'),
-            $textViewerHdrDiv= $('.headerDiv',$textViewerHdr),
             $textViewerContent = $('#textViewerContent')
 <?php
   if ($showContentOutline) {
@@ -271,7 +272,6 @@
             imgViewer,
             $imageViewer= $('#imageViewer'),
             $imageViewerHdr= $('#imageViewerHdr'),
-            $imageViewerHdrDiv= $('.headerDiv',$imageViewerHdr),
             $imageViewerContent= $('#imageViewerContent')
 <?php
   }
@@ -282,7 +282,6 @@
 ,
             $transViewer = $('#transViewer'),
             $transViewerHdr = $('#transViewerHdr'),
-            $transViewerHdrDiv= $('.headerDiv',$transViewerHdr),
             $transViewerContent = $('#transViewerContent')
 <?php
   }
@@ -293,7 +292,6 @@
 ,
             $chayaViewer = $('#chayaViewer'),
             $chayaViewerHdr = $('#chayaViewerHdr'),
-            $chayaViewerHdrDiv= $('.headerDiv',$chayaViewerHdr),
             $chayaViewerContent = $('#chayaViewerContent')
 <?php
   }
@@ -343,9 +341,10 @@
                                                  { initViewPercent:100,
                                                    id:'imageViewerContent',
                                                    imgViewContainer: $imageViewerContent.get(0),
-                                                   imgViewHeaderDiv: $imageViewerHdrDiv,
+                                                   imgViewHeader: $imageViewerHdr,
+                                                   posLookup: blnPosLookup,
                                                    polygonLookup: polysByBlnTagTokCmpTag,
-                                                   urls: urlBlnImgLookup
+                                                   imgLookup: urlBlnImgLookup
                                                  });
 <?php
   }
@@ -574,7 +573,7 @@
   if ($showImageView && count($blnIDs) > 0) {
 ?>
     <div id="imageViewer" class="viewer">
-      <div id="imageViewerHdr" class="viewerHeader"><div class="headerDiv"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll off">&#x1F517;</button>Image</div></div></div>
+      <div id="imageViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll off">&#x1F517;</button>Image</div></div>
       <div id="imageViewerContent" class="viewerContent"></div>
     </div>
 <?php
@@ -582,14 +581,14 @@
 ?>
 
     <div id="textViewer" class="viewer syncScroll">
-      <div id="textViewerHdr" class="viewerHeader"><div class="headerDiv"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div></div></div>
+      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div></div>
       <div id="textViewerContent" class="viewerContent">test</div>
     </div>
 <?php
   if ($showTranslationView && $hasTranslation) {
 ?>
     <div id="transViewer" class="viewer syncScroll">
-      <div id="transViewerHdr" class="viewerHeader"><div class="headerDiv"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Translation</div></div></div>
+      <div id="transViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Translation</div></div>
       <div id="transViewerContent" class="viewerContent">test</div>
     </div>
 <?php
@@ -599,7 +598,7 @@
   if ($showChayaView && $hasChaya) {
 ?>
     <div id="chayaViewer" class="viewer syncScroll">
-      <div id="chayaViewerHdr" class="viewerHeader"><div class="headerDiv"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Chāyā</div></div></div>
+      <div id="chayaViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Chāyā</div></div>
       <div id="chayaViewerContent" class="viewerContent">test</div>
     </div>
 <?php

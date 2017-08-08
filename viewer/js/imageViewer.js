@@ -58,8 +58,9 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
   this.vpOffset = imgVCfg['initViewportOffset'] && !isNaN(imgVCfg['initViewportOffset'].x) && !isNaN(imgVCfg['initViewportOffset'].y) ? imgVCfg['initViewportOffset']:{x:0,y:0};
   this.zoomFactorRange = { min:20,max:150,inc:2 };
   this.imgViewContainer = imgVCfg['imgContainerDiv']?imgVCfg['imgContainerDiv']: $('#imageViewerContent').get(0);
-  this.$imgViewHeaderDiv = imgVCfg['imgViewHeaderDiv']?imgVCfg['imgViewHeaderDiv']: $('#imageViewerHdr .headerDiv').get(0);
-  this.urls = imgVCfg['urls']?imgVCfg['urls']: null;
+  this.$imgViewHeader = imgVCfg['imgViewHeader']?imgVCfg['imgViewHeader']: $('#imageViewerHdr');
+  this.posLookup = imgVCfg['posLookup']?imgVCfg['posLookup']: null;
+  this.imgLookup = imgVCfg['imgLookup']?imgVCfg['imgLookup']: null;
   this.imgEntity = imgVCfg['imgEntity']?imgVCfg['imgEntity']: null;
   this.polygons = [];
   this.polygonLookup = imgVCfg['polygonLookup']?imgVCfg['polygonLookup']: null;;
@@ -86,7 +87,7 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
               if (imgV.imgCanvas.width != imgV.imgViewContainer.clientWidth ||
                   imgV.imgCanvas.height != imgV.imgViewContainer.clientHeight) {
                 imgV.imgCanvas.width = imgV.imgViewContainer.clientWidth;
-                imgV.imgCanvas.height = imgV.imgViewContainer.clientHeight-10;
+                imgV.imgCanvas.height = imgV.imgViewContainer.clientHeight-20;
                 imgV.imgContext = imgV.imgCanvas.getContext('2d');
                 imgV.imgContext.imageSmoothingEnabled = false;
                 imgV.vpSize.width = imgV.imgCanvas.width *100 / imgV.zoomFactor;
@@ -96,53 +97,108 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
     });
   }
   //******** viewer change  DATA lookup URL by blnID/imgID
-  if (this.urls && this.urls.bln && Object.keys(this.urls.bln).length) {
-    this.entTag = Object.keys(this.urls.bln)[0];
-    imgSrc = this.urls.bln[this.entTag];
-  } else if (this.urls && this.urls.img && Object.keys(this.urls.img).length) {
-    this.entTag = Object.keys(this.urls.img)[0];
-    imgSrc = this.urls.img[this.entTag];
+  if (this.imgLookup && this.imgLookup.bln && Object.keys(this.imgLookup.bln).length) {
+    this.entTag = Object.keys(this.imgLookup.bln)[0];
+    imgSrc = this.imgLookup.bln[this.entTag]['url'];
+  } else if (this.imgLookup && this.imgLookup.img && Object.keys(this.imgLookup.img).length) {
+    this.entTag = Object.keys(this.imgLookup.img)[0];
+    imgSrc = this.imgLookup.img[this.entTag];
   } else if (this.imgEntity && this.imgEntity.url) {
     imgSrc = this.imgEntity.url;
   }
   //setup canvas and context
   this.imgCanvas.className = "imgCanvas";
-//  this.imgContext = this.imgCanvas.getContext('2d');
-//  this.imgContext.imageSmoothingEnabled = false;
 
-  if (this.entTag && this.polygonLookup && this.polygonLookup[this.entTag],
-      Object.keys(this.polygonLookup[this.entTag]).length > 0) {
-    for (wordTag in this.polygonLookup[this.entTag]) {
-      polygons = this.polygonLookup[this.entTag][wordTag];
-      if (polygons.length > 1) {//multiple polygons so find centroid of centriods
-        centers = [];
-        for (i in polygons) {
-          centers.push(UTILITY.getCentroid(polygons[i]));
-        }
-        center = UTILITY.getCentroid(centers);
-      } else if (polygons.length == 1) {
-        center = UTILITY.getCentroid(polygons[0])
-      } else {
-        center = null;
-      }
-      this.addImagePolygon(polygons,wordTag,false,null,center,null);//WARNING!! todo code change boundary can be multiple polygons
+  this.imgCanvas.onmouseleave = function(e) {
+    delete this.focusMode;
+  };
+  this.imgCanvas.onmouseenter = function(e) {
+    if (!this.focusMode) {
+      this.focusMode = "mouseIn";
     }
-  }
+  };
 
   if (imgSrc) {
     this.imgFilename = imgSrc.substring(imgSrc.lastIndexOf("/")+1);
 // ********* todo add this to source (as by line??) or as hover text for title.
   }
   //setup image tools
-  if (this.$imgViewHeaderDiv) {
+  if (this.imgViewContainer) {
     if (this.imgFilename) {
-      this.$imgViewHeaderDiv.append($('<span class="filename">'+this.imgFilename+"</span>"));
+      this.$resSourceDiv = $('<div class="sourceLine">Source: '+this.imgFilename+"</div>");
+      $(this.imgViewContainer).append(this.$resSourceDiv);
     }
-    this.zoomDIV = $('<div class="zoomUI"><div id="zoomOut" title="Zoom Out" class="zoomButton">-</div><div id="zoomIn" title="Zoom In" class="zoomButton">+</div></div>').get(0);
-    this.$imgViewHeaderDiv.append(this.zoomDIV);
+  }
+  if (this.$imgViewHeader) {
+    this.$baselineMenu = $('<div id="imgVBlnMenu" class="menuLabelDiv" title="Select baseline to view">Linked</div>');
+    this.$imgViewHeader.append(this.$baselineMenu);
+    if ( this.imgLookup.bln && Object.keys(this.imgLookup.bln).length) {
+      this.$blnMenuPanel = $('<div id="baselines" class="menuPanel"/>');
+      $('body').append(this.$blnMenuPanel);
+
+      for (lkupID in this.imgLookup.bln) {
+        blnInfo = this.imgLookup.bln[lkupID];
+        resLabel = blnInfo.title;
+        elemID = "blnLkupID" + lkupID;
+        thumbUrl = (blnInfo.thumbUrl?blnInfo.thumbUrl:blnInfo.url);
+        $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
+        $resDiv.prop('lkupID',lkupID);
+        $resDiv.unbind('click').bind('click', function(e) {
+          var lkupID = $(this).prop('lkupID'), sourceNames = [], atbID,
+              blnInfo = imgV.imgLookup.bln[lkupID];
+          imgV.loadBaselineAt(lkupID, {x:imgV.vpLoc.x, y:0});
+          imgV.$blnMenuPanel.removeClass('showMenu');
+          e.stopImmediatePropagation();
+          return false;
+        });
+        this.$blnMenuPanel.append($resDiv);
+      }
+      this.$baselineMenu.unbind('click').bind('click', function(e) {
+        var offset = imgV.$baselineMenu.offset();
+        imgV.$blnMenuPanel.css('left',""+(offset.left+50)+"px");
+        imgV.$blnMenuPanel.css('top',""+(offset.top+20)+"px");
+        imgV.$blnMenuPanel.toggleClass('showMenu');
+        e.stopImmediatePropagation();
+        return false;
+      });
+    }
+    this.$imgMenu = $('<div id="imgVImgMenu" class="menuLabelDiv" title="Select Img to view">Other</div>');
+    this.$imgViewHeader.append(this.$imgMenu);
+    if ( this.imgLookup.img && Object.keys(this.imgLookup.img).length) {
+      this.$imgMenuPanel = $('<div id="images" class="menuPanel"/>');
+      $('body').append(this.$imgMenuPanel);
+
+      for (lkupID in this.imgLookup.img) {
+        imgInfo = this.imgLookup.img[lkupID];
+        resLabel = imgInfo.title;
+        elemID = "blnLkupID" + lkupID;
+        thumbUrl = (imgInfo.thumbUrl?imgInfo.thumbUrl:imgInfo.url);
+        $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
+        $resDiv.prop('lkupID',lkupID);
+        $resDiv.unbind('click').bind('click', function(e) {
+          var lkupID = $(this).prop('lkupID');
+          imgV.loadImage(lkupID);
+          imgV.$imgMenuPanel.removeClass('showMenu');
+          e.stopImmediatePropagation();
+          return false;
+        });
+        this.$imgMenuPanel.append($resDiv);
+      }
+      this.$imgMenu.unbind('click').bind('click', function(e) {
+        var offset = imgV.$imgMenu.offset();
+        imgV.$imgMenuPanel.css('left',""+(offset.left+50)+"px");
+        imgV.$imgMenuPanel.css('top',""+(offset.top+20)+"px");
+        imgV.$imgMenuPanel.toggleClass('showMenu');
+        e.stopImmediatePropagation();
+        return false;
+      });
+    }
+    this.$zoomDIV = $('<div class="zoomUI"><div id="zoomOut" title="Zoom Out" class="zoomButton">-</div><div id="zoomIn" title="Zoom In" class="zoomButton">+</div></div>').get(0);
+    this.$imgViewHeader.append(this.$zoomDIV);
   }
   this.image = new Image();
   this.image.onload = function(e) {
+    imgV.loadWordPolygons();
     imgV.imgContext = imgV.imgCanvas.getContext('2d');
     imgV.imgContext.imageSmoothingEnabled = false;
     imgV.init();
@@ -171,6 +227,85 @@ VIEWERS.ImageViewer.prototype = {
     this.initViewport();
     this.draw();
   },
+
+
+/**
+* put your comment there...
+*
+*/
+
+  loadBaselineAt: function(blnTag, offset) {
+    var sourceNames = [], atbID,
+        blnInfo = this.imgLookup.bln[blnTag];
+    this.entTag = blnInfo.tag;
+    if (offset && offset.x && offset.y) {
+      this.vpOffset.x = !isNaN(offset.x)?offset.x:0;
+      this.vpOffset.y = !isNaN(offset.y)?offset.y:0;
+    }
+    this.image.src = blnInfo.url;
+    this.imgFilename = blnInfo.url.substring(blnInfo.url.lastIndexOf("/")+1);
+    if (blnInfo.source && Object.keys(blnInfo.source).length) {
+      for (atbID in blnInfo.source) {
+        sourceNames.push(blnInfo.source[atbID]);
+      }
+    } else {
+      sourceNames.push("unknown");
+    }
+    this.$resSourceDiv.html('('+this.imgFilename+') Source: '+sourceNames.join(','));
+  },
+
+
+/**
+* put your comment there...
+*
+*/
+
+  loadImage: function(imgTag) {
+    var sourceNames = [], atbID,
+        imgInfo = this.imgLookup.img[imgTag];
+    this.entTag = imgInfo.tag;
+    this.vpOffset.x = 0;
+    this.vpOffset.y = 0;
+    this.image.src = imgInfo.url;
+    this.imgFilename = imgInfo.url.substring(imgInfo.url.lastIndexOf("/")+1);
+    if (imgInfo.source && Object.keys(imgInfo.source).length) {
+      for (atbID in imgInfo.source) {
+        sourceNames.push(imgInfo.source[atbID]);
+      }
+    } else {
+      sourceNames.push("unknown");
+    }
+    this.$resSourceDiv.html('('+this.imgFilename+') Source: '+sourceNames.join(','));
+  },
+
+
+/**
+* put your comment there...
+*
+*/
+
+  loadWordPolygons: function () {
+    this.polygons = [];
+    this.selectedPolygons = {};
+    if (this.entTag && this.polygonLookup && this.polygonLookup[this.entTag] &&
+        Object.keys(this.polygonLookup[this.entTag]).length > 0) {
+      for (wordTag in this.polygonLookup[this.entTag]) {
+        polygons = this.polygonLookup[this.entTag][wordTag];
+        if (polygons.length > 1) {//multiple polygons so find centroid of centriods
+          centers = [];
+          for (i in polygons) {
+            centers.push(UTILITY.getCentroid(polygons[i]));
+          }
+          center = UTILITY.getCentroid(centers);
+        } else if (polygons.length == 1) {
+          center = UTILITY.getCentroid(polygons[0])
+        } else {
+          center = null;
+        }
+        this.addImagePolygon(polygons,wordTag,false,null,center,null);//WARNING!! todo code change boundary can be multiple polygons
+      }
+    }
+ },
 
 
 /**
@@ -592,9 +727,20 @@ VIEWERS.ImageViewer.prototype = {
 */
 
   eventToCanvas: function(event,canvas) {
-    var bbox = canvas.getBoundingClientRect();
-    return [Math.round(event.clientX - bbox.left * (canvas.width  / bbox.width)),
-            Math.round(event.clientY - bbox.top  * (canvas.height / bbox.height))];
+    var bbox = canvas.getBoundingClientRect(),clientX,clientY,i;
+    if (event.clientX) {
+      clientX = event.clientX;
+      clientY = event.clientY;
+      return [Math.round(clientX - bbox.left * (canvas.width  / bbox.width)),
+              Math.round(clientY - bbox.top  * (canvas.height / bbox.height))];
+    } else if (event.type.indexOf("touch") != -1 && event.originalEvent) {// todo add code for touch zoom
+      clientX = event.originalEvent.touches[0].clientX;
+      clientY = event.originalEvent.touches[0].clientY;
+      return [Math.round(clientX - bbox.left * (canvas.width  / bbox.width)),
+              Math.round(clientY - bbox.top  * (canvas.height / bbox.height))];
+    } else {
+      return [0,0];
+    }
   },
 
 
@@ -641,12 +787,32 @@ VIEWERS.ImageViewer.prototype = {
 /**
 * put your comment there...
 *
-* @param direction
+* @returns int array representing the center point [x,y] of the viewport
+*/
+
+  getViewportCenter: function () {
+    return [this.vpSize.width/2 + this.vpLoc.x, this.vpSize.height/2 + this.vpLoc.y];
+  },
+
+/**
+* put your comment there...
+*
+* @param direction int indicates zoomin (+1) or zoomout (-1)
 */
 
   zoomCenter: function (direction) {
-    var xImgAllign = this.vpSize.width/2 + this.vpLoc.x,
-        yImgAllign = this.vpSize.height/2 + this.vpLoc.y;
+    this.zoomPoint(direction,this.getViewportCenter())
+  },
+
+/**
+* put your comment there...
+*
+* @param direction
+*/
+
+  zoomPoint: function (direction, zoomPoint) {
+    var xImgAllign = zoomPoint[0],
+        yImgAllign = zoomPoint[1];
     this.zoomFactor = Math.max(this.zoomFactorRange.min,
                               Math.min(this.zoomFactorRange.max,this.zoomFactor + ( this.zoomFactorRange.inc * direction)));
     this.vpSize.width = this.imgCanvas.width *100 / this.zoomFactor;
@@ -665,13 +831,13 @@ VIEWERS.ImageViewer.prototype = {
   addEventHandlers: function() {
     var imgV = this;
   // navDiv events
-    $('#zoomOut',imgV.zoomDIV).unbind('click').bind('click', function(e) {
+    $('#zoomOut',imgV.$zoomDIV).unbind('click').bind('click', function(e) {
         setTimeout(function() {imgV.zoomCenter.call(imgV,-1);},50);
         e.stopImmediatePropagation();
         return false;
       });
 
-    $('#zoomIn',imgV.zoomDIV).unbind('click').bind('click', function(e) {
+    $('#zoomIn',imgV.$zoomDIV).unbind('click').bind('click', function(e) {
         setTimeout(function() {imgV.zoomCenter.call(imgV,1);},50);
         e.stopImmediatePropagation();
         return false;
@@ -686,6 +852,44 @@ VIEWERS.ImageViewer.prototype = {
     imgV.imgCanvas.onmousewheel = function(e) {
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgV.id);
       imgV.handleWheel.call(imgV,e); //delegate passing imgV as context
+    };
+    imgV.imgCanvas.onkeydown = function(e) {
+      var keyCode = (e.keyCode || e.which);
+      if (keyCode > 36 && keyCode <41) {
+        switch (e.keyCode || e.which) {
+          case 38://'Up':
+            if (e.ctrlKey || e.metaKey) {
+              imgV.moveViewportRelative(0,-15);
+            } else {
+              imgV.moveViewportRelative(0,-2);
+            }
+            break;
+          case 40://'Down':
+            if (e.ctrlKey || e.metaKey) {
+              imgV.moveViewportRelative(0,15);
+            } else {
+              imgV.moveViewportRelative(0,2);
+            }
+            break;
+          case 37://"Left":
+            if (e.ctrlKey || e.metaKey) {
+              imgV.moveViewportRelative(-15,0);
+            } else {
+              imgV.moveViewportRelative(-2,0);
+            }
+            break;
+          case 39://"Right":
+            if (e.ctrlKey || e.metaKey) {
+              imgV.moveViewportRelative(15,0);
+            } else {
+              imgV.moveViewportRelative(2,0);
+            }
+            break;
+        }
+        imgV.draw();
+        e.stopImmediatePropagation();
+        return false;
+      }
     };
     imgV.imgCanvas.onkeypress = function(e) {
       var key = e.which == null?String.fromCharCode(e.keyCode):
@@ -710,31 +914,18 @@ VIEWERS.ImageViewer.prototype = {
         //hittest for target polygons
         var hitPolyIndices = imgV.hitTestPolygons(x,y);
         //unselect existing if no ctrl key pressed
-        if (!e.ctrlKey) {
+        if (!e.ctrlKey || !e.metaKey) {
           imgV.selectedPolygons = {};
         }
         //add indices to selected array
         for (i=0; i < hitPolyIndices.length; i++) {
           index = hitPolyIndices[i];
-          gid = imgV.polygons[index -1].label;
-          imgV.selectedPolygons[gid] = 1;
-        }
-
-        if (imgV.selectedPolygons && Object.keys(imgV.selectedPolygons).length > 0) {
-          selectedTags = Object.keys(imgV.selectedPolygons);
-          firstPoly = imgV.polygons[imgV.polygonLookup[selectedTags[0]]-1];
-          firstPolyVerts = firstPoly.polygons[0].join();
-          for (i = 1; i < selectedTags.length; i++) {
-            testPoly = imgV.polygons[imgV.polygonLookup[selectedTags[i]]-1];
-            if (testPoly.polygons[0].join() == firstPolyVerts) {
-              delete imgV.selectedPolygons[selectedTags[i]];
-            }
-          }
+          imgV.selectedPolygons[imgV.polygons[index -1].label] = 1;
         }
         //redraw
         imgV.drawImage();
         imgV.drawImagePolygons();
-//        $('.editContainer').trigger('updateselection',[imgV.id,imgV.getSelectedPolygonLabels()]);
+        $('.editContainer').trigger('updateselection',[imgV.id,imgV.getSelectedPolygonLabels()]);
     };
 
     imgV.imgCanvas.onclick = function (e){
@@ -743,32 +934,30 @@ VIEWERS.ImageViewer.prototype = {
       var x = imgV.vpLoc.x + imgV.vpSize.width/imgV.imgCanvas.width * pt[0],
           y = imgV.vpLoc.y + imgV.vpSize.height/imgV.imgCanvas.height * pt[1],
           i,index;
-      if (imgV.focusMode != 'focused') {
+      if (!imgV.focusMode || imgV.focusMode != 'focused') {
         imgV.focusMode = 'focused';
         imgV.imgCanvas.focus();
       }
-      if (!e.ctrlKey) {
-        imgV.selectedPolygons = {};
+      if (e.ctrlKey || e.metaKey) {
+        //hittest for target polygons
+        var hitPolyIndices = imgV.hitTestPolygons(x,y);
+        //add indices to selected array
+        for (i=0; i < hitPolyIndices.length; i++) {
+          index = hitPolyIndices[i];
+          imgV.selectedPolygons[imgV.polygons[index -1].label] = 1;
+        }
+        //redraw
+        imgV.drawImage();
+        imgV.drawImagePolygons();
+        $('.viewerContent').trigger('updateselection',[imgV.id,imgV.getSelectedPolygonLabels()]);
       }
-      //set cursor back to pointer ???
-      //hittest for target polygons
-      var hitPolyIndices = imgV.hitTestPolygons(x,y);
-      //add indices to selected array
-      for (i=0; i < hitPolyIndices.length; i++) {
-        index = hitPolyIndices[i];
-        imgV.selectedPolygons[imgV.polygons[index -1].label] = 1;
-      }
-      //redraw
-      imgV.drawImage();
-      imgV.drawImagePolygons();
-      $('.viewerContent').trigger('updateselection',[imgV.id,imgV.getSelectedPolygonLabels()]);
     };
 
     imgV.rbRect,imgV.drgStart,imgV.rbImageData = null;
     $(imgV.imgCanvas).unbind("mousedown touchstart").bind("mousedown touchstart", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgV.id);
       //set cursor to grabbing and flag dragnavigation
-      if (e.buttons == 1) { // left mouse button user might be doing drag navigation
+      if (e.buttons == 1 || e.type == "touchstart") { // left mouse button user might be doing drag navigation
         imgV.imgCanvas.style.cursor = 'pointer';
       //store drag start
         imgV.drgStart = imgV.eventToCanvas(e, imgV.imgCanvas);
@@ -780,25 +969,29 @@ VIEWERS.ImageViewer.prototype = {
 
     $(imgV.imgCanvas).unbind("mousemove touchmove").bind("mousemove touchmove", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgV.id);
-      if (e.buttons == 1) { // left mouse button with move user is drag navigation
-        imgV.dragnav = 'move';
-        imgV.imgCanvas.style.cursor = 'grabbing';
-        //get new postion
-        newPos = imgV.eventToCanvas(e, imgV.imgCanvas);
-        //move image to new location
-        imgV.moveViewportRelative((imgV.drgStart[0] - newPos[0])*100/imgV.zoomFactor,(imgV.drgStart[1] - newPos[1])*100/imgV.zoomFactor);
-        imgV.drgStart = newPos;
-        imgV.draw()
+      if (e.buttons == 1 || e.type == "touchmove") { // left mouse button with move user is drag navigation
+        if (e.type == "touchmove" && e.originalEvent.touches.length > 1) {//2 or more touches so treat as zoom
+          touchPoints = imgV.eventToCanvas(e, imgV.imgCanvas);
+        } else {
+          imgV.dragnav = 'move';
+          imgV.imgCanvas.style.cursor = 'grabbing';
+          //get new postion
+          newPos = imgV.eventToCanvas(e, imgV.imgCanvas);
+          //move image to new location
+          imgV.moveViewportRelative((imgV.drgStart[0] - newPos[0])*100/imgV.zoomFactor,(imgV.drgStart[1] - newPos[1])*100/imgV.zoomFactor);
+          imgV.drgStart = newPos;
+          imgV.draw()
+        }
       }
     });
 
     $(imgV.imgCanvas).unbind("mouseup touchend").bind("mouseup touchend", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgV.id);
-      if (imgV.dragnav == 'move') {
+      if (imgV.dragnav == 'move' || imgV.dragnav == 'down') {
         delete imgV.dragnav;
         imgV.imgCanvas.style.cursor = 'crosshair';
         e.stopImmediatePropagation();
-        return;
+        return false;
       }
     });
 
@@ -812,7 +1005,7 @@ VIEWERS.ImageViewer.prototype = {
 */
 
     function updateSelectionHandler(e,senderID, selectionIDs) {
-      if (senderID == imgV.id || imgV.autoLinkOrdMode) {
+      if (senderID == imgV.id) {
         return;
       }
       DEBUG.log("event","selection changed received by imageVE in "+imgV.id+" from "+senderID+" selected ids "+ selectionIDs.join());
@@ -877,57 +1070,46 @@ VIEWERS.ImageViewer.prototype = {
 //    $(imgV.imgViewContainer).unbind('leaveSyllable').bind('leaveSyllable', leaveSyllableHandler);
 
 
-/**
-* put your comment there...
-*
-* @param object e System event object
-* @param senderID
-* @param anchorSegID
-* @param visFraction
-*/
+    /**
+    * handle 'synchronize' event for img view
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending view pane for recursion control
+    * @param string lineSeqTag tag of line sequence anchor nearest the top of the view
+    * @param number lineFraction is the fraction of display viewed relative to the anchor entity
+    * @param string hdrSeqTag tag of structure sequence anchor nearest the top of the view
+    * @param number hdrFraction is the fraction of display viewed relative to the structure anchor entity
+    */
 
-    function synchronizeHandler(e,senderID, anchorSegID, visFraction, imgPosData) {
-      if (senderID == imgV.id) {
+    function imgSynchronizeHandler(e,senderID,lineSeqTag,lineFraction,hdrSeqTag,hdrFraction,scrViewHeight,imgScrollData) {
+      var $view = $(this), newBln = null, newTop;
+      if (senderID == imgV.id || !$view.parent().hasClass('syncScroll') || imgV.entTag.match(/img/)) {
         return;
       }
-      DEBUG.log("event","synchronize recieved by imageVE in "+imgV.id+" from "+senderID+" with anchor segID "+ anchorSegID+" and visibility fraction "+visFraction);
-      var top, polygon, deltaPolygon, index, syncSegTag, yOffset = 0;
-      if (imgPosData) {
-        syncSegTag = "seg"+imgPosData.segID;
-      } else {
-        return;
-      }
-      //find segment's polygon
-      index = imgV.polygonLookup[syncSegTag];
-      if (!index) {//non image segment id for this imageVE so ignore it
-        return;
-      } else {
-        polygon = imgV.polygons[-1+index];
-      }
-      if (imgPosData.deltaSegID) {
-        index = imgV.polygonLookup[imgPosData.deltaSegID];
-        if (index) {
-          deltaPolygon = imgV.polygons[-1+index];
-        }
-      }
-      if (polygon && polygon.label == syncSegTag) {
-        polygon = polygon.polygon;
-        if (deltaPolygon && imgPosData.deltaFactor) {
-          deltaPolygon = deltaPolygon.polygon;
-          top = polygon[0][1] + imgPosData.deltaFactor * (deltaPolygon[0][1] - polygon[0][1]);
-        } else {
-          top = polygon[0][1] + imgPosData.segHeightFactor * (polygon[2][1] - polygon[0][1]);
+      DEBUG.log("event","synchronize recieved by imageV in "+imgV.id+" from "+senderID+" with line anchor seqID "+ lineSeqTag+" and visibility fraction "+lineFraction+" and with header anchor seqID "+ hdrSeqTag+" and visibility fraction "+hdrFraction+" screen view height "+scrViewHeight);
+      if (imgV.posLookup) {
+        if (lineSeqTag && imgV.posLookup.line[lineSeqTag]) {
+          if (imgV.entTag != imgV.posLookup.line[lineSeqTag].blnTag) {
+            newBln = imgV.posLookup.line[lineSeqTag].blnTag;
+          }
+          newTop = Math.max( 0, imgV.posLookup.line[lineSeqTag].y + imgV.posLookup.line[lineSeqTag].h * lineFraction);
+        } else if (hdrSeqTag && imgV.posLookup.construct[hdrSeqTag]) {
+          if (imgV.entTag != imgV.posLookup.construct[hdrSeqTag].blnTag) {
+            newBln = imgV.posLookup.construct[hdrSeqTag].blnTag;
+          }
+          newTop = Math.max( 0, imgV.posLookup.construct[hdrSeqTag].y + imgV.posLookup.construct[hdrSeqTag].h * hdrFraction);
         }
       }
       //calculate position for segment polygon
-      if (top) {
-        imgV.eraseNavPanel();
-        imgV.moveViewportToImagePosY(top);
+      if (!newBln) {
+        imgV.moveViewportToImagePosY(newTop);
         imgV.draw();
+      } else {
+        imgV.loadBaselineAt(newBln, {x:imgV.vpLoc.x, y:newTop});
       }
     };
 
-//    $(imgV.imgViewContainer).unbind('synchronize').bind('synchronize', synchronizeHandler);
+    $(imgV.imgViewContainer).unbind('synchronize').bind('synchronize', imgSynchronizeHandler);
 
   },
 

@@ -19,11 +19,14 @@
   padding-left: 25px;
 }
 
-.headerDiv {
+.viewerHeader {
+  background-color: rgb(240,240,230);
+  height: 35px;
   width: 100%;
+  border: none;
 }
 
-.viewerHeader {
+.viewerHeader, #imageViewerHdr {
   background-color: rgb(240,240,230);
   height: 35px;
   width: 100%;
@@ -248,11 +251,49 @@ body.showTOC .tocNavPanel {
 .zoomUI {
   height: 100%;
   float: right;
-  display: inline-flex;
-  margin-right: 15px;
+  display: inline;
+  margin-right: 25px;
+  min-width: 70px;
+  cursor: pointer;
+}
+
+.imgmenuresource:hover {
+  background-color: darkgrey;
+}
+.imgmenuresource {
+  cursor: pointer;
+  align-items: center;
+  vertical-align: middle;
+  height: 25px;
+}
+
+.resImageIconBtn {
+  max-height: 20px;
+  max-width: 50px;
+  vertical-align: text-bottom;
+  padding: 4px;
 }
 
 .filename {
   display: inline-flex;
   padding-left: 20px;
+}
+
+.menuPanel.showMenu {
+  display: block;
+}
+
+.menuPanel {
+  display: none;
+  position: absolute;
+  background-color: rgb(214,214,204);
+  max-width: 100px;
+}
+
+.menuLabelDiv {
+  display: inline-flex;
+  justify-content: left;
+  vertical-align: middle;
+  font-size: 14pt;
+  padding-left: 25px;
 }
