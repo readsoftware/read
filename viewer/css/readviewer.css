@@ -287,7 +287,7 @@ body.showTOC .tocNavPanel {
   display: none;
   position: absolute;
   background-color: rgb(214,214,204);
-  max-width: 100px;
+  max-width: 200px;
 }
 
 .menuLabelDiv {

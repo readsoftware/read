@@ -148,7 +148,7 @@ function getEditionGlossaryLookup($entTag,  $refresh = false) {
     $glossaryTypeID = Entity::getIDofTermParentLabel('glossary-catalogtype'); //term dependency
     $catalogs = new Catalogs(substr($entTag,3)." = ANY(cat_edition_ids) and cat_type_id = $glossaryTypeID","cat_id",null,null);
     if (!$catalogs->getError() && $catalogs->getCount() > 0) {
-      $catalog = $catalogs->current();
+      $catalog = $catalogs->current();//choose the first
       $catID = $catalog->getID();
     }
   }
@@ -352,24 +352,27 @@ function getSequenceAnnotationTypes($sequence) {
 *
 * @return int array of term ids for annotationtypes
 */
-function getEditionAnnotationTypes($ednID) {
+function getEditionAnnotationTypes($ednIDs) {
   global $edition,$annoTypeIDs;
   $seqEntGIDs = array();
   $annoTypeIDs = array();
-  $edition = new Edition($ednID);
-  if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
-    array_push($warnings,"Warning need valid accessible edition id $ednID.");
-  } else {
-    $edSeqs = $edition->getSequences(true);
-    $textAnalysisSeq = null;
-    foreach ($edSeqs as $edSequence) {
-      $seqType = $edSequence->getType();
-      if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
-        $textAnalysisSeq = $edSequence;
+  foreach ($ednIDs as $ednID) {
+    $edition = new Edition($ednID);
+    if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
+      array_push($warnings,"Warning need valid accessible edition id $ednID.");
+      continue;
+    } else {
+      $edSeqs = $edition->getSequences(true);
+      $textAnalysisSeq = null;
+      foreach ($edSeqs as $edSequence) {
+        $seqType = $edSequence->getType();
+        if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
+          $textAnalysisSeq = $edSequence;
+        }
       }
-    }
-    if ($textAnalysisSeq && $textAnalysisSeq->getEntityIDs() && count($textAnalysisSeq->getEntityIDs()) > 0) {
-      getSequenceAnnotationTypes($textAnalysisSeq);
+      if ($textAnalysisSeq && $textAnalysisSeq->getEntityIDs() && count($textAnalysisSeq->getEntityIDs()) > 0) {
+        getSequenceAnnotationTypes($textAnalysisSeq);
+      }
     }
   }
   return $annoTypeIDs;
@@ -643,101 +646,6 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
 
 
 /**
-* gets the editions Structural Translation/Chaya html
-*
-* calculates the structure view of this edition's translation/chaya annotations stopping at depth frist node
-* with annotation, also process embedded physical line markers and footnote markers
-*
-* @param int $ednID identifies the edition to calculate
-* @param int $annoTypeID identifies the type of translation to calculate
-* @param boolean $forceRecalc indicating whether to ignore cached values
-*
-* @returns mixed object with a string representing the html and a footnote lookup table
-*/
-function getEditionStructuralTranslationHtml($ednID, $annoTypeID = null, $forceRecalc = false) {
-  global $lineLabel2SeqTagMap, $tfnRefToTfnText, $tfnCnt, $translationTypeID, $preMarker, $fnPreMarker;
-  $lineLabel2SeqTagMap = array();
-  $tfnRefToTfnText = array();
-  $tfnCnt = 0;
-  $html = "";
-  $edition = new Edition($ednID);
-  if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
-    array_push($warnings,"Warning need valid accessible edition id $ednID.");
-  } else {
-    $edSeqs = $edition->getSequences(true);
-    $seqPhys = $seqText = $textAnalysisSeq = null;
-    foreach ($edSeqs as $edSequence) {
-      $seqType = $edSequence->getType();
-      if (!$seqPhys && $seqType == "TextPhysical"){//warning!!!! term dependency
-        $seqPhys = $edSequence;
-      }
-      if (!$seqText && $seqType == "Text"){//warning!!!! term dependency
-        $seqText = $edSequence;
-      }
-      if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
-        $textAnalysisSeq = $edSequence;
-      }
-    }
-
-    if (!$textAnalysisSeq || !$textAnalysisSeq->getEntityIDs() || count($textAnalysisSeq->getEntityIDs()) == 0) {
-      return false;
-    } else {//process analysis
-      //calculate  label to seqTag lookup incase there are embedded line labels of the form [[label]]map
-      if ($seqPhys && $seqPhys->getEntityIDs() && count($seqPhys->getEntityIDs()) > 0) {
-        foreach ($seqPhys->getEntities(true) as $physicalLineSeq) {
-          $label = $physicalLineSeq->getLabel();
-          $seqTag = 'seq'.$physicalLineSeq->getID();
-          if (!$label) {
-            $label = $seqTag;
-          }
-          $lineLabel2SeqTagMap[$label] = $seqTag;
-        }
-      }
-      if ($annoTypeID) {
-        $translationTypeID = $annoTypeID;
-        $transType = (Entity::getTermFromID($annoTypeID) != "Translation"?Entity::getTermFromID($annoTypeID):"Generic");//warning!!!! term dependency
-        $preMarker = substr(strtolower($transType),0,1);
-        $fnPreMarker = $preMarker.'fn';
-      } else {
-        $transType = "Generic";
-        $translationTypeID = Entity::getIDofTermParentLabel('Translation-AnnotationType');//warning!!!! term dependency
-        $preMarker = 't';
-        $fnPreMarker = 'tfn';
-      }
-      //start to calculate html using each entity of the analysis container
-      foreach ($textAnalysisSeq->getEntityIDs() as $entGID) {
-        $prefix = substr($entGID,0,3);
-        $entID = substr($entGID,4);
-        if ($prefix == 'seq') {
-          $subSequence = new Sequence($entID);
-          if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
-            error_log("warn, Warning inaccessible sub-sequence id $entID skipped.");
-          } else {
-            $html .= getStructTransHtml($subSequence, 1);
-          }
-        } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
-          if ($prefix == 'cmp') {
-            $entity = new Compound($entID);
-          } else {
-            $entity = new Token($entID);
-          }
-          if (!$entity || $entity->hasError()) {//no word or unavailable so warn
-            error_log("warn, Warning inaccessible word id $entGID skipped.");
-          } else {
-            $html .= getWordTransHtml($entity,false);
-          }
-        }else{
-          error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
-          continue;
-        }
-      }
-    }
-  }
-  return json_encode($html);
-}
-
-
-/**
 * returns footnotes of an entity as Html fragment
 *
 * @param object $entity that can be annotated
@@ -870,7 +778,7 @@ function addWordPolygonsToEntityLookup($token, $entTag, $isFinalToken) {
           && array_key_exists($entTag,$polysByBlnTagTokCmpTag[$curBlnTag])) {
         $entULPoints = $polysByBlnTagTokCmpTag[$curBlnTag][$entTag][0][0];
         $entLRPoints = $polysByBlnTagTokCmpTag[$curBlnTag][$entTag][0][2];
-        $blnPosByEntTag['word'][$entTag] = array('blnTag'=>$blnTag,'x'=>$entULPoints[0],'y'=>$entULPoints[1],'h'=>($entULPoints[1]-$entULPoints[1]));
+        $blnPosByEntTag['word'][$entTag] = array('blnTag'=>$blnTag,'x'=>$entULPoints[0],'y'=>$entULPoints[1],'h'=>($entLRPoints[1]-$entULPoints[1]));
       }
     }
   }
@@ -1182,7 +1090,6 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   $prevTCMS = "";
   $editionTOCHtml = "";
   $warnings = array();
-  $fnRefTofnText = array();
   $typeIDs = array();
   $fnCnt = 0;
   $footnoteTypeID = Entity::getIDofTermParentLabel('FootNote-FootNoteType');//warning!!!! term dependency
@@ -1447,7 +1354,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
   $physTextTypeTrmID = Entity::getIDofTermParentLabel('textphysical-sequencetype'); //term dependency
   $catID = $catalog->getID();
   if (!$refreshWordMap && array_key_exists("cache-cat$catID",$_SESSION) &&
-  array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID"])) {
+        array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID"])) {
     return $_SESSION["cache-cat$catID"]['wrdTag2LocLabel'];
   }
   $editionIDs = $catalog->getEditionIDs();

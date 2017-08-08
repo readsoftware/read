@@ -63,6 +63,7 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
   this.imgLookup = imgVCfg['imgLookup']?imgVCfg['imgLookup']: null;
   this.imgEntity = imgVCfg['imgEntity']?imgVCfg['imgEntity']: null;
   this.polygons = [];
+  this.syncY = this.newTop = 0;
   this.polygonLookup = imgVCfg['polygonLookup']?imgVCfg['polygonLookup']: null;;
   this.selectedPolygons = {};
   this.viewAllPolygons = false; //intially hide any polygons
@@ -87,7 +88,7 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
               if (imgV.imgCanvas.width != imgV.imgViewContainer.clientWidth ||
                   imgV.imgCanvas.height != imgV.imgViewContainer.clientHeight) {
                 imgV.imgCanvas.width = imgV.imgViewContainer.clientWidth;
-                imgV.imgCanvas.height = imgV.imgViewContainer.clientHeight-20;
+                imgV.imgCanvas.height = imgV.imgViewContainer.clientHeight-30;
                 imgV.imgContext = imgV.imgCanvas.getContext('2d');
                 imgV.imgContext.imageSmoothingEnabled = false;
                 imgV.vpSize.width = imgV.imgCanvas.width *100 / imgV.zoomFactor;
@@ -157,6 +158,9 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
         var offset = imgV.$baselineMenu.offset();
         imgV.$blnMenuPanel.css('left',""+(offset.left+50)+"px");
         imgV.$blnMenuPanel.css('top',""+(offset.top+20)+"px");
+        if (imgV.$imgMenuPanel && imgV.$imgMenuPanel.hasClass('showMenu')) {
+          imgV.$imgMenuPanel.removeClass('showMenu');
+        }
         imgV.$blnMenuPanel.toggleClass('showMenu');
         e.stopImmediatePropagation();
         return false;
@@ -188,6 +192,9 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
         var offset = imgV.$imgMenu.offset();
         imgV.$imgMenuPanel.css('left',""+(offset.left+50)+"px");
         imgV.$imgMenuPanel.css('top',""+(offset.top+20)+"px");
+        if (imgV.$blnMenuPanel && imgV.$blnMenuPanel.hasClass('showMenu')) {
+          imgV.$blnMenuPanel.removeClass('showMenu');
+        }
         imgV.$imgMenuPanel.toggleClass('showMenu');
         e.stopImmediatePropagation();
         return false;
@@ -238,7 +245,7 @@ VIEWERS.ImageViewer.prototype = {
     var sourceNames = [], atbID,
         blnInfo = this.imgLookup.bln[blnTag];
     this.entTag = blnInfo.tag;
-    if (offset && offset.x && offset.y) {
+    if (offset && (offset.x || offset.x == 0) && (offset.y || offset.y == 0)) {
       this.vpOffset.x = !isNaN(offset.x)?offset.x:0;
       this.vpOffset.y = !isNaN(offset.y)?offset.y:0;
     }
@@ -1082,31 +1089,43 @@ VIEWERS.ImageViewer.prototype = {
     */
 
     function imgSynchronizeHandler(e,senderID,lineSeqTag,lineFraction,hdrSeqTag,hdrFraction,scrViewHeight,imgScrollData) {
-      var $view = $(this), newBln = null, newTop;
+      var $view = $(this), newBln = null, newTop = null, imgPosHash = "", syncY;
       if (senderID == imgV.id || !$view.parent().hasClass('syncScroll') || imgV.entTag.match(/img/)) {
         return;
       }
-      DEBUG.log("event","synchronize recieved by imageV in "+imgV.id+" from "+senderID+" with line anchor seqID "+ lineSeqTag+" and visibility fraction "+lineFraction+" and with header anchor seqID "+ hdrSeqTag+" and visibility fraction "+hdrFraction+" screen view height "+scrViewHeight);
+//      DEBUG.log("event","synchronize recieved by imageV in "+imgV.id+" from "+senderID+" with line anchor seqID "+ lineSeqTag+" and visibility fraction "+lineFraction+" and with header anchor seqID "+ hdrSeqTag+" and visibility fraction "+hdrFraction+" screen view height "+scrViewHeight);
       if (imgV.posLookup) {
         if (lineSeqTag && imgV.posLookup.line[lineSeqTag]) {
           if (imgV.entTag != imgV.posLookup.line[lineSeqTag].blnTag) {
             newBln = imgV.posLookup.line[lineSeqTag].blnTag;
           }
           newTop = Math.max( 0, imgV.posLookup.line[lineSeqTag].y + imgV.posLookup.line[lineSeqTag].h * lineFraction);
-        } else if (hdrSeqTag && imgV.posLookup.construct[hdrSeqTag]) {
+          syncY =imgV.posLookup.line[lineSeqTag].y;
+        }
+        if (hdrSeqTag && imgV.posLookup.construct[hdrSeqTag]
+            && (newTop == null ||
+                imgV.posLookup.line[lineSeqTag].blnTag != imgV.posLookup.construct[hdrSeqTag].blnTag
+                && Math.abs(hdrFraction) < Math.abs(lineFraction))) {
+          newBln = null;
           if (imgV.entTag != imgV.posLookup.construct[hdrSeqTag].blnTag) {
             newBln = imgV.posLookup.construct[hdrSeqTag].blnTag;
           }
           newTop = Math.max( 0, imgV.posLookup.construct[hdrSeqTag].y + imgV.posLookup.construct[hdrSeqTag].h * hdrFraction);
+          syncY =imgV.posLookup.construct[hdrSeqTag].y;
         }
       }
-      //calculate position for segment polygon
       imgV.unselectAllPolygons();
-      if (!newBln) {
-        imgV.moveViewportToImagePosY(newTop);
-        imgV.draw();
-      } else {
-        imgV.loadBaselineAt(newBln, {x:imgV.vpLoc.x, y:newTop});
+//      DEBUG.log("warn","synchronize lSegID:"+ lineSeqTag+"("+lineFraction+") hSeqID:"+ hdrSeqTag+"("+hdrFraction+")" );
+//      DEBUG.log("warn","synchronize y:"+ imgV.syncY+"-"+syncY+"   newtop:"+ imgV.newTop+"-"+newTop+")");
+      if (newBln || imgV.syncY >= syncY && imgV.newTop >= newTop || imgV.syncY <= syncY && imgV.newTop <= newTop) {
+        imgV.syncY = syncY;
+        imgV.newTop = newTop;
+        if (!newBln && newTop != null) {
+          imgV.moveViewportToImagePosY(newTop);
+          imgV.draw();
+        } else if (newTop != null){
+          imgV.loadBaselineAt(newBln, {x:imgV.vpLoc.x, y:newTop});
+        }
       }
     };
 

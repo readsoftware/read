@@ -37,7 +37,7 @@
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
   require_once (dirname(__FILE__) . '/../model/entities/EntityFactory.php');//get user access control
   require_once (dirname(__FILE__) . '/php/viewutils.php');//get utilities for viewing
-  require_once (dirname(__FILE__) . '/php/testdata.php');//get user access control
+//  require_once (dirname(__FILE__) . '/php/testdata.php');//get user access control
   $dbMgr = new DBManager();
   $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):$_REQUEST);
   if (!$data) {
@@ -69,18 +69,8 @@
   $showTranslationView = defined("SHOWTRANSLATIONVIEW")?SHOWTRANSLATIONVIEW:true;
   $showChayaView = defined("SHOWCHAYAVIEW")?SHOWCHAYAVIEW:true;
 
-  //TODO add code to ensure that baseline/images exist, translation exist and CHAYA exist
-  $edAnnoTypes = getEditionAnnotationTypes($edition->getID());
-  //image test data
-  $blnIDs = array(663,665,664,666,667);
-  $imgURLsbyBlnImgTag1 = "{'bln663':'http://localhost/images/bc02/txt1/2_3_D_r.jpg',
-                          'bln665':'http://localhost/images/bc02/txt2/2_3_C_r.jpg',
-                          'bln664':'http://localhost/images/bc02/txt3/2_3_B_r.jpg',
-                          'bln666':'http://localhost/images/bc02/txt4/2_3_AGEFH_1F_r.jpg',
-                          'bln667':'http://localhost/images/bc02/txt5/2_1_BE_r.jpg',
-                          'img6':'http://localhost/images/bc02/txt6/2_1_ACD_r.jpg',
-                          'img7':'http://localhost/images/bc02/txt7/2_2_B_r.jpg'}";
-//end image test data
+  //get list of all edition annotation types and use to test if there are any translations and/or chaya
+  $edAnnoTypes = getEditionAnnotationTypes($ednIDs);
   $hasTranslation = in_array(Entity::getIDofTermParentLabel('translation-annotationtype'),$edAnnoTypes);
   $hasChaya = in_array(Entity::getIDofTermParentLabel('chaya-translation'),$edAnnoTypes);
 ?>
@@ -136,36 +126,39 @@
           dbName = '<?=DBNAME?>',
           basepath="<?=SITE_BASE_PATH?>";
       var edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs)?>,
-          edFootnotes = <?=getEditionFootnoteTextLookup()?>,
-          edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>,
+          edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
+          edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>//calc'd for first edition assuming all editions are inclusive
 <?php
   if ($showContentOutline) {
 ?>
-          tocHtml = '<?=getEditionTOCHtml()?>',
+,
+          tocHtml = '<?=getEditionTOCHtml()?>'//reset and calc'd in getEditionsStructuralViewHtml
 <?php
   }
   if ($showImageView &&  count($imgURLsbyBlnImgTag) > 0) {
 ?>
-          urlBlnImgLookup = <?=getImageBaselineURLLookup()?>,
-          blnPosLookup = <?=getBaselinePosByEntityTagLookup()?>,
-          polysByBlnTagTokCmpTag = <?=getPolygonByBaselineEntityTagLookup()?>,
+,
+          urlBlnImgLookup = <?=getImageBaselineURLLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
+          blnPosLookup = <?=getBaselinePosByEntityTagLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
+          polysByBlnTagTokCmpTag = <?=getPolygonByBaselineEntityTagLookup()?>//reset and calc'd in getEditionsStructuralViewHtml
 <?php
   }
   if ($showTranslationView && $hasTranslation) {
 ?>
+,
           transStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs)?>,
-          transFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>,
+          transFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
   }
   if ($showChayaView && $hasChaya) {
 ?>
+,
           chayaStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs, Entity::getIDofTermParentLabel('chaya-translation'))?>,
-          chayaFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>,
+          chayaFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
   }
 ?>
-          testHtmlSmall = <?=$testHtmlSmall?>;
-
+;
     function closeAllPopups(e) {
       var $showing = $('.showing'), $body = $('body');
       if ($showing && $showing.length) {
@@ -278,7 +271,7 @@
   }
 ?>
 <?php
-  if ($showImageView && count($blnIDs) > 0) {
+  if ($showImageView && count($imgURLsbyBlnImgTag) > 0) {
 ?>
 ,
             imgViewer,
@@ -340,14 +333,13 @@
   }
 ?>
 <?php
-  if ($showImageView && count($blnIDs) > 0) {
+  if ($showImageView && count($imgURLsbyBlnImgTag) > 0) {
 ?>
 //initialise imageViewer
             $imageViewer.jqxExpander({expanded:true,
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-//            $imageViewerContent.html(testHtmlSmall);
             $imageViewerContent.height('150px');
             imgViewer = new VIEWERS.ImageViewer(
                                                  { initViewPercent:100,
@@ -396,7 +388,8 @@
               if ( entTags = classes.match(/cmp\d+/)) {//use first cmp tag for tool tip
                 entTag = entTags[0];
               } else {
-                 entTag = classes.match(/tok\d+/)
+                 entTag = classes.match(/tok\d+/);
+                 entTag = entTag[0];
               }
               if (entTag && edGlossaryLookup[entTag]) {
                 entGlossInfo = edGlossaryLookup[entTag];
@@ -574,7 +567,7 @@
   }
 ?>
 <?php
-  if ($showImageView && count($blnIDs) > 0) {
+  if ($showImageView && count($imgURLsbyBlnImgTag) > 0) {
 ?>
     <div id="imageViewer" class="viewer syncScroll">
       <div id="imageViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll off">&#x1F517;</button>Image</div></div>
