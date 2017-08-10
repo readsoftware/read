@@ -120,7 +120,7 @@ if (!$data) {
   $decomp = null;//required
   if ( isset($data['decomp'])) {//get decomposition string
     $decomp = $data['decomp'];
-    $matchCnt = preg_match("/([aiïüueo’]+)(?:([\s-‐])([aiïüueo’]+))?/",$decomp,$decompParts);
+    $matchCnt = preg_match("/([aāiīïüuūeēoō’l̥̄rṛṝ]+)(?:([\s-‐])([aāiīïüuūeēoō’l̥̄rṛṝ]+))?/",$decomp,$decompParts);
     if ($matchCnt == 1 && $decomp == array_shift($decompParts)) {
       $decomp = join(":",$decompParts);// create decomp sting of form tok1endvowel:sep:tok2startvowel
     } else {

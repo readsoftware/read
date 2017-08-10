@@ -980,7 +980,7 @@ EDITORS.EntityPropVE.prototype = {
                   ((entity.decomp && !val) ||
                    (val &&
                     (!entity.decomp || entity.decomp != val) &&
-                    val.toLowerCase().match(/^([aiïüueo’]+|[aiïüueo’]+[\s-‐][aiïüueo’]+)$/)))) {
+                    val.toLowerCase().match(/^([aiïüuṛṝeo’lr̥̄]+|[aiïüuṛṝeol’r̥̄]+[\s-‐][aiïüuṛṝelo’r̥̄]+)$/)))) {
               if (!$(this).parent().parent().hasClass("dirty")) {
                 $(this).parent().parent().addClass("dirty");
               }
