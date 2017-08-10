@@ -37,37 +37,67 @@
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
   require_once (dirname(__FILE__) . '/../model/entities/EntityFactory.php');//get user access control
   require_once (dirname(__FILE__) . '/php/viewutils.php');//get utilities for viewing
-//  require_once (dirname(__FILE__) . '/php/testdata.php');//get user access control
   $dbMgr = new DBManager();
+  //check and validate parameters
   $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):$_REQUEST);
   if (!$data) {
     returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
   } else {
+    $multiEdition = (!isset($data['multiEd']) || !$data['multiEd'])? false:true;//default (parameter missing) not multi edition
+    $txtID = null;
+    if (isset($data['txtID']) && is_numeric($data['txtID'])) {
+      $txtID = intval($data['txtID']);
+      if (!is_int($txtID)) {
+        $txtID = null;
+      }
+    }
+    $ednID = null;
     if ( isset($data['ednID'])) {//required
       $ednID = $data['ednID'];
       $ednIDs = explode(",",$ednID);
-      $ednID = $ednIDs[0];
-      $glossaryEntTag = "edn".$ednID;
+      $ednID = intval($ednIDs[0]);
+      if (!is_int($ednID)) {
+        $ednIDs = $ednID = null;
+      }
+    }
+    $title = "unknown text";
+    if (!$txtID && !$ednID) {
+      returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
+    } else if (!$ednID) {
+      $text = new Text($txtID);
+      if ($text->hasError()) {
+        returnXMLErrorMsgPage("unable to load text $txtID - ".join(",",$text->getErrors()));
+      }
+      $editions = $text->getEditions();
+      if ($editions->getError() || $editions->getCount() == 0) {
+        returnXMLErrorMsgPage("unable to load any text editions - ".$editions->getError());
+      }
+      $ednIDs = $editions->getKeys();
+      $sortedEdnIDs = $ednIDs;
+      sort($sortedEdnIDs,SORT_NUMERIC);
+      $ednID = $sortedEdnIDs[0];
+      $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
+    } else if (!$txtID) {
       $edition = new Edition($ednID);
       if ($edition->hasError()) {
         returnXMLErrorMsgPage("unable to load edition - ".join(",",$edition->getErrors()));
       }
       $text = $edition->getText(true);
-      if (!$text) {
+      if (!$text || $text->hasError()) {
         returnXMLErrorMsgPage("invalid viewer request - access denied");
       }
       $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
-    } else {
-      returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
+      $txtID = $text->getID();
     }
+    $glossaryEntTag = "edn".$ednID;
     if ( isset($data['catID'])) {//optional override
       $glossaryEntTag = "cat".$data['catID'];
     }
   }
-  $showContentOutline = defined("SHOWVIEWERCONTENTOUTLINE")?SHOWVIEWERCONTENTOUTLINE:true;
-  $showImageView = defined("SHOWIMAGEVIEW")?SHOWIMAGEVIEW:true;
-  $showTranslationView = defined("SHOWTRANSLATIONVIEW")?SHOWTRANSLATIONVIEW:true;
-  $showChayaView = defined("SHOWCHAYAVIEW")?SHOWCHAYAVIEW:true;
+  $showContentOutline = isset($data['showTOC'])?(!$data['showTOC']?false:true):(defined("SHOWVIEWERCONTENTOUTLINE")?SHOWVIEWERCONTENTOUTLINE:true);
+  $showImageView = isset($data['showImage'])?(!$data['showImage']?false:true):(defined("SHOWIMAGEVIEW")?SHOWIMAGEVIEW:true);
+  $showTranslationView = isset($data['showTrans'])?(!$data['showTrans']?false:true):(defined("SHOWTRANSLATIONVIEW")?SHOWTRANSLATIONVIEW:true);
+  $showChayaView = isset($data['showChaya'])?(!$data['showChaya']?false:true):(defined("SHOWCHAYAVIEW")?SHOWCHAYAVIEW:true);
 
   //get list of all edition annotation types and use to test if there are any translations and/or chaya
   $edAnnoTypes = getEditionAnnotationTypes($ednIDs);
@@ -119,13 +149,9 @@
     <script src="../editors/js/debug.js"></script>
     <script src="./js/imageViewer.js"></script>
     <script type="text/javascript">
-      var sktSort = ('<?=USESKTSORT?>' == "0" || !'<?=USESKTSORT?>')?false:true,
-          maxUploadSize = parseInt(<?=MAX_UPLOAD_SIZE?>),
-          linkToSyllablePattern = '<?=defined("LINKSYLPATTERN")?LINKSYLPATTERN:""?>',
-          progressInputName='<?php echo ini_get("session.upload_progress.name"); ?>',
-          dbName = '<?=DBNAME?>',
-          basepath="<?=SITE_BASE_PATH?>";
-      var edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs)?>,
+      var dbName = '<?=DBNAME?>',
+          basepath="<?=SITE_BASE_PATH?>",
+          edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs)?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
           edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>//calc'd for first edition assuming all editions are inclusive
 <?php
@@ -391,7 +417,7 @@
                  entTag = classes.match(/tok\d+/);
                  entTag = entTag[0];
               }
-              if (entTag && edGlossaryLookup[entTag]) {
+              if (edGlossaryLookup && entTag && edGlossaryLookup[entTag]) {
                 entGlossInfo = edGlossaryLookup[entTag];
                 if (entGlossInfo['lemTag']) {
                   lemmaInfo = edGlossaryLookup[entGlossInfo['lemTag']];

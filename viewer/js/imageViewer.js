@@ -54,7 +54,7 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
   this.type = "ImageV";
   this.id = imgVCfg['id'] ? imgVCfg['id']: null;
   this.imgCanvas = imgVCfg['imageCanvas'] ? imgVCfg['imageCanvas']:null;
-  this.zoomFactor = imgVCfg['zoomFactor'] ? imgVCfg['zoomFactor']:20;
+  this.zoomFactor = imgVCfg['zoomFactor'] ? imgVCfg['zoomFactor']:70;
   this.vpOffset = imgVCfg['initViewportOffset'] && !isNaN(imgVCfg['initViewportOffset'].x) && !isNaN(imgVCfg['initViewportOffset'].y) ? imgVCfg['initViewportOffset']:{x:0,y:0};
   this.zoomFactorRange = { min:20,max:150,inc:2 };
   this.imgViewContainer = imgVCfg['imgContainerDiv']?imgVCfg['imgContainerDiv']: $('#imageViewerContent').get(0);
@@ -82,7 +82,7 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
   //adjust initial size of image canvas
   if (this.imgViewContainer) {
     this.imgCanvas.width = this.imgViewContainer.clientWidth;
-    this.imgCanvas.height = this.imgViewContainer.clientHeight;
+    this.imgCanvas.height = this.imgViewContainer.clientHeight-30;
     $(this.imgViewContainer).unbind('mouseup').bind('mouseup',function(e) {
               DEBUG.log("gen","resize called");
               if (imgV.imgCanvas.width != imgV.imgViewContainer.clientWidth ||
@@ -341,11 +341,14 @@ VIEWERS.ImageViewer.prototype = {
 */
 
   initViewport: function () {
-    var vpWidth  = this.imgCanvas.width *100 / this.zoomFactor,
-        vpHeight = this.imgCanvas.height *100 / this.zoomFactor;
+    var vpWidth ,vpHeight;
+    this.zoomFactor = this.imgCanvas.width/this.image.width;
+
+    vpWidth  = this.imgCanvas.width *100 / this.zoomFactor;
+    vpHeight = this.imgCanvas.height *100 / this.zoomFactor;
+    this.vpSize = { width: vpWidth || 500, height: vpHeight };
     this.vpMaxLoc = { x: this.image.width, y: this.image.height };
     this.vpLoc = { x: this.vpOffset.x, y: this.vpOffset.y };
-    this.vpSize = { width: vpWidth || 500, height: vpHeight || 500/this.imgAspectRatio };
     this.vpLastLoc =  { x: 0, y: 0 };
   },
 

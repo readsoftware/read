@@ -15,22 +15,16 @@
   font-size: 18pt;
   font-weight: bold;
   background-color: inherit;
-  height: 35px;
+  height: 40px;
   padding-left: 25px;
-}
-
-.viewerHeader {
-  background-color: rgb(240,240,230);
-  height: 35px;
-  width: 100%;
-  border: none;
 }
 
 .viewerHeader, #imageViewerHdr {
   background-color: rgb(240,240,230);
-  height: 35px;
+  height: 40px;
   width: 100%;
   border: none;
+  padding: 0px;
 }
 
 .viewerContent {
