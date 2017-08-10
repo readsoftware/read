@@ -52,8 +52,8 @@ div.modify .TCM {
 #textEditPage div.editContainer > div::-moz-selection{ background: transparent; color:black;}
 #textEditPage .linebreak::selection{ background: transparent; color:black;}
 #textEditPage .linebreak::-moz-selection{ background: transparent; color:black;}
-#textEditPage .selected::selection{ background: #648cc8; color:white}
-#textEditPage .selected::-moz-selection{ background: #648cc8; color:white}
+#textEditPage .selected::selection{ background: #2F9755; color:white}
+#textEditPage .selected::-moz-selection{ background: #2F9755; color:white}
 
 #textEditPage > span{
   margin-top: 10px;
@@ -66,7 +66,7 @@ div.modify .TCM {
 }
 
 div.selected span.wordTranslation {
-  background: #2F5597 !important;
+  background: #2F9755 !important;
   color:white !important;
 }
 .toksep {
@@ -81,7 +81,7 @@ div.editContainer.showTokenSep .toksep {
 
 .selected {
   color: white;
-  background-color: #2F5597;
+  background-color: #2F9755;
 }
 
 #textEditPage .editContainer {
