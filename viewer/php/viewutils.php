@@ -478,6 +478,80 @@ function getStructTransHtml($sequence, $addBoundaryHtml = false) {
 }
 
 /**
+* gets multi edition header structure html
+*
+* calculates the HTML for displaying multi edition buttons ordered published  followed by research
+*
+* @param int array $ednIDs identifies the editions to calculate
+*
+* @returns string html representing header information to attach to the edition textViewer header
+*/
+function getMultiEditionHeaderHtml($ednIDs) {
+  $publishedEditionsHTML = array();
+  $pubSortKeys = array();
+  $researchEditionsHTML = array();
+  $researchSortKeys = array();
+  foreach ($ednIDs as $ednID) {//accumulate in order all subsequence for text, text physical and analysis
+    $edition = new Edition($ednID);
+    if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
+      error_log("Warning edition id $ednID not accessible. Skipping.".
+        ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
+      continue;
+    } else {
+      $ord = $edition->getScratchProperty('ordinal');
+      $date = "";
+      $descr = $edition->getDescription();
+      $hdrText = $descr;
+      $atbIDs = $edition->getAttributionIDs();
+      if ($atbIDs && count($atbIDs) > 0) {
+        $attribution = new Attribution($atbIDs[0]);
+        if ($attribution && !$attribution->hasError()) {
+          $title = $attribution->getTitle();
+          $detail = $attribution->getDetail();
+          if ($detail) {
+            $descr .= " ($title,$detail)";
+          }
+          if (preg_match("/[^\d](\d\d\d\d)[^\d]?/",$title,$matches)) {
+            $date = $matches[1];
+            $hdrText = $title;
+          }
+        }
+      }
+      if ($ord && is_numeric($ord)) {
+        $sort = $ord;
+      } else if ($date) {
+        $sort = $date;
+      } else {
+        $sort = intval($ednID)*10000;
+      }
+      if ($edition->isResearchEdition()) {
+        $researchEditionsHTML[$ednID] = "<button id=\"edn$ednID\" class=\"textEdnButton research\" title=\"$descr\">$hdrText</button>";
+        $researchSortKeys[$sort] = $ednID;
+      } else { // published ??
+        $publishedEditionsHTML[$ednID] = "<button id=\"edn$ednID\" class=\"textEdnButton published\" title=\"$descr\">$hdrText</button>";
+        $pubSortKeys[$sort] = $ednID;
+      }
+    }
+  }
+  //create headerDiv Html
+  $html = "<div id=\"multiEditionHeaderMenu\">";
+  if (count($pubSortKeys)) {
+    ksort($pubSortKeys,SORT_NUMERIC);
+    foreach ($pubSortKeys as $sort=>$ednID) {
+      $html .= $publishedEditionsHTML[$ednID];
+    }
+  }
+  if (count($researchSortKeys)) {
+    ksort($researchSortKeys,SORT_NUMERIC);
+    foreach ($researchSortKeys as $sort=>$ednID) {
+      $html .= $researchEditionsHTML[$ednID];
+    }
+  }
+  $html .= "</div>";
+  return $html;
+}
+
+/**
 * gets the editions Structural Translation/Chaya html
 *
 * calculates the structure view of this edition's translation/chaya annotations stopping at depth frist node
@@ -550,6 +624,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
         foreach ($attributions as $attribution) {
           $atbID = $attribution->getID();
           $title = $attribution->getTitle();
+          $detail = $attribution->get;
           if (!array_key_exists($atbID,$sourceNameLookup)) {
             $sourceNameLookup[$atbID] = $title;
           }
@@ -1029,8 +1104,9 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
     $entTag = null;
     if ($prefix == 'seq') {
       $subSequence = new Sequence($entID);
-      if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
+      if (!$subSequence || $subSequence->getID() != $entID || $subSequence->hasError()) {//no sequence or unavailable so warn
         error_log("Warning inaccessible sub-sequence id $entID skipped.");
+        continue;
       } else {
         $structureHtml .= getStructHTML($subSequence);
         $entTag = $subSequence->getEntityTag();
@@ -1194,7 +1270,8 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
     }//endelse valid edtion
   }// end foreach ednID
 
-  if (count($analysisSeqIDs) == 0) {
+  $html = "";
+  if (count($analysisSeqIDs) == 0 && count($textDivSeqIDs) == 0) {
     array_push($warnings,"Warning no structural analysis found for edition id $ednID. Skipping.");
   } else {//process analysis
     //calculate  post grapheme id to physical line label map
@@ -1243,12 +1320,13 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
                   $blnTag = $segBaseline->getEntityTag();
                   $url = $segBaseline->getURL();
                   $ord = $segBaseline->getScratchProperty('ordinal');
+                  $blnImgTag = 'img'.$segBaseline->getImageID();
                   if ($ord) {
                     $sort = $ord;
                   } else {
                     $sort = 1000 * intval($segBaseline->getID());
                   }
-                  $imgURLsbyBlnImgTag['bln'][$sort] = array('tag'=>$blnTag, 'url'=>$url, 'source'=> $sourceLookup);
+                  $imgURLsbyBlnImgTag['bln'][$sort] = array('tag'=>$blnTag, 'url'=>$url, 'imgTag'=>$blnImgTag, 'source'=> $sourceLookup);
                   $title = substr($url,strrpos($url,'/')+1);//filename
                   $image = $segBaseline->getImage(true);
                   if ($image && $image->getTitle()) {
@@ -1295,11 +1373,15 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
         }
       }
     }
-    $html = "";
     $fnCnt = 0;
     $tokCnt = 0;
+    if (count($analysisSeqIDs) > 0) {
+      $structureSeqIDs = $analysisSeqIDs;
+    } else {
+      $structureSeqIDs = $textDivSeqIDs;
+    }
     //start to calculate HTML using each entity of the analysis container
-    foreach ($analysisSeqIDs as $entGID) {
+    foreach ($structureSeqIDs as $entGID) {
       $prefix = substr($entGID,0,3);
       $entID = substr($entGID,4);
       if ($prefix == 'seq') {
@@ -1565,16 +1647,16 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
         $lemHtml .= "<span class=\"lemmaheadword\">".$lemmaValue."</span><span class=\"lemmapos\">";
         $lemmaGenderID = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
-        $lemmaPos = $lemmaPosID && Entity::getTermFromID($lemmaPosID) ? Entity::getTermFromID($lemmaPosID) : '';
+        $lemmaPos = $lemmaPosID && is_int($lemmaPosID) && Entity::getTermFromID($lemmaPosID) ? Entity::getTermFromID($lemmaPosID) : '';
         $isVerb = null;
         if ($lemmaPos) {
           $isVerb = ($lemmaPos == 'v.');
         }
         $lemmaSposID = $lemma->getSubpartOfSpeech();
         $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
-        if ($lemmaGenderID) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
+        if ($lemmaGenderID && is_int($lemmaGenderID)) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
           $lemHtml .=  Entity::getTermFromID($lemmaGenderID).($lemmaCF[2]==2?'(?)':'');
-        } else if ($lemmaSposID) {
+        } else if ($lemmaSposID && is_int($lemmaSposID)) {
           $lemHtml .=  Entity::getTermFromID($lemmaSposID).($lemmaCF[1]==2?'(?)':'');
         }else if ($lemmaPos) {
           $lemHtml .=  $lemmaPos.($lemmaCF[0]==2?'(?)':'');
@@ -1632,10 +1714,10 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
               $conj2 = $inflection->getSecondConjugation();
               $infString = '';
               if ($isVerb) { //term dependency
-                if ($vmood) {
+                if ($vmood && is_int($vmood)) {
                   $vtensemood = Entity::getTermFromID($vmood).($ingCF[2]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$vtensemood</span>";
-                } else if ($vtense) {
+                } else if ($vtense && is_int($vtense)) {
                   $vtensemood = Entity::getTermFromID($vtense).($ingCF[0]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$vtensemood</span>";
                 } else {
@@ -1644,7 +1726,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if (!array_key_exists($vtensemood,$groupedForms)) {
                   $groupedForms[$vtensemood] = array();
                 }
-                if ($num) {
+                if ($num && is_int($num)) {
                   $num = Entity::getTermFromID($num).($ingCF[4]==2?'(?)':'');
                 } else {
                   $num = '?';
@@ -1652,7 +1734,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if (!array_key_exists($num,$groupedForms[$vtensemood])) {
                   $groupedForms[$vtensemood][$num] = array();
                 }
-                if ($vper) {
+                if ($vper && is_int($vper)) {
                   $vper = Entity::getTermFromID($vper).($ingCF[6]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$vper</span>";
                 } else {
@@ -1664,7 +1746,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if ($num) {
                   $infString .= "<span class=\"inflectdescript\">$num</span>";
                 }
-                if ($conj2) {
+                if ($conj2 && is_int($conj2)) {
                   $conj2 = Entity::getTermFromID($conj2).($ingCF[7]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$conj2</span>";
                 } else {
@@ -1675,7 +1757,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 }
                 $node = &$groupedForms[$vtensemood][$num][$vper][$conj2];
               } else {
-                if ($gen) {
+                if ($gen && is_int($gen)) {
                   $gen = Entity::getTermFromID($gen).($ingCF[3]==2?'(?)':'');
                   if (!$lemmaGenderID){//handle noun supress infection gender output
                     $infString .= "<span class=\"inflectdescript\">$gen</span>";
@@ -1686,7 +1768,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if (!array_key_exists($gen,$groupedForms)) {
                   $groupedForms[$gen] = array();
                 }
-                if ($num) {
+                if ($num && is_int($num)) {
                   $num = Entity::getTermFromID($num).($ingCF[4]==2?'(?)':'');
                 } else {
                   $num = '?';
@@ -1694,7 +1776,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if (!array_key_exists($num,$groupedForms[$gen])) {
                   $groupedForms[$gen][$num] = array();
                 }
-                if ($case) {
+                if ($case && is_int($case)) {
                   $case = Entity::getTermFromID($case).($ingCF[5]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$case</span>";
                 } else {
@@ -1706,7 +1788,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if ($num) {
                   $infString .= "<span class=\"inflectdescript\">$num</span>";
                 }
-                if ($conj2) {
+                if ($conj2 && is_int($conj2)) {
                   $conj2 = Entity::getTermFromID($conj2).($ingCF[7]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$conj2</span>";
                 } else {

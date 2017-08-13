@@ -208,8 +208,33 @@ body.showTOC .tocNavPanel {
   font-size: smaller;
 }
 
-#chayaViewerContent .section:not(.Chapter) {
-  font-style: italic;
+#chayaViewerContent {
+  background-color: rgba(214,214,204,0.2);
+}
+
+#multiEditionHeaderMenu {
+  display: inline;
+  padding-left: 40px;
+}
+
+.textEdnButton {
+  margin-left: 20px;
+  background-color: rgba(204,204,194,0.5);
+  font-weight: bold;
+}
+
+.textEdnButton.selected {
+  background-color: rgba(204,204,194,0.9);
+  border: solid 1px grey;
+  color: rgb(4,4,164) !important;
+}
+
+.textEdnButton.published{
+  color: rgb(4,4,24);
+}
+
+.textEdnButton.research{
+  color:grey;
 }
 
 .secHeader.Sentence {
@@ -284,8 +309,12 @@ body.showTOC .tocNavPanel {
   max-width: 200px;
 }
 
-.menuLabelDiv {
+.menuLabelDiv.showMenu {
   display: inline-flex;
+}
+
+.menuLabelDiv {
+  display: none;
   justify-content: left;
   vertical-align: middle;
   font-size: 14pt;

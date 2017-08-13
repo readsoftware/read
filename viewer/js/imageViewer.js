@@ -47,7 +47,7 @@ var VIEWERS = VIEWERS || {};
 */
 
 VIEWERS.ImageViewer =  function(imgVCfg) {
-  var imgV = this, imgFilename,imgSrc,
+  var imgV = this, imgFilename,imgSrc, posLookup, imgLookup, polygonLookup,
       imgContainerDiv = $('<div id="imgContainerDiv" />');
   //read configuration and set defaults
   this.config = imgVCfg;
@@ -56,22 +56,17 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
   this.imgCanvas = imgVCfg['imageCanvas'] ? imgVCfg['imageCanvas']:null;
   this.zoomFactor = imgVCfg['zoomFactor'] ? imgVCfg['zoomFactor']:70;
   this.vpOffset = imgVCfg['initViewportOffset'] && !isNaN(imgVCfg['initViewportOffset'].x) && !isNaN(imgVCfg['initViewportOffset'].y) ? imgVCfg['initViewportOffset']:{x:0,y:0};
-  this.zoomFactorRange = { min:20,max:150,inc:2 };
+  this.zoomFactorRange = { min:20,max:250,inc:2 };
   this.imgViewContainer = imgVCfg['imgContainerDiv']?imgVCfg['imgContainerDiv']: $('#imageViewerContent').get(0);
   this.$imgViewHeader = imgVCfg['imgViewHeader']?imgVCfg['imgViewHeader']: $('#imageViewerHdr');
-  this.posLookup = imgVCfg['posLookup']?imgVCfg['posLookup']: null;
-  this.imgLookup = imgVCfg['imgLookup']?imgVCfg['imgLookup']: null;
-  this.imgEntity = imgVCfg['imgEntity']?imgVCfg['imgEntity']: null;
   this.polygons = [];
   this.syncY = this.newTop = 0;
-  this.polygonLookup = imgVCfg['polygonLookup']?imgVCfg['polygonLookup']: null;;
   this.selectedPolygons = {};
   this.viewAllPolygons = false; //intially hide any polygons
-/*
-  if (this.dataMgr && this.dataMgr.entities) {//warninig!!!!! patch until change code to use dataMgr api
-    window.entities = this.dataMgr.entities;
-    window.trmIDtoLabel = this.dataMgr.termInfo.labelByID;
-  }*/
+  posLookup = imgVCfg['posLookup']?imgVCfg['posLookup']: null;
+  imgLookup = imgVCfg['imgLookup']?imgVCfg['imgLookup']: null;
+  polygonLookup = imgVCfg['polygonLookup']?imgVCfg['polygonLookup']: null;
+  this.initData(posLookup,imgLookup,polygonLookup);
   //create canvas if needed and attach to container
   if (!this.imgCanvas && this.imgViewContainer) {
     this.imgCanvas = document.createElement('canvas');
@@ -83,6 +78,7 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
   if (this.imgViewContainer) {
     this.imgCanvas.width = this.imgViewContainer.clientWidth;
     this.imgCanvas.height = this.imgViewContainer.clientHeight-30;
+    //drag resize - note for smoother adjust change this to mousemove
     $(this.imgViewContainer).unbind('mouseup').bind('mouseup',function(e) {
               DEBUG.log("gen","resize called");
               if (imgV.imgCanvas.width != imgV.imgViewContainer.clientWidth ||
@@ -97,16 +93,6 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
               }
     });
   }
-  //******** viewer change  DATA lookup URL by blnID/imgID
-  if (this.imgLookup && this.imgLookup.bln && Object.keys(this.imgLookup.bln).length) {
-    this.entTag = Object.keys(this.imgLookup.bln)[0];
-    imgSrc = this.imgLookup.bln[this.entTag]['url'];
-  } else if (this.imgLookup && this.imgLookup.img && Object.keys(this.imgLookup.img).length) {
-    this.entTag = Object.keys(this.imgLookup.img)[0];
-    imgSrc = this.imgLookup.img[this.entTag];
-  } else if (this.imgEntity && this.imgEntity.url) {
-    imgSrc = this.imgEntity.url;
-  }
   //setup canvas and context
   this.imgCanvas.className = "imgCanvas";
 
@@ -119,99 +105,24 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
     }
   };
 
-  if (imgSrc) {
-    this.imgFilename = imgSrc.substring(imgSrc.lastIndexOf("/")+1);
-// ********* todo add this to source (as by line??) or as hover text for title.
-  }
-  //setup image tools
+  //setup image ui tools
   if (this.imgViewContainer) {
-    if (this.imgFilename) {
-      this.$resSourceDiv = $('<div class="sourceLine">Source: '+this.imgFilename+"</div>");
-      $(this.imgViewContainer).append(this.$resSourceDiv);
-    }
+    this.$resSourceDiv = $('<div class="sourceLine">Source: unknown</div>');
+    $(this.imgViewContainer).append(this.$resSourceDiv);
   }
   if (this.$imgViewHeader) {
     this.$baselineMenu = $('<div id="imgVBlnMenu" class="menuLabelDiv" title="Select baseline to view">Linked</div>');
     this.$imgViewHeader.append(this.$baselineMenu);
-    if ( this.imgLookup.bln && Object.keys(this.imgLookup.bln).length) {
-      this.$blnMenuPanel = $('<div id="baselines" class="menuPanel"/>');
-      $('body').append(this.$blnMenuPanel);
-
-      for (lkupID in this.imgLookup.bln) {
-        blnInfo = this.imgLookup.bln[lkupID];
-        resLabel = blnInfo.title;
-        elemID = "blnLkupID" + lkupID;
-        thumbUrl = (blnInfo.thumbUrl?blnInfo.thumbUrl:blnInfo.url);
-        $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
-        $resDiv.prop('lkupID',lkupID);
-        $resDiv.unbind('click').bind('click', function(e) {
-          var lkupID = $(this).prop('lkupID'), sourceNames = [], atbID,
-              blnInfo = imgV.imgLookup.bln[lkupID];
-          imgV.loadBaselineAt(lkupID, {x:imgV.vpLoc.x, y:0});
-          imgV.$blnMenuPanel.removeClass('showMenu');
-          e.stopImmediatePropagation();
-          return false;
-        });
-        this.$blnMenuPanel.append($resDiv);
-      }
-      this.$baselineMenu.unbind('click').bind('click', function(e) {
-        var offset = imgV.$baselineMenu.offset();
-        imgV.$blnMenuPanel.css('left',""+(offset.left+50)+"px");
-        imgV.$blnMenuPanel.css('top',""+(offset.top+20)+"px");
-        if (imgV.$imgMenuPanel && imgV.$imgMenuPanel.hasClass('showMenu')) {
-          imgV.$imgMenuPanel.removeClass('showMenu');
-        }
-        imgV.$blnMenuPanel.toggleClass('showMenu');
-        e.stopImmediatePropagation();
-        return false;
-      });
-    }
+    this.$blnMenuPanel = $('<div id="baselines" class="menuPanel" />');
+    $('body').append(this.$blnMenuPanel);
     this.$imgMenu = $('<div id="imgVImgMenu" class="menuLabelDiv" title="Select Img to view">Other</div>');
     this.$imgViewHeader.append(this.$imgMenu);
-    if ( this.imgLookup.img && Object.keys(this.imgLookup.img).length) {
-      this.$imgMenuPanel = $('<div id="images" class="menuPanel"/>');
-      $('body').append(this.$imgMenuPanel);
-
-      for (lkupID in this.imgLookup.img) {
-        imgInfo = this.imgLookup.img[lkupID];
-        resLabel = imgInfo.title;
-        elemID = "blnLkupID" + lkupID;
-        thumbUrl = (imgInfo.thumbUrl?imgInfo.thumbUrl:imgInfo.url);
-        $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
-        $resDiv.prop('lkupID',lkupID);
-        $resDiv.unbind('click').bind('click', function(e) {
-          var lkupID = $(this).prop('lkupID');
-          imgV.loadImage(lkupID);
-          imgV.$imgMenuPanel.removeClass('showMenu');
-          e.stopImmediatePropagation();
-          return false;
-        });
-        this.$imgMenuPanel.append($resDiv);
-      }
-      this.$imgMenu.unbind('click').bind('click', function(e) {
-        var offset = imgV.$imgMenu.offset();
-        imgV.$imgMenuPanel.css('left',""+(offset.left+50)+"px");
-        imgV.$imgMenuPanel.css('top',""+(offset.top+20)+"px");
-        if (imgV.$blnMenuPanel && imgV.$blnMenuPanel.hasClass('showMenu')) {
-          imgV.$blnMenuPanel.removeClass('showMenu');
-        }
-        imgV.$imgMenuPanel.toggleClass('showMenu');
-        e.stopImmediatePropagation();
-        return false;
-      });
-    }
+    this.$imgMenuPanel = $('<div id="images" class="menuPanel"/>');
+    $('body').append(this.$imgMenuPanel);
+    this.initImageUI();
     this.$zoomDIV = $('<div class="zoomUI"><div id="zoomOut" title="Zoom Out" class="zoomButton">-</div><div id="zoomIn" title="Zoom In" class="zoomButton">+</div></div>').get(0);
     this.$imgViewHeader.append(this.$zoomDIV);
   }
-  this.image = new Image();
-  this.image.onload = function(e) {
-    imgV.loadWordPolygons();
-    imgV.imgContext = imgV.imgCanvas.getContext('2d');
-    imgV.imgContext.imageSmoothingEnabled = false;
-    imgV.init();
-  };
-  this.image.crossOrigin = "anonymous";
-  this.image.src = imgSrc;
   return this;
 };
 
@@ -228,7 +139,143 @@ VIEWERS.ImageViewer.prototype = {
 *
 */
 
-  init: function() {
+  initData: function(posLookup,imgLookup,polygonLookup) {
+    this.posLookup = posLookup;
+    this.imgLookup = imgLookup;
+    this.polygonLookup = polygonLookup;
+    this.polygons = [];
+    this.imgSrc = null;
+    this.syncY = this.newTop = 0;
+    this.selectedPolygons = {};
+    this.viewAllPolygons = false; //intially hide any polygons
+    //******** viewer change  DATA lookup URL by blnID/imgID
+    if (this.imgLookup && this.imgLookup.bln && Object.keys(this.imgLookup.bln).length) {
+      this.entTag = Object.keys(this.imgLookup.bln)[0];
+      this.imgSrc = this.imgLookup.bln[this.entTag]['url'];
+    } else if (this.imgLookup && this.imgLookup.img && Object.keys(this.imgLookup.img).length) {
+      this.entTag = Object.keys(this.imgLookup.img)[0];
+      this.imgSrc = this.imgLookup.img[this.entTag]['url'];
+    }
+    if (this.imgSrc) {
+      this.imgFilename = this.imgSrc.substring(this.imgSrc.lastIndexOf("/")+1);
+    }
+  },
+
+
+/**
+* put your comment there...
+*
+*/
+
+  initImageUI: function() {
+    var imgV = this, blnImgTags = [], otherImgTags = [];
+    if (this.$resSourceDiv) {
+      this.$resSourceDiv.html('Source: '+this.imgFilename?this.imgFilename:'unknown');
+    }
+    //clear menu panels
+    this.$blnMenuPanel.html("");
+    this.$imgMenuPanel.html("");
+    //setup menus from lookup data
+    if (this.imgLookup && this.imgLookup.bln && Object.keys(this.imgLookup.bln).length) {
+      imgV.$baselineMenu.addClass('showMenu');
+      for (lkupID in this.imgLookup.bln) {
+        blnInfo = this.imgLookup.bln[lkupID];
+        resLabel = blnInfo.title;
+        blnImgTags.push(blnInfo.imgTag);
+        elemID = "blnLkupID" + lkupID;
+        thumbUrl = (blnInfo.thumbUrl?blnInfo.thumbUrl:blnInfo.url);
+        $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
+        $resDiv.prop('lkupID',lkupID);
+        $resDiv.unbind('click').bind('click', function(e) {
+          var lkupID = $(this).prop('lkupID'), sourceNames = [], atbID,
+              blnInfo = imgV.imgLookup.bln[lkupID];
+          imgV.loadBaselineAt(lkupID, {x:imgV.vpLoc.x, y:0});
+          imgV.$blnMenuPanel.removeClass('showMenu');
+          e.stopImmediatePropagation();
+          return false;
+        });
+        this.$blnMenuPanel.append($resDiv);
+      }
+      this.$baselineMenu.unbind('click').bind('click', function(e) {
+        var offset = imgV.$baselineMenu.offset();
+        imgV.$blnMenuPanel.css('left',""+(offset.left)+"px");
+        imgV.$blnMenuPanel.css('top',""+(offset.top+20)+"px");
+        if (imgV.$imgMenuPanel && imgV.$imgMenuPanel.hasClass('showMenu')) {
+          imgV.$imgMenuPanel.removeClass('showMenu');
+        }
+        imgV.$blnMenuPanel.toggleClass('showMenu');
+        e.stopImmediatePropagation();
+        return false;
+      });
+    } else {
+      imgV.$baselineMenu.removeClass('showMenu');
+    }
+    if (this.imgLookup && this.imgLookup.img && Object.keys(this.imgLookup.img).length) {
+      for (lkupID in this.imgLookup.img) {
+        if (blnImgTags.indexOf(lkupID) == -1){//non baseline image so other
+          otherImgTags.push(lkupID);
+        }
+      }
+      if (otherImgTags.length > 0) {
+        imgV.$imgMenu.addClass('showMenu');
+        for (lkupID in otherImgTags) {
+          imgInfo = this.imgLookup.img[otherImgTags[lkupID]];
+          resLabel = imgInfo.title;
+          elemID = "blnLkupID" + lkupID;
+          thumbUrl = (imgInfo.thumbUrl?imgInfo.thumbUrl:imgInfo.url);
+          $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
+          $resDiv.prop('lkupID',lkupID);
+          $resDiv.unbind('click').bind('click', function(e) {
+            var lkupID = $(this).prop('lkupID');
+            imgV.loadImage(lkupID);
+            imgV.$imgMenuPanel.removeClass('showMenu');
+            e.stopImmediatePropagation();
+            return false;
+          });
+          this.$imgMenuPanel.append($resDiv);
+        }
+        this.$imgMenu.unbind('click').bind('click', function(e) {
+          var offset = imgV.$imgMenu.offset();
+          imgV.$imgMenuPanel.css('left',""+(offset.left)+"px");
+          imgV.$imgMenuPanel.css('top',""+(offset.top+20)+"px");
+          if (imgV.$blnMenuPanel && imgV.$blnMenuPanel.hasClass('showMenu')) {
+            imgV.$blnMenuPanel.removeClass('showMenu');
+          }
+          imgV.$imgMenuPanel.toggleClass('showMenu');
+          e.stopImmediatePropagation();
+          return false;
+        });
+      } else {
+        imgV.$imgMenu.removeClass('showMenu');
+      }
+    } else {
+      imgV.$imgMenu.removeClass('showMenu');
+    }
+    if (! this.image) {
+      this.image = new Image();
+      this.image.onload = function(e) {
+        imgV.loadWordPolygons();
+        imgV.imgContext = imgV.imgCanvas.getContext('2d');
+        imgV.imgContext.imageSmoothingEnabled = false;
+        imgV.initImage();
+      };
+      this.image.crossOrigin = "anonymous";
+    }
+    if (this.image.src != this.imgSrc) {
+      this.image.src = this.imgSrc;
+    } else {
+      imgV.loadWordPolygons();
+      imgV.initImage();
+    }
+  },
+
+
+/**
+* put your comment there...
+*
+*/
+
+  initImage: function() {
     this.imgAspectRatio = this.image.width/this.image.height;
     this.addEventHandlers();
     this.initViewport();
@@ -309,7 +356,7 @@ VIEWERS.ImageViewer.prototype = {
         } else {
           center = null;
         }
-        this.addImagePolygon(polygons,wordTag,false,null,center,null);//WARNING!! todo code change boundary can be multiple polygons
+        this.addImagePolygon(polygons,wordTag,false,[wordTag],center,null);//WARNING!! todo code change boundary can be multiple polygons
       }
     }
  },
@@ -321,7 +368,7 @@ VIEWERS.ImageViewer.prototype = {
 */
 
   resize: function () {
-    this.init();
+    this.initImage();
   },
 
 
@@ -342,13 +389,13 @@ VIEWERS.ImageViewer.prototype = {
 
   initViewport: function () {
     var vpWidth ,vpHeight;
-    this.zoomFactor = this.imgCanvas.width/this.image.width;
+    this.zoomFactor = this.imgCanvas.width/this.image.width * 100;
 
     vpWidth  = this.imgCanvas.width *100 / this.zoomFactor;
     vpHeight = this.imgCanvas.height *100 / this.zoomFactor;
     this.vpSize = { width: vpWidth || 500, height: vpHeight };
     this.vpMaxLoc = { x: this.image.width, y: this.image.height };
-    this.vpLoc = { x: this.vpOffset.x, y: this.vpOffset.y };
+    this.vpLoc = { x: 0, y: this.vpMaxLoc.y/2 };
     this.vpLastLoc =  { x: 0, y: 0 };
   },
 
@@ -437,7 +484,7 @@ VIEWERS.ImageViewer.prototype = {
 
   addImagePolygon: function (polygons,label,visible,linkIDs,center,ordinal) {
     //todo add code to validate the polygon
-    var clr = "green";
+    var clr = "blue";
     if (!linkIDs){
       clr = "red";
     }
@@ -1034,52 +1081,6 @@ VIEWERS.ImageViewer.prototype = {
     $(imgV.imgViewContainer).unbind('updateselection').bind('updateselection', updateSelectionHandler);
 
 
-/**
-* put your comment there...
-*
-* @param object e System event object
-* @param senderID
-* @param selectionIDs
-*/
-
-    function enterSyllableHandler(e,senderID, selectionIDs) {
-      if (senderID == imgV.id) {
-        return;
-      }
-//      DEBUG.log("gen""enterSyllable received by "+pimgV.idane+" for "+ selectionIDs[0]);
-      var i, id;
-      $.each(selectionIDs, function(i,val) {
-        imgV.setImagePolygonHilite(imgV.getIndexbyPolygonName(val),true);
-      });
-      imgV.drawImagePolygons();
-    };
-
-//    $(imgV.imgViewContainer).unbind('enterSyllable').bind('enterSyllable', enterSyllableHandler);
-
-
-/**
-* put your comment there...
-*
-* @param object e System event object
-* @param senderID
-* @param selectionIDs
-*/
-
-    function leaveSyllableHandler(e,senderID, selectionIDs) {
-      if (senderID == imgV.id) {
-        return;
-      }
-      var i, id;
-      $.each(selectionIDs, function(i,val) {
-        imgV.setImagePolygonHilite(imgV.getIndexbyPolygonName(val),false);
-      });
-      imgV.drawImage();
-      imgV.drawImagePolygons();
-    };
-
-//    $(imgV.imgViewContainer).unbind('leaveSyllable').bind('leaveSyllable', leaveSyllableHandler);
-
-
     /**
     * handle 'synchronize' event for img view
     *
@@ -1173,7 +1174,7 @@ VIEWERS.ImageViewer.prototype = {
     this.imgContext.font = "1.4em arial";
     this.imgContext.textAlign = "center";
     this.imgContext.textBaseline = "middle";
-    this.imgContext.lineWidth = 1;
+    this.imgContext.lineWidth = 2;
     for(i=0;i<this.polygons.length; i++) {
       polygonObj = this.polygons[i];
       if (!polygonObj || polygonObj.hidden && !polygonObj.hilite && !this.selectedPolygons[polygonObj.label]) {

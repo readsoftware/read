@@ -63,7 +63,7 @@
     $title = "unknown text";
     if (!$txtID && !$ednID) {
       returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
-    } else if (!$ednID) {
+    } else if ($txtID) {
       $text = new Text($txtID);
       if ($text->hasError()) {
         returnXMLErrorMsgPage("unable to load text $txtID - ".join(",",$text->getErrors()));
@@ -77,7 +77,7 @@
       sort($sortedEdnIDs,SORT_NUMERIC);
       $ednID = $sortedEdnIDs[0];
       $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
-    } else if (!$txtID) {
+    } else {
       $edition = new Edition($ednID);
       if ($edition->hasError()) {
         returnXMLErrorMsgPage("unable to load edition - ".join(",",$edition->getErrors()));
@@ -88,6 +88,9 @@
       }
       $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
       $txtID = $text->getID();
+    }
+    if ($multiEdition && $ednIDs && count($ednIDs) > 1) {//setup edition info strcture
+      $multiEditionHeaderDivHtml = getMultiEditionHeaderHtml($ednIDs);
     }
     $glossaryEntTag = "edn".$ednID;
     if ( isset($data['catID'])) {//optional override
@@ -100,6 +103,7 @@
   $showChayaView = isset($data['showChaya'])?(!$data['showChaya']?false:true):(defined("SHOWCHAYAVIEW")?SHOWCHAYAVIEW:true);
 
   //get list of all edition annotation types and use to test if there are any translations and/or chaya
+  //note this is the same for multi-editions so teh interface is built and hidden or shown based on each edition's data
   $edAnnoTypes = getEditionAnnotationTypes($ednIDs);
   $hasTranslation = in_array(Entity::getIDofTermParentLabel('translation-annotationtype'),$edAnnoTypes);
   $hasChaya = in_array(Entity::getIDofTermParentLabel('chaya-translation'),$edAnnoTypes);
@@ -149,39 +153,162 @@
     <script src="../editors/js/debug.js"></script>
     <script src="./js/imageViewer.js"></script>
     <script type="text/javascript">
-      var dbName = '<?=DBNAME?>',
+      var dbName = '<?=DBNAME?>',imgViewer,
           basepath="<?=SITE_BASE_PATH?>",
+<?php
+  if ($multiEdition) {
+    $edStructHtmlByEdn = "";
+    $edFootnotesByEdn = "";
+    $edGlossaryLookupByEdn = "";
+    $edTocHtmlByEdn = "";
+    $edUrlBlnImgLookupByEdn = "";
+    $edBlnPosLookupByEdn = "";
+    $edPolysByBlnTagTokCmpTagByEdn = "";
+    $isFirst = true;
+    foreach ($ednIDs as $ednID) {
+      if (!$isFirst) {
+        $edStructHtmlByEdn .= ", '$ednID':";
+        $edFootnotesByEdn .= ", '$ednID':";
+        $edGlossaryLookupByEdn .= ", '$ednID':";
+        $edTocHtmlByEdn .= ", '$ednID':";
+        $edUrlBlnImgLookupByEdn .= ", '$ednID':";
+        $edBlnPosLookupByEdn .= ", '$ednID':";
+        $edPolysByBlnTagTokCmpTagByEdn .= ", '$ednID':";
+      } else {
+        $isFirst = false;
+        $defaultEdnID = $ednID;
+        $edStructHtmlByEdn .= "'$ednID':";
+        $edFootnotesByEdn .= "'$ednID':";
+        $edGlossaryLookupByEdn .= "'$ednID':";
+        $edTocHtmlByEdn .= "'$ednID':";
+        $edUrlBlnImgLookupByEdn .= "'$ednID':";
+        $edBlnPosLookupByEdn .= "'$ednID':";
+        $edPolysByBlnTagTokCmpTagByEdn .= "'$ednID':";
+      }
+        $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID));
+        $edFootnotesByEdn .= getEditionFootnoteTextLookup();
+        $edGlossaryLookupByEdn .= getEditionGlossaryLookup('edn'.$ednID);
+        $edTocHtmlByEdn .= "'".getEditionTOCHtml()."'";
+        $edUrlBlnImgLookupByEdn .= getImageBaselineURLLookup();//reset and calc'd in getEditionsStructuralViewHtml
+        $edBlnPosLookupByEdn .= getBaselinePosByEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
+        $edPolysByBlnTagTokCmpTagByEdn .= getPolygonByBaselineEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
+    }
+?>
+          multiEdition = true,
+          edStructHtmlByEdn = {<?=$edStructHtmlByEdn?>},
+          edFootnotesByEdn = {<?=$edFootnotesByEdn?>},//reset and calc'd in getEditionsStructuralViewHtml
+          edGlossaryLookupByEdn = {<?=$edGlossaryLookupByEdn?>},//calc'd for first edition assuming all editions are inclusive
+          edStructHtml = edStructHtmlByEdn[<?=$defaultEdnID?>],//get first edition
+          edFootnotes = edFootnotesByEdn[<?=$defaultEdnID?>],//get first edition
+          edGlossaryLookup = edGlossaryLookupByEdn[<?=$defaultEdnID?>]//get first edition
+<?php
+  } else {
+?>
+          multiEdition = false,
           edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs)?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
           edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>//calc'd for first edition assuming all editions are inclusive
 <?php
+  }
   if ($showContentOutline) {
+    if ($multiEdition) {
+?>
+,
+          edTocHtmlByEdn = {<?=$edTocHtmlByEdn?>},//reset and calc'd in getEditionsStructuralViewHtml
+          tocHtml = edTocHtmlByEdn[<?=$defaultEdnID?>]//get first edition
+<?php
+    } else {
 ?>
 ,
           tocHtml = '<?=getEditionTOCHtml()?>'//reset and calc'd in getEditionsStructuralViewHtml
 <?php
+    }
   }
   if ($showImageView &&  count($imgURLsbyBlnImgTag) > 0) {
+    if ($multiEdition) {
+?>
+,
+          edUrlBlnImgLookupByEdn = {<?=$edUrlBlnImgLookupByEdn?>},
+          edBlnPosLookupByEdn = {<?=$edBlnPosLookupByEdn?>},//reset and calc'd in getEditionsStructuralViewHtml
+          edPolysByBlnTagTokCmpTagByEdn = {<?=$edPolysByBlnTagTokCmpTagByEdn?>},//calc'd for first edition assuming all editions are inclusive
+          urlBlnImgLookup = edUrlBlnImgLookupByEdn[<?=$defaultEdnID?>],//get first edition
+          blnPosLookup = edBlnPosLookupByEdn[<?=$defaultEdnID?>],//get first edition
+          polysByBlnTagTokCmpTag = edPolysByBlnTagTokCmpTagByEdn[<?=$defaultEdnID?>]//get first edition
+<?php
+    } else {
 ?>
 ,
           urlBlnImgLookup = <?=getImageBaselineURLLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
           blnPosLookup = <?=getBaselinePosByEntityTagLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
           polysByBlnTagTokCmpTag = <?=getPolygonByBaselineEntityTagLookup()?>//reset and calc'd in getEditionsStructuralViewHtml
 <?php
+    }
   }
   if ($showTranslationView && $hasTranslation) {
+    if ($multiEdition) {
+      $edTransStructHtmlByEdn = "";
+      $edTransFootnotesByEdn = "";
+      $isFirst = true;
+      foreach ($ednIDs as $ednID) {
+        if (!$isFirst) {
+          $edTransStructHtmlByEdn .= ", '$ednID':";
+          $edTransFootnotesByEdn .= ", '$ednID':";
+        } else {
+          $isFirst = false;
+          $defaultEdnID = $ednID;
+          $edTransStructHtmlByEdn .= "'$ednID':";
+          $edTransFootnotesByEdn .= "'$ednID':";
+        }
+          $edTransStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID));
+          $edTransFootnotesByEdn .= getEditionTranslationFootnoteTextLookup();
+      }
+?>
+,
+          edTransStructHtmlByEdn = {<?=$edTransStructHtmlByEdn?>},
+          edTransFootnotesByEdn = {<?=$edTransFootnotesByEdn?>},
+          transStructHtml = edTransStructHtmlByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
+          transFootnotes = edTransFootnotesByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
+<?php
+    } else {
 ?>
 ,
           transStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs)?>,
           transFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
+    }
   }
   if ($showChayaView && $hasChaya) {
+    if ($multiEdition) {
+      $edChayaStructHtmlByEdn = "";
+      $edChayaFootnotesByEdn = "";
+      $isFirst = true;
+      foreach ($ednIDs as $ednID) {
+        if (!$isFirst) {
+          $edChayaStructHtmlByEdn .= ", '$ednID':";
+          $edChayaFootnotesByEdn .= ", '$ednID':";
+        } else {
+          $isFirst = false;
+          $defaultEdnID = $ednID;
+          $edChayaStructHtmlByEdn .= "'$ednID':";
+          $edChayaFootnotesByEdn .= "'$ednID':";
+        }
+          $edChayaStructHtmlByEdn .= getEditionsStructuralTranslationHtml(array($ednID), Entity::getIDofTermParentLabel('chaya-translation'));
+          $edChayaFootnotesByEdn .= getEditionTranslationFootnoteTextLookup();//reset and calc'd in getEditionsStructuralTranslationHtml
+      }
+?>
+,
+          edChayaStructHtmlByEdn = {<?=$edChayaStructHtmlByEdn?>},
+          edChayaFootnotesByEdn = {<?=$edChayaFootnotesByEdn?>},
+          chayaStructHtml = edChayaStructHtmlByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
+          chayaFootnotes = edChayaFootnotesByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
+<?php
+    } else {
 ?>
 ,
           chayaStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs, Entity::getIDofTermParentLabel('chaya-translation'))?>,
           chayaFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
+    }
   }
 ?>
 ;
@@ -210,7 +337,7 @@
       e.stopImmediatePropagation();
       if (!this.supressSynchOnce) {
         DEBUG.log("event","scroll view top = "+top+" height = "+viewHeight);
-        minY = 10000;
+        minY = 1000000;
         $lineLblSpans = $(this).find('span.linelabel');
         if ($lineLblSpans.length) {
           $lineLblSpans.each(function(index,lblSpan) {
@@ -223,7 +350,7 @@
             }
           });
         }
-        minY = 10000;
+        minY = 1000000;
         $secHdrDivs = $(this).find('div.secHeader');
         if ($secHdrDivs.length) {
           $secHdrDivs.each(function(index,secDiv) {
@@ -238,7 +365,9 @@
         }
         closeAllPopups();
 //        imgScrollData = this.getImageScrollData(segTag,lineFraction);
-        $('.viewerContent').trigger('synchronize',[this.id,lineSeqTag,lineFraction,hdrSeqTag,hdrFraction,viewHeight,imgScrollData]);
+        if (lineSeqTag || hdrSegTag) {
+          $('.viewerContent').trigger('synchronize',[this.id,lineSeqTag,lineFraction,hdrSeqTag,hdrFraction,viewHeight,imgScrollData]);
+        }
       } else {
         delete this.supressSynchOnce;
       }
@@ -295,12 +424,11 @@
             $tocNavButton= $('.tocNavButton')
 <?php
   }
-?>
-<?php
+  $cntPanels = 1; //text view will always show
   if ($showImageView && count($imgURLsbyBlnImgTag) > 0) {
+    $cntPanels++;
 ?>
 ,
-            imgViewer,
             $imageViewer= $('#imageViewer'),
             $imageViewerHdr= $('#imageViewerHdr'),
             $imageViewerContent= $('#imageViewerContent')
@@ -309,6 +437,7 @@
 ?>
 <?php
   if ($showTranslationView && $hasTranslation) {
+    $cntPanels++;
 ?>
 ,
             $transViewer = $('#transViewer'),
@@ -319,6 +448,7 @@
 ?>
 <?php
   if ($showChayaView && $hasChaya) {
+    $cntPanels++;
 ?>
 ,
             $chayaViewer = $('#chayaViewer'),
@@ -327,32 +457,93 @@
 <?php
   }
 ?>
+,
+           cntPanels = <?=$cntPanels?>,
+           avgContentPanelHeight = ($(window).height()-$('.headline').height())/cntPanels - $textViewerHdr.height() -15
 ;
 <?php
+  if ($multiEdition && $multiEditionHeaderDivHtml) {
+?>
+          $textViewerHdr.append('<?=$multiEditionHeaderDivHtml?>');
+          function switchEdition(ednID) {
+            setTextViewHtmlandEvents(edStructHtmlByEdn[ednID], edFootnotesByEdn[ednID], edGlossaryLookupByEdn[ednID]);
+<?php
+    if ($showContentOutline) {
+?>
+            setTOCHtmlandEvents(edTocHtmlByEdn[ednID]);
+<?php
+    }
+    if ($showImageView && count($imgURLsbyBlnImgTag) > 0) {
+?>
+            if ( imgViewer ) {
+              imgViewer.initData(
+                edBlnPosLookupByEdn[ednID],
+                edUrlBlnImgLookupByEdn[ednID],
+                edPolysByBlnTagTokCmpTagByEdn[ednID]);
+              imgViewer.initImageUI();
+            }
+<?php
+    }
+    if ($showTranslationView && $hasTranslation) {
+?>
+            setTransViewHtmlandEvents(edTransStructHtmlByEdn[ednID], edTransFootnotesByEdn[ednID]);
+<?php
+    }
+    if ($showChayaView && $hasChaya) {
+?>
+            setChayaViewHtmlandEvents(edChayaStructHtmlByEdn[ednID], edChayaFootnotesByEdn[ednID]);
+<?php
+    }
+?>
+          }
+          $('.textEdnButton',$textViewerHdr).unbind('click').bind('click',function(e) {
+            var $button = $(this), ednTag = $button.attr('id'), ednID = ednTag.substring(3);
+            if (!$button.hasClass('selected')) {//ensure skip multiple clicks on selected edition.
+              $('.textEdnButton.selected',$textViewerHdr).removeClass('selected');
+              $button.addClass('selected');
+              //switch to this edition
+              switchEdition(ednID);
+            }
+            e.stopImmediatePropagation();
+            return false;
+          });
+<?php
+  }
   if ($showContentOutline) {
 ?>
-//initialise toc
+          function setTOCHtmlandEvents(tocHtml) {
+            //initialise toc
             $tocNavPanel.html(tocHtml);
-            $('.tocEntry',$tocNavPanel).unbind('click').bind('click', function(e) {
-              var $body = $('body'),classes = $(this).attr("class"), tocID, seqTag;
-              tocID = $(this).attr('id');
-              seqTag = tocID.substring(3);
-              $body.removeClass('showTOC');
-              $('.viewerContent').trigger('synchronize',[tocID,null,0,seqTag,0,null,null]);
-              e.stopImmediatePropagation();
-              return false;
-            });
-
-            $tocNavButton.unbind('click').bind('click', function(e) {
-              var $body = $('body');
-              if ($body.hasClass('showTOC')) {
+            if (tocHtml) {
+              $tocNavPanel.attr('disabled','');
+              //attach event handlers
+              $('.tocEntry',$tocNavPanel).unbind('click').bind('click', function(e) {
+                var $body = $('body'),classes = $(this).attr("class"), tocID, seqTag;
+                tocID = $(this).attr('id');
+                seqTag = tocID.substring(3);
                 $body.removeClass('showTOC');
-              } else {
-                $body.addClass('showTOC');
-              }
-              e.stopImmediatePropagation();
-              return false;
-            });
+                $('.viewerContent').trigger('synchronize',[tocID,null,0,seqTag,0,null,null]);
+                e.stopImmediatePropagation();
+                return false;
+              });
+
+              $tocNavButton.unbind('click').bind('click', function(e) {
+                var $body = $('body');
+                if ($body.hasClass('showTOC')) {
+                  $body.removeClass('showTOC');
+                } else {
+                  $body.addClass('showTOC');
+                }
+                e.stopImmediatePropagation();
+                return false;
+              });
+            } else {
+              $tocNavPanel.attr('disabled','disabled');
+            }
+          }
+          if (tocHtml) {
+            setTOCHtmlandEvents(tocHtml);//initial setup
+          }
 
 
 <?php
@@ -366,7 +557,7 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-            $imageViewerContent.height('150px');
+            $imageViewerContent.height(''+avgContentPanelHeight+'px');
             imgViewer = new VIEWERS.ImageViewer(
                                                  { initViewPercent:100,
                                                    id:'imageViewerContent',
@@ -384,8 +575,9 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
+            $textViewerContent.height(''+avgContentPanelHeight+'px');
+          function setTextViewHtmlandEvents(edStructHtml,edFootnotes,edGlossaryLookup) {
             $textViewerContent.html(edStructHtml);
-            $textViewerContent.height('150px');
             if (edFootnotes && typeof edFootnotes == 'object' && Object.keys(edFootnotes).length > 0) {
               $('.footnote',$textViewerContent).unbind('click').bind('click', function(e) {
                 var id = this.id, footnoteHtml, $showing;
@@ -446,6 +638,8 @@
               e.stopImmediatePropagation();
               return false;
             });
+          }
+          setTextViewHtmlandEvents(edStructHtml,edFootnotes,edGlossaryLookup);
     /**
     * handle 'updateselection' event
     *
@@ -510,28 +704,31 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-            $transViewerContent.html(transStructHtml);
-            $transViewerContent.height('150px');
-            $transViewerContent.unbind('click').bind('click', closeAllPopups);
-            if (transFootnotes && typeof transFootnotes == 'object' && Object.keys(transFootnotes).length > 0) {
-              $('.footnote',$transViewerContent).unbind('click').bind('click', function(e) {
-                var id = this.id, footnoteHtml;
-                  footnoteHtml = (transFootnotes[id]?transFootnotes[id]:"unable to find footnote text or empty footnote");
-                  $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
-                                      trigger: 'click',
-                                      autoHide: false,
-                                      showArrow: false });
-                  closeAllPopups();
-                  $(this).unbind('close').bind('close', function(e) {
-                    $(this).jqxTooltip('destroy');
-                  });
-                  $(this).jqxTooltip('open');
-                  $(this).addClass('showing');
-                  e.stopImmediatePropagation();
-                  return false;
-              });
-            }
+            $transViewerContent.height(''+avgContentPanelHeight+'px');
 
+            function setTransViewHtmlandEvents(transStructHtml,transFootnotes) {
+              $transViewerContent.html(transStructHtml);
+              $transViewerContent.unbind('click').bind('click', closeAllPopups);
+              if (transFootnotes && typeof transFootnotes == 'object' && Object.keys(transFootnotes).length > 0) {
+                $('.footnote',$transViewerContent).unbind('click').bind('click', function(e) {
+                  var id = this.id, footnoteHtml;
+                    footnoteHtml = (transFootnotes[id]?transFootnotes[id]:"unable to find footnote text or empty footnote");
+                    $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
+                                        trigger: 'click',
+                                        autoHide: false,
+                                        showArrow: false });
+                    closeAllPopups();
+                    $(this).unbind('close').bind('close', function(e) {
+                      $(this).jqxTooltip('destroy');
+                    });
+                    $(this).jqxTooltip('open');
+                    $(this).addClass('showing');
+                    e.stopImmediatePropagation();
+                    return false;
+                });
+              }
+            }
+            setTransViewHtmlandEvents(transStructHtml,transFootnotes);
             //assign handler for all syllable elements
             $transViewerContent.unbind("scroll").bind("scroll", viewScrollHandler);
 
@@ -547,27 +744,31 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
-            $chayaViewerContent.html(chayaStructHtml);
-            $chayaViewerContent.height('150px');
-            $chayaViewerContent.unbind('click').bind('click',closeAllPopups);
-            if (chayaFootnotes && typeof chayaFootnotes == 'object' && Object.keys(chayaFootnotes).length > 0) {
-              $('.footnote',$chayaViewerContent).unbind('click').bind('click', function(e) {
-                var id = this.id, footnoteHtml;
-                  footnoteHtml = (chayaFootnotes[id]?chayaFootnotes[id]:"unable to find footnote text or empty footnote");
-                  $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
-                                      trigger: 'click',
-                                      autoHide: false,
-                                      showArrow: false });
-                  closeAllPopups();
-                  $(this).unbind('close').bind('close', function(e) {
-                    $(this).jqxTooltip('destroy');
-                  });
-                  $(this).jqxTooltip('open');
-                  $(this).addClass('showing');
-                  e.stopImmediatePropagation();
-                  return false;
-              });
+            $chayaViewerContent.height(''+avgContentPanelHeight+'px');
+
+            function setChayaViewHtmlandEvents(chayaStructHtml,chayaFootnotes) {
+              $chayaViewerContent.html(chayaStructHtml);
+              $chayaViewerContent.unbind('click').bind('click',closeAllPopups);
+              if (chayaFootnotes && typeof chayaFootnotes == 'object' && Object.keys(chayaFootnotes).length > 0) {
+                $('.footnote',$chayaViewerContent).unbind('click').bind('click', function(e) {
+                  var id = this.id, footnoteHtml;
+                    footnoteHtml = (chayaFootnotes[id]?chayaFootnotes[id]:"unable to find footnote text or empty footnote");
+                    $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
+                                        trigger: 'click',
+                                        autoHide: false,
+                                        showArrow: false });
+                    closeAllPopups();
+                    $(this).unbind('close').bind('close', function(e) {
+                      $(this).jqxTooltip('destroy');
+                    });
+                    $(this).jqxTooltip('open');
+                    $(this).addClass('showing');
+                    e.stopImmediatePropagation();
+                    return false;
+                });
+              }
             }
+            setChayaViewHtmlandEvents(chayaStructHtml,chayaFootnotes);
 
             //assign handler for all syllable elements
             $chayaViewerContent.unbind("scroll").bind("scroll", viewScrollHandler);

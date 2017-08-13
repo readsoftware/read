@@ -135,6 +135,16 @@
 
     //*******************************PUBLIC FUNCTIONS************************************
 
+    /**
+    * Check type is Research
+    *
+    * @return boolean indentifying the term from typology of terms is research
+    */
+    public function isResearchEdition() {
+      $type = Entity::getTermFromID($this->_type_id);
+      return (($type && strtolower($type) == "research") || !$type);
+    }
+
     //********GETTERS*********
     /**
     * Gets the Description for this Edition

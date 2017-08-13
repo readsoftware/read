@@ -323,7 +323,6 @@
     * @return Editions iterator with all editions linked to this text
     */
     public function getEditions() {
-      $condition = "edn_text_id = ".$this->_id;
       if (count($this->getReplacementIDs())>0) {
         $condition = "edn_text_id in (".join(",",$this->getReplacementIDs()).")";
       }else{

@@ -980,7 +980,7 @@ EDITORS.EntityPropVE.prototype = {
                   ((entity.decomp && !val) ||
                    (val &&
                     (!entity.decomp || entity.decomp != val) &&
-                    val.toLowerCase().match(/^([aāiīïüuūeēoō’l̥̄rṛṝ]+|[aāiīïüuūeēoō’l̥̄rṛṝ]+[\s-‐][aāiīïüuūeēoō’l̥̄rṛṝ]+)$/)))) {
+                    val.toLowerCase().match(/^([aāiīïüuūeēoō’l̥̄rṛṝ]+|[aāiīïüuūeēoō’l̥̄rṛṝ]+[\s-‐][aāiīïüuūeēoō’l̥̄rṛṝ]+)$/)))) {//todo extract to config for lang-script
               if (!$(this).parent().parent().hasClass("dirty")) {
                 $(this).parent().parent().addClass("dirty");
               }
