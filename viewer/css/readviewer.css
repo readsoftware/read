@@ -209,12 +209,17 @@ body.showTOC .tocNavPanel {
 }
 
 #chayaViewerContent {
-  background-color: rgba(214,214,204,0.2);
+  background-color: rgba(214,214,204,0.4);
 }
 
 #multiEditionHeaderMenu {
   display: inline;
   padding-left: 40px;
+}
+
+.lineHeader {
+  font-weight: bold;
+  padding-right: 15px;
 }
 
 .textEdnButton {

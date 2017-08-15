@@ -277,7 +277,6 @@ function getWordTransHtml($entity) {
   $prefix = substr($entGID,0,3);
   $entID = substr($entGID,4);
   $entTag = $prefix.$entID;
-  $wordParts = array();
   $wordHtml = "";
   $tokIDs = null;
 
@@ -424,12 +423,12 @@ function getStructTransHtml($sequence, $addBoundaryHtml = false) {
     if ($curStructHeaderbyLevel[$curStructLevel]['sup'] == str_replace("(","",str_replace(")","",$seqSup))) {
       $label = null;
     } else {//sibling so signal output of section Header
-      $label = ($seqSup?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+      $label = (($seqSup && $seqType !== "Section")?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
     }
     //close section div
     $structureHtml .= "</div>";
   } else {// new struct is deeper case
-    $label = ($seqSup?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+    $label = (($seqSup && $seqType !== "Section")?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
   }
   if ($label) {//output header div and toc info
     $structureHtml .= '<div id="'.$preMarker.$seqTag.'" class="secHeader level'.$level.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
@@ -624,7 +623,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
         foreach ($attributions as $attribution) {
           $atbID = $attribution->getID();
           $title = $attribution->getTitle();
-          $detail = $attribution->get;
+          $detail = $attribution->getDetail();
           if (!array_key_exists($atbID,$sourceNameLookup)) {
             $sourceNameLookup[$atbID] = $title;
           }
@@ -875,7 +874,6 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
   $prefix = substr($entGID,0,3);
   $entID = substr($entGID,4);
   $entTag = $prefix.$entID;
-  $wordParts = array();
   $wordHtml = "";
   $nextTCMS = "";
   $tcms = "";
@@ -1142,6 +1140,246 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
 
 
 /**
+* returns the html for tokenisation in physical line layout
+*
+* @param int array of text division $sequence ids containing global ids ordered words of the text
+* @param boolean $addBoundaryHtml determine whether to add boundary info for each edition in a multi edition calculation
+*/
+function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
+  global $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $seqBoundaryMarkerHtmlLookup, $polysByBlnTagTokCmpTag, $blnPosByEntTag, $curStructHeaderbyLevel;
+
+  $wordCnt = 0;
+  $prevTCMS = "";
+  $nextTCMS = "";
+  $tcms = "";
+  $prevGraIsVowelCarrier = false;
+  $previousA = null;
+  $physicalLinesHtml = "";
+  //start to calculate HTML using each text division container
+  $cntTxtDivGID = count($textDivSeqIDs);
+  for ($i = 0; $i < $cntTxtDivGID; $i++) {
+    $seqGID = $textDivSeqIDs[$i];
+    if (strpos($seqGID,'seq') === 0) {
+      $txtDivSequence = new Sequence(substr($seqGID,4));
+      if (!$txtDivSequence || $txtDivSequence->hasError()) {//no sequence or unavailable so warn
+        error_log("warn, Warning inaccessible tokenisation sequence $seqGID skipped.");
+        continue;
+      } else {//process text division
+        $fTxtDivSeq = ($i == 0);// also indicate first physical line and first word of this scope
+        $nextSeqGID = $i+1<$cntTxtDivGID?$textDivSeqIDs[$i+1]:null;
+        $seqEntGIDs = $txtDivSequence->getEntityIDs();
+        $seqType = $txtDivSequence->getType();
+        $seqTag = $txtDivSequence->getEntityTag();
+        //check for boundary entry for this seqTag
+        if ($addBoundaryHtml && array_key_exists($seqTag,$seqBoundaryMarkerHtmlLookup)) {
+          $physicalLinesHtml .= $seqBoundaryMarkerHtmlLookup[$seqTag];
+        }
+        if (!$seqEntGIDs || count($seqEntGIDs) == 0) {
+          error_log("warn, Found empty tokenisation sequence element $seqTag for edition ".$edition->getDescription()." id=".$edition->getID());
+          continue;
+        }
+        $cntGID = count($seqEntGIDs);
+        for ($j = 0; $j < $cntGID; $j++) {//process the words of this text division
+          $wordGID = $seqEntGIDs[$j];
+          $prefix = substr($wordGID,0,3);
+          $wordID = substr($wordGID,4);
+          $nextToken = null;
+          //find next token for boundary determination
+          $nextEntGID = $j+1<$cntGID?$seqEntGIDs[$j+1]:null;
+          if (!$nextEntGID && $nextSeqGID) { //get next entGID from next text division
+            $nextTxtDivSequence = new Sequence(substr($nextSeqGID,4));
+            if (!$nextTxtDivSequence || $nextTxtDivSequence->hasError()) {//no sequence or unavailable so warn
+              error_log("warn, Warning inaccessible tokenisation sequence $nextSeqGID next entity set to null.");
+            } else {
+              $nextSeqEntGIDs = $nextTxtDivSequence->getEntityIDs();
+              if ($nextSeqEntGIDs && count($nextSeqEntGIDs) > 0) {
+                $nextEntGID = $nextSeqEntGIDs[0];
+              }
+            }
+          }
+          if ( $nextEntGID ) {
+            switch (substr($nextEntGID,0,3)) {
+              case 'cmp':
+                $nextToken = new Compound(substr($nextEntGID,4));
+                if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
+                  error_log("Warning inaccessible entity id $nextEntGID skipped.");
+                  $nextToken = null;
+                  break;
+                } else {//change to GID for first token of this compound
+                  $nextEntGID = $nextToken->getTokenIDs();
+                  if ($nextEntGID && count($nextEntGID)) {//found so change and fall through to token processing
+                    $nextEntGID = "tok:".$nextEntGID[0];
+                  } else {
+                    error_log("Warning inaccessible entity id ".$nextToken->getGlobalID()." skipped.");
+                    $nextToken = null;
+                    break;
+                  }
+                }
+              case 'tok':
+                $nextToken = new Token(substr($nextEntGID,4));
+                if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
+                  error_log("Warning inaccessible entity id $nextEntGID skipped.");
+                  $nextToken = null;
+                  break;
+                }
+            }
+          }
+          //process current word
+          $wordTag = null;
+          $tokIDs = null;
+          if ($prefix == 'cmp' || $prefix == 'tok' ) {
+            if ($prefix == 'cmp') {
+              $entity = new Compound($wordID);
+            } else {
+              $entity = new Token($wordID);
+            }
+            if (!$entity || $entity->hasError()) {//no word or unavailable so warn
+              error_log("Warning inaccessible word id $wordGID skipped.");
+            } else {
+              $wordTag = $entity->getEntityTag();
+              if ($entity && $prefix == 'cmp' && count($entity->getTokenIDs())) {
+                $tokIDs = $entity->getTokenIDs();
+              } else if ($entity && $prefix == 'tok'){
+                $tokIDs = array($wordID);
+              } else {
+                error_log("err, rendering word for physical line and found invalid GID $wordGID");
+                continue;
+              }
+              $footnoteHtml = "";
+              $wordHtml = "";
+              $isLastWord = ($j+1 == $cntGID && $i+1 == $cntTxtDivGID);
+              if ($tokIDs) {
+                ++$wordCnt;
+                //for each token in word
+                $tokCnt = count($tokIDs);
+                for($k =0; $k < $tokCnt; $k++) {
+                  $tokID = $tokIDs[$k];
+                  $firstT = ($k==0);
+                  $lastT = (1+$k == $tokCnt);
+                  $token = new Token($tokID);
+                  addWordPolygonsToEntityLookup($token, $wordTag, $lastT);
+                  $graIDs = $token->getGraphemeIDs();
+                  //for each grapheme in token
+                  $graCnt = count($graIDs);
+                  for($l=0; $l<$graCnt; $l++) {
+                    $graID = $graIDs[$l];
+                    $grapheme = new Grapheme($graID);
+                    if (!$grapheme) {
+                      error_log("err,calculating word html and grapheme not available for graID $graID");
+                      $prevGraIsVowelCarrier = false;
+                      continue;
+                    }
+                    if ($grapheme->getValue() == "ʔ") {
+                      $prevGraIsVowelCarrier = true;
+                      continue;
+                    }
+                    $firstG = ($l==0 || $l==1 && $prevGraIsVowelCarrier);
+                    $lastG = (1+$l == $graCnt);
+                    //check for TCM transition brackets
+                    $tcms = $grapheme->getTextCriticalMark();
+                    $postTCMBrackets = "";
+                    $preTCMBrackets = "";
+                    if ($prevTCMS != $tcms) {
+                      list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
+                    }
+                    if ($postTCMBrackets && !($firstT && $firstG)) {// lookahead will close previous token using postBrackets of this grapheme so skip if first of word
+                      $wordHtml .= $postTCMBrackets;
+                    }
+                    if ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap)) {//grapheme marks physical line beginning so close previous and start new line
+                      if ($footnoteHtml) {
+                        $wordHtml .= $footnoteHtml;
+                        $footnoteHtml = "";
+                      }
+                      //output current word HTML
+                      //if in a compound output hyphen
+                      //if not first physical line then close physical line div and start a new line
+                      $physicalLinesHtml .= ($wordHtml?$wordHtml:"").(($wordHtml?(($firstT && $firstG)?"</span>":"-</span>"):"")).(!$fTxtDivSeq?"</div>":"")."<div class=\"physicalLineDiv\">".$graID2LineHtmlMarkerlMap[$graID];
+                      $wordHtml = "";
+                      //open word span
+                      $wordHtml .= '<span class="grpTok '.($seqTag?$seqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
+                      $prevTCMS = "";//at a new physical line so reset TCM//???need to recalc previous brackets???
+                      $previousA = null;
+                    }
+                    if ($footnoteHtml) {
+                      $wordHtml .= $footnoteHtml;
+                      $footnoteHtml = "";
+                    }
+                    if ($preTCMBrackets) {
+                      $wordHtml .= $preTCMBrackets;
+                    }
+                    //add grapheme
+                    $graTemp = $grapheme->getValue();
+                    if ($prevGraIsVowelCarrier && $previousA && ($prevTCMS == $tcms || (!$prevTCMS|| $prevTCMS == "S") && (!$tcms|| $tcms == "S"))) {
+                      if ($graTemp == 'i') {
+                        $graTemp = "ï";
+                      }else if ($graTemp == 'u') {
+                        $graTemp = "ü";
+                      }
+                    }
+                    $prevTCMS = $tcms;
+                    $wordHtml .= $graTemp;
+                    if ($graTemp == "a") {
+                      $previousA = true;
+                    } else {
+                      $previousA = false;
+                    }
+                    $prevGraIsVowelCarrier = false;
+                  }//end for graphIDs
+                  $footnoteHtml = getEntityFootnotesHtml($token);
+                }//end for token IDs
+                if ($nextToken) {//find tcm for first grapheme of next token to check for closing brackets
+                  $nextGraIDs = $nextToken->getGraphemeIDs();
+                  if (count($nextGraIDs) > 0) {
+                    $nextGrapheme = new Grapheme($nextGraIDs[0]);
+                    $nextTCMS = $nextGrapheme->getTextCriticalMark();
+                    if ($nextTCMS != $tcms) {
+                      $postTCMBrackets = "";
+                      $preTCMBrackets = "";
+                      list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($tcms,$nextTCMS,true);
+                      $wordHtml .= $postTCMBrackets;
+                    }
+                  }
+                }
+                if ($isLastWord && $prevTCMS && $prevTCMS != "S") {//close off any TCM
+                  $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
+                  $prevTCMS = "";//reset since we closed off TCMs for the structure.
+                  //This will ensure next structures output will have opening TCMs
+                  if ($tcmBrackets) {
+                    $wordHtml .= $tcmBrackets;
+                  }
+                }
+                if ($prefix == "cmp") {//end of compound so add cmp entity footnotes
+                  $footnoteHtml .= getEntityFootnotesHtml($entity);
+                }
+                if ($footnoteHtml) {
+                  $wordHtml .= $footnoteHtml;
+                  $footnoteHtml = "";
+                }
+                $wordHtml = preg_replace('/\/\/\//',"",$wordHtml); // remove edge indicator
+                $wordHtml = preg_replace('/_+/',"_",$wordHtml); // multple missing consonants
+                $wordHtml = preg_replace('/_/',".",$wordHtml); // multple missing consonants
+                $wordHtml .= "</span>";
+                //      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
+              }
+              $physicalLinesHtml .= $wordHtml;
+            }
+          }else{
+            error_log("warn, Found unknown word element $wordGID for edition ".$edition->getDescription()." id="+$edition->getID());
+            continue;
+          }
+        }//end for cntGID
+      }// end  of process text division
+
+    } else {
+      error_log("warn, Found unknown tokenisation element $seqGID for edition $ednID");
+      continue;
+    }
+  }// end for txtDivSeqIDs
+  return $physicalLinesHtml;
+}
+
+
+/**
 * gets the editions Structural layout html
 *
 * calculates the structure view of this edition of the text with granularity of token,
@@ -1242,12 +1480,18 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
           }
           if (!$seqPhys && $seqType == "TextPhysical"){//warning!!!! term dependency
             $physicalLineSeqIDs = array_merge($physicalLineSeqIDs,$componentIDs);
+            if (!$isFirstEdn) {
+              $entTag = str_replace(':','',$componentIDs[0]);
+              $seqBoundaryMarkerHtmlLookup[$entTag] = getEntityBoundaryHtml($edition,"partBoundary $entTag");
+            }
           } else if (!$seqText && $seqType == "Text"){//warning!!!! term dependency
             $textDivSeqIDs = array_merge($textDivSeqIDs,$componentIDs);
+            if (!$isFirstEdn) {
+              $entTag = str_replace(':','',$componentIDs[0]);
+              $seqBoundaryMarkerHtmlLookup[$entTag] = getEntityBoundaryHtml($edition,"partBoundary $entTag");
+            }
           } else if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
-            if ($isFirstEdn) {
-              $isFirstEdn = false;
-            } else {//add entry to boundary lookup
+            if (!$isFirstEdn) {
               $entTag = str_replace(':','',$componentIDs[0]);
               $seqBoundaryMarkerHtmlLookup[$entTag] = getEntityBoundaryHtml($edition,"partBoundary $entTag");
             }
@@ -1256,6 +1500,9 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
             array_push($warnings,"Warning no code to handle sequence seq:$edSeqID of type $seqType. Skipping.");
           }
         }
+      }
+      if ($isFirstEdn) {
+        $isFirstEdn = false;
       }
       $attributions = $edition->getAttributions(true);
       if ($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
@@ -1275,6 +1522,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
     array_push($warnings,"Warning no structural analysis found for edition id $ednID. Skipping.");
   } else {//process analysis
     //calculate  post grapheme id to physical line label map
+    $useInlineLabel = (count($analysisSeqIDs) > 0);
     if (count($physicalLineSeqIDs) > 0) {
       foreach ($physicalLineSeqIDs as $physicalLineSeqGID) {
         $physicalLineSeq = new Sequence(substr($physicalLineSeqGID,4));
@@ -1357,9 +1605,15 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
                 if (!$label) {
                   $label = $seqTag;
                 }
-                $lineHtml = "<span class=\"linelabel $seqTag\">[$label]";
-                $lineHtml .= getEntityFootnotesHtml($physicalLineSeq);//add any line footnotes to end of label
-                $lineHtml .= "</span>";
+                if ($useInlineLabel) {
+                  $lineHtml = "<span class=\"linelabel $seqTag\">[$label]";
+                  $lineHtml .= getEntityFootnotesHtml($physicalLineSeq);//add any line footnotes to end of label
+                  $lineHtml .= "</span>";
+                } else { //use header format
+                  $lineHtml = "<span class=\"lineHeader $seqTag\">$label";
+                  $lineHtml .= getEntityFootnotesHtml($physicalLineSeq);//add any line footnotes to end of label
+                  $lineHtml .= "</span>";
+                }
                 if (strpos($syllable->getSortCode(),"0.19")=== 0 &&
                 strpos($syllable->getSortCode2(),"0.5")=== 0 &&
                 count($graIDs) > 1) { //begins with vowel carrier so choose second grapheme
@@ -1376,42 +1630,41 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
     $fnCnt = 0;
     $tokCnt = 0;
     if (count($analysisSeqIDs) > 0) {
-      $structureSeqIDs = $analysisSeqIDs;
-    } else {
-      $structureSeqIDs = $textDivSeqIDs;
-    }
-    //start to calculate HTML using each entity of the analysis container
-    foreach ($structureSeqIDs as $entGID) {
-      $prefix = substr($entGID,0,3);
-      $entID = substr($entGID,4);
-      if ($prefix == 'seq') {
-        $subSequence = new Sequence($entID);
-        if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
-          error_log("warn, Warning inaccessible sub-sequence id $entID skipped.");
-        } else {
-          $html .= getStructHtml($subSequence,true);
+      //start to calculate HTML using each entity of the analysis container
+      foreach ($analysisSeqIDs as $entGID) {
+        $prefix = substr($entGID,0,3);
+        $entID = substr($entGID,4);
+        if ($prefix == 'seq') {
+          $subSequence = new Sequence($entID);
+          if (!$subSequence || $subSequence->hasError()) {//no sequence or unavailable so warn
+            error_log("warn, Warning inaccessible sub-sequence id $entID skipped.");
+          } else {
+            $html .= getStructHtml($subSequence,true);
+          }
+        } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
+          if ($prefix == 'cmp') {
+            $entity = new Compound($entID);
+          } else {
+            $entity = new Token($entID);
+          }
+          if (!$entity || $entity->hasError()) {//no word or unavailable so warn
+            error_log("warn, Warning inaccessible word id $entGID skipped.");
+          } else {
+            $html .= getWordHtml($entity,false);
+          }
+        }else{
+          error_log("warn, Found unknown structural element $entGID for edition $ednID");
+          continue;
         }
-      } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
-        if ($prefix == 'cmp') {
-          $entity = new Compound($entID);
-        } else {
-          $entity = new Token($entID);
-        }
-        if (!$entity || $entity->hasError()) {//no word or unavailable so warn
-          error_log("warn, Warning inaccessible word id $entGID skipped.");
-        } else {
-          $html .= getWordHtml($entity,false);
-        }
-      }else{
-        error_log("warn, Found unknown structural element $entGID for edition $ednID");
-        continue;
       }
-    }
-    //check for termination divs by inspection of $curStructHeaderbyLevel
-    if (count($curStructHeaderbyLevel) > 0) {
-      foreach (array_keys($curStructHeaderbyLevel) as $key) {
-        $html .= "</div>";
+      //check for termination divs by inspection of $curStructHeaderbyLevel
+      if (count($curStructHeaderbyLevel) > 0) {
+        foreach (array_keys($curStructHeaderbyLevel) as $key) {
+          $html .= "</div>";
+        }
       }
+    } else {// process textdivisions in physical line layout
+      $html .= getPhysicalLinesHtml($textDivSeqIDs,true);
     }
   }// end else
   $sourceHtml = "";
@@ -1647,16 +1900,16 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
         $lemHtml .= "<span class=\"lemmaheadword\">".$lemmaValue."</span><span class=\"lemmapos\">";
         $lemmaGenderID = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
-        $lemmaPos = $lemmaPosID && is_int($lemmaPosID) && Entity::getTermFromID($lemmaPosID) ? Entity::getTermFromID($lemmaPosID) : '';
+        $lemmaPos = $lemmaPosID && is_numeric($lemmaPosID) && Entity::getTermFromID($lemmaPosID) ? Entity::getTermFromID($lemmaPosID) : '';
         $isVerb = null;
         if ($lemmaPos) {
           $isVerb = ($lemmaPos == 'v.');
         }
         $lemmaSposID = $lemma->getSubpartOfSpeech();
         $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
-        if ($lemmaGenderID && is_int($lemmaGenderID)) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
+        if ($lemmaGenderID && is_numeric($lemmaGenderID)) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
           $lemHtml .=  Entity::getTermFromID($lemmaGenderID).($lemmaCF[2]==2?'(?)':'');
-        } else if ($lemmaSposID && is_int($lemmaSposID)) {
+        } else if ($lemmaSposID && is_numeric($lemmaSposID)) {
           $lemHtml .=  Entity::getTermFromID($lemmaSposID).($lemmaCF[1]==2?'(?)':'');
         }else if ($lemmaPos) {
           $lemHtml .=  $lemmaPos.($lemmaCF[0]==2?'(?)':'');
@@ -1714,10 +1967,10 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
               $conj2 = $inflection->getSecondConjugation();
               $infString = '';
               if ($isVerb) { //term dependency
-                if ($vmood && is_int($vmood)) {
+                if ($vmood && is_numeric($vmood)) {
                   $vtensemood = Entity::getTermFromID($vmood).($ingCF[2]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$vtensemood</span>";
-                } else if ($vtense && is_int($vtense)) {
+                } else if ($vtense && is_numeric($vtense)) {
                   $vtensemood = Entity::getTermFromID($vtense).($ingCF[0]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$vtensemood</span>";
                 } else {
@@ -1726,7 +1979,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if (!array_key_exists($vtensemood,$groupedForms)) {
                   $groupedForms[$vtensemood] = array();
                 }
-                if ($num && is_int($num)) {
+                if ($num && is_numeric($num)) {
                   $num = Entity::getTermFromID($num).($ingCF[4]==2?'(?)':'');
                 } else {
                   $num = '?';
@@ -1734,7 +1987,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if (!array_key_exists($num,$groupedForms[$vtensemood])) {
                   $groupedForms[$vtensemood][$num] = array();
                 }
-                if ($vper && is_int($vper)) {
+                if ($vper && is_numeric($vper)) {
                   $vper = Entity::getTermFromID($vper).($ingCF[6]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$vper</span>";
                 } else {
@@ -1746,7 +1999,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if ($num) {
                   $infString .= "<span class=\"inflectdescript\">$num</span>";
                 }
-                if ($conj2 && is_int($conj2)) {
+                if ($conj2 && is_numeric($conj2)) {
                   $conj2 = Entity::getTermFromID($conj2).($ingCF[7]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$conj2</span>";
                 } else {
@@ -1757,7 +2010,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 }
                 $node = &$groupedForms[$vtensemood][$num][$vper][$conj2];
               } else {
-                if ($gen && is_int($gen)) {
+                if ($gen && is_numeric($gen)) {
                   $gen = Entity::getTermFromID($gen).($ingCF[3]==2?'(?)':'');
                   if (!$lemmaGenderID){//handle noun supress infection gender output
                     $infString .= "<span class=\"inflectdescript\">$gen</span>";
@@ -1768,7 +2021,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if (!array_key_exists($gen,$groupedForms)) {
                   $groupedForms[$gen] = array();
                 }
-                if ($num && is_int($num)) {
+                if ($num && is_numeric($num)) {
                   $num = Entity::getTermFromID($num).($ingCF[4]==2?'(?)':'');
                 } else {
                   $num = '?';
@@ -1776,7 +2029,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if (!array_key_exists($num,$groupedForms[$gen])) {
                   $groupedForms[$gen][$num] = array();
                 }
-                if ($case && is_int($case)) {
+                if ($case && is_numeric($case)) {
                   $case = Entity::getTermFromID($case).($ingCF[5]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$case</span>";
                 } else {
@@ -1788,7 +2041,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 if ($num) {
                   $infString .= "<span class=\"inflectdescript\">$num</span>";
                 }
-                if ($conj2 && is_int($conj2)) {
+                if ($conj2 && is_numeric($conj2)) {
                   $conj2 = Entity::getTermFromID($conj2).($ingCF[7]==2?'(?)':'');
                   $infString .= "<span class=\"inflectdescript\">$conj2</span>";
                 } else {
