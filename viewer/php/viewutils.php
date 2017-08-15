@@ -1246,7 +1246,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                 continue;
               }
               $footnoteHtml = "";
-              $wordHtml = "";
+              $wordHtml = '<span class="grpTok '.($seqTag?$seqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
               $isLastWord = ($j+1 == $cntGID && $i+1 == $cntTxtDivGID);
               if ($tokIDs) {
                 ++$wordCnt;
@@ -1293,7 +1293,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                       //output current word HTML
                       //if in a compound output hyphen
                       //if not first physical line then close physical line div and start a new line
-                      $physicalLinesHtml .= ($wordHtml?$wordHtml:"").(($wordHtml?(($firstT && $firstG)?"</span>":"-</span>"):"")).(!$fTxtDivSeq?"</div>":"")."<div class=\"physicalLineDiv\">".$graID2LineHtmlMarkerlMap[$graID];
+                      $physicalLinesHtml .= ((!$fTxtDivSeq&&$wordHtml)?$wordHtml:"").((!$fTxtDivSeq&&$wordHtml?(($firstT && $firstG)?"</span>":"-</span>"):"")).(!$fTxtDivSeq?"</div>":"")."<div class=\"physicalLineDiv\">".$graID2LineHtmlMarkerlMap[$graID];
                       $wordHtml = "";
                       //open word span
                       $wordHtml .= '<span class="grpTok '.($seqTag?$seqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
