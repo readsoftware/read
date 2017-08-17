@@ -43,6 +43,7 @@
   if (!$data) {
     returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
   } else {
+    $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:true;//default (parameter missing) not multi edition
     $multiEdition = (!isset($data['multiEd']) || !$data['multiEd'])? false:true;//default (parameter missing) not multi edition
     $txtID = null;
     if (isset($data['txtID']) && is_numeric($data['txtID'])) {
@@ -68,7 +69,7 @@
       if ($text->hasError()) {
         returnXMLErrorMsgPage("unable to load text $txtID - ".join(",",$text->getErrors()));
       }
-      $editions = $text->getEditions();
+      $editions = $text->getEditions(true);
       if ($editions->getError() || $editions->getCount() == 0) {
         returnXMLErrorMsgPage("unable to load any text editions - ".$editions->getError());
       }
@@ -89,6 +90,7 @@
       $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
       $txtID = $text->getID();
     }
+    $multiEditionHeaderDivHtml = null;
     if ($multiEdition && $ednIDs && count($ednIDs) > 1) {//setup edition info strcture
       $multiEditionHeaderDivHtml = getMultiEditionHeaderHtml($ednIDs);
     }
@@ -185,9 +187,9 @@
         $edBlnPosLookupByEdn .= "'$ednID':";
         $edPolysByBlnTagTokCmpTagByEdn .= "'$ednID':";
       }
-        $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID));
+        $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
         $edFootnotesByEdn .= getEditionFootnoteTextLookup();
-        $edGlossaryLookupByEdn .= getEditionGlossaryLookup('edn'.$ednID);
+        $edGlossaryLookupByEdn .= getEditionGlossaryLookup('edn'.$ednID,$refreshLookUps);
         $edTocHtmlByEdn .= "'".getEditionTOCHtml()."'";
         $edUrlBlnImgLookupByEdn .= getImageBaselineURLLookup();//reset and calc'd in getEditionsStructuralViewHtml
         $edBlnPosLookupByEdn .= getBaselinePosByEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
@@ -205,9 +207,9 @@
   } else {
 ?>
           multiEdition = false,
-          edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs)?>,
+          edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs,$refreshLookUps)?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
-          edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag)?>//calc'd for first edition assuming all editions are inclusive
+          edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag,$refreshLookUps)?>//calc'd for first edition assuming all editions are inclusive
 <?php
   }
   if ($showContentOutline) {
@@ -224,7 +226,7 @@
 <?php
     }
   }
-  if ($showImageView &&  count($imgURLsbyBlnImgTag) > 0) {
+  if ($showImageView && (count($imgURLsbyBlnImgTag['bln']) > 0 || count($imgURLsbyBlnImgTag['img']) > 0)) {
     if ($multiEdition) {
 ?>
 ,
@@ -259,7 +261,7 @@
           $edTransStructHtmlByEdn .= "'$ednID':";
           $edTransFootnotesByEdn .= "'$ednID':";
         }
-          $edTransStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID));
+          $edTransStructHtmlByEdn .= getEditionsStructuralTranslationHtml(array($ednID),null,$refreshLookUps);
           $edTransFootnotesByEdn .= getEditionTranslationFootnoteTextLookup();
       }
 ?>
@@ -272,7 +274,7 @@
     } else {
 ?>
 ,
-          transStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs)?>,
+          transStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs,null,$refreshLookUps)?>,
           transFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
     }
@@ -292,7 +294,7 @@
           $edChayaStructHtmlByEdn .= "'$ednID':";
           $edChayaFootnotesByEdn .= "'$ednID':";
         }
-          $edChayaStructHtmlByEdn .= getEditionsStructuralTranslationHtml(array($ednID), Entity::getIDofTermParentLabel('chaya-translation'));
+          $edChayaStructHtmlByEdn .= getEditionsStructuralTranslationHtml(array($ednID), Entity::getIDofTermParentLabel('chaya-translation'),$refreshLookUps);
           $edChayaFootnotesByEdn .= getEditionTranslationFootnoteTextLookup();//reset and calc'd in getEditionsStructuralTranslationHtml
       }
 ?>
@@ -305,7 +307,7 @@
     } else {
 ?>
 ,
-          chayaStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs, Entity::getIDofTermParentLabel('chaya-translation'))?>,
+          chayaStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs, Entity::getIDofTermParentLabel('chaya-translation'),$refreshLookUps)?>,
           chayaFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
     }
@@ -339,6 +341,9 @@
         DEBUG.log("event","scroll view top = "+top+" height = "+viewHeight);
         minY = 1000000;
         $lineLblSpans = $(this).find('span.linelabel');
+        if ($lineLblSpans.length == 0) {
+          $lineLblSpans = $(this).find('span.lineHeader');
+        }
         if ($lineLblSpans.length) {
           $lineLblSpans.each(function(index,lblSpan) {
             if (lblSpan.offsetTop + lblSpan.offsetHeight > top) { //visible
@@ -365,7 +370,7 @@
         }
         closeAllPopups();
 //        imgScrollData = this.getImageScrollData(segTag,lineFraction);
-        if (lineSeqTag || hdrSegTag) {
+        if (lineSeqTag || hdrSeqTag) {
           $('.viewerContent').trigger('synchronize',[this.id,lineSeqTag,lineFraction,hdrSeqTag,hdrFraction,viewHeight,imgScrollData]);
         }
       } else {
@@ -425,7 +430,7 @@
 <?php
   }
   $cntPanels = 1; //text view will always show
-  if ($showImageView && count($imgURLsbyBlnImgTag) > 0) {
+  if ($showImageView && (count($imgURLsbyBlnImgTag['bln']) > 0 || count($imgURLsbyBlnImgTag['img']) > 0)) {
     $cntPanels++;
 ?>
 ,
@@ -466,6 +471,7 @@
 ?>
           $textViewerHdr.append('<?=$multiEditionHeaderDivHtml?>');
           function switchEdition(ednID) {
+            closeAllPopups();
             setTextViewHtmlandEvents(edStructHtmlByEdn[ednID], edFootnotesByEdn[ednID], edGlossaryLookupByEdn[ednID]);
 <?php
     if ($showContentOutline) {
@@ -473,7 +479,7 @@
             setTOCHtmlandEvents(edTocHtmlByEdn[ednID]);
 <?php
     }
-    if ($showImageView && count($imgURLsbyBlnImgTag) > 0) {
+    if ($showImageView && (count($imgURLsbyBlnImgTag['bln']) > 0 || count($imgURLsbyBlnImgTag['img']) > 0)) {
 ?>
             if ( imgViewer ) {
               imgViewer.initData(
@@ -515,7 +521,7 @@
             //initialise toc
             $tocNavPanel.html(tocHtml);
             if (tocHtml) {
-              $tocNavPanel.attr('disabled','');
+              $tocNavButton.show()
               //attach event handlers
               $('.tocEntry',$tocNavPanel).unbind('click').bind('click', function(e) {
                 var $body = $('body'),classes = $(this).attr("class"), tocID, seqTag;
@@ -538,11 +544,13 @@
                 return false;
               });
             } else {
-              $tocNavPanel.attr('disabled','disabled');
+              $tocNavButton.hide();
             }
           }
           if (tocHtml) {
             setTOCHtmlandEvents(tocHtml);//initial setup
+          } else {
+            $tocNavButton.hide();
           }
 
 
@@ -550,7 +558,7 @@
   }
 ?>
 <?php
-  if ($showImageView && count($imgURLsbyBlnImgTag) > 0) {
+  if ($showImageView && (count($imgURLsbyBlnImgTag['bln']) > 0 || count($imgURLsbyBlnImgTag['img']) > 0)) {
 ?>
 //initialise imageViewer
             $imageViewer.jqxExpander({expanded:true,
@@ -578,6 +586,7 @@
             $textViewerContent.height(''+avgContentPanelHeight+'px');
           function setTextViewHtmlandEvents(edStructHtml,edFootnotes,edGlossaryLookup) {
             $textViewerContent.html(edStructHtml);
+            closeAllPopups();
             if (edFootnotes && typeof edFootnotes == 'object' && Object.keys(edFootnotes).length > 0) {
               $('.footnote',$textViewerContent).unbind('click').bind('click', function(e) {
                 var id = this.id, footnoteHtml, $showing;
@@ -794,7 +803,7 @@
   }
 ?>
 <?php
-  if ($showImageView && count($imgURLsbyBlnImgTag) > 0) {
+  if ($showImageView && (count($imgURLsbyBlnImgTag['bln']) > 0 || count($imgURLsbyBlnImgTag['img']) > 0)) {
 ?>
     <div id="imageViewer" class="viewer syncScroll">
       <div id="imageViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll off">&#x1F517;</button>Image</div></div>

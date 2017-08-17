@@ -119,9 +119,9 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
     this.$imgViewHeader.append(this.$imgMenu);
     this.$imgMenuPanel = $('<div id="images" class="menuPanel"/>');
     $('body').append(this.$imgMenuPanel);
-    this.initImageUI();
     this.$zoomDIV = $('<div class="zoomUI"><div id="zoomOut" title="Zoom Out" class="zoomButton">-</div><div id="zoomIn" title="Zoom In" class="zoomButton">+</div></div>').get(0);
     this.$imgViewHeader.append(this.$zoomDIV);
+    this.initImageUI();
   }
   return this;
 };
@@ -151,10 +151,12 @@ VIEWERS.ImageViewer.prototype = {
     //******** viewer change  DATA lookup URL by blnID/imgID
     if (this.imgLookup && this.imgLookup.bln && Object.keys(this.imgLookup.bln).length) {
       this.entTag = Object.keys(this.imgLookup.bln)[0];
-      this.imgSrc = this.imgLookup.bln[this.entTag]['url'];
+      this.imgInfo = this.imgLookup.bln[this.entTag];
+      this.imgSrc = this.imgInfo['url'];
     } else if (this.imgLookup && this.imgLookup.img && Object.keys(this.imgLookup.img).length) {
       this.entTag = Object.keys(this.imgLookup.img)[0];
-      this.imgSrc = this.imgLookup.img[this.entTag]['url'];
+      this.imgInfo = this.imgLookup.img[this.entTag];
+      this.imgSrc = this.imgInfo['url'];
     }
     if (this.imgSrc) {
       this.imgFilename = this.imgSrc.substring(this.imgSrc.lastIndexOf("/")+1);
@@ -168,9 +170,17 @@ VIEWERS.ImageViewer.prototype = {
 */
 
   initImageUI: function() {
-    var imgV = this, blnImgTags = [], otherImgTags = [];
-    if (this.$resSourceDiv) {
-      this.$resSourceDiv.html('Source: '+this.imgFilename?this.imgFilename:'unknown');
+    var imgV = this, blnImgTags = [], otherImgTags = [],sourceNames = [], atbID;
+    if (this.$resSourceDiv && this.imgInfo) {
+      this.imgTitle = this.imgInfo.title;
+      if (this.imgInfo.source && Object.keys(this.imgInfo.source).length) {
+        for (atbID in this.imgInfo.source) {
+          sourceNames.push(this.imgInfo.source[atbID]);
+        }
+      } else {
+        sourceNames.push("unknown");
+      }
+      this.$resSourceDiv.html(''+this.imgTitle+' Source: '+sourceNames.join(','));
     }
     //clear menu panels
     this.$blnMenuPanel.html("");
@@ -204,9 +214,17 @@ VIEWERS.ImageViewer.prototype = {
           imgV.$imgMenuPanel.removeClass('showMenu');
         }
         imgV.$blnMenuPanel.toggleClass('showMenu');
+        imgV.$blnMenuPanel.focus();
         e.stopImmediatePropagation();
         return false;
       });
+        this.$blnMenuPanel.unbind('blur').bind('blur', function(e) {
+          if ($(this).hasClass('showMenu')) {
+            $(this).removeClass('showMenu');
+          }
+          e.stopImmediatePropagation();
+          return false;
+        });
     } else {
       imgV.$baselineMenu.removeClass('showMenu');
     }
@@ -218,10 +236,11 @@ VIEWERS.ImageViewer.prototype = {
       }
       if (otherImgTags.length > 0) {
         imgV.$imgMenu.addClass('showMenu');
-        for (lkupID in otherImgTags) {
-          imgInfo = this.imgLookup.img[otherImgTags[lkupID]];
+        for (otherIndex in otherImgTags) {
+          lkupID = otherImgTags[otherIndex];
+          imgInfo = this.imgLookup.img[lkupID];
           resLabel = imgInfo.title;
-          elemID = "blnLkupID" + lkupID;
+          elemID = "imgLkupID" + lkupID;
           thumbUrl = (imgInfo.thumbUrl?imgInfo.thumbUrl:imgInfo.url);
           $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
           $resDiv.prop('lkupID',lkupID);
@@ -242,6 +261,14 @@ VIEWERS.ImageViewer.prototype = {
             imgV.$blnMenuPanel.removeClass('showMenu');
           }
           imgV.$imgMenuPanel.toggleClass('showMenu');
+          imgV.$imgMenuPanel.focus();
+          e.stopImmediatePropagation();
+          return false;
+        });
+        this.$imgMenuPanel.unbind('blur').bind('blur', function(e) {
+          if ($(this).hasClass('showMenu')) {
+            $(this).removeClass('showMenu');
+          }
           e.stopImmediatePropagation();
           return false;
         });
@@ -291,13 +318,14 @@ VIEWERS.ImageViewer.prototype = {
   loadBaselineAt: function(blnTag, offset) {
     var sourceNames = [], atbID,
         blnInfo = this.imgLookup.bln[blnTag];
+    this.imgInfo = blnInfo;
     this.entTag = blnInfo.tag;
     if (offset && (offset.x || offset.x == 0) && (offset.y || offset.y == 0)) {
       this.vpOffset.x = !isNaN(offset.x)?offset.x:0;
       this.vpOffset.y = !isNaN(offset.y)?offset.y:0;
     }
     this.image.src = blnInfo.url;
-    this.imgFilename = blnInfo.url.substring(blnInfo.url.lastIndexOf("/")+1);
+    this.imgTitle = blnInfo.title;
     if (blnInfo.source && Object.keys(blnInfo.source).length) {
       for (atbID in blnInfo.source) {
         sourceNames.push(blnInfo.source[atbID]);
@@ -305,7 +333,7 @@ VIEWERS.ImageViewer.prototype = {
     } else {
       sourceNames.push("unknown");
     }
-    this.$resSourceDiv.html('('+this.imgFilename+') Source: '+sourceNames.join(','));
+    this.$resSourceDiv.html(''+this.imgTitle+' Source: '+sourceNames.join(','));
   },
 
 
@@ -317,11 +345,12 @@ VIEWERS.ImageViewer.prototype = {
   loadImage: function(imgTag) {
     var sourceNames = [], atbID,
         imgInfo = this.imgLookup.img[imgTag];
+    this.imgInfo = imgInfo;
     this.entTag = imgInfo.tag;
     this.vpOffset.x = 0;
     this.vpOffset.y = 0;
     this.image.src = imgInfo.url;
-    this.imgFilename = imgInfo.url.substring(imgInfo.url.lastIndexOf("/")+1);
+    this.imgTitle = imgInfo.title;
     if (imgInfo.source && Object.keys(imgInfo.source).length) {
       for (atbID in imgInfo.source) {
         sourceNames.push(imgInfo.source[atbID]);
@@ -329,7 +358,7 @@ VIEWERS.ImageViewer.prototype = {
     } else {
       sourceNames.push("unknown");
     }
-    this.$resSourceDiv.html('('+this.imgFilename+') Source: '+sourceNames.join(','));
+    this.$resSourceDiv.html(''+this.imgTitle+' Source: '+sourceNames.join(','));
   },
 
 
@@ -900,7 +929,16 @@ VIEWERS.ImageViewer.prototype = {
         return false;
       });
 
-  //image canvas events
+    //image canvas events
+    //focus
+    imgV.imgCanvas.onmouseleave = function(e) {
+      delete this.focusMode;
+    };
+    imgV.imgCanvas.onmouseenter = function(e) {
+      if (!this.focusMode) {
+        this.focusMode = "mouseIn";
+      }
+    };
     // wheel zoom
     imgV.imgCanvas.onwheel = function(e) {
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgV.id);
@@ -961,7 +999,6 @@ VIEWERS.ImageViewer.prototype = {
       return false;
     };
 
-    imgV.segMode = "done";
     imgV.imgCanvas.ondblclick = function (e){
         var pt = imgV.eventToCanvas(e, imgV.imgCanvas);
         //adjust point to be image coordinates

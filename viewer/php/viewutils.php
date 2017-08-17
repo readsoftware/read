@@ -718,7 +718,6 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
   return json_encode($html);
 }
 
-
 /**
 * returns footnotes of an entity as Html fragment
 *
@@ -1456,8 +1455,8 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
               $sort = 1000 * intval($image->getID());
             }
             $imgURLsbyBlnImgTag['img'][$sort] = array('tag'=>$tag, 'url'=>$url, 'source'=>$sourceLookup);
-            $title = $image->getTitle()?$image->getTitle():substr($url,strrpos($url,'/')+1);//filename
-            $imgURLsbyBlnImgTag['img'][$sort]['title'] = $title;
+            $title = $image->getTitle();//?$image->getTitle():substr($url,strrpos($url,'/')+1);//filename
+            $imgURLsbyBlnImgTag['img'][$sort]['title'] = $title?$title:"";
             if ($url) {
               $info = pathinfo($url);
               $imgURLsbyBlnImgTag['img'][$sort]['thumbUrl'] = $info['dirname']."/th".$info['basename'];
@@ -1575,12 +1574,12 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
                     $sort = 1000 * intval($segBaseline->getID());
                   }
                   $imgURLsbyBlnImgTag['bln'][$sort] = array('tag'=>$blnTag, 'url'=>$url, 'imgTag'=>$blnImgTag, 'source'=> $sourceLookup);
-                  $title = substr($url,strrpos($url,'/')+1);//filename
+                  //$title = substr($url,strrpos($url,'/')+1);//filename
                   $image = $segBaseline->getImage(true);
-                  if ($image && $image->getTitle()) {
-                    $title = $image->getTitle();
-                  }
-                  $imgURLsbyBlnImgTag['bln'][$sort]['title'] = $title;
+                  //if ($image && $image->getTitle()) {
+                  $title = $image->getTitle();
+                  //}
+                  $imgURLsbyBlnImgTag['bln'][$sort]['title'] = $title?$title:"";
                   if ($url) {
                     $info = pathinfo($url);
                     $imgURLsbyBlnImgTag['bln'][$sort]['thumbUrl'] = $info['dirname']."/th".$info['basename'];
