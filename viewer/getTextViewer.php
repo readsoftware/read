@@ -608,7 +608,8 @@
             });
             $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
               var classes = $(this).attr("class"), entTag, entTags, lemTag, lemmaInfo, entGlossInfo
-                  popupHtml = "No lemma info for " + $(this).text();
+                  popupHtml = null;
+                  //popupHtml = "No lemma info for " + $(this).text();
               if ( entTags = classes.match(/cmp\d+/)) {//use first cmp tag for tool tip
                 entTag = entTags[0];
               } else {
@@ -632,15 +633,17 @@
               }
               $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[entTag]]);
               closeAllPopups();
-              $(this).jqxTooltip({ content: '<div class="popupwrapperdiv">'+popupHtml+"</div>",
-                                   trigger: 'click',
-                                   showArrow: false,
-                                   autoHide: false });
-              $(this).unbind('close').bind('close', function(e) {
-                $(this).jqxTooltip('destroy');
-              });
-              $(this).jqxTooltip('open');
-              $(this).addClass('showing');
+              if (popupHtml) {
+                $(this).jqxTooltip({ content: '<div class="popupwrapperdiv">'+popupHtml+"</div>",
+                                     trigger: 'click',
+                                     showArrow: false,
+                                     autoHide: false });
+                $(this).unbind('close').bind('close', function(e) {
+                  $(this).jqxTooltip('destroy');
+                });
+                $(this).jqxTooltip('open');
+                $(this).addClass('showing');
+              }
               e.stopImmediatePropagation();
               return false;
             });

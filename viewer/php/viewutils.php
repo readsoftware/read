@@ -1680,7 +1680,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   $sourceHtml = "";
   if ($sourceNameLookup && count($sourceNameLookup) > 0) {
     $isFrist = true;
-    $sourceHtml = "<div class=\"source edn1\"><span class=\"sourcelabel\">Source:</span>";
+    $sourceHtml = "<div class=\"source edn1\"><span class=\"sourcelabel\">Source: </span>";
     foreach ($sourceNameLookup as $atbID => $title) {
       if ($isFrist) {
         $sourceHtml .= "<span class=\"sourceitem atb$atbID\">$title";
