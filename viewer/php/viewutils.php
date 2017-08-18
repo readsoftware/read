@@ -1246,7 +1246,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
               }
               $footnoteHtml = "";
               $wordHtml = '<span class="grpTok '.($seqTag?$seqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
-              $isLastWord = ($j+1 == $cntGID && $i+1 == $cntTxtDivGID);
+              $isLastWord = (($j+1 == $cntGID) && ($i+1 == $cntTxtDivGID));
               if ($tokIDs) {
                 ++$wordCnt;
                 //for each token in word
@@ -1272,6 +1272,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                       $prevGraIsVowelCarrier = true;
                       continue;
                     }
+                    $isNewPhysicalLine = ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap));
                     $firstG = ($l==0 || $l==1 && $prevGraIsVowelCarrier);
                     $lastG = (1+$l == $graCnt);
                     //check for TCM transition brackets
@@ -1281,24 +1282,29 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                     if ($prevTCMS != $tcms) {
                       list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
                     }
-                    if ($postTCMBrackets && !($firstT && $firstG)) {// lookahead will close previous token using postBrackets of this grapheme so skip if first of word
-                      $wordHtml .= $postTCMBrackets;
-                    }
-                    if ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap)) {//grapheme marks physical line beginning so close previous and start new line
+                    if ($isNewPhysicalLine) {//grapheme marks physical line beginning so close previous and start new line
+                      $postTCMBrackets = getTCMTransitionBrackets($prevTCMS,"S");
+                      if ($postTCMBrackets && !($firstT && $firstG)) {
+                        $wordHtml .= $postTCMBrackets;
+                      }
                       if ($footnoteHtml) {
                         $wordHtml .= $footnoteHtml;
                         $footnoteHtml = "";
                       }
+                      $preTCMBrackets = getTCMTransitionBrackets("S",$tcms);
                       //output current word HTML
                       //if in a compound output hyphen
                       //if not first physical line then close physical line div and start a new line
-                      $physicalLinesHtml .= ((!$fTxtDivSeq&&$wordHtml)?$wordHtml:"").((!$fTxtDivSeq&&$wordHtml?(($firstT && $firstG)?"</span>":"-</span>"):"")).(!$fTxtDivSeq?"</div>":"")."<div class=\"physicalLineDiv\">".$graID2LineHtmlMarkerlMap[$graID];
-                      $wordHtml = "";
+                      $physicalLinesHtml .= ((!$fTxtDivSeq && $wordHtml && !($firstT && $firstG))?$wordHtml."-</span>":"").
+                                            (!$fTxtDivSeq?"</div>":"")."<div class=\"physicalLineDiv\">".$graID2LineHtmlMarkerlMap[$graID];
                       //open word span
-                      $wordHtml .= '<span class="grpTok '.($seqTag?$seqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
-                      $prevTCMS = "";//at a new physical line so reset TCM//???need to recalc previous brackets???
+                      $wordHtml = '<span class="grpTok '.($seqTag?$seqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
+                      $prevTCMS = "S";//at a new physical line so reset TCM//???need to recalc previous brackets???
                       $previousA = null;
+                    } else if ($postTCMBrackets && !($firstT && $firstG)) {// lookahead will close previous token using postBrackets of this grapheme so skip if first of word
+                      $wordHtml .= $postTCMBrackets;
                     }
+
                     if ($footnoteHtml) {
                       $wordHtml .= $footnoteHtml;
                       $footnoteHtml = "";
@@ -1329,9 +1335,14 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                 if ($nextToken) {//find tcm for first grapheme of next token to check for closing brackets
                   $nextGraIDs = $nextToken->getGraphemeIDs();
                   if (count($nextGraIDs) > 0) {
-                    $nextGrapheme = new Grapheme($nextGraIDs[0]);
+                    $firstGraID = $nextGraIDs[0];
+                    $nextStartsOnNewLine = ($firstGraID && array_key_exists($firstGraID,$graID2LineHtmlMarkerlMap));
+                    $nextGrapheme = new Grapheme($firstGraID);
                     $nextTCMS = $nextGrapheme->getTextCriticalMark();
-                    if ($nextTCMS != $tcms) {
+                    if ($nextStartsOnNewLine) {
+                      $postTCMBrackets = getTCMTransitionBrackets($tcms,"S");
+                      $wordHtml .= $postTCMBrackets;
+                    } else if ($nextTCMS != $tcms) {
                       $postTCMBrackets = "";
                       $preTCMBrackets = "";
                       list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($tcms,$nextTCMS,true);
@@ -1341,7 +1352,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                 }
                 if ($isLastWord && $prevTCMS && $prevTCMS != "S") {//close off any TCM
                   $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
-                  $prevTCMS = "";//reset since we closed off TCMs for the structure.
+                  $prevTCMS = "";//reset since we closed off TCMs for the edition.
                   //This will ensure next structures output will have opening TCMs
                   if ($tcmBrackets) {
                     $wordHtml .= $tcmBrackets;
@@ -1354,7 +1365,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                   $wordHtml .= $footnoteHtml;
                   $footnoteHtml = "";
                 }
-                $wordHtml = preg_replace('/\/\/\//',"",$wordHtml); // remove edge indicator
+                //$wordHtml = preg_replace('/\/\/\//',"",$wordHtml); // remove edge indicator
                 $wordHtml = preg_replace('/_+/',"_",$wordHtml); // multple missing consonants
                 $wordHtml = preg_replace('/_/',".",$wordHtml); // multple missing consonants
                 $wordHtml .= "</span>";

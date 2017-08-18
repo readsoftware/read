@@ -180,7 +180,7 @@ VIEWERS.ImageViewer.prototype = {
       } else {
         sourceNames.push("unknown");
       }
-      this.$resSourceDiv.html(''+this.imgTitle+' Source: '+sourceNames.join(','));
+      this.$resSourceDiv.html((this.imgTitle?('('+this.imgTitle+')'):'')+' Source: '+sourceNames.join(','));
     }
     //clear menu panels
     this.$blnMenuPanel.html("");
@@ -333,7 +333,7 @@ VIEWERS.ImageViewer.prototype = {
     } else {
       sourceNames.push("unknown");
     }
-    this.$resSourceDiv.html(''+this.imgTitle+' Source: '+sourceNames.join(','));
+    this.$resSourceDiv.html((this.imgTitle?('('+this.imgTitle+')'):'')+' Source: '+sourceNames.join(','));
   },
 
 
@@ -358,7 +358,7 @@ VIEWERS.ImageViewer.prototype = {
     } else {
       sourceNames.push("unknown");
     }
-    this.$resSourceDiv.html(''+this.imgTitle+' Source: '+sourceNames.join(','));
+    this.$resSourceDiv.html((this.imgTitle?('('+this.imgTitle+')'):'')+' Source: '+sourceNames.join(','));
   },
 
 

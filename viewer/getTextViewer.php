@@ -152,6 +152,7 @@
     <script src="/jqwidget/jqwidgets/jqxvalidator.js"></script>
     <script src="/jqwidget/jqwidgets/jqxpanel.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtree.js"></script>
+    <script src="../editors/js/utility.js"></script>
     <script src="../editors/js/debug.js"></script>
     <script src="./js/imageViewer.js"></script>
     <script type="text/javascript">
@@ -412,10 +413,6 @@
     };
 
 
-    </script>
-    <script src="../editors/js/utility.js"></script>
-    <script src="../editors/js/debug.js"></script>
-    <script type="text/javascript">
       $(document).ready( function () {
         var
             $textViewer = $('#textViewer'),
