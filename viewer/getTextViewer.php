@@ -324,6 +324,14 @@
       if ($body.hasClass('showTOC')) {
         $body.removeClass('showTOC');
       }
+      if (imgViewer) {
+        if (imgViewer.$imgMenuPanel && imgViewer.$imgMenuPanel.hasClass('showMenu')) {
+          imgViewer.$imgMenuPanel.removeClass('showMenu');
+        }
+        if (imgViewer.$blnMenuPanel && imgViewer.$blnMenuPanel.hasClass('showMenu')) {
+          imgViewer.$blnMenuPanel.removeClass('showMenu');
+        }
+      }
     }
 
 /**

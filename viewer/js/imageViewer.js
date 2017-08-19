@@ -1032,6 +1032,15 @@ VIEWERS.ImageViewer.prototype = {
         imgV.focusMode = 'focused';
         imgV.imgCanvas.focus();
       }
+      if (closeAllPopups && typeof closeAllPopups == "function") {
+        closeAllPopups();
+      }
+      if (imgV.$imgMenuPanel && imgV.$imgMenuPanel.hasClass('showMenu')) {
+        imgV.$imgMenuPanel.removeClass('showMenu');
+      }
+      if (imgV.$blnMenuPanel && imgV.$blnMenuPanel.hasClass('showMenu')) {
+        imgV.$blnMenuPanel.removeClass('showMenu');
+      }
       if (e.ctrlKey || e.metaKey) {
         //hittest for target polygons
         var hitPolyIndices = imgV.hitTestPolygons(x,y);

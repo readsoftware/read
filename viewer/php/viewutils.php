@@ -1698,9 +1698,9 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
   $textTypeTrmID = Entity::getIDofTermParentLabel('text-sequencetype'); //term dependency
   $physTextTypeTrmID = Entity::getIDofTermParentLabel('textphysical-sequencetype'); //term dependency
   $catID = $catalog->getID();
-  if (!$refreshWordMap && array_key_exists("cache-cat$catID",$_SESSION) &&
-        array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID"])) {
-    return $_SESSION["cache-cat$catID"]['wrdTag2LocLabel'];
+  if (!$refreshWordMap && array_key_exists("cache-cat$catID".DBNAME,$_SESSION) &&
+        array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID".DBNAME])) {
+    return $_SESSION["cache-cat$catID".DBNAME]['wrdTag2LocLabel'];
   }
   $editionIDs = $catalog->getEditionIDs();
   $wrdTag2LocLabel = array();
