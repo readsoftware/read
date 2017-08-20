@@ -153,6 +153,7 @@
           $lemmaDefNode->appendChild($posNode);
         }
         if ($lemmaEtym = $lemma->getDescription()) {
+          $lemmaEtym = html_entity_decode($lemmaEtym);
           $dDoc = new DOMDocument();
           $dDoc->loadXML("<span>$lemmaEtym</span>",LIBXML_NOXMLDECL);
           $etym = $dDoc->getElementsByTagName("span")->item(0);
@@ -161,6 +162,7 @@
           $lemmaDefNode->appendChild($etymNode);
         }
         if ($lemmaGloss = $lemma->getTranslation()) {
+          $lemmaGloss = html_entity_decode($lemmaGloss);
           $dDoc = new DOMDocument();
           $dDoc->loadXML("<span>$lemmaGloss</span>",LIBXML_NOXMLDECL);
           $gloss = $dDoc->getElementsByTagName("span")->item(0);
