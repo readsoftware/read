@@ -249,7 +249,7 @@ EDITORS.WordlistVE.prototype = {
                              '</div>');
       this.viewToolbar.append(this.downloadHTMLBtnDiv);
       this.downloadHTMLBtn = $('#'+btnDownloadHTMLName,this.downloadHTMLBtnDiv);
-      this.downloadHTMLBtn.attr('disabled','disabled');
+//      this.downloadHTMLBtn.attr('disabled','disabled');
 
       this.downloadRTFurl = basepath+"/services/exportRTFGlossary.php?db="+dbName+"&catID="+wordlistVE.catID+"&download=1";
       this.downloadRTFBtnDiv = $('<div class="toolbuttondiv">' +
