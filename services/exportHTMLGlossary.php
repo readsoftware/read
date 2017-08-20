@@ -56,6 +56,8 @@
   $catID = (array_key_exists('catID',$_REQUEST)? $_REQUEST['catID']:null);
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
+  $useTranscription = (!array_key_exists('usevalue',$_REQUEST)? true:false);
+  $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
   $refreshWordMap = (array_key_exists('refreshWordMap',$_REQUEST)? true:false);
   $termInfo = getTermInfoForLangCode('en');
   $termLookup = $termInfo['labelByID'];
@@ -129,7 +131,7 @@
         $lemmaNode = $htmlDomDoc->createElement('span',$lemmaValue);
         $lemmaNode->setAttribute('class','lemma');
         $lemmaDefNode->appendChild($lemmaNode);
-        $lemmaGender = $lemma->getGender();
+        $lemmaGenderID = $lemma->getGender();
         $lemmaPos = $lemma->getPartOfSpeech();
         if ( $lemmaPos) {
           $isVerb = $termLookup[$lemmaPos] == 'v.';
@@ -137,8 +139,8 @@
         $lemmaSpos = $lemma->getSubpartOfSpeech();
         $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
         $posNode = null;
-        if ($lemmaGender) {
-          $posNode = $htmlDomDoc->createElement('span',$termLookup[$lemmaGender].($lemmaCF[2]==2?'(?)':''));
+        if ($lemmaGenderID) {
+          $posNode = $htmlDomDoc->createElement('span',$termLookup[$lemmaGenderID].($lemmaCF[2]==2?'(?)':''));
           $posNode->setAttribute('class','pos');
           $lemmaDefNode->appendChild($posNode);
         } else if ($lemmaSpos) {
@@ -191,9 +193,10 @@
         }
         $lemmaComponents = $lemma->getComponents(true);
         if ($lemmaComponents && $lemmaComponents->getCount()) {
-
           $hasAttestations = true; // signal see also
           $groupedForms = array();
+          $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/");
+          $replacement = array("aï","aü","","","","","");
           foreach ($lemmaComponents as $lemmaComponent) {
             $entPrefix = $lemmaComponent->getEntityTypeCode();
             $entID = $lemmaComponent->getID();
@@ -212,9 +215,9 @@
               $conj2 = $inflection->getSecondConjugation();
               $infString = '';
               if ($isVerb) { //term dependency
-                if ($vmood) {
+                if ($vmood && is_numeric($vmood)) {
                   $vtensemood = $termLookup[$vmood].($ingCF[2]==2?'(?)':'');
-                } else if ($vtense) {
+                } else if ($vtense && is_numeric($vtense)) {
                   $vtensemood = $termLookup[$vtense].($ingCF[0]==2?'(?)':'');
                 } else {
                   $vtensemood = '?';
@@ -222,7 +225,7 @@
                 if (!array_key_exists($vtensemood,$groupedForms)) {
                   $groupedForms[$vtensemood] = array();
                 }
-                if ($num) {
+                if ($num && is_numeric($num)) {
                   $num = $termLookup[$num].($ingCF[4]==2?'(?)':'');
                 } else {
                   $num = '?';
@@ -230,7 +233,7 @@
                 if (!array_key_exists($num,$groupedForms[$vtensemood])) {
                   $groupedForms[$vtensemood][$num] = array();
                 }
-                if ($vper) {
+                if ($vper && is_numeric($vper)) {
                   $vper = $termLookup[$vper].($ingCF[6]==2?'(?)':'');
                 } else {
                   $vper = '?';
@@ -238,12 +241,19 @@
                 if (!array_key_exists($vper,$groupedForms[$vtensemood][$num])) {
                   $groupedForms[$vtensemood][$num][$vper] = array();
                 }
-                if ($conj2) {
+                if ($num) {
+                }
+                if ($conj2 && is_numeric($conj2)) {
                   $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
-               }
-                $node = &$groupedForms[$vtensemood][$num][$vper];
+               } else {
+                  $conj2 = '?';
+                }
+                if (!array_key_exists($conj2,$groupedForms[$vtensemood][$num][$vper])) {
+                  $groupedForms[$vtensemood][$num][$vper][$conj2] = array();
+                }
+                $node = &$groupedForms[$vtensemood][$num][$vper][$conj2];
               } else {
-                if ($gen) {
+                if ($gen && is_numeric($gen)) {
                   $gen = $termLookup[$gen].($ingCF[3]==2?'(?)':'');
                 } else {
                   $gen = '?';
@@ -251,7 +261,7 @@
                 if (!array_key_exists($gen,$groupedForms)) {
                   $groupedForms[$gen] = array();
                 }
-                if ($num) {
+                if ($num && is_numeric($num)) {
                   $num = $termLookup[$num].($ingCF[4]==2?'(?)':'');
                 } else {
                   $num = '?';
@@ -259,7 +269,7 @@
                 if (!array_key_exists($num,$groupedForms[$gen])) {
                   $groupedForms[$gen][$num] = array();
                 }
-                if ($case) {
+                if ($case && is_numeric($case)) {
                   $case = $termLookup[$case].($ingCF[5]==2?'(?)':'');
                 } else {
                   $case = '?';
@@ -267,16 +277,29 @@
                 if (!array_key_exists($case,$groupedForms[$gen][$num])) {
                   $groupedForms[$gen][$num][$case] = array();
                 }
-                if ($conj2) {
-                  $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
+                if ($num) {
                 }
-                $node = &$groupedForms[$gen][$num][$case];
+                if ($conj2 && is_numeric($conj2)) {
+                  $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
+                } else {
+                  $conj2 = '?';
+                }
+                if (!array_key_exists($conj2,$groupedForms[$gen][$num][$case])) {
+                  $groupedForms[$gen][$num][$case][$conj2] = array();
+                }
+                $node = &$groupedForms[$gen][$num][$case][$conj2];
               }
               $inflectionComponents = $inflection->getComponents(true);
               foreach ($inflectionComponents as $inflectionComponent) {
-                $pattern = array("/ʔ/","/°/","/\/\/\//","/#/","/◊/");
-                $replacement = array("","","","","");
-                $value = preg_replace($pattern,$replacement,$inflectionComponent->getValue());
+                if ($useTranscription) {
+                  $value = $inflectionComponent->getTranscription();
+                } else {
+                  $value = $inflectionComponent->getValue();
+                }
+                if ($hideHyphens) {
+                  $value = preg_replace("/\-/","",$value);
+                }
+                $value = preg_replace($pattern,$replacement,$value);
                 $sc = $inflectionComponent->getSortCode();
                 $entTag = preg_replace("/:/","",$inflectionComponent->getGlobalID());
                 $attestedCommentary = "";
@@ -295,15 +318,35 @@
                   }
                 }
                 $loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?" (".$attestedCommentary.")":"");
-                if (! array_key_exists($sc,$node)) {
-                  $node[$sc] = array('value'=>$value,
-                                     'loc'=>array($loc));
-                } else if (! in_array($loc,$node[$sc]['loc'])) {
-                  array_push($node[$sc]['loc'],$loc);
+                //accumulate locations
+                if (!array_key_exists($sc,$node)) {
+                  $node[$sc] = array('value'=>
+                                       array($value =>
+                                              array('loc'=>
+                                                     array())));
+                } else if (!array_key_exists($value,$node[$sc]['value'])) {
+                  $node[$sc]['value'][$value] =  array('loc'=>
+                                                        array());
+                }
+                if (array_key_exists($loc,$node[$sc]['value'][$value]['loc'])) {
+                  $node[$sc]['value'][$value]['loc'][$loc] += 1;
+                } else {
+                  $node[$sc]['value'][$value]['loc'][$loc] = 1;
                 }
               }
             } else { //un-inflected form
-              $value = $lemmaComponent->getValue();
+              if ($useTranscription) {
+                $value = $lemmaComponent->getTranscription();
+              } else {
+                $value = $lemmaComponent->getValue();
+              }
+              if (!$value) {
+                continue;
+              }
+              if ($hideHyphens) {
+                $value = preg_replace("/\-/","",$value);
+              }
+              $value = preg_replace($pattern,$replacement,$value);
               $sc = $lemmaComponent->getSortCode();
               $entTag = preg_replace("/:/","",$lemmaComponent->getGlobalID());
               $attestedCommentary = "";
@@ -323,13 +366,32 @@
               }
               $loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?" (".$attestedCommentary.")":"");
               if (! array_key_exists('?',$groupedForms)) {
+                $groupedForms['?'] = array();
+              }
+              if (! array_key_exists('?',$groupedForms['?'])) {
+                $groupedForms['?']['?'] = array();
+              }
+              if (! array_key_exists('?',$groupedForms['?']['?'])) {
                 $groupedForms['?']['?']['?'] = array();
               }
-              if (! array_key_exists($sc,$groupedForms['?']['?']['?'])) {
-                $groupedForms['?']['?']['?'][$sc] = array('value'=>$value,
-                                                'loc'=>array($loc));
-              } else if (! in_array($loc,$groupedForms['?']['?']['?'][$sc]['loc'])) {
-                array_push($groupedForms['?']['?']['?'][$sc]['loc'],$loc);
+              if (! array_key_exists('?',$groupedForms['?']['?']['?'])) {
+                $groupedForms['?']['?']['?']['?'] = array();
+              }
+              $node = &$groupedForms['?']['?']['?']['?'];
+              // accumulate locations
+              if (! array_key_exists($sc,$node)) {
+                $node[$sc] = array('value'=>
+                                     array($value =>
+                                            array('loc'=>
+                                                   array())));
+              } else if (! array_key_exists($value,$node[$sc]['value'])) {
+                $node[$sc]['value'][$value] =  array('loc'=>
+                                                     array());
+              }
+              if (array_key_exists($loc,$node[$sc]['value'][$value]['loc'])) {
+                $node[$sc]['value'][$value]['loc'][$loc] += 1;
+              } else {
+                $node[$sc]['value'][$value]['loc'][$loc] = 1;
               }
             }
           }
@@ -337,29 +399,15 @@
             $displayOrder1 = array('pres.','pres.(?)','opt.','opt.(?)','impv.','impv.(?)','fut.','fut.(?)','perf.','perf.(?)','pret','pret(?)','?');
             $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
             $displayOrder3 = array('1st','1st(?)','2nd','2nd(?)','3rd','3rd(?)','?');
+            $displayOrder4 = array('inf.','inf.(?)','abs.','abs.(?)','?');
           } else {
-            $displayOrder1 = array('m.','m.(?)','n.','n.(?)','f.','f.(?)','?');
+            $displayOrder1 = array('m.','m.(?)','mn.','mn.(?)','n.','n.(?)','mnf.','mnf.(?)','nf.','nf.(?)','f.','f.(?)','mf.','mf.(?)','?');
             $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
             $displayOrder3 = array('nom.','nom.(?)','acc.','acc.(?)','instr.','instr.(?)','dat.','dat.(?)','dat/gen.','dat/gen.(?)','abl.','abl.(?)','gen.','gen.(?)','loc.','loc.(?)','voc.','voc.(?)','?');
+            $displayOrder4 = array('desid.','desid.(?)','intens.','intens.(?)','?');
           }
-          $attestationsNode = $htmlDomDoc->createElement('div');//container to hold inflected forms and uncertain attested forms
-          $attestationsNode->setAttribute('class',"attestations");
-    $entTag = $tokCmp->getEntityTypeCode().$tokCmp->getID();
-    $entGID = $tokCmp->getGlobalID();
-    $entryNode->appendChild($attestationsNode);
-    $attestedFormNode = $htmlDomDoc->createElement('span',preg_replace('/ʔ/','',$tokCmp->getValue()));
-    $attestedFormNode->setAttribute('class',"attestedform");
-    $attestNode->appendChild($attestedFormNode);
-    if ($infString) {
-      $infNode = $htmlDomDoc->createElement('span',$infString);
-      $infNode->setAttribute('class',"inflection");
-      $attestNode->appendChild($infNode);
-    }
-    $lnRefNode = $htmlDomDoc->createElement('span',$cmpTokTag2LocLabel[$entTag]);
-    $lnRefNode->setAttribute('class',"lineref");
-    $attestNode->appendChild($lnRefNode);
           $firstComponent = true;
-          $inflectionString = "";
+          $attestedHtml = "<div class=\"attestedforms $lemTag\">";
           foreach ($displayOrder1 as $key1) {
             if (!array_key_exists($key1,$groupedForms)){
               continue;
@@ -373,91 +421,157 @@
                 if (!array_key_exists($key3,$groupedForms[$key1][$key2])){
                   continue;
                 }
-                if ($firstComponent) {
-                  $firstComponent = false;
-                } else if ($key1 == '?' && $key2 == '?' && $key3 == '?'){
-                  $inflectionString .= ", ";
-                } else {
-                  $inflectionString .= "; ";
-                }
-                $rtf .= $infStyle;
-                if ($isFirstKey1) {
-                  $isFirstKey1 = false;
-                  if ($key1 == '?' && $key2 == '?' && $key3 == '?'){
-                    $inflectionString .= '<span class="inflection"> unclear</span>';
-                  } else if (!($lemmaGender && ($key1 == $lemmaGender || $key1 == '?'))){
-                    $inflectionString .= '<span class="inflection">'.$key1." ";
+                foreach ($displayOrder4 as $key4) {
+                  if (!array_key_exists($key4,$groupedForms[$key1][$key2][$key3])){
+                    continue;
                   }
-                }
-                if ($lemmaGender || $key1 != '?') {
-                  $inflectionString .= $key3." ".$key2."</span>";
-                }
-                $node = $groupedForms[$key1][$key2][$key3];
-                sort($node);
-                $isFirstNode = true;
-                foreach ($node as $sc => $formInfo) {
-                  if ($isFirstNode) {
-                    $isFirstNode = false;
+                  if ($firstComponent) {
+                    $firstComponent = false;
                   } else {
-                    $rtf .= ", ";
+                    $attestedHtml .= "; ";
                   }
-                  $rtf .= $attestedStyle.utf8ToRtf(preg_replace('/ʔ/','',$formInfo['value'])).$endStyle;
-                  $attestedAnnotation = null;
-                  if ($attestedAnnotation) {
-                    $rtf .= $commaRed.$space.$attestedAnoStyle.htmlToRTF(utf8ToRtf($attestedAnnotation)).$endStyle.$eol;
+                  if ($isFirstKey1) {
+                    $isFirstKey1 = false;
+                    if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {
+                      if ($lemmaPos != 'adv.' && $lemmaPos != 'ind.'){ //term dependency
+                        $attestedHtml .= "<span class=\"inflectdescript\">unclear: </span>";
+                      }
+                    } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 != '?') {
+                      $attestedHtml .= "<span class=\"inflectdescript\">$key4</span>";
+                    } else if (!$lemmaGenderID){//handle noun supress infection gender output
+                      $attestedHtml .= "<span class=\"inflectdescript\">$key1</span>";
+                    }
                   }
-                  $locs = $formInfo['loc'];
-                  sort($locs);
-                  $rtf .= $space.$linRefStyle.join(', ',$locs).$endStyle;
+                  if ($key1 != '?' || $key1 == '?' && ($key2 != '?' || $key3 != '?')) {
+                    $attestedHtml .= "<span class=\"inflectdescript\">$key3</span>";
+                    $attestedHtml .= "<span class=\"inflectdescript\">$key2</span>";
+                  }
+                  $grpNode = $groupedForms[$key1][$key2][$key3][$key4];
+                  ksort($grpNode);
+                  $isFirstNode = true;
+                  foreach ($grpNode as $sc => $formInfo) {
+                    if ($isFirstNode) {
+                      $isFirstNode = false;
+                    } else {
+                      $attestedHtml .= ", ";
+                    }
+                    $isFirstForm = true;
+                    foreach ($formInfo['value'] as $formTranscr => $locInfo) {
+                      if ($isFirstForm) {
+                        $isFirstForm = false;
+                      } else {
+                        $attestedHtml .= ", ";
+                      }
+                      $attestedHtml .= "<span class=\"attestedform\">$formTranscr</span>";
+                      ksort($locInfo['loc']);
+                      $isFirstLoc = true;
+                      foreach ($locInfo['loc'] as $formLoc => $cntLoc) {
+                        if ($isFirstLoc) {
+                          $isFirstLoc = false;
+                          $attestedHtml .= "<span class=\"attestedformloc\">".html_entity_decode($formLoc).($cntLoc>1?" [".$cntLoc."×]":"");
+                        } else {
+                          $attestedHtml .= ",</span><span class=\"attestedformloc\">".html_entity_decode($formLoc).($cntLoc>1?" [".$cntLoc."×]":"");
+                        }
+                      }
+                      $attestedHtml .= "</span>";
+                    }
+                  }
                 }
-                $rtf .= $fullstopRed.$eol;
               }
             }
           }
+          $attestedHtml .= "</div>";
+          $dDoc = new DOMDocument();
+          $dDoc->loadXML($attestedHtml,LIBXML_NOXMLDECL);
+          $attestedForms = $dDoc->getElementsByTagName("div")->item(0);
+          $attestedFormsNode = $htmlDomDoc->importNode($attestedForms,true);
+          $entryNode->appendChild($attestedFormsNode);
         }
-        $lemmaCompAnalysis = $lemma->getCompoundAnalysis();
-        $relatedGIDsByLinkType =  $lemma->getRelatedEntitiesByLinkType();
+        //calculate related links
+        $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
         $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LinkageType');
         $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LinkageType');
-        $relatedNode = null;
-        if (count($relatedGIDsByLinkType) ) {
+        $relatedHtml = "";
+        if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;
-          $relatedNode = $htmlDomDoc->createElement('div');
-          $relatedNode->setAttribute('class','related');
-          $entryNode->appendChild($relatedNode);
-          $linksNode = $htmlDomDoc->createElement('div');
+          $linksHeader = "<span class=\"lemmaLinksHeader seeLinksHeader\">see</span>";
           if ($hasAttestations) {
-            $linksNode->setAttribute('class','links also');
-          } else {
-            $linksNode->setAttribute('class','links');
+            $linksHeader = "<span class=\"lemmaLinksHeader seeAlsoLinksHeader\">See also</span>";
           }
-          $relatedNode->appendChild($linksNode);
-          foreach ($relatedGIDsByLinkType as $linkTypeID => $linkedGIDs) {
-            $type = $termLookup[$linkTypeID];
-            foreach ($linkedGIDs as $linkGID) {
-              $entity = EntityFactory::createEntityFromGlobalID($linkGID);
-              if ($entity && !$entity->hasError()) {
-                $prefix = $entity->getEntityTypeCode();
-                $id = $entity->getID();
-                if (method_exists($entity,'getValue')) {
-                  $value = preg_replace('/ʔ/','',$entity->getValue());
-                } else {
-                  $value = $linkGID;
-                }
-                $linkNode = $htmlDomDoc->createElement('span');
-                $class = "link $type $prefix$id";
-                if ($isFirst) {
-                  $isFirst = false;
-                  $class .= ' first';
-                }
-                $linkNode->setAttribute('class',$class);
-                $anchorNode = $htmlDomDoc->createElement('a',$value);
-                $anchorNode->setAttribute('href',"#$prefix$id");
-                $linkNode->appendChild($anchorNode);
-                $linksNode->appendChild($linkNode);
+          $seeLinks = array();
+          foreach ($relatedGIDsByLinkType[$seeLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            $linkTag = str_replace(':','',$linkGID);
+            if ($entity && !$entity->hasError()) {
+              if (method_exists($entity,'getValue')) {
+                $value = preg_replace($pattern,$replacement,$entity->getValue());
+              } else {
+                continue;
               }
+              if (method_exists($entity,'getSortCode')) {
+                $sort = $entity->getSortCode();
+              } else {
+                $sort = substr($linkGID,4);
+              }
+              $seeLinks[$sort] = "<span class=\"seeLink $linkTag\"><a href=\"#$linkTag\">$value</a></span>";
             }
           }
+          if (count($seeLinks)) {
+            $relatedHtml .= "<div class=\"lemmaSeeLinks $lemTag\">";
+            ksort($seeLinks,SORT_NUMERIC);
+            foreach ($seeLinks as $sort => $linkHtml) {
+              if ($isFirst) {
+                $isFirst = false;
+                $relatedHtml .= $linksHeader." ".$linkHtml;
+              }else{
+                $relatedHtml .= ",".$linkHtml;
+              }
+            }
+            $relatedHtml .= ".</div>";
+          }
+        }
+        $cfLinks = array();
+        if ($relatedGIDsByLinkType && array_key_exists($cfLinkTypeID,$relatedGIDsByLinkType)) {
+          $isFirst = true;
+          $linksHeader = "<span class=\"lemmaLinksHeader cfLinksHeader\">Cf.</span>";
+          foreach ($relatedGIDsByLinkType[$cfLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            $linkTag = str_replace(':','',$linkGID);
+            if ($entity && !$entity->hasError()) {
+              if (method_exists($entity,'getValue')) {
+                $value = preg_replace($pattern,$replacement,$entity->getValue());
+              } else {
+                continue;
+              }
+              if (method_exists($entity,'getSortCode')) {
+                $sort = $entity->getSortCode();
+              } else {
+                $sort = substr($linkGID,4);
+              }
+              $cfLinks[$sort] = "<span class=\"cfLink $linkTag\"><a href=\"#$linkTag\">$value</a></span>";
+            }
+          }
+          if (count($cfLinks)) {
+            $relatedHtml .= "<div class=\"lemmaCfLinks $lemTag\">";
+            ksort($cfLinks,SORT_NUMERIC);
+            foreach ($cfLinks as $sort => $linkHtml) {
+              if ($isFirst) {
+                $isFirst = false;
+                $relatedHtml .= $linksHeader." ".$linkHtml;
+              }else{
+                $relatedHtml .= ",".$linkHtml;
+              }
+            }
+            $relatedHtml .= ".</div>";
+          }
+        }
+        if ($relatedHtml !== "") {
+          $relatedHtml = "<div class=\"lemmaLinks\">$relatedHtml</div>";
+          $dDoc = new DOMDocument();
+          $dDoc->loadXML($relatedHtml,LIBXML_NOXMLDECL);
+          $relatedLinks = $dDoc->getElementsByTagName("div")->item(0);
+          $relatedLinksNode = $htmlDomDoc->importNode($relatedLinks,true);
+          $entryNode->appendChild($relatedLinksNode);
         }
       }
     } // else

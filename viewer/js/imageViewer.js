@@ -81,8 +81,8 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
     //drag resize - note for smoother adjust change this to mousemove
     $(this.imgViewContainer).unbind('mouseup').bind('mouseup',function(e) {
               DEBUG.log("gen","resize called");
-              if (imgV.imgCanvas.width != imgV.imgViewContainer.clientWidth ||
-                  imgV.imgCanvas.height != imgV.imgViewContainer.clientHeight) {
+              if (imgV.image.height && imgV.image.width && (imgV.imgCanvas.width != imgV.imgViewContainer.clientWidth ||
+                  imgV.imgCanvas.height != imgV.imgViewContainer.clientHeight)) {
                 imgV.imgCanvas.width = imgV.imgViewContainer.clientWidth;
                 imgV.imgCanvas.height = imgV.imgViewContainer.clientHeight-30;
                 imgV.imgContext = imgV.imgCanvas.getContext('2d');

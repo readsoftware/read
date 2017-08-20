@@ -1897,6 +1897,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
     $entTag2GlossaryHtml = array();
     $lemmas = new Lemmas("lem_catalog_id = $catID and not lem_owner_id = 1","lem_sort_code,lem_sort_code2",null,null);
     if ($lemmas->getCount() > 0) {
+      $glossaryHRefUrl = READ_DIR."/services/exportHTMLGlossary.php?db=".DBNAME."&catID=$catID";
       $lemIDs = array();
       foreach($lemmas as $lemma) {
         $hasAttestations = false;
@@ -1907,7 +1908,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
           $lemHtml .= "<sup class=\"homographic\">".$lemmaOrder."</sup>";
         }
         $lemmaValue = preg_replace('/ʔ/','',$lemma->getValue());
-        $lemHtml .= "<span class=\"lemmaheadword\">".$lemmaValue."</span><span class=\"lemmapos\">";
+        $lemHtml .= "<span class=\"lemmaheadword\"><a target=\"mygloss\" href=\"$glossaryHRefUrl#$lemTag\">$lemmaValue</a></span><span class=\"lemmapos\">";
         $lemmaGenderID = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
         $lemmaPos = $lemmaPosID && is_numeric($lemmaPosID) && Entity::getTermFromID($lemmaPosID) ? Entity::getTermFromID($lemmaPosID) : '';
@@ -2274,13 +2275,14 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
         $relatedHtml = "";
         if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;
-          $linkText = 'see';
+          $linksHeader = "<span class=\"lemmaLinksHeader seeLinksHeader\">see</span>";
           if ($hasAttestations) {
-            $linkText = 'See also';
+            $linksHeader = "<span class=\"lemmaLinksHeader seeAlsoLinksHeader\">See also</span>";
           }
           $seeLinks = array();
           foreach ($relatedGIDsByLinkType[$seeLinkTypeID] as $linkGID) {
             $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            $linkTag = str_replace(':','',$linkGID);
             if ($entity && !$entity->hasError()) {
               if (method_exists($entity,'getValue')) {
                 $value = preg_replace($pattern,$replacement,$entity->getValue());
@@ -2292,54 +2294,60 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
               } else {
                 $sort = substr($linkGID,4);
               }
-              $seeLinks[$sort] = $value;
+              $seeLinks[$sort] = "<span class=\"seeLink $linkTag\">$value</span>";
             }
           }
           if (count($seeLinks)) {
+            $relatedHtml .= "<div class=\"lemmaSeeLinks $lemTag\">";
             ksort($seeLinks,SORT_NUMERIC);
-            foreach ($seeLinks as $sort => $value) {
+            foreach ($seeLinks as $sort => $linkHtml) {
               if ($isFirst) {
                 $isFirst = false;
-                $relatedHtml .= $linkText." ".$value;
+                $relatedHtml .= $linksHeader." ".$linkHtml;
               }else{
-                $relatedHtml .= ",".$value;
+                $relatedHtml .= ",".$linkHtml;
               }
             }
+            $relatedHtml .= ".</div>";
           }
-          $relatedHtml .= ".";
         }
         $cfLinks = array();
         if ($relatedGIDsByLinkType && array_key_exists($cfLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;
-          $linkText = 'Cf.';
+          $linksHeader = "<span class=\"lemmaLinksHeader cfLinksHeader\">Cf.</span>";
           foreach ($relatedGIDsByLinkType[$cfLinkTypeID] as $linkGID) {
             $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            $linkTag = str_replace(':','',$linkGID);
             if ($entity && !$entity->hasError()) {
               if (method_exists($entity,'getValue')) {
-                $value = utf8ToRtf(preg_replace('/ʔ/','',$entity->getValue()));
+                $value = preg_replace($pattern,$replacement,$entity->getValue());
               } else {
-                $value = $linkGID;
+                continue;
               }
               if (method_exists($entity,'getSortCode')) {
                 $sort = $entity->getSortCode();
               } else {
                 $sort = substr($linkGID,4);
               }
-              $cfLinks[$sort] = $value;
+              $cfLinks[$sort] = "<span class=\"seeLink $linkTag\">$value</span>";
             }
           }
           if (count($cfLinks)) {
+            $relatedHtml .= "<div class=\"lemmaCfLinks $lemTag\">";
             ksort($cfLinks,SORT_NUMERIC);
-            foreach ($cfLinks as $sort => $value) {
+            foreach ($cfLinks as $sort => $linkHtml) {
               if ($isFirst) {
                 $isFirst = false;
-                $relatedHtml .= $linkText." ".$value;
+                $relatedHtml .= $linksHeader." ".$linkHtml;
               }else{
-                $relatedHtml .= ",".$value;
+                $relatedHtml .= ",".$linkHtml;
               }
             }
+            $relatedHtml .= ".</div>";
           }
-          $relatedHtml .= ".";
+        }
+        if ($relatedHtml !== "") {
+          $entTag2GlossaryHtml[$lemTag]['relatedHtml'] = $relatedHtml;
         }
       }
     }
