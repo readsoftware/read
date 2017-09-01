@@ -365,7 +365,7 @@
           });
         }
         minY = 1000000;
-        $secHdrDivs = $(this).find('div.secHeader');
+        $secHdrDivs = $(this).find('div.secHeader, div.section');
         if ($secHdrDivs.length) {
           $secHdrDivs.each(function(index,secDiv) {
             if (secDiv.offsetTop + secDiv.offsetHeight> top) { //visible
@@ -410,6 +410,10 @@
       visFraction = lineFraction;
       if (!$anchorElem || !$anchorElem.length) {
         $anchorElem = $('div.secHeader.'+hdrSeqTag+':first',$view);
+        visFraction = hdrFraction;
+      }
+      if (!$anchorElem || !$anchorElem.length) {
+        $anchorElem = $('div.section.'+hdrSeqTag+':first',$view);
         visFraction = hdrFraction;
       }
       if ($anchorElem && $anchorElem.length ==1) {
@@ -615,8 +619,8 @@
               $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[]]);
             });
             $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
-              var classes = $(this).attr("class"), entTag, entTags, lemTag, lemmaInfo, entGlossInfo
-                  popupHtml = null;
+              var classes = $(this).attr("class"), entTag, entTags, lemTag, lemmaInfo, entGlossInfo,
+                  popupHtml = null, popupHtml = null, $glossaryPopup;
                   //popupHtml = "No lemma info for " + $(this).text();
               if ( entTags = classes.match(/cmp\d+/)) {//use first cmp tag for tool tip
                 entTag = entTags[0];
@@ -629,12 +633,21 @@
                 if (entGlossInfo['lemTag']) {
                   lemmaInfo = edGlossaryLookup[entGlossInfo['lemTag']];
                   if (lemmaInfo && lemmaInfo['entry']) {
-                    popupHtml = lemmaInfo['entry'];
+                    popupHtml = '<div class="glossHeaderInfoDiv">'+lemmaInfo['entry'];
                     if (entGlossInfo['infHtml']) {
                       popupHtml += entGlossInfo['infHtml'];
                     }
-                    if (lemmaInfo['attestedHtml']) {
-                      popupHtml += lemmaInfo['attestedHtml'];
+                    popupHtml += '</div>';
+                    if (lemmaInfo['attestedHtml'] || lemmaInfo['relatedHtml']) {
+                      popupHtml += '<div class="glossExpanderDiv"><span class="glossaryExpander">+</span></div>';
+                      popupHtml += '<div class="glossExtraInfoDiv">';
+                      if (lemmaInfo['attestedHtml']) {
+                        popupHtml += lemmaInfo['attestedHtml'];
+                      }
+                      if (lemmaInfo['relatedHtml']) {
+                        popupHtml += lemmaInfo['relatedHtml'];
+                      }
+                      popupHtml += '</div>';
                     }
                   }
                 }
@@ -642,15 +655,28 @@
               $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[entTag]]);
               closeAllPopups();
               if (popupHtml) {
-                $(this).jqxTooltip({ content: '<div class="popupwrapperdiv">'+popupHtml+"</div>",
-                                     trigger: 'click',
-                                     showArrow: false,
-                                     autoHide: false });
+                $glossExtraInfoDiv = $(this).jqxTooltip({ content: '<div class="popupwrapperdiv">'+popupHtml+"</div>",
+                                                           trigger: 'click',
+                                                           showArrow: false,
+                                                           autoHide: false });
                 $(this).unbind('close').bind('close', function(e) {
                   $(this).jqxTooltip('destroy');
                 });
                 $(this).jqxTooltip('open');
                 $(this).addClass('showing');
+                $('.glossaryExpander').unbind('click').bind('click', function(e) {
+                      var $popupWrapperDiv = $(this).parent().parent(), $expander = $(this),
+                          $extraInfoDiv = $('.glossExtraInfoDiv',$popupWrapperDiv);
+                      if ($extraInfoDiv.hasClass('expanded')) {
+                        $extraInfoDiv.removeClass('expanded');
+                        $(this).text('+');
+                      } else {
+                        $extraInfoDiv.addClass('expanded');
+                        $(this).text('-');
+                      }
+                      e.stopImmediatePropagation();
+                      return false;
+                });
               }
               e.stopImmediatePropagation();
               return false;

@@ -325,3 +325,17 @@ body.showTOC .tocNavPanel {
   font-size: 14pt;
   padding-left: 25px;
 }
+.glossExtraInfoDiv{
+  display: none;
+}
+.glossExtraInfoDiv.expanded{
+  display: block;
+}
+.glossHeaderInfoDiv, .glossExpanderDiv{
+  display: table-cell;
+}
+.glossaryExpander{
+  font-weight: bolder;
+  font-size: larger;
+  cursor: pointer;
+}

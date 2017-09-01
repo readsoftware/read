@@ -740,11 +740,6 @@
       $label = ($label?$label:'transcription');
       $rml .= makeXMLNode($label,null,$token->getTranscription());
     }
-    if ($token->getTranslation()) {
-      $label = $entityLookup['term']['idByCode']['tok_translation']['englabel'];//warning term trm_code dependency
-      $label = ($label?$label:'translation');
-      $rml .= makeXMLNode($label,null,$token->getTranslation());
-    }
     $graRML = "";
     if (count($token->getGraphemeIDs()) > 0){
       $label = $entityLookup['term']['idByCode']['tok_grapheme_ids']['englabel'];//warning term trm_code dependency
