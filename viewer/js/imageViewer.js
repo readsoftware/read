@@ -200,7 +200,8 @@ VIEWERS.ImageViewer.prototype = {
         elemID = "blnLkupID" + lkupID;
         thumbUrl = (blnInfo.thumbUrl?blnInfo.thumbUrl:blnInfo.url);
         downloadURL = (this.basepath?this.basepath:'')+'/services/downloadImage.php?'+
-                      (this.dbName?'db='+this.dbName+'&':'')+'blnID='+blnID;
+                      (this.dbName?'db='+this.dbName+'&':'')+
+                      (blnInfo.url?'url='+blnInfo.url:'blnID='+blnID);
         $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' +
                     resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'">&#x2193;</a></div>');
         $resDiv.prop('lkupID',lkupID);
@@ -255,7 +256,8 @@ VIEWERS.ImageViewer.prototype = {
           elemID = "imgLkupID" + lkupID;
           thumbUrl = (imgInfo.thumbUrl?imgInfo.thumbUrl:imgInfo.url);
           downloadURL = (this.basepath?this.basepath:'')+'/services/downloadImage.php?'+
-                        (this.dbName?'db='+this.dbName+'&':'')+'imgID='+imgID;
+                        (this.dbName?'db='+this.dbName+'&':'')+
+                        (imgInfo.url?'url='+imgInfo.url:'imgID='+imgID);
           $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' +
                       resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'">&#x2193;</a></div>');
           $resDiv.prop('lkupID',lkupID);

@@ -42,29 +42,31 @@ $dbMgr = new DBManager();
 $retVal = array();
 $errors = array();
 $warnings = array();
-$url = null;
 $urlsAllowed = ini_get('allow_url_fopen');
 
 $imgID = (array_key_exists('imgID',$_REQUEST)? $_REQUEST['imgID']:null);
 $blnID = (array_key_exists('blnID',$_REQUEST)? $_REQUEST['blnID']:null);
+$url = (array_key_exists('url',$_REQUEST)? $_REQUEST['url']:null);
 
-if (!$imgID && !$blnID) {
+if (!$imgID && !$blnID & !$url) {
   array_push($errors,"Must indicate a valid image or baseline id.");
 } else {
-  if ($imgID) {
-    $image = new Image($imgID);
-    if (!$image || $image->hasError()) {//no image or unavailable so warn
-      array_push($errors,"Error need valid image id $imgID. Errors: ".join(".",$image->getErrors()));
-    } else {
-      $url = $image->getURL();
-    }
-  } else if ($blnID) {
-    $baseline = new Baseline($blnID);
-    if (!$baseline || $baseline->hasError()) {//no baseline or unavailable so warn
-      array_push($warnings,"Error need valid baseline id $blnID. Errors: ".join(".",$baseline->getErrors()));
-    } else {
-      $url = $baseline->getURL();
-      $image = $baseline->getImage(true);
+  if (!$url) {
+    if ($imgID) {
+      $image = new Image($imgID);
+      if (!$image || $image->hasError()) {//no image or unavailable so warn
+        array_push($errors,"Error need valid image id $imgID. Errors: ".join(".",$image->getErrors()));
+      } else {
+        $url = $image->getURL();
+      }
+    } else if ($blnID) {
+      $baseline = new Baseline($blnID);
+      if (!$baseline || $baseline->hasError()) {//no baseline or unavailable so warn
+        array_push($warnings,"Error need valid baseline id $blnID. Errors: ".join(".",$baseline->getErrors()));
+      } else {
+        $url = $baseline->getURL();
+        $image = $baseline->getImage(true);
+      }
     }
   }
   if ($url) {
@@ -105,7 +107,11 @@ if (!$imgID && !$blnID) {
         $ext = explode("/",$content_type);
         $ext = $ext[1];
         $extPos = strrpos($filename, $ext);
-        if ( $extPos === false || $extPos != (strlren($filename)-1-strlen($ext))) {
+        if ($extPos === false && $ext ==="jpeg") {
+          $ext ="jpg";
+          $extPos = strrpos($filename, $ext);
+        }
+        if (($extPos === false || $extPos != (strlen($filename)-1-strlen($ext))) && $image) {
           $title = $image->getTitle();
           if ($title) {
             $filename = str_replace('[\^\[\]/?*:;{}\\]+]','_',$title).".$ext";
