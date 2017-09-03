@@ -284,11 +284,16 @@ body.showTOC .tocNavPanel {
 .imgmenuresource:hover {
   background-color: darkgrey;
 }
+.imgmenuresource a{
+  color: blue;
+}
 .imgmenuresource {
   cursor: pointer;
   align-items: center;
   vertical-align: middle;
   height: 25px;
+  padding-bottom: 4px;
+  padding-right: 3px;
 }
 
 .resImageIconBtn {
@@ -296,6 +301,18 @@ body.showTOC .tocNavPanel {
   max-width: 50px;
   vertical-align: text-bottom;
   padding: 4px;
+}
+
+.imgdownloadbtn {
+  vertical-align: text-bottom;
+  margin-bottom: 3px;
+  background-color: rgb(214,214,204);
+  padding-bottom: 3px;
+  color: blue;
+}
+
+.downloadframe {
+  display:none;
 }
 
 .filename {

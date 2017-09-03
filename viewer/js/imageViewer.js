@@ -53,6 +53,8 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
   this.config = imgVCfg;
   this.type = "ImageV";
   this.id = imgVCfg['id'] ? imgVCfg['id']: null;
+  this.dbName = imgVCfg['dbName'] ? imgVCfg['dbName']: dbName;
+  this.basepath = imgVCfg['basepath'] ? imgVCfg['basepath']: basepath;
   this.imgCanvas = imgVCfg['imageCanvas'] ? imgVCfg['imageCanvas']:null;
   this.zoomFactor = imgVCfg['zoomFactor'] ? imgVCfg['zoomFactor']:70;
   this.vpOffset = imgVCfg['initViewportOffset'] && !isNaN(imgVCfg['initViewportOffset'].x) && !isNaN(imgVCfg['initViewportOffset'].y) ? imgVCfg['initViewportOffset']:{x:0,y:0};
@@ -62,6 +64,8 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
   this.polygons = [];
   this.syncY = this.newTop = 0;
   this.selectedPolygons = {};
+  this.$downloadLink = $('<a href="#" " class="downloadlink" download/>');
+  $('body').append(this.$downloadLink);
   this.viewAllPolygons = false; //intially hide any polygons
   posLookup = imgVCfg['posLookup']?imgVCfg['posLookup']: null;
   imgLookup = imgVCfg['imgLookup']?imgVCfg['imgLookup']: null;
@@ -190,19 +194,26 @@ VIEWERS.ImageViewer.prototype = {
       imgV.$baselineMenu.addClass('showMenu');
       for (lkupID in this.imgLookup.bln) {
         blnInfo = this.imgLookup.bln[lkupID];
+        blnID = lkupID.substr(3);
         resLabel = blnInfo.title;
         blnImgTags.push(blnInfo.imgTag);
         elemID = "blnLkupID" + lkupID;
         thumbUrl = (blnInfo.thumbUrl?blnInfo.thumbUrl:blnInfo.url);
-        $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
+        downloadURL = (this.basepath?this.basepath:'')+'/services/downloadImage.php?'+
+                      (this.dbName?'db='+this.dbName+'&':'')+'blnID='+blnID;
+        $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' +
+                    resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'">&#x2193;</a></div>');
         $resDiv.prop('lkupID',lkupID);
         $resDiv.unbind('click').bind('click', function(e) {
-          var lkupID = $(this).prop('lkupID'), sourceNames = [], atbID,
-              blnInfo = imgV.imgLookup.bln[lkupID];
-          imgV.loadBaselineAt(lkupID, {x:imgV.vpLoc.x, y:0});
-          imgV.$blnMenuPanel.removeClass('showMenu');
-          e.stopImmediatePropagation();
-          return false;
+          var lkupID = $(this).prop('lkupID');
+          if (e.target.nodeName !== "A") {
+            imgV.loadBaselineAt(lkupID, {x:imgV.vpLoc.x, y:0});
+            imgV.$blnMenuPanel.removeClass('showMenu');
+            e.stopImmediatePropagation();
+            return false;
+          } else {
+            setTimeout(function(){ imgV.$blnMenuPanel.removeClass('showMenu');},500);
+          }
         });
         this.$blnMenuPanel.append($resDiv);
       }
@@ -238,19 +249,27 @@ VIEWERS.ImageViewer.prototype = {
         imgV.$imgMenu.addClass('showMenu');
         for (otherIndex in otherImgTags) {
           lkupID = otherImgTags[otherIndex];
+          imgID = lkupID.substr(3);
           imgInfo = this.imgLookup.img[lkupID];
           resLabel = imgInfo.title;
           elemID = "imgLkupID" + lkupID;
           thumbUrl = (imgInfo.thumbUrl?imgInfo.thumbUrl:imgInfo.url);
-          $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
+          downloadURL = (this.basepath?this.basepath:'')+'/services/downloadImage.php?'+
+                        (this.dbName?'db='+this.dbName+'&':'')+'imgID='+imgID;
+          $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' +
+                      resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'">&#x2193;</a></div>');
           $resDiv.prop('lkupID',lkupID);
           $resDiv.unbind('click').bind('click', function(e) {
             var lkupID = $(this).prop('lkupID');
-            imgV.loadImage(lkupID);
-            imgV.$imgMenuPanel.removeClass('showMenu');
-            e.stopImmediatePropagation();
-            return false;
-          });
+            if (e.target.nodeName !== "A") {
+              imgV.loadImage(lkupID);
+              imgV.$imgMenuPanel.removeClass('showMenu');
+              e.stopImmediatePropagation();
+              return false;
+            } else {
+              setTimeout(function(){ imgV.$imgMenuPanel.removeClass('showMenu');},500);
+            }
+         });
           this.$imgMenuPanel.append($resDiv);
         }
         this.$imgMenu.unbind('click').bind('click', function(e) {

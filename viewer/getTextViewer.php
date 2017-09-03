@@ -157,6 +157,7 @@
     <script src="./js/imageViewer.js"></script>
     <script type="text/javascript">
       var dbName = '<?=DBNAME?>',imgViewer,
+          srvbasepath="<?=SITE_ROOT?>",
           basepath="<?=SITE_BASE_PATH?>",
 <?php
   if ($multiEdition) {
@@ -578,6 +579,8 @@
             imgViewer = new VIEWERS.ImageViewer(
                                                  { initViewPercent:100,
                                                    id:'imageViewerContent',
+                                                   dbName: dbName,
+                                                   basepath: basepath,
                                                    imgViewContainer: $imageViewerContent.get(0),
                                                    imgViewHeader: $imageViewerHdr,
                                                    posLookup: blnPosLookup,
