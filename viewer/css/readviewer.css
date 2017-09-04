@@ -286,6 +286,9 @@ body.showTOC .tocNavPanel {
 }
 .imgmenuresource a{
   color: blue;
+  padding-left: 5px;
+  padding-top: 6px;
+  float: right;
 }
 .imgmenuresource {
   cursor: pointer;
@@ -347,6 +350,14 @@ body.showTOC .tocNavPanel {
 }
 .glossExtraInfoDiv.expanded{
   display: block;
+}
+.epidocDownloadLink{
+  display: none;
+  margin-left: 5px;
+  color: blue;
+}
+.epidocDownloadLink.public{
+  display: inline;
 }
 .glossHeaderInfoDiv, .glossExpanderDiv{
   display: table-cell;

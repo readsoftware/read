@@ -73,6 +73,7 @@
       if ($editions->getError() || $editions->getCount() == 0) {
         returnXMLErrorMsgPage("unable to load any text editions - ".$editions->getError());
       }
+      $edition = $editions->current();
       $ednIDs = $editions->getKeys();
       $sortedEdnIDs = $ednIDs;
       sort($sortedEdnIDs,SORT_NUMERIC);
@@ -214,6 +215,12 @@
           edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag,$refreshLookUps)?>//calc'd for first edition assuming all editions are inclusive
 <?php
   }
+?>
+          epiDownloadURLBase = "<?=SITE_BASE_PATH."/services/exportEditionToEpiDoc.php?db=".DBNAME."&download=1&ednID="?>",
+          editionIsPublic = <?=($edition->isResearchEdition()?"false":"true")?>,
+          curEdnID = "<?=$edition->getID()?>",
+          curEpidocDownloadURL = epiDownloadURLBase + curEdnID
+<?php
   if ($showContentOutline) {
     if ($multiEdition) {
 ?>
@@ -430,6 +437,8 @@
         var
             $textViewer = $('#textViewer'),
             $textViewerHdr = $('#textViewerHdr'),
+            $epidocDownloadLink = $('.epidocDownloadLink',$textViewerHdr),
+            $epidocDownloadLinkParent = $epidocDownloadLink.parent(),
             $textViewerContent = $('#textViewerContent')
 <?php
   if ($showContentOutline) {
@@ -476,13 +485,43 @@
            cntPanels = <?=$cntPanels?>,
            avgContentPanelHeight = ($(window).height()-$('.headline').height())/cntPanels - $textViewerHdr.height() -15
 ;
+if (editionIsPublic) {
+  $epidocDownloadLink.attr('href',curEpidocDownloadURL);
+  if (!$epidocDownloadLink.hasClass('public')){
+    $epidocDownloadLink.addClass('public');
+  }
+} else {
+  $epidocDownloadLink.attr('href',"#");
+  if ($epidocDownloadLink.hasClass('public')){
+    $epidocDownloadLink.removeClass('public');
+  }
+}
 <?php
   if ($multiEdition && $multiEditionHeaderDivHtml) {
 ?>
           $textViewerHdr.append('<?=$multiEditionHeaderDivHtml?>');
-          function switchEdition(ednID) {
+          $('#edn'+curEdnID,$textViewerHdr).addClass('selected');
+
+          function switchEdition(ednID, isPublished) {
+            if (curEdnID == ednID){
+              return;
+            }
             closeAllPopups();
             setTextViewHtmlandEvents(edStructHtmlByEdn[ednID], edFootnotesByEdn[ednID], edGlossaryLookupByEdn[ednID]);
+            editionIsPublic = isPublished;
+            curEdnID = ednID;
+            curEpidocDownloadURL = epiDownloadURLBase + curEdnID;
+            if (editionIsPublic) {
+              $epidocDownloadLink.attr('href',curEpidocDownloadURL);
+              if (!$epidocDownloadLink.hasClass('public')){
+                $epidocDownloadLink.addClass('public');
+              }
+            } else {
+              $epidocDownloadLink.attr('href',"#");
+              if ($epidocDownloadLink.hasClass('public')){
+                $epidocDownloadLink.removeClass('public');
+              }
+            }
 <?php
     if ($showContentOutline) {
 ?>
@@ -513,12 +552,13 @@
 ?>
           }
           $('.textEdnButton',$textViewerHdr).unbind('click').bind('click',function(e) {
-            var $button = $(this), ednTag = $button.attr('id'), ednID = ednTag.substring(3);
+            var $button = $(this), ednTag = $button.attr('id'), ednID = ednTag.substring(3),
+                isPublished = $button.hasClass('published');
             if (!$button.hasClass('selected')) {//ensure skip multiple clicks on selected edition.
               $('.textEdnButton.selected',$textViewerHdr).removeClass('selected');
               $button.addClass('selected');
               //switch to this edition
-              switchEdition(ednID);
+              switchEdition(ednID,isPublished);
             }
             e.stopImmediatePropagation();
             return false;
@@ -595,6 +635,10 @@
                                       showArrow: false,
                                       expandAnimationDuration:50,
                                       collapseAnimationDuration:50});
+            $epidocDownloadLinkParent.unbind('click').bind('click', function(e) {
+              $textViewer.jqxExpander({toggleMode: "none" });
+              setTimeout(function(){ $textViewer.jqxExpander({toggleMode: "click" });},50);
+            });
             $textViewerContent.height(''+avgContentPanelHeight+'px');
           function setTextViewHtmlandEvents(edStructHtml,edFootnotes,edGlossaryLookup) {
             $textViewerContent.html(edStructHtml);
@@ -851,7 +895,7 @@
 ?>
 
     <div id="textViewer" class="viewer syncScroll">
-      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div></div>
+      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div><span><a class="epidocDownloadLink" download href="" title="Download Epidoc TEI">&#x2193;</a></span></div>
       <div id="textViewerContent" class="viewerContent">test</div>
     </div>
 <?php
