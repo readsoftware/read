@@ -631,15 +631,17 @@ if (editionIsPublic) {
   }
 ?>
 //initialise textViewer
-            $textViewer.jqxExpander({expanded:true,
-                                      showArrow: false,
-                                      expandAnimationDuration:50,
-                                      collapseAnimationDuration:50});
-            $epidocDownloadLinkParent.unbind('click').bind('click', function(e) {
-              $textViewer.jqxExpander({toggleMode: "none" });
-              setTimeout(function(){ $textViewer.jqxExpander({toggleMode: "click" });},50);
-            });
-            $textViewerContent.height(''+avgContentPanelHeight+'px');
+          $textViewer.jqxExpander({expanded:true,
+                                    showArrow: false,
+                                    expandAnimationDuration:50,
+                                    collapseAnimationDuration:50});
+          $textViewerHdr.unbind('click').bind('click', function(e) {
+            if (e.target.nodeName === "A") {
+              e.stopImmediatePropagation();
+            }
+          });
+          $textViewerContent.height(''+avgContentPanelHeight+'px');
+
           function setTextViewHtmlandEvents(edStructHtml,edFootnotes,edGlossaryLookup) {
             $textViewerContent.html(edStructHtml);
             closeAllPopups();
