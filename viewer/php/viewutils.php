@@ -704,7 +704,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
   $sourceHtml = "";
   if ($sourceNameLookup && count($sourceNameLookup) > 0) {
     $isFrist = true;
-    $sourceHtml = "<div class=\"source edn1\"><span class=\"sourcelabel\">Source:</span>";
+    $sourceHtml = "<div class=\"source edn1\"><span class=\"sourcelabel\">Source: </span>";
     foreach ($sourceNameLookup as $atbID => $title) {
       if ($isFrist) {
         $sourceHtml .= "<span class=\"sourceitem atb$atbID\">$title";
@@ -2266,7 +2266,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
               }
             }
           }
-          $attestedHtml .= "</div>";
+          $attestedHtml .= ".</div>";
           $entTag2GlossaryHtml[$lemTag]['attestedHtml'] = $attestedHtml;
         }
         $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
@@ -2305,7 +2305,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
                 $isFirst = false;
                 $relatedHtml .= $linksHeader." ".$linkHtml;
               }else{
-                $relatedHtml .= ",".$linkHtml;
+                $relatedHtml .= ", ".$linkHtml;
               }
             }
             $relatedHtml .= ".</div>";
@@ -2329,7 +2329,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
               } else {
                 $sort = substr($linkGID,4);
               }
-              $cfLinks[$sort] = "<span class=\"seeLink $linkTag\">$value</span>";
+              $cfLinks[$sort] = "<span class=\"cfLink $linkTag\">$value</span>";
             }
           }
           if (count($cfLinks)) {

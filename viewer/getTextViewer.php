@@ -438,7 +438,6 @@
             $textViewer = $('#textViewer'),
             $textViewerHdr = $('#textViewerHdr'),
             $epidocDownloadLink = $('.epidocDownloadLink',$textViewerHdr),
-            $epidocDownloadLinkParent = $epidocDownloadLink.parent(),
             $textViewerContent = $('#textViewerContent')
 <?php
   if ($showContentOutline) {
@@ -897,7 +896,7 @@ if (editionIsPublic) {
 ?>
 
     <div id="textViewer" class="viewer syncScroll">
-      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div><span><a class="epidocDownloadLink" download href="" title="Download Epidoc TEI">&#x2193;</a></span></div>
+      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div><a class="epidocDownloadLink" download href="" title="Download Epidoc TEI"></a></div>
       <div id="textViewerContent" class="viewerContent">test</div>
     </div>
 <?php

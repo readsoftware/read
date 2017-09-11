@@ -88,6 +88,7 @@ font-weight: bold;
 .popupwrapperdiv{
   max-width: 450px;
   text-align: left;
+  display: table;
 }
 sup.showing {
   background: lightgreen !important;
@@ -145,6 +146,17 @@ sup.showing {
   font-weight: bold;
 }
 .attestedforms .attestedform{
+  font-style: italic;
+}
+.lemmaSeeLinks, .lemmaCfLinks{
+  margin-top: 8px;
+  font-weight: bold;
+  text-indent: -10px;
+  margin-left: 10px;
+}
+.seeLink, .cfLink{
+  color: rgb(0,175,0);
+  font-weight: normal;
   font-style: italic;
 }
 .linkScroll{
@@ -284,6 +296,9 @@ body.showTOC .tocNavPanel {
 .imgmenuresource:hover {
   background-color: darkgrey;
 }
+.imgmenuresource a:hover {
+  background-color: lightgrey;
+}
 .imgmenuresource a{
   color: blue;
   padding-left: 5px;
@@ -306,12 +321,12 @@ body.showTOC .tocNavPanel {
   padding: 4px;
 }
 
-.imgdownloadbtn {
-  vertical-align: text-bottom;
-  margin-bottom: 3px;
-  background-color: rgb(214,214,204);
-  padding-bottom: 3px;
-  color: blue;
+.downloadbtndiv {
+  height: 25px;
+  width: 25px;
+  background-image: URL('../images/download.png');
+  background-size: 25px 25px;
+  background-repeat: no-repeat;
 }
 
 .downloadframe {
@@ -349,12 +364,17 @@ body.showTOC .tocNavPanel {
   display: none;
 }
 .glossExtraInfoDiv.expanded{
-  display: block;
+  display: table-row;
 }
 .epidocDownloadLink{
   display: none;
   margin-left: 5px;
   color: blue;
+  height: 20px;
+  width: 20px;
+  background-image: URL('../images/download.png');
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
 }
 .epidocDownloadLink.public{
   display: inline;

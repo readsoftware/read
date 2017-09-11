@@ -430,7 +430,7 @@
                   if ($firstComponent) {
                     $firstComponent = false;
                   } else {
-                    $attestedHtml .= "; ";
+                    $attestedHtml .= "<span class=\"inflectsep\">;</span>";
                   }
                   if ($isFirstKey1) {
                     $isFirstKey1 = false;
@@ -455,14 +455,14 @@
                     if ($isFirstNode) {
                       $isFirstNode = false;
                     } else {
-                      $attestedHtml .= ", ";
+                      $attestedHtml .= ",";
                     }
                     $isFirstForm = true;
                     foreach ($formInfo['value'] as $formTranscr => $locInfo) {
                       if ($isFirstForm) {
                         $isFirstForm = false;
                       } else {
-                        $attestedHtml .= ", ";
+                        $attestedHtml .= ",";
                       }
                       $attestedHtml .= "<span class=\"attestedform\">$formTranscr</span>";
                       ksort($locInfo['loc']);
@@ -482,7 +482,7 @@
               }
             }
           }
-          $attestedHtml .= "</div>";
+          $attestedHtml .= ".</div>";
           $dDoc = new DOMDocument();
           $dDoc->loadXML($attestedHtml,LIBXML_NOXMLDECL);
           $attestedForms = $dDoc->getElementsByTagName("div")->item(0);

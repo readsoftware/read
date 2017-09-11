@@ -203,11 +203,11 @@ VIEWERS.ImageViewer.prototype = {
                       (this.dbName?'db='+this.dbName+'&':'')+
                       (blnInfo.url?'url='+blnInfo.url:'blnID='+blnID);
         $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' +
-                    resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'">&#x2193;</a></div>');
+                    resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'"><div class="downloadbtndiv"/></a></div>');//&#x2193;</a></div>');
         $resDiv.prop('lkupID',lkupID);
         $resDiv.unbind('click').bind('click', function(e) {
           var lkupID = $(this).prop('lkupID');
-          if (e.target.nodeName !== "A") {
+          if (!$(e.target).hasClass('downloadbtndiv')) {
             imgV.loadBaselineAt(lkupID, {x:imgV.vpLoc.x, y:0});
             imgV.$blnMenuPanel.removeClass('showMenu');
             e.stopImmediatePropagation();
@@ -259,11 +259,11 @@ VIEWERS.ImageViewer.prototype = {
                         (this.dbName?'db='+this.dbName+'&':'')+
                         (imgInfo.url?'url='+imgInfo.url:'imgID='+imgID);
           $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' +
-                      resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'">&#x2193;</a></div>');
+                      resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'"><div class="downloadbtndiv"/></a></div>');//&#x2193;</a></div>');
           $resDiv.prop('lkupID',lkupID);
           $resDiv.unbind('click').bind('click', function(e) {
             var lkupID = $(this).prop('lkupID');
-            if (e.target.nodeName !== "A") {
+            if (!$(e.target).hasClass('downloadbtndiv')) {
               imgV.loadImage(lkupID);
               imgV.$imgMenuPanel.removeClass('showMenu');
               e.stopImmediatePropagation();
