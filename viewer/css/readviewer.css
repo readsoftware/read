@@ -110,6 +110,14 @@ sup.showing {
   font-weight: bold;
   font-style: italic;
 }
+
+.lemmaheadword a,.lemmaheadword a:visited{
+  font-weight: bold;
+  font-style: italic;
+  color: black;
+  text-decoration: none;
+}
+
 .lemmaentry .lemmapos{
   padding-right: 5px;
 }
@@ -150,14 +158,13 @@ sup.showing {
 }
 .lemmaSeeLinks, .lemmaCfLinks{
   margin-top: 8px;
-  font-weight: bold;
   text-indent: -10px;
   margin-left: 10px;
 }
 .seeLink, .cfLink{
-  color: rgb(0,175,0);
-  font-weight: normal;
+  font-weight: bold;
   font-style: italic;
+  color: rgb(80,80,80);
 }
 .linkScroll{
   cursor: pointer;
@@ -302,7 +309,7 @@ body.showTOC .tocNavPanel {
 .imgmenuresource a{
   color: blue;
   padding-left: 5px;
-  padding-top: 6px;
+  padding-top: 9px;
   float: right;
 }
 .imgmenuresource {
@@ -322,10 +329,10 @@ body.showTOC .tocNavPanel {
 }
 
 .downloadbtndiv {
-  height: 25px;
-  width: 25px;
+  height: 20px;
+  width: 20px;
   background-image: URL('../images/download.png');
-  background-size: 25px 25px;
+  background-size: 15px 15px;
   background-repeat: no-repeat;
 }
 
@@ -368,17 +375,26 @@ body.showTOC .tocNavPanel {
 }
 .epidocDownloadLink{
   display: none;
-  margin-left: 5px;
-  color: blue;
+  vertical-align: sub;
+  text-decoration: none;
+  font-size: 16pt;
+  font-weight: bold;
+  padding-left: 9px;
+  color: rgb(60,60,60);
+}
+.epidocDownloadLink.public{
+  display: inline;
+}
+.epidownloadbtndiv {
   height: 20px;
   width: 20px;
   background-image: URL('../images/download.png');
   background-size: 20px 20px;
   background-repeat: no-repeat;
+  display: inline-block;
+  padding-bottom: 3px;
 }
-.epidocDownloadLink.public{
-  display: inline;
-}
+
 .glossHeaderInfoDiv, .glossExpanderDiv{
   display: table-cell;
 }

@@ -2275,7 +2275,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useT
         $relatedHtml = "";
         if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;
-          $linksHeader = "<span class=\"lemmaLinksHeader seeLinksHeader\">see</span>";
+          $linksHeader = "<span class=\"lemmaLinksHeader seeLinksHeader\">See</span>";
           if ($hasAttestations) {
             $linksHeader = "<span class=\"lemmaLinksHeader seeAlsoLinksHeader\">See also</span>";
           }

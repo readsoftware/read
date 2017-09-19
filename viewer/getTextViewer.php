@@ -126,33 +126,8 @@
     <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtouch.js"></script>
     <script src="/jqwidget/jqwidgets/jqxdata.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxtabs.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxdropdownbutton.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxbuttons.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxbuttongroup.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxradiobutton.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxscrollbar.js"></script>
     <script src="/jqwidget/jqwidgets/jqxexpander.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxnavigationbar.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxinput.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxdragdrop.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxgrid.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxgrid.pager.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxgrid.selection.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxgrid.filter.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxgrid.sort.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxmenu.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxwindow.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxdocking.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxsplitter.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxdropdownlist.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxlistbox.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxinput.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtooltip.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxcheckbox.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxvalidator.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxpanel.js"></script>
-    <script src="/jqwidget/jqwidgets/jqxtree.js"></script>
     <script src="../editors/js/utility.js"></script>
     <script src="../editors/js/debug.js"></script>
     <script src="./js/imageViewer.js"></script>
@@ -896,7 +871,7 @@ if (editionIsPublic) {
 ?>
 
     <div id="textViewer" class="viewer syncScroll">
-      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div><a class="epidocDownloadLink" download href="" title="Download Epidoc TEI"></a></div>
+      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div><a class="epidocDownloadLink" download href="" title="Download Epidoc TEI">&#x2B73;</a></div>
       <div id="textViewerContent" class="viewerContent">test</div>
     </div>
 <?php

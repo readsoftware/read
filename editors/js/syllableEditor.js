@@ -807,10 +807,15 @@ EDITORS.sclEditor.prototype = {
         this.syllable.focus();
         $(this.contentDiv).focus();
       }
-    } else { // multiple text and/or TCM case
+    } else { // multiple text nodes and/or TCM case
 //      DEBUG.log("warn","BEEP! VSE Replace text for syllable with embedded TCMs not implemented yet!");
-      startNodeIndex = this.charToNodeMap[this.anchorPos][0];
-      startNodeOffset = this.charToNodeMap[this.anchorPos][1];
+      if (this.beforeSplitIndex >=0 && this.anchorPos == this.cursorPos && this.beforeSplitIndex == this.anchorIndex){
+        startNodeIndex = this.anchorIndex;
+        startNodeOffset = this.anchorNodePos;
+      } else {
+        startNodeIndex = this.charToNodeMap[this.anchorPos][0];
+        startNodeOffset = this.charToNodeMap[this.anchorPos][1];
+      }
       selectLen = this.cursorPos - this.anchorPos;
       if (selectLen < 0) {
         revSelect = true;
@@ -1097,6 +1102,7 @@ EDITORS.sclEditor.prototype = {
     var keyType = key?this._keyTypeMap[key.toLowerCase()]:null,
         posV = this.state.indexOf("V"),
         posA = this.state.indexOf("A"),
+        posS = this.state.indexOf("S"),
         posT = this.state.indexOf("T"),
         posC = this.state.indexOf("C"),
         posM = this.state.indexOf("M"),
@@ -1111,30 +1117,33 @@ EDITORS.sclEditor.prototype = {
        // selection = this.anchorPos != this.cursorPos;
         selection = (posEnd - posStart) > 1;
     DEBUG.log("gen","preprocess key '"+key+"' keyType "+keyType+" cursyl "+this.curSyl+" state "+this.state+" posV "+posV
-                +" posSelStart "+posSelStart+" posSelEnd "+posSelEnd+" posStart "+posStart+" posEnd "+posEnd);
+                +" posSelStart "+posSelStart+" posSelEnd "+posSelEnd+" posStart "+posStart+" posEnd "+posEnd+" posS "+posS);
 /****************************Special Control Keys************************************/
     if (key == "z" && ctrl) {
       DEBUG.log("warn","BEEP! Undo not implemented yet!");
+      UTILITY.beep();
       return false;
     }
-    if (key == "c" && ctrl) {
-      DEBUG.log("warn","BEEP! Copy not implemented yet!");
+//    if (key == "c" && ctrl) {
+//      DEBUG.log("warn","BEEP! Copy not implemented yet!");
       //return false;
-    }
+//    }
     if (key == "x" && ctrl) {
       DEBUG.log("warn","BEEP! Cut not implemented yet!");
+      UTILITY.beep();
       return false;
     }
-    if (key == "v" && ctrl) {
-      DEBUG.log("warn","BEEP! VSE Paste not implemented yet!");
+//    if (key == "v" && ctrl) {
+//      DEBUG.log("warn","BEEP! VSE Paste not implemented yet!");
       //return false;
-    }
+//    }
     if (key == "Backspace" || key == "Del" || key == "Delete") {
       //**********selection cases**********
       if (selection) {
         // split syllable case not allowed
-        if (this.isSplitSyllable()) {
+        if (this.isSplitSyllable() && posStart < posS && posS < posEnd) {
           DEBUG.log("warn","BEEP! Deleting of split syllable not currently allowed!");
+          UTILITY.beep();
           return "error";
         } else if ( posStart == 0 && posEnd == this.state.length - 1 ) {// fully selected
           //vowel only cases
@@ -1191,7 +1200,7 @@ EDITORS.sclEditor.prototype = {
           this.ednVE.combineTokens((key == "Del")?"next":"prev",null);
 //          alert("split syllable tokenCombine underconstruction");
           return false;
-        } else if (this.isSplitSyllable() && ( key == "Backspace" || key == "Del")) {
+        } else if (false && this.isSplitSyllable() && ( key == "Backspace" || key == "Del")) {
           UTILITY.beep();
           DEBUG.log("warn","BEEP! Deleting of characters on a split syllable is currently not allowed");
           return "error";
@@ -1222,7 +1231,7 @@ EDITORS.sclEditor.prototype = {
           this.replaceText(".","left","select");
           return false;
         } else if (key == "Del") {
-          if (this.isSplitSyllable()) {
+          if (false && this.isSplitSyllable()) {
             DEBUG.log("warn","BEEP! Deleting of characters on a split syllable is currently not allowed");
             return "error";
           }
@@ -1236,8 +1245,9 @@ EDITORS.sclEditor.prototype = {
           this.replaceText("","right","select");
           return false;
         } else if (key == "Backspace") {
-          if (this.isSplitSyllable()) {
+          if (this.isSplitSyllable() && posStart == 1 && posS == 2) {
             DEBUG.log("warn","BEEP! Deleting of characters on a split syllable is currently not allowed");
+            UTILITY.beep();
             return "error";
           }
           if ((posT > posM) && (posStart > posM) && (posStart <= posT+1)) {//modifier with virāma
@@ -1254,6 +1264,10 @@ EDITORS.sclEditor.prototype = {
     } else if (!selection && (this.curSyl == "+" || this.curSyl == "?")) {
       UTILITY.beep();
       DEBUG.log("warn","BEEP! Cannot enter characters before or after "+this.curSyl);
+      return false;
+    } else if (this.isSplitSyllable() && posStart < posS && posS < posEnd) {
+      DEBUG.log("warn","BEEP! Replacement across split syllable not currently allowed!");
+      UTILITY.beep();
       return false;
     } else if (keyType) {
       switch (keyType) {
@@ -1690,8 +1704,8 @@ EDITORS.sclEditor.prototype = {
 
   getSylSplitIndex: function(){
     var cntNodes = this.syllable.length, firstNode = $(this.syllable[0]), nodesTilSplit = null, splitIndex = null;
-    nodesTilSplit = firstNode.prev().nextUntil(".boundary,.linebreak,br",'.grpGra.scl'+this.sclID);
-    splitIndex = nodesTilSplit.length;
+    nodesTilSplit = firstNode.prev().nextUntil(".boundary,.linebreak,br",'.grpGra.scl'+this.sclID);//get all syl nodes until a boundary
+    splitIndex = nodesTilSplit.length;//count of nodes is index of node before split base 1
     if (splitIndex && splitIndex < cntNodes) {
       return splitIndex;
     }
@@ -1707,8 +1721,8 @@ EDITORS.sclEditor.prototype = {
 
   getPreSplitText: function(){
     var cntNodes = this.syllable.length, preString = '', i;
-    if (this.splitIndex) {
-      for(i=0; i< this.splitIndex; i++) {
+    if (this.beforeSplitIndex >= 0) {
+      for(i=0; i<= this.beforeSplitIndex; i++) {
         preString += this.syllable[i].textContent;
       }
       return preString;
@@ -1745,10 +1759,10 @@ EDITORS.sclEditor.prototype = {
     this.lastTextNode = this.textNodes[this.textNodes.length-1];
     this.ordLast = this.lastTextNode.parentNode.className.match(/ord(\d+)/)[1];
     if (iSplit = this.getSylSplitIndex()) {
-      this.splitIndex = iSplit;
+      this.beforeSplitIndex = iSplit-1;
       this.strPreSplit = this.getPreSplitText();
-    } else if (this.splitIndex || this.strPreSplit) {
-      delete this.splitIndex;
+    } else if (this.beforeSplitIndex || this.strPreSplit) {
+      delete this.beforeSplitIndex;
       delete this.strPreSplit;
     }
     DEBUG.traceExit("computeSyllable");
@@ -2037,7 +2051,9 @@ EDITORS.sclEditor.prototype = {
           pos = 0;
           for(i=0; i < childNodes.length; i++){
             if (childNodes[i] == anchorSclNode) {//found anchorNode
-              this.anchorPos = parseInt(pos) + (anchorIsStart?range.startOffset:range.endOffset);
+              this.anchorNodePos = (anchorIsStart?range.startOffset:range.endOffset);
+              this.anchorPos = parseInt(pos) + this.anchorNodePos;
+              this.anchorIndex = i;
               DEBUG.trace("synchSyl","set anchor to start of '"+this.curSyl+"' "+this.anchorPos);
               DEBUG.trace("synchSyl","set anchor startOffset "+range.startOffset+" endOffset "+range.endOffset);
               break;
@@ -2068,12 +2084,12 @@ EDITORS.sclEditor.prototype = {
           range.setEnd(this.lastTextNode,this.lastTextNode.textContent.length);
           this.anchorPos = this.cursorPos = this.curSyl.length;
           DEBUG.trace("synchSyl","set anchor to end of '"+this.curSyl+"' to end "+this.anchorPos);
-          this.cursorNodePos = this.lastTextNode.textContent.length;
-          this.cursorIndex = this.textNodes.length - 1;
+          this.anchorNodePos = this.cursorNodePos = this.lastTextNode.textContent.length;
+          this.anchorIndex = this.cursorIndex = this.textNodes.length - 1;
         } else {
           range.setStart(this.firstTextNode,0);
           range.setEnd(this.firstTextNode,0);
-          this.anchorPos = this.cursorPos = this.cursorNodePos = this.cursorIndex = 0;
+          this.anchorIndex = this.cursorIndex = this.anchorPos = this.cursorPos = this.cursorNodePos = this.cursorIndex = 0;
         }
         rangeChanged = true;
       }
@@ -2084,6 +2100,7 @@ EDITORS.sclEditor.prototype = {
     }
     DEBUG.trace('synchSelection',"Leaving synch selection for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
     this.calculateState();
+    DEBUG.log('gen',"Hint = "+ hint +"  for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
     DEBUG.traceExit('synchSelection',"Hint = "+ hint +"  for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
   },
 
@@ -2104,6 +2121,7 @@ EDITORS.sclEditor.prototype = {
       this.graStrings = [];
       var i = 0, inc, chr,chr2,chr3,chr4,typ,
           cnt = this.curSyl.length,
+          splitPositioned = false,
           anchorPositioned = false,
           cursorPositioned = false;
       if(this.anchorPos == 0) {
@@ -2142,7 +2160,7 @@ EDITORS.sclEditor.prototype = {
                 }else{//found valid grapheme, save it
                   this.graStrings.push( chr + chr2 + chr3 + chr4);
                   typ = this._graphemeMap[chr][chr2][chr3][chr4]['typ'];
-                  this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] =
+                  this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] = //map all 4 chars to the same grapheme position
                     this.charPosGraStrMap[2 + i] = this.charPosGraStrMap[3 + i] = -1 + this.graStrings.length;
                 }
               }else if (!this._graphemeMap[chr][chr2][chr3]["srt"]){ // invalid sequence
@@ -2151,7 +2169,7 @@ EDITORS.sclEditor.prototype = {
               }else{//found valid grapheme, save it
                 this.graStrings.push( chr + chr2 + chr3);
                 typ = this._graphemeMap[chr][chr2][chr3]['typ'];
-                this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] =
+                this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] =//map all 3 chars to the same grapheme position
                   this.charPosGraStrMap[2 + i] = -1 + this.graStrings.length;
               }
             }else if (!this._graphemeMap[chr][chr2]["srt"]){ // invalid sequence
@@ -2160,7 +2178,7 @@ EDITORS.sclEditor.prototype = {
             }else{//found valid grapheme, save it
                 this.graStrings.push( chr + chr2);
                 typ = this._graphemeMap[chr][chr2]['typ'];
-                this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] = -1 + this.graStrings.length;
+                this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] = -1 + this.graStrings.length;//map both chars to the same grapheme position
             }
           }else if (!this._graphemeMap[chr]["srt"]){ // invalid sequence
               DEBUG.log("warn","scl" + this.sclID + " has incomplete sequence starting at character " + i+ " " +chr +" has no sort code");
@@ -2168,10 +2186,10 @@ EDITORS.sclEditor.prototype = {
           }else{//found valid grapheme, save it
                 this.graStrings.push( chr );
                 typ = this._graphemeMap[chr]['typ'];
-                this.charPosGraStrMap[i] = -1 + this.graStrings.length;
+                this.charPosGraStrMap[i] = -1 + this.graStrings.length;//map char to the same grapheme position
           }
         }
-        this.graPosStrPosMap[-1 + this.graStrings.length] = i;
+        this.graPosStrPosMap[-1 + this.graStrings.length] = i;//not used yet
         i += inc;
         if (typ == "CH") {// aspirated case
           if(!anchorPositioned && this.anchorPos <= i) {
@@ -2187,7 +2205,12 @@ EDITORS.sclEditor.prototype = {
               }
             } else {
               if (this.anchorPos == this.cursorPos) {
-                this.state += "CH><";
+                if (this.beforeSplitIndex >= 0 && this.beforeSplitIndex < this.anchorIndex) {
+                  this.state += "CHS><";
+                  splitPositioned = true;
+                } else {
+                  this.state += "CH><";
+                }
                 cursorPositioned = true;
               } else if (this.cursorPos <= i-1) {
                 if (cursorPositioned) {
@@ -2297,6 +2320,9 @@ EDITORS.sclEditor.prototype = {
             this.state += "<";
             cursorPositioned = true;
           }
+        }
+        if(this.beforeSplitIndex >= 0 && i == this.strPreSplit.length && !splitPositioned) {
+          this.state += "S";
         }
       }//end while
       if(!anchorPositioned) {

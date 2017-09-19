@@ -475,7 +475,7 @@ EDITORS.EditionVE.prototype = {
         seqGIDs = this.seqGIDsByType[seqTypeTag], i, seqGID, label, seqTag,
         component, sequence, firstEntGID, insertElem,
         seqLabel = this.dataMgr.getTermFromID(seqTypeTag.substring(3));
-    if (seqGIDs.length > 0) {
+    if (seqGIDs && seqGIDs.length > 0) {
       for (i=0; i<seqGIDs.length; i++) {
         seqGID = seqGIDs[i];
         seqTag = seqGID.replace(':','');
@@ -562,7 +562,7 @@ EDITORS.EditionVE.prototype = {
         element = $('#'+item.id,this.showTagTree);
         if (element.length) {
           element = element.get(0);
-          injectSeqMarkers(item.id,null);
+          ednVE.injectSeqMarkers(item.id,null);
           cntNewCheckedItems++;
           this.showTagTree.jqxTree('checkItem', element, true);
         }
@@ -3645,6 +3645,10 @@ mergeLine: function (direction,cbError) {
           case 16://"Shift":
           case 17://"Control":
           default:
+            if (e.ctrlKey || e.metaKey) {// copy or paste so let it pass
+              DEBUG.log("event","Call to keydown in tcm with ctrl key ");
+              return;
+            }
             e.stopImmediatePropagation();
             return false;//eat all other keys
             break;
@@ -3666,6 +3670,10 @@ mergeLine: function (direction,cbError) {
             DEBUG.log("nav","Call to right arrow keydown ");
             break;
           default:
+            if (e.ctrlKey || e.metaKey) {// copy or paste so let it pass
+              DEBUG.log("event","Call to keydown with ctrl key");
+              return;
+            }
             e.stopImmediatePropagation();
             return false;//eat all other keys
             break;
@@ -3692,6 +3700,7 @@ mergeLine: function (direction,cbError) {
       if (key && ednVE.editMode == "modify" && sclEditor) {
 //        DEBUG.log("gen""Call to keypress with key '"+key+"' for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
         if ((e.ctrlKey || e.metaKey) && (key.toLowerCase() == "c" || key.toLowerCase() == "v")) {// copy or paste so let it pass
+          DEBUG.log("event","Call to keypress with copy paste key '"+key+"' for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
           return;
         }
         if (key == '-' || key == '‐') {//compound separator
@@ -3748,6 +3757,12 @@ mergeLine: function (direction,cbError) {
         //tcmEditor.processKey(key,e.ctrlKey,e.shiftKey,e.altKey,e);
 //        e.stopImmediatePropagation();
 //        return false;//eat all other keys
+       } else {
+        if ((e.ctrlKey || e.metaKey) && key.toLowerCase() == "v") {// paste so eat it
+          DEBUG.log("event","Call to keypress with paste");
+          e.stopImmediatePropagation();
+          return false;//eat all other keys
+        }
        }
     };
 
@@ -4048,9 +4063,9 @@ mergeLine: function (direction,cbError) {
                         startOffset == endOffset && mdTarget == this);
         isReverseSelection = (!isCaretOnly &&((startContainer != endContainer &&
                                                 (sel && startContainer == sel.focusNode &&
-                                                        startOffset == sel.focusOffset||
-                                                 endContainer.parentElement == mdTarget ||
-                                                 endContainer.parentElement == mdTarget.parentElement)) ||
+                                                        startOffset == sel.focusOffset||( mdTarget &&
+                                                 (endContainer.parentElement == mdTarget ||
+                                                 endContainer.parentElement == mdTarget.parentElement)))) ||
                                               (startContainer == endContainer &&
                                                 sel && sel.anchorOffset != null &&
                                                 sel.focusOffset == startOffset
