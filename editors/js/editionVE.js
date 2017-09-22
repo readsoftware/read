@@ -1169,6 +1169,7 @@ EDITORS.EditionVE.prototype = {
         }
         if (ednVE.sclEd) {
           $('.selected',ednVE.contentDiv).removeClass('selected');
+          ednVE.removeFreeTextLineUI();
           delete(ednVE.sclEd);
         }
         $(ednVE.contentDiv).removeClass("modify").addClass('tcmodify');
@@ -3973,7 +3974,7 @@ mergeLine: function (direction,cbError) {
       mmTarget = e.target;
     }
     //assign handler for all syllable elements
-    $("span", this.editDiv).unbind("mousemove").bind("mousemove", sclMouseMoveHandler);
+//    $("span", this.editDiv).unbind("mousemove").bind("mousemove", sclMouseMoveHandler);
 
 
 /**
@@ -4073,6 +4074,7 @@ mergeLine: function (direction,cbError) {
                                                 mdTarget != this && mdTarget.id.match(/textContent/) != null));
 /********************************* Caret Reposition cases ***************************************/
         if (isCaretOnly){
+          DEBUG.trace("ednVE mousup","1 "+muTime);
           //handle caret reposition by snapping to nearest syllable- nearest text position in that syllable
           //range still on selected node case
           if (startContainer.nodeName == 'SPAN' && startContainer.className.match(/selected/) && eTarget !== startContainer ||
@@ -4081,6 +4083,7 @@ mergeLine: function (direction,cbError) {
           }
           // line label case
           if (e.target.nodeName == 'SPAN' && e.target.className.match(/textDivHeader/)) {
+          DEBUG.trace("ednVE mousup","2 "+muTime);
             //choose first syllable on line next('.grpGra')
             nextNode = $(e.target).next();
             while (nextNode.length && !nextNode.hasClass('grpGra') && !nextNode.hasClass('freetext')) {
@@ -4091,6 +4094,7 @@ mergeLine: function (direction,cbError) {
             newStartOffset = newEndOffset = 0;
           } else if (e.target.nodeName == 'DIV' // user end of line click or range issue in browser
                      && e.target.id.match(/textContent/) != null) {
+          DEBUG.trace("ednVE mousup","3 "+muTime);
             // check range offset which should indicate the index of the closest childnode
             if (startOffset > 0 && startOffset <= e.target.childNodes.length) {
               if (startNode = findPrevGraGroupOrFreetext( startContainer != e.target ?
@@ -4111,12 +4115,11 @@ mergeLine: function (direction,cbError) {
                      && e.target.className.match(/freetext/) != null) {
             //alert(" clicked on freetext field under constrution");
            // $(".selected",ednVE.contentDiv).removeClass("selected");
-            startNode = eTarget;
-            newStartContainer = newEndContainer = startNode.firstChild;
-            newStartOffset = newEndOffset = 0;
-           // e.stopImmediatePropagation();
-           // mdTarget = mmTarget = null;
-          //  return false;
+          DEBUG.trace("ednVE mousup","4 "+muTime);
+            ednVE.createEditFreeTextLineUI($(e.target));
+            e.stopImmediatePropagation();
+            mdTarget = mmTarget = null;
+            return false;
           } else if (useTarget) {// startContainer is selected different from target
             startNode = eTarget;
           } else if (startContainer.nodeName == "#text") {// text click case (usual case)
@@ -4142,6 +4145,7 @@ mergeLine: function (direction,cbError) {
                 //with TCM offset directing intra syllable cases
                 if ((classes.indexOf("ord0") > -1) &&
                     (selectNode = findNextGraGroupOrFreetext(startNode))) {//TCM at start of syllable find next grapheme group
+          DEBUG.trace("ednVE mousup","5 "+muTime);
                   newStartContainer = newEndContainer = selectNode.firstChild;
                   newStartOffset = newEndOffset = 0;
                 } else if (selectNode = findPrevGraGroupOrFreetext(startNode)){ // find previous grapheme groups last text position
@@ -4164,6 +4168,7 @@ mergeLine: function (direction,cbError) {
             }
             sclID = selectNode.get(0).className.match(/scl(\d+)/)[1];
           } else if (startNode && startNode.nodeName == "DIV" && startNode.className.match(/freetext/)) {
+          DEBUG.trace("ednVE mousup","6 "+muTime);
             sclID = null;  // todo invalidate VSE ??
             selectNode = $(startNode);
           } else {
@@ -4183,6 +4188,7 @@ mergeLine: function (direction,cbError) {
             //move start to next nearest grpGra
             if (startContainer.nodeName == 'SPAN' && startContainer.className.match(/textDivHeader/)) {
               //choose first syllable on line next('.grpGra')
+          DEBUG.trace("ednVE mousup","7");
               if (startNode = findNextGraGroupOrFreetext(startContainer)) {
                 newStartContainer = startNode.firstChild;
                 newStartOffset = 0;
@@ -4190,6 +4196,7 @@ mergeLine: function (direction,cbError) {
             } else if (startContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                        && startContainer.id.match(/textContent/) != null) {
               // check range offset which should indicate the index of the closest childnode
+          DEBUG.trace("ednVE mousup","8");
               if (startOffset > 0 && startOffset <= startContainer.childNodes.length &&
                 (startNode = findPrevGraGroupOrFreetext(startContainer.childNodes[startOffset]))) {
                   newStartContainer = startNode.firstChild;
@@ -4200,8 +4207,11 @@ mergeLine: function (direction,cbError) {
               }
             } else if (startContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                      && startContainer.className.match(/freetext/) != null) {
-              alert("selection started on freetext field - under constrution");
-              return;
+          DEBUG.trace("ednVE mousup","9");
+              ednVE.createEditFreeTextLineUI($(startContainer));
+//              alert("selection started on freetext field - under constrution");
+              e.stopImmediatePropagation();
+              return false;
             } else if (startContainer.nodeName == "#text") {// text click case (usual case)
               if (startOffset == startContainer.textContent.length) { //at the end of previous syllable
                 startNode = findNextGraGroupOrFreetext(startContainer.parentNode);
@@ -4217,12 +4227,14 @@ mergeLine: function (direction,cbError) {
             //move end to prev nearest grpGra
             if (endContainer.nodeName == 'SPAN' && endContainer.className.match(/textDivHeader/)) {
               //choose first syllable on line next('.grpGra')
+          DEBUG.trace("ednVE mousup","10");
               if (endNode = findNextGraGroupOrFreetext(endContainer)) {
                 newEndContainer = endNode.firstChild;
                 newEndOffset = 0;
               }
             } else if (endContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                        && endContainer.id.match(/textContent/) != null) {
+          DEBUG.trace("ednVE mousup","11");
               // check range offset which should indicate the index of the closest childnode
               if (endOffset > 0 && endOffset <= endContainer.childNodes.length &&
                     (endNode = findPrevGraGroupOrFreetext(endContainer.childNodes[endOffset]))) {
@@ -4234,8 +4246,11 @@ mergeLine: function (direction,cbError) {
               }
             } else if (endContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                      && endContainer.className.match(/freetext/) != null) {
-              alert("selection ended on freetext field - under constrution");
-              return;
+          DEBUG.trace("ednVE mousup","12");
+              ednVE.createEditFreeTextLineUI($(endContainer));
+//              alert("selection ended on freetext field - under constrution");
+              e.stopImmediatePropagation();
+              return false;
             } else if (endContainer.nodeName == "#text") {
               endNode = endContainer.parentNode;
             } else {
@@ -4295,6 +4310,7 @@ mergeLine: function (direction,cbError) {
                 //forward selection so move to first text position of syllable to right.
                 endNode = findPrevGraGroupOrFreetext(endNode);
               } else {
+          DEBUG.trace("ednVE mousup","13");
                 //error case unsupport selection node
                 DEBUG.log("gen","processing mouse up for selection startnode on element " + classes + " and is not a supported node type");
                 //select first grpGra
@@ -4350,8 +4366,13 @@ mergeLine: function (direction,cbError) {
               }
             } else if (endContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                      && endContainer.className.match(/freetext/) != null) {
-              alert(" ended reverse selection on freetext field - under constrution");
-              return;
+//              alert(" ended reverse selection on freetext field - under constrution");
+//              return;
+          DEBUG.trace("ednVE mousup","14");
+              ednVE.createEditFreeTextLineUI($(endContainer));
+//              alert("selection ended on freetext field - under constrution");
+              e.stopImmediatePropagation();
+              return false;
             } else if (endContainer.nodeName == "#text") {// text click case (usual case)
               startNode = endContainer.parentNode;
             } else { // element click case
@@ -4378,8 +4399,13 @@ mergeLine: function (direction,cbError) {
               }
             } else if (startContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                      && startContainer.className.match(/freetext/) != null) {
-              alert(" started reverse selection on freetext field - under constrution");
-              return;
+//              alert(" started reverse selection on freetext field - under constrution");
+//              return;
+          DEBUG.trace("ednVE mousup","15");
+              ednVE.createEditFreeTextLineUI($(startContainer));
+//              alert("selection ended on freetext field - under constrution");
+              e.stopImmediatePropagation();
+              return false;
             } else if (startContainer.nodeName == "#text") {
               endNode = startContainer.parentNode;
             } else {
@@ -4418,8 +4444,18 @@ mergeLine: function (direction,cbError) {
               }
             }
 
-            sclID = selectNode.get(0).className.match(/scl(\d+)/)[1];
-            selectOrdPos = parseInt(selectNode.get(0).className.match(/ord(\d+)/)[1]);
+            sclID = selectNode.get(0).className.match(/scl(\d+)/);
+            if (sclID) {
+              sclID = parseInt(sclID[1]);
+            } else {
+              sclID = null;
+            }
+            selectOrdPos = selectNode.get(0).className.match(/ord(\d+)/);
+            if (selectOrdPos) {
+              selectOrdPos = parseInt(selectOrdPos[1]);
+            } else {
+              selectOrdPos = null;
+            }
             //fixup end of selection
             classes = endNode.className;
             if (classes.indexOf("grpGra") == -1) {//not at syllable need to adjust
@@ -4437,7 +4473,7 @@ mergeLine: function (direction,cbError) {
                 endNode = $(ednVE.contentDiv).find(".grpGra:first").get(0);
               }
               newEndOffset = 0;
-           }
+            }
             if (endNode) {
               //if not same syllable need to contract to end of selectNode
               endOrdPos = parseInt(endNode.className.match(/ord(\d+)/)[1]);
@@ -4522,6 +4558,7 @@ mergeLine: function (direction,cbError) {
                             selectNode = $(".grpGra.scl"+sclIDSelect+":first",ednVE.contentDiv);
                         ednVE.sclEd.saving = false;
                         ednVE.sclEd.dirty = false;
+                        ednVE.removeFreeTextLineUI();
                         ednVE.sclEd.init(selectNode);
                       },
                       function(errStr) {
@@ -4529,6 +4566,7 @@ mergeLine: function (direction,cbError) {
                         alert("Error from navigation while trying to save current syllable - "+errStr);
                       });
           } else {
+            ednVE.removeFreeTextLineUI();
             ednVE.sclEd.init(selectNode);
           }
         }
@@ -4726,63 +4764,84 @@ mergeLine: function (direction,cbError) {
 
 
 /**
+* remove freetext line view/edit UI
+*
+*/
+
+  removeFreeTextLineUI: function() {
+    var ednVE = this;
+    $('.freetextInput',ednVE.contentDiv).each(function(index,elem) {
+      var $freeTextInput = $(elem), $freeTextDiv = $freeTextInput.parent();
+      $freeTextDiv.html($freeTextInput.val());
+    });
+  },
+
+
+/**
 * create freetext line view/edit UI
 *
 * @param node freeTextDiv Html div used to contain the freetext UI
 */
 
-  createEditFreeTextLineUI: function(freeTextDiv) {
-    var ednVE = this, classes = freeTextDiv.attr('class'), validateData, sel, range, selElem,
-        freeTextInput, validateBtn, errMsgDiv, resultsTable, lostFocusToValidate = false,
+  createEditFreeTextLineUI: function($freeTextDiv) {
+    var ednVE = this, classes = $freeTextDiv.attr('class'), validateData, sel, range, selElem,
+        $freeTextInput, validateBtn, errMsgDiv, resultsTable, lostFocusToValidate = false,
         ord = classes.match(/ordL(\d+)/)[1],html, freeTextLineSequence,tranlit,//errXoffset = 10, errYoffset=10,
         freeTextLineSeqID = classes.match(/lineseq(\d+)/)[1];
+    ednVE.removeFreeTextLineUI();
     if (freeTextLineSeqID) {
       freeTextLineSequence = ednVE.dataMgr.getEntity('seq',freeTextLineSeqID);
       translit = freeTextLineSequence.freetext;
-      if (freeTextLineSequence.validationMsg && !freeTextDiv.hasClass('error')) {
-        freeTextDiv.addClass('error');
+      if (freeTextLineSequence.validationMsg && !$freeTextDiv.hasClass('error')) {
+        $freeTextDiv.addClass('error');
       }
       errMsg = (freeTextLineSequence.validationMsg?decodeURIComponent(freeTextLineSequence.validationMsg):"No Errors");
       html = '<input class="freetextInput" contenteditable="true" value="'+translit+'" />'+
              '<button class="validateButton" >Validate</button>'+
              '<button class="commitButton" >Commit</button>'+
              '<div class="validationError">'+errMsg+'</div>';
-      freeTextDiv.html(html);
-      freeTextInput = $('.freetextInput',freeTextDiv);
-      validateBtn = $('.validateButton',freeTextDiv);
-      commitBtn = $('.commitButton',freeTextDiv);
-      errMsgDiv = $('.validationError',freeTextDiv);
-      freeTextInput.unbind('keydown').bind('keydown', function(e) {
+      $freeTextDiv.html(html);
+      $freeTextInput = $('.freetextInput',$freeTextDiv);
+      validateBtn = $('.validateButton',$freeTextDiv);
+      commitBtn = $('.commitButton',$freeTextDiv);
+      errMsgDiv = $('.validationError',$freeTextDiv);
+      $freeTextInput.unbind('keydown').bind('keydown', function(e) {
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('keypress').bind('keypress', function(e) {
-        freeTextDiv.removeClass('valid');
+      $freeTextInput.unbind('keypress').bind('keypress', function(e) {
+        $freeTextDiv.removeClass('valid');
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('keyup').bind('keyup', function(e) {
+      $freeTextInput.unbind('keyup').bind('keyup', function(e) {
         //if up arrow then navigate to the first syllable of the prev line, down arrow the next line
         // or if line is freetext then invoke edit UI
         //retrack this line to just display string.
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('paste').bind('paste', function(e) {
+      $freeTextInput.unbind('paste').bind('paste', function(e) {
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('mousedown').bind('mousedown', function(e) {
+      $freeTextInput.unbind('mousedown').bind('mousedown', function(e) {
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('mouseup').bind('mouseup', function(e) {
-        $(this).focus();
+      $freeTextInput.unbind('mouseup').bind('mouseup', function(e) {
+        $freeTextInput.focus();
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('change').bind('change', function(e) {
-        $(this).focus();
+      $freeTextInput.unbind('change').bind('change', function(e) {
+        $freeTextInput.focus();
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('blur').bind('blur', function(e) {
-        freeTextLineSequence.freetext = freeTextInput.val(); //temp solution TODO call save freetext service.
+      $freeTextInput.surpressBlurOnce = true;
+      $freeTextInput.unbind('blur').bind('blur', function(e) {
+        if ($freeTextInput.surpressBlurOnce){
+          delete $freeTextInput.surpressBlurOnce;
+          e.stopImmediatePropagation();
+          return false;
+        }
+        freeTextLineSequence.freetext = $freeTextInput.val(); //temp solution TODO call save freetext service.
         if (!lostFocusToValidate) {
-          freeTextDiv.html(freeTextInput.val());
+          $freeTextDiv.html($freeTextInput.val());
         } else {
           lostFocusToValidate = false;
         }
@@ -4806,9 +4865,9 @@ mergeLine: function (direction,cbError) {
       });
       validateBtn.unbind('click').bind('click', function(e) {
         lostFocusToValidate = true;
-        freeTextInput.focus();
+        $freeTextInput.focus();
         validateData = { seqID: freeTextLineSeqID,
-                         freetext: freeTextInput.val()};
+                         freetext: $freeTextInput.val()};
         $.ajax({
             type:"POST",
             dataType: 'json',
@@ -4825,23 +4884,23 @@ mergeLine: function (direction,cbError) {
                 if (data.success) {
                   if (!data.errString) {
                     //remove any error and/or dirty indicators
-                    if (freeTextDiv.hasClass('error')) {
-                      freeTextDiv.removeClass('error');
+                    if ($freeTextDiv.hasClass('error')) {
+                      $freeTextDiv.removeClass('error');
                     }
                     //mark as valid so commit btn will show
-                    if (!freeTextDiv.hasClass('valid')) {
-                      freeTextDiv.addClass('valid');
+                    if (!$freeTextDiv.hasClass('valid')) {
+                      $freeTextDiv.addClass('valid');
                     }
                     //ensure that seq.validationMsg was removed
                     errMsgDiv.html();
                   } else {
                     //remove any valid and/or dirty indicators
-                    if (freeTextDiv.hasClass('valid')) {
-                      freeTextDiv.removeClass('valid');
+                    if ($freeTextDiv.hasClass('valid')) {
+                      $freeTextDiv.removeClass('valid');
                     }
                     //mark validationError
-                    if (!freeTextDiv.hasClass('error')) {
-                      freeTextDiv.addClass('error');
+                    if (!$freeTextDiv.hasClass('error')) {
+                      $freeTextDiv.addClass('error');
                     }
                     //and update error UI
                     errMsgDiv.html(decodeURIComponent(data.errString));
@@ -4871,7 +4930,7 @@ mergeLine: function (direction,cbError) {
         return false;
       });
       commitBtn.unbind('click').bind('click', function(e) {
-        freeTextInput.focus();
+        $freeTextInput.focus();
         commitData = { seqID: freeTextLineSeqID,
                        ednID: ednVE.edition.id};
         if (DEBUG.healthLogOn) {
@@ -4937,8 +4996,8 @@ mergeLine: function (direction,cbError) {
         e.stopImmediatePropagation();
         return false;
       });
-      freeTextInput.focus();
-      freeTextInput.select();
+//      freeTextInput.focus();
+//      freeTextInput.select();
       if (window.getSelection) {
         sel = window.getSelection();
         if (sel.getRangeAt && sel.rangeCount) {
@@ -4948,7 +5007,7 @@ mergeLine: function (direction,cbError) {
         range = document.selection.createRange();
       }
       if (range) {
-        selElem = freeTextDiv.get(0);
+        selElem = $freeTextDiv.get(0);
         range.setStart(selElem,0);
         range.setEnd(selElem,0);
         if (sel) {
@@ -5815,9 +5874,10 @@ mergeLine: function (direction,cbError) {
       grpClass = !j?' firstLine': ((j+1) == textLineSeqIDs.length ? ' lastLine':'');
       ret = this.renderPhysicalLine(seqID,hdrClass,grpClass,grpOrd,j+1);
       html = ret[0];
-    $(this.contentDiv).append(html);
+      $(this.contentDiv).append(html);
       grpOrd = ret[1];
     }
+    $(this.contentDiv).append('<hr class="editionViewEndRule">');
     DEBUG.trace("editionVE.renderEdition","before add Handlers to DOM for edn " + this.edition.id);
     this.renumberFootnotes();
     this.addEventHandlers(); // needs to be done after content created
@@ -6162,6 +6222,7 @@ mergeLine: function (direction,cbError) {
       }
     }
     $('.prose',this.contentDiv).last().addClass('lastStructure');
+    $(this.contentDiv).append('<hr class="editionViewEndRule">');
     DEBUG.trace("editionVE.renderEditionStructure","before add Handlers to DOM for edn " + this.edition.id);
     this.renumberFootnotes();
     this.addEventHandlers(); // needs to be done after content created

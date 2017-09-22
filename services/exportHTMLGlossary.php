@@ -55,6 +55,7 @@
   $retVal = array();
   $catID = (array_key_exists('catID',$_REQUEST)? $_REQUEST['catID']:null);
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
+  $exportFilename = (array_key_exists('filename',$_REQUEST)? $_REQUEST['filename']:null);//will export to READ_FILE_STORE/DBNAME/catTag
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
   $useTranscription = (!array_key_exists('usevalue',$_REQUEST)? true:false);
   $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
@@ -435,7 +436,7 @@
                   if ($isFirstKey1) {
                     $isFirstKey1 = false;
                     if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {
-                      if ($lemmaPos != 'adv.' && $lemmaPos != 'ind.'){ //term dependency
+                      if ($termLookup[$lemmaPos] != 'adv.' && $termLookup[$lemmaPos] != 'ind.'){ //term dependency
                         $attestedHtml .= "<span class=\"inflectdescript\">unclear: </span>";
                       }
                     } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 != '?') {
@@ -496,7 +497,7 @@
         $relatedHtml = "";
         if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;
-          $linksHeader = "<span class=\"lemmaLinksHeader seeLinksHeader\">see</span>";
+          $linksHeader = "<span class=\"lemmaLinksHeader seeLinksHeader\">See</span>";
           if ($hasAttestations) {
             $linksHeader = "<span class=\"lemmaLinksHeader seeAlsoLinksHeader\">See also</span>";
           }

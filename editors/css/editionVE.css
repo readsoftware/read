@@ -25,7 +25,6 @@
 #textEditPage .textDivHeader, #textEditPage h3 {
   font-weight: bold;
   padding-right: 15px;
-  margin-left: -20px;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -113,6 +112,13 @@ div.editContainer.showTokenSep .toksep {
   background-color: blue;
 }
 
+#textEditPage .editionViewEndRule {
+  padding: 1px;
+  color: inherit;
+  background-color: transparent;
+  border: none;
+}
+
 #textEditPage .tcmedit {
   background-color: #e5e5e5;
 }
@@ -193,9 +199,9 @@ div.prose.lastStructure {
   display: none;
 }
 .ednveContentDiv, .transVContentDiv {
-  padding-left: 30px;
+  padding-left: 5px;
   overflow-y: auto;
-  max-width: 96%;
+  height: inherit!important;
   overflow-wrap: break-word;
 }
 .listDropdownButton {
@@ -240,6 +246,9 @@ div.freetext {
   width: 90%;
   color: #404040;
 }
+div.freetext.error {
+  color: #D01010;
+}
 .freetext .validationError{
   display: none;
 }
@@ -264,6 +273,9 @@ div.freetext {
 }
 .freetextInput{
   width: 80%;
+}
+.freetext.error .freetextInput{
+  border: solid 1px red;
 }
 .freetextResultTable{
   display: none;

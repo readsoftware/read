@@ -1131,7 +1131,7 @@ class Parser {
                     if (array_key_exists($char4,$graphemeCharacterMap[$char][$char2][$char3])){ // another char for grapheme
                       $inc++;
                       if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4])){ // invalid sequence
-                        array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2$char3$char4 has no sort code"." cfg line # $cfgLnCnt");
+                        array_push($this->_errors,"incomplete transcription at character $i line $lineMask, grapheme $char$char2$char3$char4 has no sort code"." cfg line # $cfgLnCnt");
                         return false;
                       }else{//found valid grapheme, save it
                         $str = $char.$char2.$char3.$char4;
@@ -1144,7 +1144,7 @@ class Parser {
                         }
                       }
                     }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3])){ // invalid sequence
-                      array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2$char3 needs follow-on char and $char4 is not a valid follow-on"." cfg line # $cfgLnCnt");
+                      array_push($this->_errors,"incomplete transcription at character $i line $lineMask, grapheme $char$char2$char3 needs follow-on char and $char4 is not a valid follow-on"." cfg line # $cfgLnCnt");
                       return false;
                     }else{//found valid grapheme, save it
                       $str = $char.$char2.$char3;
@@ -1157,7 +1157,7 @@ class Parser {
                       }
                     }
                   }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2])){ // invalid sequence
-                    array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2 needs follow-on char and $char3 is not a valid follow-on"." cfg line # $cfgLnCnt");
+                    array_push($this->_errors,"incomplete transcription at character $i line $lineMask, grapheme $char$char2 needs follow-on char and $char3 is not a valid follow-on"." cfg line # $cfgLnCnt");
                     return false;
                   }else{//found valid grapheme, save it
                     $str = $char.$char2;
@@ -1174,7 +1174,7 @@ class Parser {
                     }
                   }
                 }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char])){ // invalid sequence
-                  array_push($this->_errors,"incomplete trascription at character $i, grapheme $char needs follow-on char and $char2 is not a valid follow-on"." cfg line # $cfgLnCnt");
+                  array_push($this->_errors,"incomplete transcription at character $i, grapheme $char needs follow-on char and $char2 is not a valid follow-on"." cfg line # $cfgLnCnt");
                   return false;
                 }else{//found valid grapheme, save it
                   $str = $char;
@@ -1222,7 +1222,7 @@ class Parser {
                   $numberToken = false;
                 }
                 //handle vowel carrier insert case
-                if (($segState == "S" || $segState == "V") && $typ == "V") {//Start new Syllable with Vowel Carrier
+                if (($segState == "S" || $segState == "V" || $segState == "I") && $typ == "V") {//Start new Syllable with Vowel Carrier
                   //insert vowel carrier
                   $curGrapheme = new Grapheme();
                   $curGrapheme->setGrapheme("ʔ");
@@ -1507,7 +1507,7 @@ class Parser {
                   }
                 }
               }else{
-                array_push($this->_errors,"found unknown trascription symbol $char at character $i in linemask $lineMask of $ckn not found in grapheme character map"." cfg line # $cfgLnCnt");
+                array_push($this->_errors,"found unknown transcription symbol $char at character $i in linemask $lineMask of $ckn not found in grapheme character map"." cfg line # $cfgLnCnt");
                 if ($this->_breakOnError) {
                   return;
                 }
