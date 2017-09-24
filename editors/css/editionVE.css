@@ -112,7 +112,7 @@ div.editContainer.showTokenSep .toksep {
   background-color: blue;
 }
 
-#textEditPage .editionViewEndRule {
+#textEditPage .viewEndRule {
   padding: 1px;
   color: inherit;
   background-color: transparent;
@@ -160,7 +160,6 @@ div.section.level3,
 div.section.level4,
 div.section.level5{
   display: inline-block;
-  width: 95%;
 }
 
 div.section.Sentence{
@@ -224,7 +223,6 @@ div.prose.lastStructure {
 }
 .prose {
   display: inline-flex;
-  justify-content: space-evenly;
   word-break: keep-all;
   align-items: flex-start;
   flex-wrap: wrap;

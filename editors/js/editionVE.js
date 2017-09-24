@@ -5877,7 +5877,7 @@ mergeLine: function (direction,cbError) {
       $(this.contentDiv).append(html);
       grpOrd = ret[1];
     }
-    $(this.contentDiv).append('<hr class="editionViewEndRule">');
+    $(this.contentDiv).append('<hr class="viewEndRule">');
     DEBUG.trace("editionVE.renderEdition","before add Handlers to DOM for edn " + this.edition.id);
     this.renumberFootnotes();
     this.addEventHandlers(); // needs to be done after content created

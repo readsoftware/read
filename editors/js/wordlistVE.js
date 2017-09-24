@@ -659,7 +659,7 @@ EDITORS.WordlistVE.prototype = {
         }
       }//end for entities in lemmas + wordlist
     }
-    this.contentDiv.html(html);
+    this.contentDiv.html(html+"<hr class=\"viewEndRule\">");
     this.addEventHandlers(this.contentDiv);
   },
 
@@ -1366,7 +1366,7 @@ EDITORS.WordlistVE.prototype = {
                   (!word.locLabel ? " missing word location label":""));
       }
     }
-    this.contentDiv.html(html);
+    this.contentDiv.html(html+"<hr class=\"viewEndRule\">");
     this.addEventHandlers(this.contentDiv);
   },
 

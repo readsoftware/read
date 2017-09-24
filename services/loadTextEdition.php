@@ -121,9 +121,9 @@
     $textPhysSeqTypeID = $termInfo['idByTerm_ParentLabel']['textphysical-sequencetype'];//term dependency
     $linePhysSeqTypeID = $termInfo['idByTerm_ParentLabel']['linephysical-textphysical'];//term dependency
     $ednID = $edition->getID();
-    $retString = '{"entities":{"update":{"edn":{"'.$ednID.'":{"description":"'.$edition->getDescription().'",'.
+    $retString = '{"entities":{"update":{"edn":{"'.$ednID.'":{"description":'.json_encode($edition->getDescription()).','.
                                '"id":"'.$ednID.'",'.
-                               '"value":"'.$edition->getDescription().'",'.
+                               '"value":'.json_encode($edition->getDescription()).','.
                                '"readonly":'.($edition->isReadonly()?'true':'false').','.
                                '"typeID":"'.$edition->getTypeID().'",'.
                                '"txtID":"'.$edition->getTextID().'",'.
