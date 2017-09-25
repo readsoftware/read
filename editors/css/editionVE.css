@@ -198,8 +198,8 @@ div.prose.lastStructure {
   display: none;
 }
 .ednveContentDiv, .transVContentDiv {
-  padding-left: 5px;
-  overflow-y: auto;
+  padding-left: 8px;
+  overflow-y: scroll;
   height: inherit!important;
   overflow-wrap: break-word;
 }
@@ -239,6 +239,9 @@ div.prose.lastStructure {
   color:black;
   line-height: 1.4;
 }
+.textDivHeader.freetext {
+  vertical-align: top;
+}
 div.freetext {
   display: inline-block;
   width: 90%;
@@ -246,6 +249,9 @@ div.freetext {
 }
 div.freetext.error {
   color: #D01010;
+}
+div.freetext.dirty {
+  color: orange;
 }
 .freetext .validationError{
   display: none;

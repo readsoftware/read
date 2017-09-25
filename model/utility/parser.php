@@ -969,6 +969,7 @@ class Parser {
                 }else{
                   array_push($this->_errors,"found no * for $char at character $i for TCM brackets for cknLine $ckn.$lineMask"." cfg line # $cfgLnCnt");
                   $i++;
+                  $tcm = $char;
                 }
               }else if ($char == "{" && mb_substr($script,$i+1,1)== '{'){//text critical scribal deletion start
                 $tcm = "{{";

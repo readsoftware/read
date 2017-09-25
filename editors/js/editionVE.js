@@ -2025,7 +2025,7 @@ mergeLine: function (direction,cbError) {
     var ednVE = this,sel,range, startNode, prevNode, headerNode, grdCnt = 500,
         context,refDivSeqID,refEntGID,grpClass = "",hdrClass = "", newLineHTML = "",
         newSclID, newTokGID, newTextDivSeqGID,newPhysLineSeqID,newLineOrd,refLineSeqGID,
-        insertdata, refTokID, posInsert = 'before', beforeFirst = false;
+        insertdata, refTokID, posInsert = 'after', beforeFirst = false;
     if (window.getSelection) {
       sel = window.getSelection();
       if (sel.getRangeAt && sel.rangeCount) {
@@ -2083,7 +2083,7 @@ mergeLine: function (direction,cbError) {
           return;
         }
       } else {
-        //if not endHeader then check for split token on this lines linebreak
+        //if not endHeader then check for cross line token on this lines linebreak
         if (!headerNode.hasClass('endHeader') && headerNode.nextUntil('br','.linebreak').attr('class').match(/split/)) {
           alert("Inserting line between lines sharing a token is not allowed. Please split the last token of this line first.");
           return;
@@ -4771,8 +4771,51 @@ mergeLine: function (direction,cbError) {
   removeFreeTextLineUI: function() {
     var ednVE = this;
     $('.freetextInput',ednVE.contentDiv).each(function(index,elem) {
-      var $freeTextInput = $(elem), $freeTextDiv = $freeTextInput.parent();
-      $freeTextDiv.html($freeTextInput.val());
+      var $freeTextInput = $(elem), $freeTextDiv = $freeTextInput.parent(),
+         classes = $freeTextDiv.attr('class'),
+         freeTextLineSeqID = classes.match(/lineseq(\d+)/)[1],
+         strFreetext=$freeTextInput.val();
+      if (freeTextLineSeqID) {
+        freeTextLineSequence = ednVE.dataMgr.getEntity('seq',freeTextLineSeqID);
+        if (freeTextLineSequence) {
+          if (freeTextLineSequence.freetext == strFreetext){//input is same as saved on server
+            if ($freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.removeClass('dirty');
+            }
+          } else if (strFreetext.length) {
+            if (!$freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.addClass('dirty');
+            }
+            if ($freeTextDiv.hasClass('error')) {
+              $freeTextDiv.removeClass('error');
+            }
+            if ($freeTextDiv.hasClass('valid')) {
+              $freeTextDiv.removeClass('valid');
+            }
+            if (freeTextLineSequence.errorMsg) {
+              delete freeTextLineSequence.errorMsg;
+            }
+          } else {// blank line or spaces
+            if (!$freeTextDiv.hasClass('error')) {
+              $freeTextDiv.addClass('error');
+            }
+            if ($freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.removeClass('dirty');
+            }
+            if ($freeTextDiv.hasClass('valid')) {
+              $freeTextDiv.removeClass('valid');
+            }
+            freeTextLineSequence.errorMsg = "blank or space only line text not supported, please enter …";
+          }
+          freeTextLineSequence.localfreetext = strFreetext;
+        }
+      }
+      //set FreeText line display
+      if (!strFreetext || strFreetext.trim() == "") {
+        $freeTextDiv.html("blank or space only line text not supported, please enter …");
+      } else {
+        $freeTextDiv.html(strFreetext);
+      }
     });
   },
 
@@ -4791,12 +4834,31 @@ mergeLine: function (direction,cbError) {
     ednVE.removeFreeTextLineUI();
     if (freeTextLineSeqID) {
       freeTextLineSequence = ednVE.dataMgr.getEntity('seq',freeTextLineSeqID);
-      translit = freeTextLineSequence.freetext;
-      if (freeTextLineSequence.validationMsg && !$freeTextDiv.hasClass('error')) {
-        $freeTextDiv.addClass('error');
+      if ( typeof freeTextLineSequence.localfreetext == 'undefined') {//first time
+        freeTextLineSequence.localfreetext = freeTextLineSequence.freetext;
+        if (freeTextLineSequence.validationMsg) {
+          freeTextLineSequence.errorMsg = decodeURIComponent(freeTextLineSequence.validationMsg);
+          $freeTextDiv.addClass('error');
+        }
+      } else {
+        if (freeTextLineSequence.localfreetext != freeTextLineSequence.freetext) {
+          if (freeTextLineSequence.localfreetext &&
+              freeTextLineSequence.localfreetext.trim().length &&
+              freeTextLineSequence.errorMsg) {
+            delete freeTextLineSequence.errorMsg;
+            $freeTextDiv.addClass('dirty');
+            $freeTextDiv.removeClass('error');
+            $freeTextDiv.removeClass('valid');
+          }
+        }
+        if (freeTextLineSequence.errorMsg) {
+          $freeTextDiv.addClass('error');
+          $freeTextDiv.removeClass('dirty');
+          $freeTextDiv.removeClass('valid');
+        }
       }
-      errMsg = (freeTextLineSequence.validationMsg?decodeURIComponent(freeTextLineSequence.validationMsg):"No Errors");
-      html = '<input class="freetextInput" contenteditable="true" value="'+translit+'" />'+
+      errMsg = (freeTextLineSequence.errorMsg?freeTextLineSequence.errorMsg:"");
+      html = '<input class="freetextInput" contenteditable="true" value="'+freeTextLineSequence.localfreetext+'" />'+
              '<button class="validateButton" >Validate</button>'+
              '<button class="commitButton" >Commit</button>'+
              '<div class="validationError">'+errMsg+'</div>';
@@ -4834,14 +4896,49 @@ mergeLine: function (direction,cbError) {
       });
       $freeTextInput.surpressBlurOnce = true;
       $freeTextInput.unbind('blur').bind('blur', function(e) {
+        var strFreetext = $freeTextInput.val();
         if ($freeTextInput.surpressBlurOnce){
           delete $freeTextInput.surpressBlurOnce;
           e.stopImmediatePropagation();
           return false;
         }
-        freeTextLineSequence.freetext = $freeTextInput.val(); //temp solution TODO call save freetext service.
+        freeTextLineSequence.localfreetext = $freeTextInput.val(); //temp solution TODO call save freetext service.
         if (!lostFocusToValidate) {
-          $freeTextDiv.html($freeTextInput.val());
+          if (!strFreetext || strFreetext.trim() == "") {
+            $freeTextDiv.html("blank or space only line text not supported, please enter …");
+          } else {
+            $freeTextDiv.html(strFreetext);
+          }
+          if (freeTextLineSequence.freetext == strFreetext){//input is same as saved on server
+            if ($freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.removeClass('dirty');
+            }
+          } else if (strFreetext.length) {
+            if (!$freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.addClass('dirty');
+            }
+            if ($freeTextDiv.hasClass('error')) {
+              $freeTextDiv.removeClass('error');
+            }
+            if ($freeTextDiv.hasClass('valid')) {
+              $freeTextDiv.removeClass('valid');
+            }
+            if (freeTextLineSequence.errorMsg) {
+              delete freeTextLineSequence.errorMsg;
+            }
+          } else {
+            if (!$freeTextDiv.hasClass('error')) {
+              $freeTextDiv.addClass('error');
+            }
+            if ($freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.removeClass('dirty');
+            }
+            if ($freeTextDiv.hasClass('valid')) {
+              $freeTextDiv.removeClass('valid');
+            }
+            freeTextLineSequence.errorMsg = "blank or space only line text not supported, please enter …";
+          }
+          freeTextLineSequence.localfreetext = strFreetext;
         } else {
           lostFocusToValidate = false;
         }
@@ -4864,60 +4961,79 @@ mergeLine: function (direction,cbError) {
         return false;
       });
       validateBtn.unbind('click').bind('click', function(e) {
+        var strFreetext = $freeTextInput.val();
         lostFocusToValidate = true;
-        $freeTextInput.focus();
-        validateData = { seqID: freeTextLineSeqID,
-                         freetext: $freeTextInput.val()};
-        $.ajax({
-            type:"POST",
-            dataType: 'json',
-            url: basepath+'/services/validateFreeTextLine.php?db='+dbName,
-            data: validateData,
-            asynch: true,
-            success: function (data, status, xhr) {
-              var seqID = freeTextLineSeqID;
-              if (typeof data == 'object') {
-                if (data.entities) {
-                  //update data
-                  ednVE.dataMgr.updateLocalCache(data,ednVE.edition.txtID);
-                }
-                if (data.success) {
-                  if (!data.errString) {
-                    //remove any error and/or dirty indicators
-                    if ($freeTextDiv.hasClass('error')) {
-                      $freeTextDiv.removeClass('error');
-                    }
-                    //mark as valid so commit btn will show
-                    if (!$freeTextDiv.hasClass('valid')) {
-                      $freeTextDiv.addClass('valid');
-                    }
-                    //ensure that seq.validationMsg was removed
-                    errMsgDiv.html();
-                  } else {
-                    //remove any valid and/or dirty indicators
-                    if ($freeTextDiv.hasClass('valid')) {
-                      $freeTextDiv.removeClass('valid');
-                    }
-                    //mark validationError
-                    if (!$freeTextDiv.hasClass('error')) {
-                      $freeTextDiv.addClass('error');
-                    }
-                    //and update error UI
-                    errMsgDiv.html(decodeURIComponent(data.errString));
+        if (!strFreetext || strFreetext.trim() == "") {
+          //remove any valid and/or dirty indicators
+          if ($freeTextDiv.hasClass('valid')) {
+            $freeTextDiv.removeClass('valid');
+          }
+          if ($freeTextDiv.hasClass('dirty')) {
+            $freeTextDiv.removeClass('dirty');
+          }
+          //mark validationError
+          if (!$freeTextDiv.hasClass('error')) {
+            $freeTextDiv.addClass('error');
+          }
+          //and update error UI
+          freeTextLineSequence.localfreetext = strFreetext;
+          freeTextLineSequence.validationMsg = "blank or space only line text not supported, please enter …";
+          errMsgDiv.html(freeTextLineSequence.validationMsg);
+        } else {
+          $freeTextInput.focus();
+          validateData = { seqID: freeTextLineSeqID,
+                           freetext: $freeTextInput.val()};
+          $.ajax({
+              type:"POST",
+              dataType: 'json',
+              url: basepath+'/services/validateFreeTextLine.php?db='+dbName,
+              data: validateData,
+              asynch: true,
+              success: function (data, status, xhr) {
+                var seqID = freeTextLineSeqID;
+                if (typeof data == 'object') {
+                  if (data.entities) {
+                    //update data
+                    ednVE.dataMgr.updateLocalCache(data,ednVE.edition.txtID);
                   }
-                }else if (data['errors']) {
-                  alert("Error(s) occurred while trying to validate a freetext line. Error: " + data['errors'].join(" : "));
+                  if (data.success) {
+                    if (!data.errString) {
+                      //remove any error and/or dirty indicators
+                      if ($freeTextDiv.hasClass('error')) {
+                        $freeTextDiv.removeClass('error');
+                      }
+                      //mark as valid so commit btn will show
+                      if (!$freeTextDiv.hasClass('valid')) {
+                        $freeTextDiv.addClass('valid');
+                      }
+                      //ensure that seq.validationMsg was removed
+                      errMsgDiv.html();
+                    } else {
+                      //remove any valid and/or dirty indicators
+                      if ($freeTextDiv.hasClass('valid')) {
+                        $freeTextDiv.removeClass('valid');
+                      }
+                      //mark validationError
+                      if (!$freeTextDiv.hasClass('error')) {
+                        $freeTextDiv.addClass('error');
+                      }
+                      //and update error UI
+                      errMsgDiv.html(decodeURIComponent(data.errString));
+                    }
+                  }else if (data['errors']) {
+                    alert("Error(s) occurred while trying to validate a freetext line. Error: " + data['errors'].join(" : "));
+                  }
+                  if (data.warnings) {
+                    DEBUG.log("warn", "warnings during  validate freetext - " + data.warnings.join(" : "));
+                  }
                 }
-                if (data.warnings) {
-                  DEBUG.log("warn", "warnings during  validate freetext - " + data.warnings.join(" : "));
-                }
+              },// end success cb
+              error: function (xhr,status,error) {
+                  // add record failed.
+                  errStr = "An error occurred while trying to call  validate freetext. Error: " + error;
               }
-            },// end success cb
-            error: function (xhr,status,error) {
-                // add record failed.
-                errStr = "An error occurred while trying to call  validate freetext. Error: " + error;
-            }
-        });// end ajax
+          });// end ajax
+        }
         e.stopImmediatePropagation();
         return false;
       });
@@ -4996,8 +5112,6 @@ mergeLine: function (direction,cbError) {
         e.stopImmediatePropagation();
         return false;
       });
-//      freeTextInput.focus();
-//      freeTextInput.select();
       if (window.getSelection) {
         sel = window.getSelection();
         if (sel.getRangeAt && sel.rangeCount) {
@@ -5015,6 +5129,7 @@ mergeLine: function (direction,cbError) {
           sel.addRange(range);
         }
       }
+      $freeTextInput.focus();
     }
   },
 
