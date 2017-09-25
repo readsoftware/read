@@ -3987,7 +3987,8 @@ mergeLine: function (direction,cbError) {
 
     function findNextGraGroupOrFreetext(elem) {
       var nextNode = $(elem), grdCnt = 500;
-      if (!nextNode.hasClass('grpGra') && !nextNode.hasClass('freetext')) {// move atleast one node
+      if (!nextNode.hasClass('grpGra') && !nextNode.hasClass('freetext') ||
+          nextNode.hasClass('textDivHeader') && !nextNode.hasClass('endHeader')) {// move atleast one node
         nextNode = nextNode.next();
       }
       while (nextNode.length && !nextNode.hasClass('grpGra') && !nextNode.hasClass('freetext')  && grdCnt--) {
@@ -4011,7 +4012,8 @@ mergeLine: function (direction,cbError) {
 
     function findPrevGraGroupOrFreetext(elem) {
       var prevNode = $(elem), grdCnt = 500;
-      if (!prevNode.hasClass('grpGra') && !prevNode.hasClass('freetext')) {// move atleast one node
+      if (!prevNode.hasClass('grpGra') && !prevNode.hasClass('freetext') ||
+          prevNode.hasClass('textDivHeader') && !prevNode.hasClass('startHeader')) {// move atleast one node
         prevNode = prevNode.prev();
       }
       while (prevNode.length && !prevNode.hasClass('grpGra') && !prevNode.hasClass('freetext') && grdCnt--) {
