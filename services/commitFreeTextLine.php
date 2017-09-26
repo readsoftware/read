@@ -245,7 +245,7 @@
                     break;
                   }
                 }
-                array_push($warnings,"commit freetext - found empty next physical line sequence $neighborGID");
+                array_push($warnings,"commit freetext - found empty next physical line sequence ".$neighborGID[0]);
               }
             }
           }

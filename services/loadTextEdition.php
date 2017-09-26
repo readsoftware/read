@@ -183,7 +183,7 @@
                                         '"value":"'.$sequence->getLabel().'",'.
                                         '"readonly":'.($sequence->isReadonly()?'true':'false').','.
                                         '"typeID":"'.$seqTypeID.'",'.
-                                        '"entityIDs":["'.join('","',$sequence->getEntityIDs()).'"]';
+                                        '"entityIDs":['.(count($sequence->getEntityIDs())?'"'.join('","',$sequence->getEntityIDs()).'"':'').']';
           $superscript = $sequence->getSuperScript();
           if ($superscript && count($superscript) > 0) {
             $seqRetString .= ',"sup":"'.$superscript.'"';

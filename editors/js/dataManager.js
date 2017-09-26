@@ -335,6 +335,45 @@ MANAGERS.DataManager.prototype = {
 
 
 /**
+* checkForSplit - determine is syllable is split
+*
+* @param int tokID token id to be checked
+* @param int sclID syllable id to be checked
+* @param boolean end determine whether to check end or start(defalut) of token
+*
+* @returns int position of split or zero if not split
+*/
+
+  checkForSplit: function (tokID, sclID, end) {
+    var token = this.entities.tok[tokID],
+        strTok = token.value,strTokCompare,
+        syllable = this.entities.scl[sclID],
+        strScl = syllable.value,
+        cntScl = strScl.length,
+        split = 0,
+        i = 0,j;
+    if (!end) { //check start of token
+      strTokCompare = strTok.substring(0,cntScl);
+      split = 0;
+      while ( strScl != strTokCompare) {
+        split++;
+        strScl = strScl.substring(1);//remove lead char
+        strTokCompare = strTokCompare.substring(0, strTokCompare.length - 1);
+      }
+    } else {
+      strTokCompare = strTok.substring(strTok.length - cntScl);
+      split = cntScl;
+      while ( strScl != strTokCompare) {
+        split--;
+        strTokCompare = strTokCompare.substring(1);//remove lead char
+        strScl = strScl.substring(0, strScl.length - 1);
+      }
+    }
+    return split;
+  },
+
+
+/**
 * calculate switch hash for an entity
 *
 * @param string prefix Short string indicating the type of entity
@@ -346,7 +385,7 @@ MANAGERS.DataManager.prototype = {
     if (this.entities[prefix] && this.entities[prefix][entID]) {
       entity = this.entities[prefix][entID];
       switch (prefix) {
-        case "scl":
+        case "xxxscl"://xxxdeprecate this case
           if (entity['segID']) {
             startID = endID = entity['segID'];
           } else {
@@ -359,11 +398,19 @@ MANAGERS.DataManager.prototype = {
             endSclID = entity['syllableClusterIDs'][entity['syllableClusterIDs'].length-1];
             if (startSclID && this.entities['scl'][startSclID] && this.entities['scl'][startSclID]['segID']) {
               startID = this.entities['scl'][startSclID]['segID'];
+              split = this.checkForSplit(entity.id,startSclID,false);
+              if (split){
+                startID = "scl"+startSclID+"S"+split;
+              }
             } else {
               DEBUG.log("error",'in dataManager.calcSwitchHash token id ' + entID + ' start syllable invalid or missing segment id.');
             }
             if (endSclID && this.entities['scl'][endSclID] && this.entities['scl'][endSclID]['segID']) {
               endID = this.entities['scl'][endSclID]['segID'];
+              split = this.checkForSplit(entity.id,endSclID,true);
+              if (split){
+                endID = "scl"+endSclID+"S"+split;
+              }
             } else {
               DEBUG.log("error",'in dataManager.calcSwitchHash token id ' + entID + ' end syllable invalid or missing segment id.');
             }
@@ -379,6 +426,10 @@ MANAGERS.DataManager.prototype = {
               startSclID = this.entities['tok'][startTokID]['syllableClusterIDs'][0];
               if (startSclID && this.entities['scl'][startSclID] && this.entities['scl'][startSclID]['segID']) {
                 startID = this.entities['scl'][startSclID]['segID'];
+                split = this.checkForSplit(startTokID,startSclID,false);
+                if (split){
+                  startID = "scl"+startSclID+"S"+split;
+                }
               } else {
                 DEBUG.log("error",'in dataManager.calcSwitchHash start token id ' + startTokID + ' start syllable invalid or missing segment id.');
               }
@@ -389,6 +440,10 @@ MANAGERS.DataManager.prototype = {
               endSclID = this.entities['tok'][endTokID]['syllableClusterIDs'][this.entities['tok'][endTokID]['syllableClusterIDs'].length-1];
               if (endSclID && this.entities['scl'][endSclID] && this.entities['scl'][endSclID]['segID']) {
                 endID = this.entities['scl'][endSclID]['segID'];
+                split = this.checkForSplit(endTokID,endSclID,true);
+                if (split){
+                  endID = "scl"+endSclID+"S"+split;
+                }
               } else {
                 DEBUG.log("error",'in dataManager.calcSwitchHash end token id ' + endTokID + ' end syllable invalid or missing segment id.');
               }
@@ -693,7 +748,8 @@ MANAGERS.DataManager.prototype = {
         prefix = entTag.substring(0,3),
         entID = entTag.substring(3),
         entity;
-    if (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp' ) {
+// deprecate switch for scl    if (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp' ) {
+    if (prefix == 'tok' || prefix == 'cmp' ) {
       entity = this.getEntityFromGID(entTag);
       if (entity && !entity.startSegID) {
         this.calcSwitchHash(prefix,entID);

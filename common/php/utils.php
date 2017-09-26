@@ -1235,6 +1235,41 @@ function getSwitchInfoByTextFromEntities(&$entities,&$gra2SclMap,&$errors,&$warn
 }
 
 /**
+* checkForSplit - determine is syllable is split
+*
+* @param Token $token to be checked
+* @param Syllable $syllable located at beginning or end of token to be checked
+* @param boolean $end determine whether to check end or start(defalut) of token
+*
+* @returns int position of split or zero if not split
+*/
+
+function checkForSplit($token, $syllable, $end) {
+  $strTok = $token.value;
+  $strScl = $syllable.value;
+  $cntScl = strlen($strScl);
+  $split = 0;
+  if (!end) { //check start of token
+    $strTokCompare = substr($strTok,0,$cntScl);
+    $split = 0;
+    while ( $strScl != $strTokCompare) {
+      $split++;
+      $strScl = substr($strScl,1);//remove lead char
+      $strTokCompare = substr($strTokCompar,0, (strlen($strTokCompare) - 1));
+    }
+  } else {
+    $strTokCompare = $strTok.substring($strTok.length - $cntScl);
+    $split = $cntScl;
+    while ( $strScl != $strTokCompare) {
+      $split--;
+      $strTokCompare = substr($strTokCompare,1);//remove lead char
+      $strScl = substr($strScl,0, (strlen($strScl) - 1));
+    }
+  }
+  return $split;
+}
+
+/**
 * update existing switch information given a new entities global identifier
 *
 * @param int $entGID
@@ -1254,7 +1289,7 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
   if (array_key_exists($prefix,$entities) && array_key_exists($id, $entities[$prefix])) {
     $entObj = $entities[$prefix][$id];
     switch ($prefix) {
-      case "scl":
+      case "xxxscl"://xxx deprecate switch for syllables
         if (array_key_exists('segID',$entObj)) {
           $startID = $endID = $entObj['segID'];
         }
@@ -1267,6 +1302,10 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
           if ($entities['scl'][$startSclID]) {
             if (array_key_exists('segID',$entities['scl'][$startSclID]) && $entities['scl'][$startSclID]['segID']) {
               $startID = $entities['scl'][$startSclID]['segID'];
+              $split = checkForSplit($entObj,$startSclID,false);
+              if ($split){
+                $startID = "scl".$startSclID."S".$split;
+              }
             } else {
               array_push($warnings,"warning no segID for syllable ID $startSclID of $entGID skipping switch calculation");
             }
@@ -1276,6 +1315,10 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
           if ($entities['scl'][$endSclID]) {
             if (array_key_exists('segID',$entities['scl'][$endSclID]) && $entities['scl'][$endSclID]['segID']) {
               $endID = $entities['scl'][$endSclID]['segID'];
+              $split = checkForSplit($entObj,$endSclID,false);
+              if ($split){
+                $endID = "scl".$endSclID."S".$split;
+              }
             } else {
               array_push($warnings,"warning no segID for syllable ID $endSclID of $entGID skipping switch calculation");
             }

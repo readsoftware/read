@@ -1038,7 +1038,7 @@ class Parser {
                 array_push($this->_errors,"error - compound hyphen found character $i at start of line $lineMask of $ckn"." cfg line # $cfgLnCnt");
               } else if  (mb_substr($script,$i-1,1) == " "){//previous char is a space and is not allowed
                 array_push($this->_errors,"error - compound hyphen following space found at character $i on line $lineMask of $ckn "." cfg line # $cfgLnCnt");
-              } else if (!@$cmpIndex && $tokIndex){//must be first separator of this compound
+              } else if (!@$cmpIndex && @$tokIndex){//must be first separator of this compound
                 $curCompound = new Compound();
                 $curCompound->setComponentIDs(array('tok:'.$tokTempID));
                 $curCompound->setVisibilityIDs($vis);
