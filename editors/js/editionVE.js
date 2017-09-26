@@ -2254,7 +2254,7 @@ mergeLine: function (direction,cbError) {
       }
       if (trgHeaderNode.length) {
         if (trgHeaderNode.hasClass('freetext')) {
-          trgFreetextNode = trgHeaderNode.nextUntil('linebreak','.freetext');
+          trgFreetextNode = trgHeaderNode.nextUntil('.linebreak','.freetext');
         } else {
           trgSclID = (trgHeaderNode.nextUntil('.linebreak','.grpGra').first().attr('class')).match(/scl(\d+)/)[1];
         }

@@ -256,7 +256,11 @@
             if ($txtDivSequences->getCount()){
               if ($prevCtxGIDs) {
                 foreach ($txtDivSequences as $sequence) {
-                  $interGIDs = array_intersect($prevCtxGIDs,$sequence->getEntityIDs());
+                  $seqEntityIDs = $sequence->getEntityIDs();
+                  if (!$seqEntityIDs || count($seqEntityIDs) == 0) {
+                    continue;
+                  }
+                  $interGIDs = array_intersect($prevCtxGIDs,$seqEntityIDs);
                   if (count($interGIDs)) {
                     $prevTxtDivSeq = $sequence;
                     foreach($interGIDs as $interGID) {
@@ -269,6 +273,10 @@
               }
               if ($nextCtxGIDs) {
                 foreach ($txtDivSequences as $sequence) {
+                  $seqEntityIDs = $sequence->getEntityIDs();
+                  if (!$seqEntityIDs || count($seqEntityIDs) == 0) {
+                    continue;
+                  }
                   $interGIDs = array_intersect($nextCtxGIDs,$sequence->getEntityIDs());
                   if (count($interGIDs)) {
                     $nextTxtDivSeq = $sequence;
