@@ -239,6 +239,9 @@ div.prose.lastStructure {
   color:black;
   line-height: 1.4;
 }
+.textDivHeader>sup {
+  padding-left: 2px;
+}
 .textDivHeader.freetext {
   vertical-align: top;
 }

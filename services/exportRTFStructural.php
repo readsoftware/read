@@ -176,6 +176,7 @@
     } else {//process analysis
       //calculate  post grapheme id to physical line label map
       $graID2LineLabelMap = array();
+      $graID2LineFootnoteMap = array();
       if ($seqPhys && $seqPhys->getEntityIDs() && count($seqPhys->getEntityIDs()) > 0) {
         foreach ($seqPhys->getEntities(true) as $physicalLineSeq) {
           $sclGIDs = $physicalLineSeq->getEntityIDs();
@@ -200,9 +201,14 @@
           if (strpos($syllable->getSortCode(),"0.19")=== 0 &&
               strpos($syllable->getSortCode2(),"0.5")=== 0 &&
               count($graIDs) > 1) { //begins with vowel carrier so choose second grapheme
-            $graID2LineLabelMap[$graIDs[1]] = $label;
+            $mapGraID = $graIDs[1];
           } else {
-            $graID2LineLabelMap[$graIDs[0]] = $label;
+            $mapGraID = $graIDs[0];
+          }
+          $graID2LineLabelMap[$mapGraID] = $label;
+          $physLineFootnote = getEntityFootnotesRTF($physicalLineSeq);
+          if ($physLineFootnote) {
+            $graID2LineFootnoteMap[$mapGraID] = $physLineFootnote;
           }
         }
       }
@@ -287,7 +293,7 @@
 
 
   function renderWordRTF($entity, $isLastWord) {
-    global $prevTCMS, $graID2LineLabelMap, $rtf, $tcmSrchStrings, $tcmRtfRplcStrings,
+    global $prevTCMS, $graID2LineLabelMap, $graID2LineFootnoteMap, $rtf, $tcmSrchStrings, $tcmRtfRplcStrings,
            $srchStrings, $rplcStrings, $endStyle, $needsSpace, $proseBeginning,
            $proseStyle, $eol, $space, $previousGraFootnotes, $lineMarkerStyle;
     $entGID = $entity->getGlobalID();
@@ -357,10 +363,18 @@
             }
             $wordRTF = $lineMarkerStyle;
             if ($firstT && $firstG || $lastT && $lastG) {
-              $wordRTF .= ($proseBeginning?"":" ")."[".$graID2LineLabelMap[$graID]."]"." ";
+              $wordRTF .= ($proseBeginning?"":" ")."[".$graID2LineLabelMap[$graID];
+              if ( array_key_exists($graID,$graID2LineFootnoteMap)) {
+                $wordRTF .= $graID2LineFootnoteMap[$graID];
+              }
+              $wordRTF .= "]"." ";
               $needsSpace = false;
             } else {
-              $wordRTF .= "[".$graID2LineLabelMap[$graID]."]";
+              $wordRTF .= "[".$graID2LineLabelMap[$graID];
+              if ( array_key_exists($graID,$graID2LineFootnoteMap)) {
+                $wordRTF .= $graID2LineFootnoteMap[$graID];
+              }
+              $wordRTF .= "]";
             }
             $wordRTF .= $endStyle;
             $prevTCMS = "";//at a new physical line so reset TCM
@@ -404,10 +418,10 @@
         }//end for graphIDs
         $previousGraFootnotes .= getEntityFootnotesRTF($token);
       }//end for token IDs
-      if ($tokCnt > 1) {//compound so check footnotes
+      if ($prefix == 'cmp') {//compound so check footnotes
         $previousGraFootnotes .= getEntityFootnotesRTF($entity);
       }
-      if ($isLastWord && $prevTCMS && $prevTCMS != "S") {//close off any TCM
+      if ($isLastWord &&$prevTCMS && $prevTCMS != "S") {//close off any TCM
         $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
         $prevTCMS = "";//reset since we closed of TCMs for the structure.
                        //This will ensure next structures output will have opening TCMs
@@ -419,13 +433,13 @@
           array_push($wordParts,($wordRTF?utf8ToRtf($wordRTF):"").$tcmBrackets);
           $wordRTF = "";
         }
-        if ($previousGraFootnotes) {
-          array_push($wordParts,$previousGraFootnotes);
-          $previousGraFootnotes = "";
-        }
       }
       if ($wordRTF) {
         array_push($wordParts,utf8ToRtf($wordRTF));
+      }
+      if ($isLastWord && $previousGraFootnotes) {
+        array_push($wordParts,$previousGraFootnotes);
+        $previousGraFootnotes = "";
       }
       $wordRTF = join("",$wordParts);
       $wordRTF = preg_replace('/\/\/\//',"",$wordRTF); // remove edge indicator

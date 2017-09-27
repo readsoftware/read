@@ -5707,10 +5707,11 @@ mergeLine: function (direction,cbError) {
       lineHTML = '<span class="textDivHeader seqLabel'+(headerClass?' '+ headerClass:'')+
                       (lineord?' ordL'+ lineord:'')+
                       (physLineSeqID?' lineseq'+ physLineSeqID:'')+'">'+
-                       physLineSeq.label+'</span>';
+                       physLineSeq.label;
       if ( this.lookup.seq && this.lookup.seq[physLineSeqID] && this.lookup.seq[physLineSeqID].fnMarker ) {
         lineHTML += this.lookup.seq[physLineSeqID].fnMarker;
       }
+      lineHTML += '</span>';
       sclIDs = physLineSeq.entityIDs;
       //for each syllable in physical line sequence
       for(i=0; i<sclIDs.length; i++) {
