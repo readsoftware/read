@@ -788,6 +788,7 @@ EDITORS.EditionVE.prototype = {
                       ednVE.downloadRTFLink.attr('href',basepath+"/services/exportRTFEdition.php?db="+dbName+"&ednID="+ednVE.edition.id+"&style="+ednVE.repType+"&download=1");
                       ednVE.downloadRTFBtn.attr('title',"Download Physical '"+ednVE.repType+"' View to RTF");
                       ednVE.renderEdition();
+                      ednVE.refreshSeqMarkers();
                     });
 
     this.formatBtnDiv = $('<div class="toolbuttondiv">' +
@@ -1140,7 +1141,7 @@ EDITORS.EditionVE.prototype = {
     var ednVE = this;
       //modify
       if (!this.editMode && !ednVE.edition.readonly) {
-        $('sup',this.editDiv).remove();
+//        $('sup',this.editDiv).remove();
         this.editMode = "modify";
         editModeBtn.html("Modify");
         if (!this.sclEd) {
@@ -1212,6 +1213,7 @@ EDITORS.EditionVE.prototype = {
       } else if (ednVE.editMode == "tag") {
           delete ednVE.editMode;
           editModeBtn.html("View");
+          ednVE.refreshSeqMarkers();
           $(ednVE.contentDiv).removeClass('tagging');
           this.edStyleBtn.removeAttr('disabled');
           this.linkSclBtn.removeAttr('disabled');
@@ -1641,6 +1643,7 @@ mergeLine: function (direction,cbError) {
                 ednVE.calcLineGraphemeLookups(physLineSeqID);
                 //redraw line
                 ednVE.reRenderPhysLine(lineOrdTag,physLineSeqID);
+                ednVE.refreshSeqMarkers();
                 //position sylED on new syllable
                 if (typeof sclEd != "undefined") {
                   if (data.entities.update && data.entities.update.tok) {//split an owned token
@@ -5147,7 +5150,7 @@ mergeLine: function (direction,cbError) {
         seqID, ednSeqIDs = this.edition.seqIDs,
         seqLK = this.dataMgr.entities['seq'],
         i,cnt;
-    this.lookup = { 'gra':{}, 'scl':{}, 'tok':{}, 'cmp':{}};
+    this.lookup = { 'gra':{}, 'scl':{}, 'tok':{}, 'cmp':{}, 'seq':{}};
     if (seqLK && Object.keys(seqLK).length && ednSeqIDs && ednSeqIDs.length) {
       cnt = ednSeqIDs.length;
       for (i=0; i<cnt; i++) {
@@ -5466,11 +5469,12 @@ mergeLine: function (direction,cbError) {
         }
         entFootnote = this.getEntFootnoteHtml('scl'+sclID);
         if (entFootnote) {
-          if (this.lookup.gra[graID].fnMarker) {
-            this.lookup.gra[graID].fnMarker += entFootnote;
-          } else {
-            this.lookup.gra[graID].fnMarker = entFootnote;
+          if (!this.lookup.gra[graID].fnMarker) {
+            this.lookup.gra[graID].fnMarker = {};
           }
+          this.lookup.gra[graID].fnMarker['scl'+sclID] = entFootnote;
+        } else if (this.lookup.gra[graID].fnMarker && this.lookup.gra[graID].fnMarker['scl'+sclID]) {
+          delete this.lookup.gra[graID].fnMarker['scl'+sclID];
         }
       }
       // update last grapheme boundary to appropriate linebreak
@@ -5492,10 +5496,13 @@ mergeLine: function (direction,cbError) {
       }
       entFootnote = this.getEntFootnoteHtml('seq'+physLineSeqID);
       if (entFootnote) {
-        if (this.lookup.gra[graID].fnMarker) {
-          this.lookup.gra[graID].fnMarker += entFootnote;
+        if (!this.lookup.seq[physLineSeqID]) {
+          this.lookup.seq[physLineSeqID] = {};
+        }
+        if (this.lookup.seq[physLineSeqID].fnMarker) {
+          this.lookup.seq[physLineSeqID].fnMarker += entFootnote;
         } else {
-          this.lookup.gra[graID].fnMarker = entFootnote;
+          this.lookup.seq[physLineSeqID].fnMarker = entFootnote;
         }
       }
     } else if (!physLineSeq){
@@ -5641,11 +5648,12 @@ mergeLine: function (direction,cbError) {
             this.lookup.gra[graID].tokctx = context+' tok'+entID;
             if ((k+1) == graIDs.length) { // last grapheme of this token create the HTML boundary marker
               if (entFootnote) {
-                if (this.lookup.gra[graID].fnMarker) {
-                  this.lookup.gra[graID].fnMarker += entFootnote;
-                } else {
-                  this.lookup.gra[graID].fnMarker = entFootnote;
+                if (!this.lookup.gra[graID].fnMarker) {
+                  this.lookup.gra[graID].fnMarker = {};
                 }
+                this.lookup.gra[graID].fnMarker[context+' tok'+entID] = entFootnote;
+              } else if (this.lookup.gra[graID].fnMarker && this.lookup.gra[graID].fnMarker[context+' tok'+entID]) {
+                delete this.lookup.gra[graID].fnMarker[context+' tok'+entID];
               }
               isCmpTokenSeparator = (!isLastEnt && context.search(/cmp/)>-1);
               if (!entities.gra[graID] || !entities.gra[graID].type) {
@@ -5690,9 +5698,9 @@ mergeLine: function (direction,cbError) {
 
   renderPhysicalLine: function (physLineSeqID, headerClass, groupClass,grpOrdStart, lineord) {
     DEBUG.traceEntry("editionVE.renderPhysicalLine","physLseqID = " + physLineSeqID);
-    var  entities = this.dataMgr.entities, physLineSeq = entities.seq[physLineSeqID],
-        grpOrd = grpOrdStart?grpOrdStart:1,sclID,sclIDs,i,j, hasNonReconConsnt, hasNonAddedConsnt, isConsnt, typ,
-        graLU, grapheme,previousA, previousGraTCMS, graID,graIDs,i,j,lineHTML,grpHTML = "",inRestore = false,
+    var  entities = this.dataMgr.entities, physLineSeq = entities.seq[physLineSeqID], fnCtx,
+        grpOrd = grpOrdStart?grpOrdStart:1, sclID, sclIDs, i, j, hasNonReconConsnt, hasNonAddedConsnt, isConsnt, typ,
+        graLU, grapheme, previousA, previousGraTCMS, graID, graIDs, lineHTML, grpHTML = "", inRestore = false,
         prevGraIsVowelCarrier = false, plusSign = (this.repType == "diplomatic" ? "+&nbsp":"+");
     if (physLineSeq && physLineSeq.entityIDs && physLineSeq.entityIDs.length) {
       //calculate line header
@@ -5700,6 +5708,9 @@ mergeLine: function (direction,cbError) {
                       (lineord?' ordL'+ lineord:'')+
                       (physLineSeqID?' lineseq'+ physLineSeqID:'')+'">'+
                        physLineSeq.label+'</span>';
+      if ( this.lookup.seq && this.lookup.seq[physLineSeqID] && this.lookup.seq[physLineSeqID].fnMarker ) {
+        lineHTML += this.lookup.seq[physLineSeqID].fnMarker;
+      }
       sclIDs = physLineSeq.entityIDs;
       //for each syllable in physical line sequence
       for(i=0; i<sclIDs.length; i++) {
@@ -5836,7 +5847,9 @@ mergeLine: function (direction,cbError) {
                 lineHTML += grpHTML+ '</span>';
                 grpHTML = '';
               }
-              lineHTML += graLU.fnMarker;
+              for (fnCtx in graLU.fnMarker) {
+                lineHTML += graLU.fnMarker[fnCtx];
+              }
             }
             //check for split syllable token break or compound token break
             if (graLU.boundary) {
