@@ -584,9 +584,9 @@ EDITORS.EditionVE.prototype = {
 * refresh sequence type markers in edition display
 */
 
-  refreshSeqMarkers: function () {
-    var ednVE = this, element,segTypeTag, color,
-        checkedItems, i, item;
+  refreshSeqMarkers: function (seqIDs) {
+    var ednVE = this, element,segTypeTag, color,label,
+        checkedItems, i, item, seqID, sequence, $marker;
     checkedItems = this.showSeqTree.jqxTree('getCheckedItems');
     this.calcSeqList();
     this.showSeqTree.jqxTree('clear');
@@ -601,6 +601,18 @@ EDITORS.EditionVE.prototype = {
         element = element.get(0);
         if ($('sup.'+segTypeTag,ednVE.editDiv).length == 0) {
           ednVE.injectSeqMarkers(segTypeTag,color);
+        } else if (seqIDs && seqIDs.length > 0){
+          for (j in seqIDs) {
+            seqID = seqIDs[j];
+            sequence = ednVE.dataMgr.getEntity('seq',seqID);
+            if (sequence) {
+              label = sequence.sup? sequence.sup : ( sequence.value?sequence.value:'seq'+seqID);
+              $marker = $('sup.seq'+seqID,ednVE.editDiv);
+              if ($marker) {
+                $marker.html(label);
+              }
+            }
+          }
         }
         this.showSeqTree.jqxTree('checkItem', element, true);
       } else {
@@ -617,14 +629,50 @@ EDITORS.EditionVE.prototype = {
     $('sup',this.editDiv).remove();
   },
 
+ afterUpdate: function(entTag) {
+    var ednVE = this, prefix, entID, entity, $elems,classes, match, txtDivSeqID, lineOrd, $header, physLineID;
+    entTag = entTag.replace(":","");// ensure GID is converted incase
+    prefix = entTag.substring(0,3);
+    entID = entTag.substring(3);
+    //find scope of change
+    if (prefix == "seq") {
+// todo define cases where this makes sense like structure sequence changes.
+    } else {
+      $elems = $("."+entTag);
+      if ($elems.length > 0) {
+        classes = $elems.get(0).className;
+        match = classes.match(/seq(\d+)/);
+        if (match && match.length > 1) {
+          txtDivSeqID = match[1];
+          ednVE.calcTextDivGraphemeLookups(txtDivSeqID);
+        }
+        match = classes.match(/ordL\d+/);
+        if (match) {
+          lineOrd = match[0];
+          $header = $(".textDivHeader."+lineOrd);
+          if ($header.length == 1) {
+            classes = $header.get(0).className;
+            match = classes.match(/lineseq(\d+)/);
+            if (match && match.length > 1) {
+              physLineID = match[1];
+              ednVE.calcLineGraphemeLookups(physLineID);
+              ednVE.reRenderPhysLine(lineOrd,physLineID);
+            }
+          }
+        }
+      }
+    }
+    //update presentation
+  },
+
 
 /**
 * create toolbars for this edition editor
 */
 
   createStaticToolbar: function () {
-    var ednVE = this;
-    var btnObjLevelName = this.id+'objlevel',
+    var ednVE = this,
+        btnObjLevelName = this.id+'objlevel',
         btnEdStyleName = this.id+'edstyle',
         btnFormatName = this.id+'edformat',
         btnLinkName = this.id+'link',
@@ -6226,7 +6274,9 @@ mergeLine: function (direction,cbError) {
                     grpHTML = '';
                   }
                   if (graLU.fnMarker) {
-                    wordHTML += graLU.fnMarker;
+                    for (fnCtx in graLU.fnMarker) {
+                      wordHTML += graLU.fnMarker[fnCtx];
+                    }
                   }
                   //add break node to html
   //                if (graLU.boundary.indexOf('toksep') == -1) {
@@ -6389,8 +6439,6 @@ mergeLine: function (direction,cbError) {
       this.renumberLines();
     }
   },
-
-
 
 
 /**

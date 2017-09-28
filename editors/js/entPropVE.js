@@ -148,6 +148,13 @@ EDITORS.EntityPropVE.prototype = {
   },
 
 
+  afterUpdate: function() {
+    if (this.controlVE && this.controlVE.afterUpdate) {
+      this.controlVE.afterUpdate(this.tag);
+    }
+  },
+
+
 /**
 * show entity's properties by creating UI for each property
 *
@@ -1707,6 +1714,9 @@ EDITORS.EntityPropVE.prototype = {
               //update data
               entPropVE.dataMgr.updateLocalCache(data,null);
               entPropVE.propMgr.showVE();
+              if (entPropVE.propMgr && entPropVE.propMgr.entityUpdated) {
+                entPropVE.propMgr.entityUpdated();
+              }
             }
             if (data.errors) {
               alert("An error occurred while trying to remove annotation record. Error: " + data.errors.join());
@@ -1992,7 +2002,7 @@ EDITORS.EntityPropVE.prototype = {
                     entPropVE.controlVE.setDefaultSeqType(sequence.typeID);
                   }
                   if (entPropVE.controlVE && entPropVE.controlVE.refreshSeqMarkers) {
-                    entPropVE.controlVE.refreshSeqMarkers();
+                    entPropVE.controlVE.refreshSeqMarkers([seqID]);
                   }
                   if (entPropVE.controlVE && entPropVE.controlVE.refreshPhysLineHeader) {
                     entPropVE.controlVE.refreshPhysLineHeader(seqID);
