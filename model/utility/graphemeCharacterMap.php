@@ -107,7 +107,7 @@ $graphemeCharacterMap = array(
 "+"=>array("srt"=>"953","ssrt"=>"953","typ"=>"O"),
 "/"=>array(
     "/"=>array(
-        "/"=>array("srt"=>"954","ssrt"=>"954","typ"=>"O")),
+        "/"=>array("srt"=>"954","ssrt"=>"954","typ"=>"I")),
     "srt"=>"959","ssrt"=>"959","typ"=>"O"), // debug temp assiqnment remove after / clean up
 "#"=>array("srt"=>"956","ssrt"=>"956","typ"=>"O"),
 "…"=>array("srt"=>"955","ssrt"=>"955","typ"=>"O"),

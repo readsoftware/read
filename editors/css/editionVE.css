@@ -249,12 +249,13 @@ div.freetext {
   display: inline-block;
   width: 90%;
   color: #404040;
+  background-color: rgb(216,216,216);
 }
 div.freetext.error {
   color: #D01010;
 }
 div.freetext.dirty {
-  color: orange;
+  background-color: rgb(255,192,76);
 }
 .freetext .validationError{
   display: none;
