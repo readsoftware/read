@@ -3481,25 +3481,26 @@ mergeLine: function (direction,cbError) {
             }
             break;
           case 8://"Backspace":
-            if ((e.ctrlKey || e.metaKey) && sclEditor ) {
-              if (sclEditor.isSelectAll()) {
+            if ((e.ctrlKey || e.metaKey) && sclEditor ) {//ctrl + backspace
+              if (sclEditor.isSelectAll()) {//entire syllable selected
                 sclEditor.removeSelected();
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
               } else if (sclEditor.hasCaret() &&
-                        sclEditor.caretAtBoundary("left")) {
+                        sclEditor.caretAtBoundary("left")) { // caret at left boundary of syllable
                 prevNode = sclEditor.prevAdjacent();
                 //check for sclEditor state next to left side auxilary element boundary, TCM or linebreak
                 if (prevNode.hasClass('TCM')){
-                  //process removing TCM
+                  //todo: process removing TCM ?? ignore right now
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
                 } else if (prevNode.hasClass('boundary')) {
-                  //process removing boundary
+                  //process removing boundary by combining this token with the previous
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to boundary node");
                   ednVE.combineTokens('prev');
                 } else if (prevNode.hasClass('textDivHeader')) {
                   //process removing linebreak
                   ednVE.mergeLine('prev');
+                  //todo add case to process combineToken case
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
                 } else { //unknown so do nothing but beep  or should we send this to VSE like Del case
                   UTILITY.beep();
@@ -3507,27 +3508,21 @@ mergeLine: function (direction,cbError) {
                 }
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
-              } else {
+              } else { // caret not at left boundary so sent to syllable editor for processing
                 var ret = sclEditor.preprocessKey("Backspace",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
                 if (ret === false) {
                   sclEditor.synchSelection();
-                  e.stopImmediatePropagation();
-                  return false;//eat all other keys
-                } else if (ret === "error") {
-                  e.stopImmediatePropagation();
-                  return false;//eat all other keys
                 }
+                e.stopImmediatePropagation();
+                return false;//eat all other keys
               }
-            } else {
+            } else { //simple backspace so pass to syllable editor for processing
               var ret = sclEditor.preprocessKey("Backspace",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
               if (ret === false) {
                 sclEditor.synchSelection();
-                e.stopImmediatePropagation();
-                return false;//eat all other keys
-              } else if (ret === "error") {
-                e.stopImmediatePropagation();
-                return false;//eat all other keys
               }
+              e.stopImmediatePropagation();
+              return false;//eat all other keys
             }
             break;
           case 32:// space " ":
@@ -3584,90 +3579,53 @@ mergeLine: function (direction,cbError) {
             return false;
             break;
           case 46://"Del":
-            if ( sclEditor ) {
-              if ((e.ctrlKey || e.metaKey) && sclEditor.isSelectAll()) {
+            if ((e.ctrlKey || e.metaKey) && sclEditor ) {//ctrl + delete
+              if (sclEditor.isSelectAll()) {//entire syllable selected
                 sclEditor.removeSelected();
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
-              } else if (sclEditor.hasCaret()) {
-                if (sclEditor.caretAtBoundary()) {
-                  var adjNode;
-                  //check if left side
-                  if (sclEditor.caretAtBoundary("left")) {
-                    adjNode = sclEditor.prevAdjacent();
-                    while(adjNode.hasClass('TCM') && loopLimit) {
-                      adjNode = $(adjNode[0]).prev();
-                      loopLimit--;
-                    }
-                    direction = "prev";
+              } else if (sclEditor.hasCaret() &&
+                        sclEditor.caretAtBoundary("right")) { // caret at right boundary of syllable
+                adjNode = sclEditor.prevAdjacent();
+                //check for sclEditor state next to right side auxilary element boundary, TCM or linebreak
+                if (adjNode.hasClass('TCM')){
+                  //todo: process removing TCM ?? ignore right now
+                  DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
+                } else if (adjNode.hasClass('boundary')) {
+                  //process removing boundary
+                  DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to boundary node");
+                  ednVE.combineTokens('next');
+                } else if (adjNode.hasClass('linebreak')) {
+                  //process removing compound split before linebreak
+                  if (adjNode.hasClass('cmpsplit')) {
+                    ednVE.combineTokens('next');
                   } else {
-                    adjNode = sclEditor.nextAdjacent();
-                    while(adjNode.hasClass('TCM') && loopLimit) {
-                      adjNode = $(adjNode[0]).next();
-                      loopLimit--;
-                    }
-                    direction = "next";
+                    ednVE.mergeLine('next');
                   }
-                  //check for sclEditor state next to right side auxilary element boundary, TCM or linebreak
-                  if (adjNode.hasClass('TCM') && (e.ctrlKey || e.metaKey)){
-                    //process removing TCM
-                    DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
-                  } else if (adjNode.hasClass('boundary') && (e.ctrlKey || e.metaKey)) {
-                    //process removing boundary
-                    DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to boundary node");
-                    ednVE.combineTokens(direction);
-                  } else if (adjNode.hasClass('linebreak') && direction == 'next') {
-                    //process removing compound split before linebreak
-                    if (adjNode.hasClass('cmpsplit')) {
-                      ednVE.combineTokens(direction);
-                    } else {
-                      if (e.ctrlKey || e.metaKey) {
-                        ednVE.mergeLine('next');
-                      } else {
-                        //alert("TEST combine tokens "+direction);
-                        ednVE.combineTokens(direction);
-                      }
-                    }
-                    DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
-                  } else {//send ctrl + del to VSE on unknown boundary ????
-                    var ret = sclEditor.preprocessKey("Del",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
-                    if (ret === false) {
-                      sclEditor.synchSelection();
-                    }
-                  }
-                  e.stopImmediatePropagation();
-                  return false;//eat all other keys
-                }  else {
-                  var ret = sclEditor.preprocessKey("Del",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
-                  if (ret === false) {
-                    sclEditor.synchSelection();
-                  }
-                  e.stopImmediatePropagation();
-                  return false;//eat all other keys
+                  DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
+                } else {//send ctrl + del to VSE on unknown boundary ????
+                  UTILITY.beep();
+                  DEBUG.log("warn","BEEP! Ctrl Backspace at unknown location, ignoring keystroke");
                 }
-              } else {
-                UTILITY.beep();
                 e.stopImmediatePropagation();
-                return false;
-              }
-            }
-            break;
-          default:
-/*            key = (e.which == null?String.fromCharCode(e.keyCode):
-                    (e.which != 0 )?String.fromCharCode(e.which):null);
-            if ( key ) {
-              if (e.ctrlKey && (key.toLowerCase() == "c" || key.toLowerCase() == "v")) {// copy or paste so let it pass
-                return;
-              }
-              if (key >= "A" && key <= "Z" && !e.shiftKey) {
-                key = key.toLowerCase();
-              }
-              //DEBUG.log("nav","Call to keypress with key '"+key+"' for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-              if (!sclEditor.preprocessKey(key,(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e)) {
+                return false;//eat all other keys
+              } else { // caret not at right boundary so sent to syllable editor for processing
+                var ret = sclEditor.preprocessKey("Del",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
+                if (ret === false) {
+                  sclEditor.synchSelection();
+                }
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
               }
-            }*/
+            } else {
+              var ret = sclEditor.preprocessKey("Del",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
+              if (ret === false) {
+                sclEditor.synchSelection();
+              }
+              e.stopImmediatePropagation();
+              return false;//eat all other keys
+            }
+            break;
         }
       } else if (ednVE.editMode == "tcm"  && tcmEditor ) {
         switch (e.keyCode || e.which) {
