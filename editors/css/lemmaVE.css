@@ -217,7 +217,7 @@ div.sandhiUI .propEditUI {
   display:none;
 }
 div.sandhiUI.edit .propEditUI {
-  display:block;
+  display:table;
 }
 div.custTagUI .propDisplayUI {
   display:block;

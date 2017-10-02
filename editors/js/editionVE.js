@@ -3226,7 +3226,7 @@ mergeLine: function (direction,cbError) {
     function grpGraDblClickHandler(e) {
       var classes = $(this).attr('class'), objLevel = ednVE.layoutMgr.getEditionObjectLevel(),
           firstGroup, lastGroup, ord, minOrd = 10000000, maxOrd = 0,
-          entTag, headernode, segIDs = [],i, sclIDs = [],sclID, lineord;
+          entTag, sandhiSelector = "", headernode, segIDs = [],i, sclIDs = [],sclID, lineord;
       if(!e.ctrlKey){//if not multiselect
         $(".selected", ednVE.contentDiv).removeClass("selected");
         ednVE.selOrderGrpGraClasses = [];
@@ -3234,8 +3234,14 @@ mergeLine: function (direction,cbError) {
       ednVE.selOrderGrpGraClasses.push(classes);
       if (objLevel == 'token' && ednVE.editMode != "modify") {
         entTag = classes.match(/tok\d+/)[0];
+        sandhiSelector = ",.grpGra.s"+entTag;
       } else if (objLevel == 'compound' && ednVE.editMode != "modify") {
-        entTag = classes.match(/cmp\d+/) ? classes.match(/cmp\d+/)[0] : classes.match(/tok\d+/)[0];
+        if (classes.match(/cmp\d+/)) {
+          entTag = classes.match(/cmp\d+/)[0];
+        } else {
+          entTag = classes.match(/tok\d+/)[0];
+          sandhiSelector = ",.grpGra.s"+entTag;
+        }
       } else if (objLevel == 'line' && ednVE.editMode != "modify") {
         if ($(this).prev().hasClass('textDivHeader')) {
           headernode = $(this).prev();
@@ -3255,7 +3261,7 @@ mergeLine: function (direction,cbError) {
       if (objLevel == 'line' ) {
         $("."+lineord+":not(.textDivHeader)",ednVE.contentDiv).addClass("selected");
       } else {
-        $(".grpGra."+entTag,ednVE.contentDiv).addClass("selected");
+        $(".grpGra."+entTag+sandhiSelector,ednVE.contentDiv).addClass("selected");
       }
       if (ednVE.componentLinkMode && ednVE.entPropVE && ednVE.entPropVE.addSequenceEntityGID ){
         ednVE.entPropVE.addSequenceEntityGID(entTag.substring(0,3)+':'+entTag.substring(3));
@@ -5643,15 +5649,29 @@ mergeLine: function (direction,cbError) {
           //for each token's grapheme
           for (k=0; k<graIDs.length; k++) {
             graID = graIDs[k];
-            if (k==0 && entities.gra[graID] && entities.gra[graID].decomp && entities.gra[graID].tokIDs) {
-              entities.gra[graID].tokIDs.push(entID);
-            }
             // add/update lookup with containing tokID, context string, and Boundary
             if (!this.lookup.gra[graID]) {
               this.lookup.gra[graID] = {};
             }
-            this.lookup.gra[graID].tokID = entID;
-            this.lookup.gra[graID].tokctx = context+' tok'+entID;
+            if (k==0) {
+              if (entities.gra[graID].decomp &&
+                  entities.gra[graID].decomp.length){//sandhi case
+                if (entities.gra[graID] && entities.gra[graID].tokIDs) {
+                  entities.gra[graID].tokIDs.push(entID);
+                }
+                if (this.lookup.gra[graID].tokID &&
+                    this.lookup.gra[graID].tokctx) {
+                  this.lookup.gra[graID].stokID = entID;
+                  this.lookup.gra[graID].tokctx += ' stok'+entID;
+                }
+              } else {
+                this.lookup.gra[graID].tokID = entID;
+                this.lookup.gra[graID].tokctx = context+' tok'+entID;
+              }
+            } else {
+              this.lookup.gra[graID].tokID = entID;
+              this.lookup.gra[graID].tokctx = context+' tok'+entID;
+            }
             if ((k+1) == graIDs.length) { // last grapheme of this token create the HTML boundary marker
               if (entFootnote) {
                 if (!this.lookup.gra[graID].fnMarker) {
@@ -5679,7 +5699,7 @@ mergeLine: function (direction,cbError) {
             }else{//in the case where the boundary changes it's necessary to erase the old boundary HTML
               delete this.lookup.gra[graID].boundary;
             }
-          }
+          }//end for each grapheme
         }
         break;
       default:
@@ -5771,6 +5791,12 @@ mergeLine: function (direction,cbError) {
                 lineHTML += graLU.preTCM.replace(/⟨\*/g,"").replace(/[⟨⟩]/g,"");
               }
               previousA = false;
+            }
+            if (grapheme.decomp && grapheme.decomp.length) { //sandhi
+              if (grpHTML) {
+                lineHTML += grpHTML+ '</span>';
+                grpHTML = '';
+              }
             }
             //if no group find context and start grapheme group
             if (!grpHTML) {
@@ -6361,7 +6387,7 @@ mergeLine: function (direction,cbError) {
       }
     }
     $('.prose',this.contentDiv).last().addClass('lastStructure');
-    $(this.contentDiv).append('<hr class="editionViewEndRule">');
+    $(this.contentDiv).append('<hr class="viewEndRule">');
     DEBUG.trace("editionVE.renderEditionStructure","before add Handlers to DOM for edn " + this.edition.id);
     this.renumberFootnotes();
     this.addEventHandlers(); // needs to be done after content created

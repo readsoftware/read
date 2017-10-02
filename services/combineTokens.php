@@ -327,6 +327,8 @@
       addUpdateEntityReturnData('tok',$token1->getID(),'graphemeIDs',$token1->getGraphemeIDs());
       addUpdateEntityReturnData('tok',$token1->getID(),'value',$token1->getValue());
       addUpdateEntityReturnData('tok',$token1->getID(),'transcr',$token1->getTranscription());
+      addUpdateEntityReturnData('tok',$token1->getID(),'sort',$token1->getSortCode());
+      addUpdateEntityReturnData('tok',$token1->getID(),'sort2',$token1->getSortCode2());
       addUpdateEntityReturnData('tok',$token1->getID(),'syllableClusterIDs',$token1->getSyllableClusterIDs());
     }
   }

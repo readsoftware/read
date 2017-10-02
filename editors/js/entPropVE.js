@@ -206,6 +206,7 @@ EDITORS.EntityPropVE.prototype = {
            this.prefix == "tok" || this.prefix == "scl" || this.prefix == "cat" ) && this.entity ) {
         this.createComponentsUI();
       }
+      this.contentDiv.append('<hr class="viewEndRule">');
     } else {
       this.contentDiv.html('Entity Property Viewer - no entity information found.');
     }
@@ -957,7 +958,7 @@ EDITORS.EntityPropVE.prototype = {
                               '<div class="valueInputDiv propEditElement">'+
                                 '<input class="valueInput" placeholder="Enter Decomposition"/>'+
                               '</div>'+
-                              '<div class="saveDiv propEditElement">Save</div>'+
+                              '<button class="saveDiv propEditElement">Save</button>'+
                             '</div>'));
           //click to edit
           $('div.sandhibtn',sandhiUI).unbind("click").bind("click",function(e) {
@@ -966,6 +967,7 @@ EDITORS.EntityPropVE.prototype = {
                 entity = entPropVE.dataMgr.getEntityFromGID(entTag);
             if (entity && entity.decomp) {
               inputElem.val(entity.decomp);
+              $('.saveDiv',sandhiUI).html('Save');
             }
             //show edit UI
             graSandhiUI.addClass("edit");//mark component's sandhiUI div
@@ -993,6 +995,11 @@ EDITORS.EntityPropVE.prototype = {
               }
             } else if ($(this).parent().parent().hasClass("dirty")) {
               $(this).parent().parent().removeClass("dirty");
+            }
+            if (entity.decomp && (!val || val.length == 0)){
+              $('.saveDiv',sandhiUI).html('Delete');
+            } else {
+              $('.saveDiv',sandhiUI).html('Save');
             }
           });
           //save data
@@ -1150,7 +1157,7 @@ EDITORS.EntityPropVE.prototype = {
       context = this.controlVE.getFullContextFromGrapheme(graID);
       if (context) {
         savedata['context'] = context;
-        txtDivSeqID = context[0].substring(3);
+        txtDivSeqID = context[0].substring(3);//caution dependency on class add order, assumes txtDiv seqTag is first
       }
     }
     //jqAjax synch save

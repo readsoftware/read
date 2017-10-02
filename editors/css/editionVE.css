@@ -112,7 +112,7 @@ div.editContainer.showTokenSep .toksep {
   background-color: blue;
 }
 
-#textEditPage .viewEndRule {
+.viewEndRule {
   padding: 1px;
   color: inherit;
   background-color: transparent;

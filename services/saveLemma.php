@@ -355,7 +355,10 @@ if (count($errors) == 0) {
       } else if ($lemma) {
         $entIDs = $lemma->getComponentIDs();
         if ($entIDs && is_array($entIDs)) {
-          array_push($entIDs,$tokGID);
+          if (in_array($tokGID,$entIDs)) {
+            break;
+          }
+          array_push($entIDs,$tokGID);// fix 612 here  ensure unique.
         } else {
           $entIDs = array($tokGID);
         }
