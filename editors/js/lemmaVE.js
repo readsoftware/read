@@ -81,6 +81,12 @@ EDITORS.LemmaVE.prototype = {
     } else {
       this.editDiv.html('Lemma Editor');
     }
+    this.editDiv.unbind("click").bind("click", function(e) {
+      var $editElems = $('.edit',this);
+      if ($editElems.length > 0) {
+        $editElems.removeClass('edit');
+      }
+    });
     DEBUG.traceExit("init","init lemma editor");
   },
 
@@ -172,6 +178,7 @@ EDITORS.LemmaVE.prototype = {
         this.createTaggingUI();
         this.createAnnotationUI();
       }
+      this.editDiv.append('<hr class="viewEndRule">');
     } else {
       this.editDiv.html('Lemma Editor - no lemma information found.');
     }
@@ -209,6 +216,8 @@ EDITORS.LemmaVE.prototype = {
         lemmaVE.valueUI.addClass("edit");
         $('div.valueInputDiv input',this.valueUI).focus();
 //        $('div.valueInputDiv input',this.valueUI).select();
+        e.stopImmediatePropagation();
+        return false;
       });
       //blur to cancel
       $('div.valueInputDiv input',this.valueUI).unbind("blur").bind("blur",function(e) {
@@ -237,18 +246,24 @@ EDITORS.LemmaVE.prototype = {
         if (lemmaVE.propMgr && lemmaVE.propMgr.showVE) {
           lemmaVE.propMgr.showVE("tabPropVE",lemmaVE.propMgr.currentVE.tag);
         }
+        e.stopImmediatePropagation();
+        return false;
       });
       //previous lemma
       $('.med-prevword',this.valueUI).unbind("click").bind("click",function(e) {
         if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.prevWord) {
           lemmaVE.wordlistVE.prevWord();
         }
+        e.stopImmediatePropagation();
+        return false;
       });
       //next lemma
       $('.med-nextword',this.valueUI).unbind("click").bind("click",function(e) {
         if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.nextWord) {
           lemmaVE.wordlistVE.nextWord();
         }
+        e.stopImmediatePropagation();
+        return false;
       });
       //save data
       $('.saveDiv',this.valueUI).unbind("click").bind("click",function(e) {
@@ -266,6 +281,8 @@ EDITORS.LemmaVE.prototype = {
         } else if (confirm('Are you sure you want to delete lemma "' + origText + '"?')) { // is delete
           lemmaVE.deleteLemma();
         }
+        e.stopImmediatePropagation();
+        return false;
       });
     DEBUG.traceExit("createValueUI");
   },
@@ -299,6 +316,8 @@ EDITORS.LemmaVE.prototype = {
         lemmaVE.compUI.addClass("edit");
         $('div.valueInputDiv input',this.compUI).focus();
 //        $('div.valueInputDiv input',this.valueUI).select();
+        e.stopImmediatePropagation();
+        return false;
       });
       //blur to cancel
       $('div.valueInputDiv input',this.compUI).unbind("blur").bind("blur",function(e) {
@@ -408,7 +427,9 @@ EDITORS.LemmaVE.prototype = {
           }
           lemmaVE.compUI.removeClass("edit");
         }
-      });
+        e.stopImmediatePropagation();
+        return false;
+     });
     DEBUG.traceExit("createCompoundAnalysisUI");
   },
 
@@ -617,6 +638,8 @@ EDITORS.LemmaVE.prototype = {
         lemmaVE.descrUI.addClass("edit");
         $('div.valueInputDiv input',this.descrUI).focus();
         //$('div.valueInputDiv input',this.descrUI).select();
+        e.stopImmediatePropagation();
+        return false;
       });
       //blur to cancel
       $('div.valueInputDiv input',this.descrUI).unbind("blur").bind("blur",function(e) {
@@ -645,6 +668,8 @@ EDITORS.LemmaVE.prototype = {
           lemmaVE.saveLemma(lemProp);
         }
         lemmaVE.descrUI.removeClass("edit");
+        e.stopImmediatePropagation();
+        return false;
       });
     DEBUG.traceExit("createDescriptionUI");
   },
@@ -770,6 +795,8 @@ EDITORS.LemmaVE.prototype = {
           ctxDiv.removeClass("dirty");
         }
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     return radioGroup;
   },
@@ -871,6 +898,8 @@ EDITORS.LemmaVE.prototype = {
           ctxDiv.removeClass("dirty");
         }
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //save data
     $('.saveBtnDiv',posEdit).unbind("click").bind("click",function(e) {
@@ -939,6 +968,8 @@ EDITORS.LemmaVE.prototype = {
         $('.posEditUI',lemmaVE.posUI).removeClass('dirty');
       }
       lemmaVE.posUI.removeClass("edit");
+      e.stopImmediatePropagation();
+      return false;
     });
     posEdit.append($('<input style="visibility:hidden;" />'));
     return posEdit;
@@ -976,6 +1007,8 @@ EDITORS.LemmaVE.prototype = {
       $('div.valueLabelDiv',this.posUI).unbind("click").bind("click",function(e) {
         lemmaVE.posUI.addClass("edit");
         $('div.posEditUI input',this.posUI).focus();
+        e.stopImmediatePropagation();
+        return false;
       });
       //click to cancel
       $('div.posEditUI input',this.posUI).unbind("blur").bind("blur",function(e) {
@@ -1023,6 +1056,8 @@ EDITORS.LemmaVE.prototype = {
         lemmaVE.transUI.addClass("edit");
         $('div.valueInputDiv input',lemmaVE.transUI).focus();
         //$('div.valueInputDiv input',lemmaVE.transUI).select();
+        e.stopImmediatePropagation();
+        return false;
       });
       //blur to cancel
       $('div.valueInputDiv input',this.transUI).unbind("blur").bind("blur",function(e) {
@@ -1051,6 +1086,8 @@ EDITORS.LemmaVE.prototype = {
           lemmaVE.saveLemma(lemProp);
         }
         lemmaVE.transUI.removeClass("edit");
+        e.stopImmediatePropagation();
+        return false;
       });
     DEBUG.traceExit("createTransUI");
   },
@@ -1261,6 +1298,8 @@ EDITORS.LemmaVE.prototype = {
         lemmaVE.wordlistVE.setLinkMode(false);
         $('span.linkAttestedFormButton',this.infEdit).html('<u>Link Attested Form</u>');
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //save inflection data
     $('.cancelBtnDiv',infEdit).unbind("click").bind("click",function(e) {
@@ -1269,6 +1308,8 @@ EDITORS.LemmaVE.prototype = {
         delete lemmaVE.linkToInfID;
         lemmaVE.wordlistVE.setLinkMode(false);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //save inflection data
     $('.saveBtnDiv',infEdit).unbind("click").bind("click",function(e) {
@@ -1301,6 +1342,8 @@ EDITORS.LemmaVE.prototype = {
         delete lemmaVE.linkToInfID;
         lemmaVE.wordlistVE.setLinkMode(false);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     if (infID) {
       $('span.linkAttestedFormButton',this.infEdit).unbind("click").bind("click",function(e) {
@@ -1314,6 +1357,8 @@ EDITORS.LemmaVE.prototype = {
           lemmaVE.wordlistVE.setLinkMode(false);
           lemmaVE.showLemma();
         }
+        e.stopImmediatePropagation();
+        return false;
       });
     }
   },
@@ -1490,6 +1535,8 @@ EDITORS.LemmaVE.prototype = {
     $('span.attestedannobtn',this.attestedUI).unbind("click").bind("click",function(e) {
       //show anno editor with glossary annotation if exist
       lemmaVE.propMgr.showVE("annoVE",$(this).prop('anoTag'),$(this).prop('gid'));
+      e.stopImmediatePropagation();
+      return false;
     });
     //remove anno
     $('span.removeanno',this.attestedUI).unbind("click").bind("click",function(e) {
@@ -1499,13 +1546,19 @@ EDITORS.LemmaVE.prototype = {
           anoTag = anoTag[0];
           lemmaVE.removeAnno(anoTag,$(this).prop('gid'));
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     $('span.inflection',this.attestedUI).unbind("click").bind("click",function(e) {
       lemmaVE.attestedUI.addClass("edit");
       lemmaVE.initShowInflectionEditUI( $(this).prop('infID'), $(this).prop('gid'),$(this));
+      e.stopImmediatePropagation();
+      return false;
     });
     $('span.unlink',this.attestedUI).unbind("click").bind("click",function(e) {
       lemmaVE.unlinkAttested( $(this).prop('infID'), $(this).prop('gid'));
+      e.stopImmediatePropagation();
+      return false;
     });
     //create inflectionUI container
     this.inflectionEditUI = $('<div class="infEditUI"/>');
@@ -1519,6 +1572,8 @@ EDITORS.LemmaVE.prototype = {
         $(this).html('<u>Add new</u>');
         lemmaVE.wordlistVE.setLinkMode(false);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     DEBUG.traceExit("createAttestedUI");
   },
@@ -1571,12 +1626,16 @@ EDITORS.LemmaVE.prototype = {
       if (lemmaVE.propMgr && lemmaVE.propMgr.showVE) {
         lemmaVE.propMgr.showVE("tagVE", lemmaVE.tag);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //remove tag
     $('span.removetag',this.tagUI).unbind("click").bind("click",function(e) {
       var classes = $(this).attr('class'),
           anoTag = classes.match(/ano\d+/)[0];
       entPropVE.removeTag(anoTag);
+      e.stopImmediatePropagation();
+      return false;
     });
     //create input with save button
     DEBUG.traceExit("createTaggingUI");
@@ -1697,6 +1756,8 @@ EDITORS.LemmaVE.prototype = {
       if (lemmaVE.propMgr && lemmaVE.propMgr.showVE) {
         lemmaVE.propMgr.showVE("annoVE");
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //remove anno
     $('span.removeanno',this.annoUI).unbind("click").bind("click",function(e) {
@@ -1706,6 +1767,8 @@ EDITORS.LemmaVE.prototype = {
           anoTag = anoTag[0];
           lemmaVE.removeAnno(anoTag);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //create input with save button
     DEBUG.traceExit("createAnnotationUI");
@@ -1838,6 +1901,8 @@ EDITORS.LemmaVE.prototype = {
           setTimeout(function(){
               $('.linkTypeUI',lemmaVE.linkTypeUI).scrollTop(offset);
             },50);
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         this.linkTypeTree.unbind("blur").bind("blur",function(e) {
@@ -1866,6 +1931,8 @@ EDITORS.LemmaVE.prototype = {
             if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.setLinkRelatedMode) {
               lemmaVE.wordlistVE.setLinkRelatedMode(true);
             }
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     DEBUG.traceExit("createLinkTypeUI");
@@ -1928,6 +1995,8 @@ EDITORS.LemmaVE.prototype = {
       } else {
         $(this).parent().addClass('expand');
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     $('div.relationentry',this.relUI).unbind("dblclick").bind("dblclick",function(e) {
       var entTag = $(this).prop('tag'),entity;
@@ -1940,6 +2009,8 @@ EDITORS.LemmaVE.prototype = {
     });
     $('span.unlink',this.relUI).unbind("click").bind("click",function(e) {
       lemmaVE.unlinkRelated( $(this).prop('typeID'), $(this).prop('entGID'));
+      e.stopImmediatePropagation();
+      return false;
     });
     DEBUG.traceExit("createRelatedUI");
   },

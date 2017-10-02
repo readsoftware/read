@@ -341,6 +341,9 @@ if (count($errors) == 0) {
       if ($inflection) {// add token to passed inflection
         $entIDs = $inflection->getComponentIDs();
         if ($entIDs && is_array($entIDs)) {
+          if (in_array($tokGID,$entIDs)) {
+            break;
+          }
           array_push($entIDs,$tokGID);
         } else {
           $entIDs = array($tokGID);
