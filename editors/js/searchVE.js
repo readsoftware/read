@@ -956,6 +956,7 @@ EDITORS.SearchVE.prototype = {
         data:{txtID:txtGID.substring(4)},
         asynch: true,
         success: function (data, status, xhr) {
+              var msg = "added research edition - ";
               if (typeof data == 'object' && data.success && data.entities) {
                 srchVE.dataMgr.updateLocalCache(data,srchVE.getCursorTextID());
                 if (data && data.entities && data.entities.insert && data.entities.insert.edn) {
@@ -967,9 +968,11 @@ EDITORS.SearchVE.prototype = {
                     if (text.ednIDs.indexOf(ednID) == -1){
                       text.ednIDs.push(ednID);
                     }
+                    msg += data.entities.insert.edn[ednID].value + " ";
                   }
                 }
                 srchVE.updateCursorInfoBar();
+                alert(msg);
               }
         },// end success cb
         error: function (xhr,status,error) {
