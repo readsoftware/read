@@ -223,6 +223,10 @@ EDITORS.EntityPropVE.prototype = {
     var entPropVE = this, matchEntityTags,i, matchEntity, matchValue, matchAttr;
         switchable = !(this.dataMgr.getEntity('edn',this.controlVE.getEdnID())).readonly;
 
+    //check for sandhi and ignore UI
+    if (this.dataMgr.checkForSandhi(this.tag)) {
+      return;
+    }
     //create UI container
     this.altTransUI = $('<div class="altTransUI '+(switchable?'':'readonly')+'"></div>');
     this.contentDiv.append(this.altTransUI);

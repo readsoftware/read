@@ -335,6 +335,42 @@ MANAGERS.DataManager.prototype = {
 
 
 /**
+* checkForSandhi - determine if entity contains a sandhi
+*
+* @param string entTag entity tag to be checked
+*
+* @returns boolean indicating that entity contains a sandhi
+*/
+
+  checkForSandhi: function (entTag) {
+    var prefix = entTag.substring(0,3),
+        entID = entTag.substring(3),
+        tokIDs = [], graIDs = [],i,entity;
+    if (prefix == "cmp") { // get tok IDs
+      entity = this.getEntity(prefix,entID);
+      tokIDs = entity.tokenIDs;
+    } else if (prefix == "tok") {
+      tokIDs.push(entID);
+    }
+    if (tokIDs.length > 0) {
+      for (i in tokIDs) {
+        entity = this.getEntity("tok",tokIDs[i]);
+        graIDs = graIDs.concat( entity.graphemeIDs);
+      }
+    }
+    if (graIDs.length > 0) {
+      for (i in graIDs) {
+        entity = this.getEntity("gra",graIDs[i]);
+        if (entity.decomp && entity.decomp.length) {
+          return true;
+        }
+      }
+    }
+    return false;
+  },
+
+
+/**
 * checkForSplit - determine is syllable is split
 *
 * @param int tokID token id to be checked
