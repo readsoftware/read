@@ -2323,12 +2323,16 @@ EDITORS.LemmaVE.prototype = {
                 lemmaVE.dataMgr.updateLocalCache(data,null);
                 oldLemID = lemmaVE.entID;
                 if (lemmaVE.wordlistVE){
-                  if (!lemmaVE.wordlistVE.nextWord()) {
-                    lemmaVE.wordlistVE.prevWord();
+                  if (!lemmaVE.wordlistVE.nextWord(lemmaVE.tag)) {
+                    if (!lemmaVE.wordlistVE.prevWord(lemmaVE.tag)) {
+                      lemmaVE.entID = null;
+                      lemmaVE.showLemma();
+                    };
                   }
                   lemmaVE.wordlistVE.removeWordlistEntry('lem'+oldLemID);
-                  lemmaVE.entID = null;
-                  lemmaVE.showLemma();
+                  if (lemmaVE.tag) {
+                    lemmaVE.wordlistVE.scrollEntIntoView(lemmaVE.tag);
+                  }
                 }
               }
               if (data.editionHealth) {

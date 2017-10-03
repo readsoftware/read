@@ -390,8 +390,45 @@ EDITORS.WordlistVE.prototype = {
 * @returns true|false
 */
 
-  prevWord: function () {
+  prevWord: function (curEntTag) {
     var curEntry = $('.selected',this.contentDiv).parent(),prevNode;
+    if (curEntry.length == 0 && curEntTag){
+      curEntry = $('div.wordlistentry:has(span.'+curEntTag+')');
+    }
+    if (curEntry.length && curEntry.prev().hasClass('wordlistentry')) {
+      switch (this.levelSelected) {
+        case 'lemma':
+          prevNode = curEntry.prevAll('div:has(span.lemma)').first();
+          break;
+        case 'unlinked':
+          prevNode = curEntry.prevAll('div:has(span.word)').first();
+          break;
+        case 'all':
+        default:
+          prevNode = curEntry.prev('.wordlistentry');
+          break;
+      }
+      if (prevNode.length == 1) {
+        prevNode.children().first().trigger('dblclick');
+        prevNode[0].scrollIntoView();
+        return true;
+      }
+    }
+    UTILITY.beep();
+    return false;
+  },
+
+/**
+* trigger dblclick on previous word based for filtered display
+*
+* @returns true|false
+*/
+
+  prevWord: function (curEntTag) {
+    var curEntry = $('.selected',this.contentDiv).parent(),prevNode;
+    if (curEntry.length == 0 && curEntTag){
+      curEntry = $('div.wordlistentry:has(span.'+curEntTag+')');
+    }
     if (curEntry.length && curEntry.prev().hasClass('wordlistentry')) {
       switch (this.levelSelected) {
         case 'lemma':
@@ -422,8 +459,11 @@ EDITORS.WordlistVE.prototype = {
 * @returns true|false
 */
 
-  nextWord: function () {
+  nextWord: function (curEntTag) {
     var curEntry = $('.selected',this.contentDiv).parent(),nextNode;
+    if (curEntry.length == 0 && curEntTag){
+      curEntry = $('div.wordlistentry:has(span.'+curEntTag+')');
+    }
     if (curEntry.length && curEntry.next().hasClass('wordlistentry')) {
       switch (this.levelSelected) {
         case 'lemma':
@@ -445,6 +485,30 @@ EDITORS.WordlistVE.prototype = {
     }
     UTILITY.beep();
     return false;
+  },
+
+  lookupLemma: function (val) {
+    return this.lemLookup[val];
+  },
+
+
+/**
+* scroll wordlist entry into view
+*
+* @param string entTag identifies the entity to scroll into view
+*/
+
+  scrollEntIntoView: function (entTag) {
+    var $scrollEntry;
+    if (entTag){
+      $scrollEntry = $('div.wordlistentry:has(span.'+entTag+')');
+    }
+    if ($scrollEntry.length == 0) {
+     $scrollEntry = $('.selected',this.contentDiv).parent();
+    }
+    if ($scrollEntry.length > 0) {
+     $scrollEntry[0].scrollIntoView();
+    }
   },
 
   lookupLemma: function (val) {
