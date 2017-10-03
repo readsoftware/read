@@ -2317,11 +2317,16 @@ EDITORS.LemmaVE.prototype = {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var oldLemID;
+              var oldLemID, i;
               if (typeof data == 'object' && data.success && data.entities) {
                 //update data
-                lemmaVE.dataMgr.updateLocalCache(data,null);
                 oldLemID = lemmaVE.entID;
+                if (lemmaVE.entity && lemmaVE.entity.entityIDs && lemmaVE.entity.entityIDs.length) {
+                  for (i in lemmaVE.entity.entityIDs) {
+                    lemmaVE.wordlistVE.insertWordEntry(lemmaVE.entity.entityIDs[i],'lem'+oldLemID);
+                  }
+                }
+                lemmaVE.dataMgr.updateLocalCache(data,null);
                 if (lemmaVE.wordlistVE){
                   if (!lemmaVE.wordlistVE.nextWord(lemmaVE.tag)) {
                     if (!lemmaVE.wordlistVE.prevWord(lemmaVE.tag)) {
