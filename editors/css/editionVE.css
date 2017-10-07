@@ -90,6 +90,7 @@ div.editContainer.showTokenSep .toksep {
 
 #textEditPage .editContainer {
   text-align: left;
+  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode"!important;
 }
 
 #textEditPage .editContainer.hasFocus {
@@ -237,7 +238,7 @@ div.prose.lastStructure {
 #textEditPage span:not(.selected):not(.tcmedit) {
   background-color: white;
   color:black;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 .textDivHeader>sup {
   padding-left: 2px;

@@ -1242,6 +1242,12 @@ class Parser {
                 }
                 //create grapheme
                 $curGrapheme = new Grapheme();
+                if ($str === "ï"){
+                  $str = "i";
+                }
+                if ($str === "ü"){
+                  $str = "u";
+                }
                 $curGrapheme->setGrapheme($str);
                 if ($graphemeIsUpper) {
                   $curGrapheme->setUppercase($ustr);

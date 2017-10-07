@@ -57,7 +57,7 @@
     <link rel="stylesheet" href="./editors/css/lemmaVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/searchVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/propertyVE.css" type="text/css" />
-    <script src="/jquery/jquery-1.11.0.min.js"></script>
+    <script src="/jquery/jquery-1.11.1.min.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtouch.js"></script>
     <script src="/jqwidget/jqwidgets/jqxdata.js"></script>

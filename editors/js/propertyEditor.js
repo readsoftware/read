@@ -14,6 +14,10 @@
 * You should have received a copy of the GNU General Public License along with READ.
 * If not, see <http://www.gnu.org/licenses/>.
 */
+
+if (termInfo && termInfo.labelByID ) {
+  var trmIDtoLabel = trmIDtoLabel || termInfo.labelByID;
+}
 /**
 * editors sclEditor object
 *
@@ -39,6 +43,7 @@ EDITORS.propEditor =  function(propertyVECfg,prefix,id) {
   this.prefix = propertyVECfg['prefix'] ? propertyVECfg['prefix']:null;
   this.dataMgr = propertyVECfg['dataMgr'] ? propertyVECfg['dataMgr']:null;
   this.editDiv = propertyVECfg['propEditDiv'] ? propertyVECfg['propEditDiv']:null;
+  this.trmIDtoLabel = this.dataMgr.termInfo.labelByID;
   this.id = propertyVECfg['id'] ? propertyVECfg['id']:null;
   this.gid = this.prefix + this.id;
   this.init();

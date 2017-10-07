@@ -1467,6 +1467,15 @@ EDITORS.sclEditor.prototype = {
               this.replaceText('///',"selected","end");
               return false;
             }
+          } else if (keyType == 'N' && posStart == this.state.length - 2 && posEnd == this.state.length - 1){
+            var chrs = (this.curSyl + key).split(""), len = chrs.length;
+            if (
+                len == 4 && this._graphemeMap[chrs[0]][chrs[1]][chrs[2]][chrs[3]] ||
+                len == 3 && this._graphemeMap[chrs[0]][chrs[1]][chrs[2]] ||
+                len == 2 && this._graphemeMap[chrs[0]][chrs[1]]){
+              this.replaceText(key,"insert","end");
+              return false;
+            }
           }
           UTILITY.beep();
           DEBUG.log("warn","BEEP! Unrecognized token character ignor for "+this.curSyl+" with state "+this.state);

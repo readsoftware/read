@@ -884,7 +884,7 @@ EDITORS.WordlistVE.prototype = {
               html += '<span class="attestedforms">';
               for (j=0; j<wordGIDs.length; j++) {
                 word = this.dataMgr.getEntityFromGID(wordGIDs[j]);
-//                tag = wordGIDs[j].replace(":","");
+                tag = wordGIDs[j].replace(":","");
 //                word = linkedWords[tag];
                 if (!word || !word.value) {
                   DEBUG.log('err',"word not found in linkWords for tag "+tag);
@@ -1421,7 +1421,7 @@ EDITORS.WordlistVE.prototype = {
       if (word && word.tag && word.value && word.transcr && word.locLabel) {
         html += '<div class="wordlistentry"><span class="word '+word.tag+'" srch="'+
                 word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
-                word.transcr.replace(/aʔi/g,'aï') + word.transcr.replace(/aʔu/g,'aü') + word.transcr.replace(/ʔ/g,'') +
+                word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                 ' ' + word.locLabel + '</span></div>';
       } else {
         DEBUG.log('err',"Genreating html for wordlist found incomplete word data "+word.tag+
