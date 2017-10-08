@@ -363,11 +363,11 @@
             }
             $wordRTF = $lineMarkerStyle;
             if ($firstT && $firstG || $lastT && $lastG) {
-              $wordRTF .= ($proseBeginning?"":" ")."[".$graID2LineLabelMap[$graID];
+              $wordRTF .= ($proseBeginning?"":" ")."[".$graID2LineLabelMap[$graID]."]";
               if ( array_key_exists($graID,$graID2LineFootnoteMap)) {
                 $wordRTF .= $graID2LineFootnoteMap[$graID];
               }
-              $wordRTF .= "]"." ";
+              $wordRTF .= " ";
               $needsSpace = false;
             } else {
               $wordRTF .= "[".$graID2LineLabelMap[$graID];

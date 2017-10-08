@@ -201,7 +201,8 @@
           $label = "seq$seqID";
         }
         //********output line header
-        $rtf .= $lineStyle.$lineHeaderStyle.$label.$endStyle.$tab.$eol;
+        $rtf .= $lineStyle.$lineHeaderStyle.$label.$endStyle.$eol;
+        $rtf .= getEntityFootnotesRTF($physicalLineSeq);
         //check for freetext and output as is
         if ($physicalLineSeq->getType() == "FreeText") {
           $freetext = $physicalLineSeq->getScratchProperty("freetext");
@@ -378,7 +379,6 @@
             $rtf .= $tcmBrackets;
           }
         }
-        $previousGraFootnotes .= getEntityFootnotesRTF($physicalLineSeq);
         if ($previousGraFootnotes) {
           $rtf .= $previousGraFootnotes;
         }
@@ -413,7 +413,7 @@
   }
 
   function getEntityFootnotesRTF($entity) {
-    global $footnoteStart, $footnoteEnd, $eol, $space, $style, $typeIDs;
+    global $footnoteStart, $footnoteEnd, $eol, $tab, $space, $style, $typeIDs;
     $fnRTF = "";
     if ( $linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
       foreach ($typeIDs as $typeID) {
@@ -422,7 +422,7 @@
             $annotation = new Annotation($anoID);
             $anoText = $annotation->getText();
             if ($anoText) {
-              $fnRTF .= $footnoteStart.htmlToRTF(utf8ToRtf($anoText)).$footnoteEnd.$eol;
+              $fnRTF .= $footnoteStart.htmlToRTF(utf8ToRtf($anoText)).$footnoteEnd.$space.$eol;
             }
           }
         }

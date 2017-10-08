@@ -242,6 +242,7 @@ div.prose.lastStructure {
 }
 .textDivHeader>sup {
   padding-left: 2px;
+  font-weight: normal;
 }
 .textDivHeader.freetext {
   vertical-align: top;
