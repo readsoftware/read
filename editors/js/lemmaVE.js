@@ -1191,7 +1191,7 @@ EDITORS.LemmaVE.prototype = {
                    {label: "acc.",trmID:363},
                    {label: "instr.",trmID:364},
                    {label: "dat.",trmID:365},
-                   {label: "dat/gen.",trmID:366},
+//                   {label: "dat/gen.",trmID:366},
                    {label: "abl.",trmID:367},
                    {label: "gen.",trmID:368},
                    {label: "loc.",trmID:369},
@@ -1369,7 +1369,7 @@ EDITORS.LemmaVE.prototype = {
     if (infID) {
       $('span.linkAttestedFormButton',this.infEdit).unbind("click").bind("click",function(e) {
         if ($(this).text() == 'Link Attested Form') {//switch to linking mode for directly linking attested forms with the same inflection
-          $(this).html('<u>Cancel link attested mode</u>');
+          $(this).html('<u>Leave link attested mode</u>');
           lemmaVE.linkToInfID = infID;
           lemmaVE.wordlistVE.setLinkMode(true);
         } else {//cancel linking mode
@@ -1409,7 +1409,7 @@ EDITORS.LemmaVE.prototype = {
     displayUI = $('<div class="propDisplayUI"/>');
     //create Header
     displayUI.append($('<div class="attestedUIHeader"><span>Attestations:</span>'+
-                       '<span class="addButton"><u>'+(this.wordlistVE.attestedLinkMode?'Cancel link mode':'Add new')+'</u></span></div>'));
+                       '<span class="addButton"><u>'+(this.wordlistVE.attestedLinkMode?'Leave link mode':'Add new')+'</u></span></div>'));
     //create a list of tokens and map them to inflections
     if (entIDs && entIDs.length) {
       for (i in entIDs) {
@@ -1588,7 +1588,7 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
     $('span.addButton',this.attestedUI).unbind("click").bind("click",function(e) {
       if ($(this).text() == 'Add new') {//switch to linking mode
-        $(this).html('<u>Cancel link mode</u>');
+        $(this).html('<u>Leave link mode</u>');
         lemmaVE.wordlistVE.setLinkMode(true);
       } else {//cancel linking mode
         $(this).html('<u>Add new</u>');

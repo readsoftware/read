@@ -962,7 +962,7 @@ EDITORS.EntityPropVE.prototype = {
     if (this.prefix == "cat") {
       addBtnLabel = 'Add edition';
     } else {
-      addBtnLabel = (this.controlVE.componentLinkMode?'Cancel link mode':'Add component');
+      addBtnLabel = (this.controlVE.componentLinkMode?'Leave link mode':'Add component');
     }
     displayUI.append($('<div class="componentsUIHeader"><span>Components:</span>'+
                        ((this.entity.readonly || graIDs)?'':('<span class="addButton"><u>'+addBtnLabel+'</u></span></div>'))));
@@ -1150,11 +1150,11 @@ EDITORS.EntityPropVE.prototype = {
               confirm("Would you like to replace components with current selection?")) {
               entPropVE.changeSequenceEntityIDs(selectedGIDs);
           } else {
-            $(this).html('<u>Cancel link mode</u>');
+            $(this).html('<u>Leave link mode</u>');
             entPropVE.controlVE.setComponentLinkMode(true,entPropVE.entity.typeID);
           }
         } else {
-          $(this).html('<u>Cancel link mode</u>');
+          $(this).html('<u>Leave link mode</u>');
           entPropVE.controlVE.setComponentLinkMode(true,entPropVE.entity.typeID);
         }
       } else {//cancel linking mode
