@@ -366,6 +366,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //mark dirty on input
         $('div.valueInputDiv input',this.valueUI).unbind("input").bind("input",function(e) {
+          var curInput = $(this).val(), btnText = $('.saveDiv',entPropVE.valueUI).html();
           if ($('div.valueLabelDiv',this.valueUI).text() != $(this).val()) {
             if (!$(this).parent().parent().hasClass("dirty")) {
               $(this).parent().parent().addClass("dirty");
@@ -373,25 +374,55 @@ EDITORS.EntityPropVE.prototype = {
           } else if ($(this).parent().parent().hasClass("dirty")) {
             $(this).parent().parent().removeClass("dirty");
           }
+          if (!curInput && btnText == "Save" &&
+                entPropVE.dataMgr.checkEntityDeletable(entPropVE.tag) &&
+               (entPropVE.prefix == "edn" ||
+                entPropVE.prefix == "txt" ||
+                entPropVE.prefix == "cat")) {
+            $('.saveDiv',entPropVE.valueUI).html("Delete").css('color','red');
+          } else if (curInput && btnText != "Save") {
+            $('.saveDiv',entPropVE.valueUI).html("Save").css('color','white');
+          }
         });
         //save data
         $('.saveDiv',this.valueUI).unbind("click").bind("click",function(e) {
-          var val;
+          var isSave = ($(this).html()== 'Save'),val,
+              origText = $('div.valueLabelDiv',entPropVE.valueUI).html();
           if ($('.propEditUI',entPropVE.valueUI).hasClass('dirty')) {
             val = $('div.valueInputDiv input',entPropVE.valueUI).val();
             $('div.valueLabelDiv',entPropVE.valueUI).html(val);
             $('.propEditUI',entPropVE.valueUI).removeClass('dirty');
-            if (entPropVE.prefix == "seq") {
-               entPropVE.changeSequenceLabel(val);
-            } else if (entPropVE.prefix == "edn") {
-               entPropVE.saveEditionLabel(val);
-            } else if (entPropVE.prefix == "txt") {
-               entPropVE.changeTextTitle(val);
-            } else if (entPropVE.prefix == "cat") {
-               entPropVE.changeCatalogTitle(val);
+            if (isSave) {
+              if (entPropVE.prefix == "seq") {
+                 entPropVE.changeSequenceLabel(val);
+              } else if (entPropVE.prefix == "edn") {
+                 entPropVE.saveEditionLabel(val);
+              } else if (entPropVE.prefix == "txt") {
+                 entPropVE.changeTextTitle(val);
+              } else if (entPropVE.prefix == "cat") {
+                 entPropVE.changeCatalogTitle(val);
+              }
+            } else { //delete case
+              switch (entPropVE.prefix) {
+                case "edn":
+                  if (confirm('Are you sure you want to delete edition "' + origText + '"?')) { // is delete
+                    entPropVE.deleteEdition();
+                  }
+                  break;
+                case "txt":
+                  if (confirm('Are you sure you want to delete text "' + origText + '"?')) { // is delete
+//                    entPropVE.deleteText();
+                  }
+                  break;
+                case "cat":
+                  if (confirm('Are you sure you want to delete Catalog "' + origText + '"?')) { // is delete
+                    entPropVE.deleteGlossary();
+                  }
+                  break;
+              }
             }
+            entPropVE.valueUI.removeClass("edit");
           }
-          entPropVE.valueUI.removeClass("edit");
         });
       }
       //click to flip editors
@@ -1739,6 +1770,80 @@ EDITORS.EntityPropVE.prototype = {
         }
     });
     DEBUG.traceExit("removeAnno");
+  },
+
+
+/**
+* delete glossary
+*
+*/
+
+  deleteGlossary: function() {
+    var entPropVE = this, savedata = {};
+    DEBUG.traceEntry("deleteGlossary");
+      savedata = {catID:entPropVE.entID};
+      //save data
+      $.ajax({
+        dataType: 'json',
+        url: basepath+'/services/deleteCatalog.php?db='+dbName,
+        data: savedata,
+        asynch: true,
+        success: function (data, status, xhr) {
+          if (typeof data == 'object' && data.success && data.entities) {
+            entPropVE.dataMgr.updateLocalCache(data,null);
+            if (entPropVE.controlVE && entPropVE.controlVE.layoutMgr) {
+              entPropVE.controlVE.layoutMgr.clearPane(entPropVE.config.id);
+              entPropVE.controlVE.layoutMgr.refreshCursor();
+            }
+            if (data['errors']) {
+              alert("Error(s) occurred while trying to delete Glossary . Error(s): " +
+                    data['errors'].join());
+            }
+          }
+        },// end success cb
+        error: function (xhr,status,error) {
+          // add record failed.
+          alert("An error occurred while trying to delete Glossary. Error: " + error);
+        }
+      });// end ajax
+    DEBUG.traceExit("deleteGlossary");
+  },
+
+
+/**
+* delete edition
+*
+*/
+
+  deleteEdition: function() {
+    var entPropVE = this, savedata = {};
+    DEBUG.traceEntry("deleteEdition");
+      savedata = {ednID:entPropVE.entID};
+      //save data
+      $.ajax({
+        dataType: 'json',
+        url: basepath+'/services/deleteEdition.php?db='+dbName,
+        data: savedata,
+        asynch: true,
+        success: function (data, status, xhr) {
+          if (typeof data == 'object' && data.success && data.entities) {
+            entPropVE.dataMgr.updateLocalCache(data,null);
+            if (entPropVE.controlVE && entPropVE.controlVE.layoutMgr) {
+              entPropVE.controlVE.layoutMgr.clearPane(entPropVE.config.id);
+              entPropVE.controlVE.layoutMgr.refreshCursor();
+            }
+            if (data['errors']) {
+              alert("Error(s) occurred while trying to delete Edition . Error(s): " +
+                    data['errors'].join());
+            }
+          }
+        },// end success cb
+        error: function (xhr,status,error) {
+          // add record failed.
+          alert("An error occurred while trying to delete Edition. Error: " + error);
+        }
+      });// end ajax
+    DEBUG.traceExit("deleteEdition");
   },
 
 

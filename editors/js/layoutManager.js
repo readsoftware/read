@@ -830,6 +830,7 @@ MANAGERS.LayoutManager.prototype = {
     }
     if ($("."+paneID,this.curLayout).length) {//remove children
       $("."+paneID,this.curLayout).children().remove();
+      $("."+paneID,this.curLayout).html(this.editPlaceholderHTML);
     }
   },
 

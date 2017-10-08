@@ -371,6 +371,112 @@ MANAGERS.DataManager.prototype = {
 
 
 /**
+* checkLinksDissolvable - determine if entity links can be dissolved (ids removed)
+*
+* @param string array entGIDs identifying the entities to be checked
+*
+* @returns boolean indicating that entity links can be dissolved
+*/
+
+  checkLinksDissolvable: function (entGIDs) {
+    var i, childEntity, entity;
+    if (entGIDs && entGIDs.length >0) {
+      for (i=0; i<entGIDs.length; i++){// check if all children are readonly
+        entity = this.getEntityFromGID(entGIDs[i]);
+        switch (entGIDs[i].substring(0,3)) {
+          case "seq":
+              if (!entity.readonly &&
+                  entity.entityIDs &&
+                  entity.entityIDs.length > 0 &&
+                  !this.checkEntityDeletable(entGIDs[i])) {
+                return false;
+              }
+            break;
+          case "edn":
+              if (!entity.readonly && entity.seqIDs && entity.seqIDs.length > 0) {
+                return false;
+              }
+            break;
+          case "txt":
+              if (!entity.readonly && entity.ednIDs && entity.ednIDs.length > 0) {
+                return false;
+              }
+            break;
+          case "lem":
+              if (entity.readonly) {
+                return false;
+              }
+            break;
+          case "tok":
+          case "cmp":
+          case "scl":
+          case "gra":
+            break;
+          default:
+            return false; //error on keep link side
+        }
+      }
+    }
+    return true;
+  },
+
+
+/**
+* checkEntityDeletable - determine if entity can be deleted
+*
+* @param string entGID identifies the entity to be checked
+*
+* @returns boolean indicating that entity can be deleted
+*/
+
+  checkEntityDeletable: function (entGID) {
+    var entTag = entGID.replace(":",""),
+        prefix = entTag.substring(0,3),
+        entID = entTag.substring(3),
+        entIDs = [],i, childEntity,
+        entity = this.getEntityFromGID(entTag);
+    if (entity && !entity.readonly) {//owned and editable
+      switch (prefix) {
+        case "seq":
+          if (!entity.entityIDs || entity.entityIDs.length == 0) {
+            return true;
+          } else if (this.getTermFromID(entity.typeID) == "Text" || //warning!!! term dependency
+                     this.getTermFromID(entity.typeID) == "TextPhysical") { //warning!!! term dependency
+            return this.checkLinksDissolvable(entity.entityIDs);
+          }
+
+          break;
+        case "edn":
+          if (!entity.seqIDs || entity.seqIDs.length == 0) {
+            return true;
+          } else {
+            return (this.checkLinksDissolvable(entity.seqIDs.map(function(id) { return "seq"+id;})));
+          }
+          break;
+        case "txt": //require that all resource be removed
+          if ((!entity.ednIDs || entity.ednIDs.length == 0) &&
+              (!entity.imageIDs || entity.ednIDs.imageIDs == 0) &&
+              (!entity.blnIDs || entity.blnIDs.length == 0) &&
+              (!entity.tmdIDs || entity.tmdIDs.length == 0)) {
+            return true;
+          }
+          break;
+        case "cat":
+          if (this.getTermFromID(entity.typeID) == "Glossary") {
+            if (!entity.lemIDs || entity.lemIDs.length == 0) {
+              return true;
+            } else {
+              return (this.checkLinksDissolvable(entity.lemIDs.map(function(id) { return "lem"+id;})));
+            }
+          }
+          break;
+      }
+    }
+    return false;
+  },
+
+
+/**
 * checkForSplit - determine is syllable is split
 *
 * @param int tokID token id to be checked

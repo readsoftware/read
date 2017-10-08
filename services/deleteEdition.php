@@ -92,176 +92,152 @@ $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true)
 if (!$data) {
   array_push($errors,"invalid json data - decode failed");
 } else {
-  $catID = null;
-  $catalog = null;
-  $lemID = null;
-  $lemma = null;
-  if ( isset($data['lemID'])) {//get lemma
-    $lemma = new Lemma($data['lemID']);
-    if ($lemma->hasError()) {
-      array_push($errors,"creating lemma - ".join(",",$lemma->getErrors()));
+  $ednID = null;
+  $edition = null;
+  $seqIDs = null;
+  $sequence = null;
+  $forceSequenceDelete = false;
+  if ( isset($data['force'])) {//get force param
+    $forceSequenceDelete = true;
+  }
+  if ( isset($data['ednID'])) {//get edition
+    $ednID = $data['ednID'];
+    $edition = new Edition($ednID);
+    if ($edition->hasError()) {
+      array_push($errors,"loading edition - ".join(",",$edition->getErrors()));
     } else {
-      $lemID = $lemma->getID();
-      if (!$catID) {
-        $catalog = new Catalog($lemma->getCatalogID());
-        if ($catalog->hasError()) {
-          array_push($errors,"creating catalog - ".join(",",$catalog->getErrors()));
-        } else {
-          $catID = $catalog->getID();
-        }
-      } else if ($lemma->getCatalogID() != $catID) {
-        array_push($errors,"lemma doesn't belong to glossary");
-      }
+      $seqIDs = $edition->getSequenceIDs();
     }
   }
-  if ($catalog && $catalog->isReadonly()) {
-    array_push($errors,"insufficient previledges for Glossary Change");
+  if (!$ednID) {
+    array_push($errors,"insufficient information for deleting Edition");
   }
-  if ($lemma && $lemma->isReadonly()) {
-    array_push($errors,"insufficient previledges to delete Lemma");
-  }
-  if (!$lemma ) {
-    array_push($errors,"valid lemma id required for delete Lemma");
+  if ($edition && $edition->isReadonly()) {
+    array_push($errors,"insufficient previledges for deleting Edition");
   }
   $healthLogging = false;
   if ( isset($data['hlthLog'])) {//check for health logging
     $healthLogging = true;
   }
 }
-if (count($errors) == 0) {
-  $lemmaAnnoIDs = $lemma->getAnnotationIDs();
-  $lemmaAnnotations = $lemma->getAnnotations(true);
-  if ($lemmaAnnotations && $lemmaAnnotations->getCount()) {
-    foreach ($lemmaAnnotations as $annotation) {
-      if (!$annotation->isReadonly()) {
-        $annotation->markForDelete();
-        $index = array_search($annotation->getID(),$lemmaAnnoIDs);
-        array_splice($lemmaAnnoIDs,$index,1);
-        addRemoveEntityReturnData('ano',$annotation->getID());
+
+if (count($errors) == 0 && $seqIDs && count($seqIDs) > 0 ) {
+  //check for lemmas
+  $sequences = new Sequences("seq_id in (".join(",",$seqIDs).")","seq_id",null,null);
+  if (!@$sequences || $sequences->getError()) {
+    array_push($errors,"error loading sequences for edition ID $ednID".$sequences->getError());
+  } else if ($sequences->getCount()>0){
+    $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
+    $deleteSequence = array();
+    foreach ($sequences as $sequence) {
+      if ($sequence->isReadonly()) {// don't care if not owned
+        continue;
       }
-    }
-  }
-  if (count($lemmaAnnoIDs)) {
-    array_push($warnings,"readonly annotaions found for lemma id $lemID : ".join(',',$lemmaAnnoIDs));
-  }
-  addUpdateEntityReturnData('lem',$lemID,'annotationIDs',$lemmaAnnoIDs);
-  $lemGID = $lemma->getGlobalID();
-  //remove lemGID from any tags (linkeToGIDs of annotation entities)
-  $tagAnnotations = new Annotations("'$lemGID' = ANY(ano_linkto_ids) and ano_linkfrom_ids is null and not ano_owner_id = 1","ano_type_id,modified");
-  if ($tagAnnotations->getCount()) {
-    foreach ($tagAnnotations as $annotation) {
-      if (!$annotation->isReadonly()) {
-        $tagLinkToIDs = $annotation->getLinkToIDs();
-        $index = array_search($lemGID,$tagLinkToIDs);
-        array_splice($tagLinkToIDs,$index,1);
-        if (count($tagLinkToIDs)) {
-          $annotation->setLinkToIDs($tagLinkToIDs);
-          $annotation->save();
-          addUpdateEntityReturnData('ano',$annotation->getID(),'linkedToIDs',$tagLinkToIDs);
-        }else{
-          $annotation->markForDelete();
-          addRemoveEntityReturnData('ano',$annotation->getID());
+      $seqEntityIDs = $sequence->getEntityIDs();
+      if (!$seqEntityIDs || count($seqEntityIDs) == 0) {
+        array_push($deleteSequence,$sequence);
+      } else if ($sequence->getType() == "Text" || $sequence->getType() == "TextPhysical") {
+        foreach ($sequence->getEntities(true) as $subSequence) {
+          if ($subSequence->isReadonly()) {// don't care if not owned
+            continue;
+          }
+          $subseqEntityIDs = $subSequence->getEntityIDs();
+          if (!$subseqEntityIDs || count($subseqEntityIDs) == 0) {
+            array_push($deleteSequence,$subSequence);
+          } else {
+            array_push($errors,"error found non empty ".$subSequence->getType()." sequence ID ".$subSequence->getID()." in edition ID $ednID");
+            break;
+          }
+        }
+        if (count($errors) == 0) {
+          array_push($deleteSequence,$sequence);
         }
       } else {
-        array_push($warnings,"readonly tag annotaion".$annotation->getID()." found for lemma id $lemID ");
-        error_log("warning: readonly tag annotaion".$annotation->getID()." found for lemma id $lemID ");
+        array_push($errors,"error found non empty ".$sequence->getType()." sequence ID ".$sequence->getID()." in edition ID $ednID");
       }
     }
-  }
-  //delete any inflections
-  $components = $lemma->getComponents(true);
-  if ($components) {
-    foreach ($components as $component) {
-      if ($component->getEntityType() == 'inflection') {
-        $component->markForDelete();
-        // and remove from local cache
-        addRemoveEntityReturnData('inf',$component->getID());
-      }
-    }
-  }
-  //delete any linked from annotation
-  $noteAnnotations = new Annotations("'$lemGID' = ANY(ano_linkfrom_ids) and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified");
-  if ($noteAnnotations->getCount()) {
-    foreach ($noteAnnotations as $annotation) {
-      if (!$annotation->isReadonly()) {
-        $annotation->markForDelete();
-        // and remove from local cache
-        addRemoveEntityReturnData('ano',$annotation->getID());
-      } else {
-        array_push($warnings,"readonly tag annotaion".$annotation->getID()." found for lemma id $lemID ");
-        error_log("warning: readonly tag annotaion".$annotation->getID()." found for lemma id $lemID ");
-      }
-    }
-  }
-  //delete any linked from annotation
-  $links = new Annotations("('$lemGID' = ANY(ano_linkfrom_ids) or '$lemGID' = ANY(ano_linkto_ids)) ".
-                                      "and ano_linkto_ids is not null and ano_linkfrom_ids is not null and ".
-                                      "not ano_owner_id = 1","ano_type_id,modified");
-  if ($links->getCount()) {
-    foreach ($links as $annotation) {
-      if (!$annotation->isReadonly()) {
-        $anoID = $annotation->getID();
-        $linkToGIDs = $annotation->getLinkToIDs();
-        $index = array_search($lemGID,$linkToGIDs);
-        if ($index !== false) {
-          array_splice($linkToGIDs,$index,1);
-          $updateLinkFromRelatedLinks = true;
-        } else {
-          $updateLinkFromRelatedLinks = false;
-        }
-        $linkFromGIDs = $annotation->getLinkFromIDs();
-        $index = array_search($lemGID,$linkFromGIDs);
-        if ($index !== false) {
-          array_splice($linkFromGIDs,$index,1);
-        }
-        if (count($linkToGIDs) and count($linkFromGIDs)) {
-          $annotation->setLinkToIDs($linkToGIDs);
-          $annotation->setLinkFromIDs($linkFromGIDs);
-          $annotation->save();
-          addUpdateEntityReturnData('ano',$annotation->getID(),'linkedToIDs',$linkToGIDs);
-          addUpdateEntityReturnData('ano',$annotation->getID(),'linkedFromIDs',$linkFromGIDs);
-        }else{
-          $annotation->markForDelete();
-          addRemoveEntityReturnData('ano',$annotation->getID());
-        }
-        if ($updateLinkFromRelatedLinks and count($linkFromGIDs)) {//unlinked sub lemma so need to update the linkRelated
-          foreach ($linkFromGIDs as $linkFromGID) {
-            $subLemma = new Lemma(substr($linkFromGID,4));
-            if (!$subLemma->hasError()) {
-              $lemAnnoIDs = $subLemma->getAnnotationIDs();
-              $index = array_search($anoID,$lemAnnoIDs);
-              if ($index !== false) {
-                array_splice($lemAnnoIDs,$index,1);
-                $subLemma->setAnnotationIDs($lemAnnoIDs);
-                addUpdateEntityReturnData('lem',$subLemma->getID(),'annotationIDs',$subLemma->getAnnotationIDs());
-                $subLemma->save();
-              }
-              addUpdateEntityReturnData('lem',$subLemma->getID(),'relatedEntGIDsByType',$subLemma->getRelatedEntitiesByLinkType());
+    if (count($errors) == 0) {
+      foreach ($deleteSequence as $sequence) {
+        $seqID = $sequence->getID();
+        $seqAnnoIDs = $sequence->getAnnotationIDs();
+        $seqAnnotations = $sequence->getAnnotations(true);
+        if ($seqAnnotations && $seqAnnotations->getCount()) {
+          //TODO add code to store anoIDs in sequence scratch
+          foreach ($seqAnnotations as $annotation) {
+            if (!$annotation->isReadonly()) {
+              $annotation->markForDelete();
+              $index = array_search($annotation->getID(),$seqAnnoIDs);
+              array_splice($seqAnnoIDs,$index,1);
+              addRemoveEntityReturnData('ano',$annotation->getID());
             }
           }
         }
-
-      } else {
-        array_push($warnings,"readonly link annotaion".$annotation->getID()." found for lemma id $lemID ");
-        error_log("warning: readonly link annotaion".$annotation->getID()." found for lemma id $lemID ");
+        if (count($seqAnnoIDs)) {
+          array_push($warnings,"readonly annotations found for sequence id $seqID : ".join(',',$seqAnnoIDs));
+        }
+        addUpdateEntityReturnData('seq',$seqID,'annotationIDs',$seqAnnoIDs);
+        $seqGID = $sequence->getGlobalID();
+        //remove lemGID from any tags (linkeToGIDs of annotation entities)
+        $tagAnnotations = new Annotations("'$seqGID' = ANY(ano_linkto_ids) and ano_linkfrom_ids is null and not ano_owner_id = 1","ano_type_id,modified");
+        if ($tagAnnotations->getCount()) {
+          //TODO consider if there is a method for undo, what info to save and where
+          foreach ($tagAnnotations as $annotation) {
+            if (!$annotation->isReadonly()) {
+              $tagLinkToIDs = $annotation->getLinkToIDs();
+              $index = array_search($seqGID,$tagLinkToIDs);
+              array_splice($tagLinkToIDs,$index,1);
+              if (count($tagLinkToIDs)) {
+                $annotation->setLinkToIDs($tagLinkToIDs);
+                $annotation->save();
+                addUpdateEntityReturnData('ano',$annotation->getID(),'linkedToIDs',$tagLinkToIDs);
+              }else{
+                $annotation->markForDelete();
+                addRemoveEntityReturnData('ano',$annotation->getID());
+              }
+            } else {
+              array_push($warnings,"readonly tag annotation".$annotation->getID()." found for sequence id $seqID ");
+              error_log("warning: readonly tag annotation".$annotation->getID()." found for sequence id $seqID ");
+            }
+          }
+        }
+        //delete any linked from annotation (tags)
+        $noteAnnotations = new Annotations("'$seqGID' = ANY(ano_linkfrom_ids) and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified");
+        if ($noteAnnotations->getCount()) {
+          foreach ($noteAnnotations as $annotation) {
+            if (!$annotation->isReadonly()) {
+              $annotation->markForDelete();
+              // and remove from local cache
+              addRemoveEntityReturnData('ano',$annotation->getID());
+            } else {
+              array_push($warnings,"readonly tag annotation".$annotation->getID()." found for sequence id $seqID ");
+              error_log("warning: readonly tag annotation".$annotation->getID()." found for sequence id $seqID ");
+            }
+          }
+        }
+        //delete sequence
+        $sequence->markForDelete();
+        // and remove from local cache
+        addRemoveEntityReturnData('seq',$sequence->getID());
       }
     }
   }
-  $lemCatID = $lemma->getCatalogID();
-  //delete lemma
-  $lemma->markForDelete();
+}
+
+if (count($errors) == 0) {
+  //get text
+  $ednTxtID = $edition->getTextID();
+  //delete edition
+  $edition->markForDelete();
   // and remove from local cache
-  addRemoveEntityReturnData('lem',$lemma->getID());
-  //update catalog info
-  $lemmas = new Lemmas("lem_catalog_id = $lemCatID","lem_id",null,null);
-  if ($lemmas && !$lemmas->getError()){
-    $catLemIDs = array();
-    if ($lemmas->getCount()>0) {
-      foreach($lemmas as $catLemma){
-        array_push($catLemIDs, $catLemma->getID());
-      }
+  addRemoveEntityReturnData('edn',$edition->getID());
+  //get text update information
+  $text = new Text($ednTxtID);
+  if ($text && !$text->hasError()){
+    $txtEdnIDs = array();
+    foreach($text->getEditions() as $txtEdition){
+      array_push($txtEdnIDs, $txtEdition->getID());
     }
-    addUpdateEntityReturnData('cat',$lemCatID,"lemIDs",$catLemIDs);
+    addUpdateEntityReturnData('txt',$ednTxtID,"ednIDs",$txtEdnIDs);
   }
 }
 
@@ -332,7 +308,7 @@ if (count($warnings)) {
 if (count($entities)) {
   $retVal["entities"] = $entities;
 }
-if ($healthLogging && $catalog) {
+if ($healthLogging && $edition) {
 //  $retVal["editionHealth"] = checkEditionHealth($catalog->getID(),false);
 }
 if (array_key_exists("callback",$_REQUEST)) {
