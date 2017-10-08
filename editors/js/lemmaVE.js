@@ -213,16 +213,21 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.valueUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.valueUI.addClass("edit");
         $('div.valueInputDiv input',this.valueUI).focus();
 //        $('div.valueInputDiv input',this.valueUI).select();
         e.stopImmediatePropagation();
         return false;
       });
+      $('div.valueInputDiv input',this.valueUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
+      });
       //blur to cancel
       $('div.valueInputDiv input',this.valueUI).unbind("blur").bind("blur",function(e) {
         if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-          lemmaVE.valueUI.removeClass("edit");
+//          lemmaVE.valueUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -313,16 +318,21 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.compUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.compUI.addClass("edit");
         $('div.valueInputDiv input',this.compUI).focus();
 //        $('div.valueInputDiv input',this.valueUI).select();
         e.stopImmediatePropagation();
         return false;
       });
+      $('div.valueInputDiv input',this.compUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
+      });
       //blur to cancel
       $('div.valueInputDiv input',this.compUI).unbind("blur").bind("blur",function(e) {
         if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-          lemmaVE.compUI.removeClass("edit");
+//          lemmaVE.compUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -635,16 +645,21 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.descrUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.descrUI.addClass("edit");
         $('div.valueInputDiv input',this.descrUI).focus();
         //$('div.valueInputDiv input',this.descrUI).select();
         e.stopImmediatePropagation();
         return false;
       });
+      $('div.valueInputDiv input',this.descrUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
+      });
       //blur to cancel
       $('div.valueInputDiv input',this.descrUI).unbind("blur").bind("blur",function(e) {
         if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-          lemmaVE.descrUI.removeClass("edit");
+//          lemmaVE.descrUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -1005,6 +1020,7 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.posUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.posUI.addClass("edit");
         $('div.posEditUI input',this.posUI).focus();
         e.stopImmediatePropagation();
@@ -1012,7 +1028,7 @@ EDITORS.LemmaVE.prototype = {
       });
       //click to cancel
       $('div.posEditUI input',this.posUI).unbind("blur").bind("blur",function(e) {
-        lemmaVE.posUI.removeClass("edit");
+//        lemmaVE.posUI.removeClass("edit");
       });
       //mark dirty on input
       $('div.posEditUI',this.posUI).unbind("input").bind("input",function(e) {
@@ -1053,16 +1069,21 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.transUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.transUI.addClass("edit");
         $('div.valueInputDiv input',lemmaVE.transUI).focus();
         //$('div.valueInputDiv input',lemmaVE.transUI).select();
         e.stopImmediatePropagation();
         return false;
       });
+      $('div.valueInputDiv input',this.transUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
+      });
       //blur to cancel
       $('div.valueInputDiv input',this.transUI).unbind("blur").bind("blur",function(e) {
         if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-          lemmaVE.transUI.removeClass("edit");
+//          lemmaVE.transUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -1550,6 +1571,7 @@ EDITORS.LemmaVE.prototype = {
       return false;
     });
     $('span.inflection',this.attestedUI).unbind("click").bind("click",function(e) {
+      $('div.edit',lemmaVE.editDiv).removeClass("edit");
       lemmaVE.attestedUI.addClass("edit");
       lemmaVE.initShowInflectionEditUI( $(this).prop('infID'), $(this).prop('gid'),$(this));
       e.stopImmediatePropagation();
@@ -1874,6 +1896,7 @@ EDITORS.LemmaVE.prototype = {
       if (valueEditable) {
       //click to edit
         $('div.valueLabelDiv',this.linkTypeUI).unbind("click").bind("click",function(e) {
+          $('div.edit',lemmaVE.editDiv).removeClass("edit");
           lemmaVE.linkTypeUI.addClass("edit");
           //init tree to current type
           var curItem = $('#trm'+(lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeLinkTypeID), lemmaVE.linkTypeTree),
