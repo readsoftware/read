@@ -5654,7 +5654,7 @@ mergeLine: function (direction,cbError) {
               this.lookup.gra[graID] = {};
             }
             if (k==0) {
-              if (entities.gra[graID] && entities.gra[graID].decomp &&
+              if (entities.gra && entities.gra[graID] && entities.gra[graID].decomp &&
                   entities.gra[graID].decomp.length){//sandhi case
                 if (entities.gra[graID].tokIDs) {
                   entities.gra[graID].tokIDs.push(entID);

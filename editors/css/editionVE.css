@@ -137,6 +137,7 @@ div.editContainer.showTokenSep .toksep {
 span.grpGra, span.TCM {
   padding-right: 1px;
   display: inline-flex;
+  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode"!important;
 }
 
 span.grpGra.prepadding {
