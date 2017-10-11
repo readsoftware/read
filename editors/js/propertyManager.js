@@ -150,6 +150,18 @@ MANAGERS.PropertyManager.prototype = {
   },
 
 /**
+* call current property editors clear method
+*
+*/
+
+  clearVE: function () {
+    if (this.currentVE && this.currentVE.clear) {
+      this.currentVE.clear();
+    }
+  },
+
+
+/**
 * put your comment there...
 *
 */

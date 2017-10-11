@@ -3495,18 +3495,26 @@ mergeLine: function (direction,cbError) {
               } else if (sclEditor.hasCaret() &&
                         sclEditor.caretAtBoundary("left")) { // caret at left boundary of syllable
                 prevNode = sclEditor.prevAdjacent();
-                //check for sclEditor state next to left side auxilary element boundary, TCM or linebreak
+                //move over TCM so we check beyond TCM
                 if (prevNode.hasClass('TCM')){
                   //todo: process removing TCM ?? ignore right now
+                  prevNode = sclEditor.prevAdjacent();
+                }
+                //check for sclEditor state next to left side auxilary element boundary, TCM or linebreak
+                if (prevNode.hasClass('TCM')){
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
                 } else if (prevNode.hasClass('boundary')) {
                   //process removing boundary by combining this token with the previous
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to boundary node");
                   ednVE.combineTokens('prev');
                 } else if (prevNode.hasClass('textDivHeader')) {
-                  //process removing linebreak
-                  ednVE.mergeLine('prev');
-                  //todo add case to process combineToken case
+                  if (prevNode.hasClass('startHeader')) {
+                    UTILITY.beep();
+                    DEBUG.log("warn","Ctrl Backspace at beginning of edition, ignoring keystroke");
+                  } else {
+                    //process removing linebreak
+                    ednVE.mergeLine('prev');
+                  }
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
                 } else { //unknown so do nothing but beep  or should we send this to VSE like Del case
                   UTILITY.beep();
@@ -3539,19 +3547,27 @@ mergeLine: function (direction,cbError) {
                   //check if left side
                   if (sclEditor.caretAtBoundary("left")) {
                     adjNode = sclEditor.prevAdjacent();
+                    if (adjNode.hasClass("TCM")){
+                      adjNode = sclEditor.prevAdjacent();
+                    }
                   } else {
                     adjNode = sclEditor.nextAdjacent();
+                    if (adjNode.hasClass("TCM")){
+                      adjNode = sclEditor.nextAdjacent();
+                    }
                   }
                   //if next to cmp toksep change to simple boundary - separate compound
                   if (adjNode.hasClass("toksep")) {
+                    //split compound
                     UTILITY.beep();
                     DEBUG.log("warn","BEEP! Call to token break next to compound separator for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                  //if cursor next to a boundry (not cmp toksep) then error
+                  //if cursor next to a boundry (not cmp toksep) then error can't break token at token start or end
                   } else if (adjNode.hasClass("boundary")) {
                     UTILITY.beep();
                     DEBUG.log("warn","BEEP! Ignoring call to token break next to boundary for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
                   //if cursor next to a linebreak then error
                   } else if (adjNode.hasClass("linebreak")) {
+                    //check for crossline token or compound
                     UTILITY.beep();
                     DEBUG.log("warn","BEEP! Call to token break next to linebreak for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
                   //else intra token

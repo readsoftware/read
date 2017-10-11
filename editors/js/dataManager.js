@@ -455,7 +455,7 @@ MANAGERS.DataManager.prototype = {
           break;
         case "txt": //require that all resource be removed
           if ((!entity.ednIDs || entity.ednIDs.length == 0) &&
-              (!entity.imageIDs || entity.ednIDs.imageIDs == 0) &&
+              (!entity.imageIDs || entity.imageIDs.length == 0) &&
               (!entity.blnIDs || entity.blnIDs.length == 0) &&
               (!entity.tmdIDs || entity.tmdIDs.length == 0)) {
             return true;

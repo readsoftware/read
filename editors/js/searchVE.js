@@ -470,6 +470,33 @@ EDITORS.SearchVE.prototype = {
 /**
 * put your comment there...
 *
+* @param txtID
+*/
+
+  removeTextRow: function (txtID) {
+    var srchVE = this, rowID, rows, i;
+    if (srchVE.selectedTxtIDs && srchVE.selectedTxtIDs[txtID]) {
+      rowID = srchVE.gridDiv.jqxGrid('getrowid', srchVE.selectedTxtIDs[txtID]);
+    }
+    if (!rowID) {// expensive!!! run through all the bound rows and find the one matching the txtID
+      rows = srchVE.gridDiv.jqxGrid('getboundrows');
+      for (i in rows) {
+        if (rows[i].txt_id == txtID) {
+          rowID = rows[i].uuid;
+          break;
+        }
+      }
+    }
+    if (rowID) {
+      srchVE.gridDiv.jqxGrid('deleterow',rowID);
+      srchVE.gridChange();
+    }
+  },
+
+
+/**
+* put your comment there...
+*
 * @param event
 */
 
@@ -485,7 +512,7 @@ EDITORS.SearchVE.prototype = {
         j = selectedIndexes[i];
         txtID = this.gridDiv.jqxGrid('getrowdata',j).txt_id;
         cursorMap.push([txtID,j]);
-        this.selectedTxtIDs[txtID] = 1;
+        this.selectedTxtIDs[txtID] = j;
       }
     } else if (gridDisplayRows.length) {//use entire grid displayRows
       for (i in gridDisplayRows) {

@@ -116,6 +116,22 @@ EDITORS.EntityPropVE.prototype = {
 
 
 /**
+* clears the editor's entity and refresh display
+*
+*/
+
+  clear: function() {
+    DEBUG.traceEntry("clearEntity");
+    this.prefix = null;
+    this.entID = null;
+    this.tag = null;
+    this.entity = null;
+    this.showEntity();
+    DEBUG.traceExit("clearEntity");
+  },
+
+
+/**
 * get editor's type string
 *
 * @returns string
@@ -411,7 +427,7 @@ EDITORS.EntityPropVE.prototype = {
                   break;
                 case "txt":
                   if (confirm('Are you sure you want to delete text "' + origText + '"?')) { // is delete
-//                    entPropVE.deleteText();
+                    entPropVE.deleteText();
                   }
                   break;
                 case "cat":
@@ -1807,6 +1823,45 @@ EDITORS.EntityPropVE.prototype = {
         }
       });// end ajax
     DEBUG.traceExit("deleteGlossary");
+  },
+
+
+/**
+* delete text
+*
+*/
+
+  deleteText: function() {
+    var entPropVE = this, savedata = {};
+    DEBUG.traceEntry("deleteText");
+      savedata = {txtID:entPropVE.entID};
+      //save data
+      $.ajax({
+        dataType: 'json',
+        url: basepath+'/services/deleteText.php?db='+dbName,
+        data: savedata,
+        asynch: true,
+        success: function (data, status, xhr) {
+          var controlVE =entPropVE.controlVE, txtID = entPropVE.entID;
+          if (typeof data == 'object' && data.success && data.entities) {
+            entPropVE.dataMgr.updateLocalCache(data,null);
+            entPropVE.clear();
+            if (controlVE && controlVE.id == "searchVE" &&
+                controlVE.removeTextRow) {
+              controlVE.removeTextRow(txtID);
+            }
+            if (data['errors']) {
+              alert("Error(s) occurred while trying to delete Text . Error(s): " +
+                    data['errors'].join());
+            }
+          }
+        },// end success cb
+        error: function (xhr,status,error) {
+          // add record failed.
+          alert("An error occurred while trying to delete Text. Error: " + error);
+        }
+      });// end ajax
+    DEBUG.traceExit("deleteText");
   },
 
 
