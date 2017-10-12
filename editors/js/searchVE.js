@@ -284,6 +284,27 @@ EDITORS.SearchVE.prototype = {
 /**
 * put your comment there...
 *
+* @param {String} pageID
+*/
+
+  syncPlayButton: function(pageID) {
+    var srchVE = this,
+        playButton = $('#play',this.searchMediaBar);
+    if (pageID == "search") {
+      if (this.searchInput.val()) {
+        playButton.removeClass("med-textpage").removeClass("med-searchpage").addClass("med-newsearchpage");
+      } else {
+        playButton.removeClass("med-newsearchpage").removeClass("med-searchpage").addClass("med-textpage");
+      }
+    } else {
+      playButton.removeClass("med-textpage").removeClass("med-newsearchpage").addClass("med-searchpage");
+    }
+  },
+
+
+/**
+* put your comment there...
+*
 */
 
   loadSearch: function() {
@@ -588,6 +609,10 @@ EDITORS.SearchVE.prototype = {
 */
 
   updateCatalogInfoBar: function () {
+    // Catalog info bar can be configured so check if there
+    if (!this.searchCatInfoBar) {
+      return;
+    }
     var srchVE = this, curText, textResources,
         catResBtnBar = $('#catResBtnBar',this.searchCatInfoBar),
         catID = this.getCurCatID();
@@ -1428,10 +1453,12 @@ EDITORS.SearchVE.prototype = {
       return;
     }
     var srchVE = this,
-        searchNavHdr = $('<div id="searchNavHdr"><div class="toolPanelLabel">Catalog</div></div>');
+        searchNavHdr = $('<div id="searchNavHdr"><div class="toolPanelLabel">Find</div></div>');
         searchNavPanel = $('<div id="searchNavPanel" class="searchPanel"/>');
-    this.searchCatInfoBar = $('<div id="searchCatalogInfoBar"><div class="catalogTitle">Resources</div></div>');
-    searchNavPanel.append(this.searchCatInfoBar);
+    if (enableCatalogResources) {
+      this.searchCatInfoBar = $('<div id="searchCatalogInfoBar"><div class="catalogTitle">Resources</div></div>');
+      searchNavPanel.append(this.searchCatInfoBar);
+    }
     this.searchInput = $('<input type="text" id="searchInput" />'),
     this.searchInput.jqxInput({placeHolder: "Enter Search Here"});
     this.searchInput.unbind('change').bind('change', function(e) {

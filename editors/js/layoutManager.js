@@ -1256,6 +1256,9 @@ MANAGERS.LayoutManager.prototype = {
            editor.displayProperties(true);
          }
       }
+      if (this.editors.searchVE) {// sync the play button
+        this.editors.searchVE.syncPlayButton(paneID);
+      }
       layoutMgr.pushState();
     }//end if
     DEBUG.traceExit("layoutMgr.loadPaneContent"," entTag "+ tag + " for "+paneID);
@@ -1387,6 +1390,9 @@ MANAGERS.LayoutManager.prototype = {
         if (this.landingPage) {
           newPage = "landingPage";
         }
+    }
+    if (this.editors.searchVE) {// sync the play button
+      this.editors.searchVE.syncPlayButton(pageID)
     }
     if (newPage) {
       $(document.body).removeClass(this.currentPage);

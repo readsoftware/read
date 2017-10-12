@@ -90,6 +90,7 @@
     <script type="text/javascript" src="./services/getTagInfo.php?db=<?=DBNAME?>"></script>
     <script type="text/javascript">
       var sktSort = ('<?=USESKTSORT?>' == "0" || !'<?=USESKTSORT?>')?false:true,
+          enableCatalogResources = ('<?=ENABLECATALOGRESOURCE?>' == "0" || !'<?=ENABLECATALOGRESOURCE?>')?false:true,
           maxUploadSize = parseInt(<?=MAX_UPLOAD_SIZE?>),
           linkToSyllablePattern = '<?=defined("LINKSYLPATTERN")?LINKSYLPATTERN:""?>',
           progressInputName='<?php echo ini_get("session.upload_progress.name"); ?>',

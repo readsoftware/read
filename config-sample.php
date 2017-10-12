@@ -26,6 +26,7 @@
   if(!defined("PASSWORD")) define("PASSWORD","password");
   if(!defined("DEFAULTVISIBILITY")) define("DEFAULTVISIBILITY","Users");
   if(!defined("USECACHE")) define("USECACHE",false);
+  if(!defined("ENABLECATALOGRESOURCE")) define("ENABLECATALOGRESOURCE",'0');//0 = not enable else enabled
 //  if(!defined("LINKSYLPATTERN")) define("LINKSYLPATTERN","L1:S1,L5+5:S1");
 //  if(!defined("USESKTSORT")) define("USESKTSORT",'1');
   if(!defined("MAX_UPLOAD_SIZE")) {
