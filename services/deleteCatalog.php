@@ -121,7 +121,7 @@ if (!$data) {
 
 if (count($errors) == 0) {
   //check for lemmas
-  $lemmas = new Lemmas("lem_catalog_id = $catID","lem_id",null,null);
+  $lemmas = new Lemmas("lem_catalog_id = $catID and not lem_owner_id = 1","lem_id",null,null);
   if (!@$lemmas || $lemmas->getError()) {
     array_push($errors,"error loading lemma for catalog ID $catID".$lemmas->getError());
   } else if ($lemmas->getCount()>0){
@@ -298,16 +298,18 @@ if (count($errors) == 0) {
   // and remove from local cache
   addRemoveEntityReturnData('cat',$catalog->getID());
   //update edition information
-  foreach ($catEdnIDs as $catEdnID) {
-    $catalogs = new Catalogs("$catEdnID = ANY(cat_edition_ids)","cat_id",null,null);
-    if ($catalogs && !$catalogs->getError()){
-      $ednCatIDs = array();
-      if ($catalogs->getCount()>0) {
-        foreach($catalogs as $ednCatalog){
-          array_push($ednCatIDs, $ednCatalog->getID());
+  if (count($catEdnIDs)){
+    foreach ($catEdnIDs as $catEdnID) {
+      $catalogs = new Catalogs("$catEdnID = ANY(cat_edition_ids) and not cat_owner_id = 1","cat_id",null,null);
+      if ($catalogs && !$catalogs->getError()){
+        $ednCatIDs = array();
+        if ($catalogs->getCount()>0) {
+          foreach($catalogs as $ednCatalog){
+            array_push($ednCatIDs, $ednCatalog->getID());
+          }
         }
+        addUpdateEntityReturnData('edn',$catEdnID,"catIDs",$ednCatIDs);
       }
-      addUpdateEntityReturnData('edn',$catEdnID,"catIDs",$ednCatIDs);
     }
   }
 }

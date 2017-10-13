@@ -1105,7 +1105,7 @@ EDITORS.WordlistVE.prototype = {
         $node, $srchNode, srchWord, srchDir, $insertNode, position, match,
         wordHTML = this.calcWordEntryHtml(wordTag);
     if (!wordHTML) {//nothing to insert
-      retrun;
+      return;
     }
     //find hint entity
     if (hintWord && hintWord.sort && word.sort) {

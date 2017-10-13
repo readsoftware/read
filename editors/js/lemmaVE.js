@@ -2340,13 +2340,24 @@ EDITORS.LemmaVE.prototype = {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var oldLemID, i;
+              var oldLemID, i, j, entGID, inflection;
               if (typeof data == 'object' && data.success && data.entities) {
                 //update data
                 oldLemID = lemmaVE.entID;
                 if (lemmaVE.entity && lemmaVE.entity.entityIDs && lemmaVE.entity.entityIDs.length) {
                   for (i in lemmaVE.entity.entityIDs) {
-                    lemmaVE.wordlistVE.insertWordEntry(lemmaVE.entity.entityIDs[i],'lem'+oldLemID);
+                    entGID = lemmaVE.entity.entityIDs[i];
+                    if (entGID.match(/inf/)) {
+                      inflection = lemmaVE.dataMgr.getEntityFromGID(entGID);
+                      if (inflection && inflection.entityIDs && inflection.entityIDs.length) {
+                        for (j in inflection.entityIDs) {
+                          entGID = inflection.entityIDs[j];
+                          lemmaVE.wordlistVE.insertWordEntry(entGID,'lem'+oldLemID);
+                        }
+                      }
+                    } else {
+                      lemmaVE.wordlistVE.insertWordEntry(entGID,'lem'+oldLemID);
+                    }
                   }
                 }
                 lemmaVE.dataMgr.updateLocalCache(data,null);

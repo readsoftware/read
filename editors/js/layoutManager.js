@@ -144,6 +144,11 @@ MANAGERS.LayoutManager.prototype = {
   },
 
 
+  refreshCatalogResources: function(){
+    this.editors.searchVE.updateCatalogInfoBar();
+  },
+
+
 /**
 * refresh search page
 *

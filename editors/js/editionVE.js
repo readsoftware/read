@@ -2108,6 +2108,12 @@ mergeLine: function (direction,cbError) {
           headerNode = $(startNode);
         } else if (startNode.className.match(/grpGra|boundary|linebreak|TCM/)){ //somewhere on line so move left to find header
           prevNode = $(startNode).prev();// !!assume caret at start means prev node is line header
+          if (prevNode.hasClass('TCM')) {//skip TCMs
+            prevNode = prevNode.prev();
+          }
+          if (prevNode.hasClass('textDivHeader')) {//on first syllable of line
+            posInsert = 'before';
+          }
           while (prevNode.length && !prevNode.hasClass('textDivHeader') && grdCnt--) {
             if (prevNode.hasClass('grpGra')) {// found not at first syllable start group
               posInsert = 'after';
@@ -3434,19 +3440,19 @@ mergeLine: function (direction,cbError) {
 */
 
     function keyDownHandler(e) {
-      var sclEditor = ednVE.sclEd,tcmEditor = ednVE.tcmEd, direction,adjNode,prevNode, loopLimit =5,
-          prevSyllable, nextSyllable, key;
+      var sclEditor = ednVE.sclEd,tcmEditor = ednVE.tcmEd, direction,$adjNode,$prevNode, loopLimit =5,
+          prevSyllable, nextSyllable, key, ordL;
       if (ednVE.editMode == 'modify' && sclEditor) {
         switch (e.keyCode || e.which) {
           case 38://'Up':
-            if (!sclEditor || !sclEditor.syllable || sclEditor.syllable.hasClass("firstLine")) {
+            if (!sclEditor.syllable || sclEditor.syllable.hasClass("firstLine")) {
               e.stopImmediatePropagation();
               return false;
             }
             sclEditor.save();
             break;
           case 40://'Down':
-            if (!sclEditor || !sclEditor.syllable || sclEditor.syllable.hasClass("lastLine")) {
+            if (!sclEditor.syllable || sclEditor.syllable.hasClass("lastLine")) {
               e.stopImmediatePropagation();
               return false;
             }
@@ -3454,14 +3460,14 @@ mergeLine: function (direction,cbError) {
             break;
           case 37://"Left":
             DEBUG.log("nav","Call to left arrow keydown for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-            if (!sclEditor || sclEditor.moveCursor("left",e.shiftKey)) {
+            if (sclEditor.moveCursor("left",e.shiftKey)) {
               e.stopImmediatePropagation();
               return false;
             }
             break;
           case 39://"Right":
             DEBUG.log("nav","Call to right arrow keydown for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-            if (!sclEditor || sclEditor.moveCursor("right",e.shiftKey)) {
+            if (sclEditor.moveCursor("right",e.shiftKey)) {
               e.stopImmediatePropagation();
               return false;
             }
@@ -3473,10 +3479,10 @@ mergeLine: function (direction,cbError) {
 //            return false;//eat all other keys
             break;
           case 13://"Enter":
-            if (sclEditor && sclEditor.hasCaret()) {
+            if (sclEditor.hasCaret()) {
               if (sclEditor.caretAtBOL() ||
                   sclEditor.caretAtEOL()) {
-                ednVE.insertLine();
+                ednVE.insertFreeTextLine();
               } else if (sclEditor.caretAtBoundary()) {
                 ednVE.splitLine();
               } else {
@@ -3487,35 +3493,47 @@ mergeLine: function (direction,cbError) {
             }
             break;
           case 8://"Backspace":
-            if ((e.ctrlKey || e.metaKey) && sclEditor ) {//ctrl + backspace
+            if (e.ctrlKey || e.metaKey) {//ctrl + backspace
               if (sclEditor.isSelectAll()) {//entire syllable selected
                 sclEditor.removeSelected();
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
               } else if (sclEditor.hasCaret() &&
                         sclEditor.caretAtBoundary("left")) { // caret at left boundary of syllable
-                prevNode = sclEditor.prevAdjacent();
+                $prevNode = sclEditor.prevAdjacent();
                 //move over TCM so we check beyond TCM
-                if (prevNode.hasClass('TCM')){
-                  //todo: process removing TCM ?? ignore right now
-                  prevNode = sclEditor.prevAdjacent();
+                if ($prevNode.hasClass('TCM')){
+                  $prevNode = $prevNode.prev();
                 }
                 //check for sclEditor state next to left side auxilary element boundary, TCM or linebreak
-                if (prevNode.hasClass('TCM')){
+                if ($prevNode.hasClass('TCM')){
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
-                } else if (prevNode.hasClass('boundary')) {
+                } else if ($prevNode.hasClass('boundary')) {
                   //process removing boundary by combining this token with the previous
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to boundary node");
                   ednVE.combineTokens('prev');
-                } else if (prevNode.hasClass('textDivHeader')) {
-                  if (prevNode.hasClass('startHeader')) {
+                } else if ($prevNode.hasClass('textDivHeader')) {
+                  if ($prevNode.hasClass('startHeader') || $prevNode.hasClass('freetext')) {
                     UTILITY.beep();
-                    DEBUG.log("warn","Ctrl Backspace at beginning of edition, ignoring keystroke");
+                    DEBUG.log("warn","Ctrl Backspace at beginning of edition or on freetext line, ignoring keystroke");
                   } else {
-                    //process removing linebreak
-                    ednVE.mergeLine('prev');
+                    headerClasses = $prevNode.attr('class');
+                    ordL = headerClasses.match(/ordL(\d+)/);
+                    if (ordL && ordL.length >1) {
+                      ordL = ordL[1];
+                      ordL = parseInt(ordL);
+                      ordL--;
+                      $prevHeader = $('.textDivHeader.ordL'+ordL,ednVE.contentDiv);
+                      if ($prevHeader && $prevHeader.length && !$prevHeader.hasClass('freetext')) {
+                        //process removing linebreak
+                        ednVE.combineTokens('prev');
+                        break;
+                      }
+                    }
+                    UTILITY.beep();
+                    DEBUG.log("warn","Ctrl Backspace next to freetext line, ignoring keystroke");
+                    alert("warning combining word with freetext line not allowed, ignoring keystroke");
                   }
-                  DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
                 } else { //unknown so do nothing but beep  or should we send this to VSE like Del case
                   UTILITY.beep();
                   DEBUG.log("warn","BEEP! Ctrl Backspace at unknown location, ignoring keystroke");
@@ -3530,6 +3548,39 @@ mergeLine: function (direction,cbError) {
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
               }
+            } else if (sclEditor.caretAtBOL()){ //simple backspace at beginning of line so try to merge with previous line
+              $prevNode = sclEditor.prevAdjacent();
+              //move over TCM so we check beyond TCM
+              if ($prevNode.hasClass('TCM')){
+                $prevNode = $prevNode.prev();
+              }
+              //check for sclEditor state next to left side auxilary element boundary, TCM or linebreak
+              if ($prevNode.hasClass('TCM')){
+                DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
+              } else if ($prevNode.hasClass('textDivHeader')) {
+                if ($prevNode.hasClass('startHeader') || $prevNode.hasClass('freetext')) {
+                  UTILITY.beep();
+                  DEBUG.log("warn","Ctrl Backspace at beginning of edition or on freetext line, ignoring keystroke");
+                } else {
+                  headerClasses = $prevNode.attr('class');
+                  ordL = headerClasses.match(/ordL(\d+)/);
+                  if (ordL && ordL.length >1) {
+                    ordL = ordL[1];
+                    ordL = parseInt(ordL);
+                    ordL--;
+                    $prevHeader = $('.textDivHeader.ordL'+ordL,ednVE.contentDiv);
+                    if ($prevHeader && $prevHeader.length && !$prevHeader.hasClass('freetext')) {
+                      //process removing linebreak
+                      ednVE.mergeLine('prev');
+                      break;
+                    }
+                  }
+                  UTILITY.beep();
+                  DEBUG.log("warn","Ctrl Backspace next to freetext line, ignoring keystroke");
+                  alert("warning merging with freetext line not allowed, ignoring keystroke");
+                }
+                DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
+              }
             } else { //simple backspace so pass to syllable editor for processing
               var ret = sclEditor.preprocessKey("Backspace",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
               if (ret === false) {
@@ -3540,59 +3591,62 @@ mergeLine: function (direction,cbError) {
             }
             break;
           case 32:// space " ":
-            if (sclEditor) {
-              if (sclEditor.hasCaret()) {
-                //if caret at syllable boundary
-                if (sclEditor.caretAtBoundary()) {
-                  //check if left side
-                  if (sclEditor.caretAtBoundary("left")) {
-                    adjNode = sclEditor.prevAdjacent();
-                    if (adjNode.hasClass("TCM")){
-                      adjNode = sclEditor.prevAdjacent();
-                    }
-                  } else {
-                    adjNode = sclEditor.nextAdjacent();
-                    if (adjNode.hasClass("TCM")){
-                      adjNode = sclEditor.nextAdjacent();
-                    }
-                  }
-                  //if next to cmp toksep change to simple boundary - separate compound
-                  if (adjNode.hasClass("toksep")) {
-                    //split compound
-                    UTILITY.beep();
-                    DEBUG.log("warn","BEEP! Call to token break next to compound separator for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                  //if cursor next to a boundry (not cmp toksep) then error can't break token at token start or end
-                  } else if (adjNode.hasClass("boundary")) {
-                    UTILITY.beep();
-                    DEBUG.log("warn","BEEP! Ignoring call to token break next to boundary for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                  //if cursor next to a linebreak then error
-                  } else if (adjNode.hasClass("linebreak")) {
-                    //check for crossline token or compound
-                    UTILITY.beep();
-                    DEBUG.log("warn","BEEP! Call to token break next to linebreak for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                  //else intra token
-                  } else {
-                    DEBUG.log("gen","Call to token break intra token for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                    ednVE.splitToken();
+            if (sclEditor.hasCaret()) {
+              //if caret at syllable boundary
+              if (sclEditor.caretAtBoundary()) {
+                //check if left side
+                if (sclEditor.caretAtBoundary("left")) {
+                  $adjNode = sclEditor.prevAdjacent();
+                  if ($adjNode.hasClass("TCM")){
+                    $adjNode = sclEditor.prevAdjacent();
                   }
                 } else {
-                  //else intra syllable so separate scl, token, etc.
-                  DEBUG.log("gen","Call to token break intra syllable for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                  $adjNode = sclEditor.nextAdjacent();
+                  if ($adjNode.hasClass("TCM")){
+                    $adjNode = sclEditor.nextAdjacent();
+                  }
+                }
+                //if next to cmp toksep change to simple boundary - separate compound
+                if ($adjNode.hasClass("toksep")) {
+                  //split crossline token
+                  ednVE.splitToken();
+                  UTILITY.beep();
+                  DEBUG.log("warn","BEEP! Call to token break next to compound separator for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                //if cursor next to a boundry (not cmp toksep) then error can't break token at token start or end
+                } else if ($adjNode.hasClass("boundary")) {
+                  UTILITY.beep();
+                  DEBUG.log("warn","BEEP! Ignoring call to token break next to boundary for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                //if cursor next to a linebreak then error
+                } else if ($adjNode.hasClass("linebreak")) {
+                  //check for crossline token or compound
+                  if ($adjNode.hasClass("toksplit") || $adjNode.hasClass("cmpsplit")) {
+                    //split crossline token
+                    ednVE.splitToken();
+                  } else {
+                    UTILITY.beep();
+                    DEBUG.log("warn","BEEP! Call to token break next to linebreak for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                  }
+                //else intra token
+                } else {
+                  DEBUG.log("gen","Call to token break intra token for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
                   ednVE.splitToken();
                 }
-              } else if (e.key != ' ') {
-                break;
               } else {
-                UTILITY.beep();
-                DEBUG.log("warn","BEEP! Call to token break not supported for selection for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                //else intra syllable so separate scl, token, etc.
+                DEBUG.log("gen","Call to token break intra syllable for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                ednVE.splitToken();
               }
-//              DEBUG.log("gen""BEEP! Call to space with token '"+sclEditor.getTokenID()+"' at position "+sclEditor.getTokenCurPos());
-              e.stopImmediatePropagation();
-              return false;
+            } else if (e.key != ' ') {
+              break;
+            } else {
+              UTILITY.beep();
+              DEBUG.log("warn","BEEP! Call to token break not supported for selection for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
             }
+            e.stopImmediatePropagation();
+            return false;
             break;
           case 45://"Insert":
-            if ((e.ctrlKey || e.metaKey) && sclEditor && (sclEditor.caretAtBoundary('left') || sclEditor.caretAtBoundary('right')) ) {
+            if ((e.ctrlKey || e.metaKey) && (sclEditor.caretAtBoundary('left') || sclEditor.caretAtBoundary('right')) ) {
               sclEditor.insertNew();
             } else {
               DEBUG.log("nav","Call to ctrl Insert for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" curson not at boundary");
@@ -3601,33 +3655,46 @@ mergeLine: function (direction,cbError) {
             return false;
             break;
           case 46://"Del":
-            if ((e.ctrlKey || e.metaKey) && sclEditor ) {//ctrl + delete
+            if (e.ctrlKey || e.metaKey) {//ctrl + delete
               if (sclEditor.isSelectAll()) {//entire syllable selected
                 sclEditor.removeSelected();
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
               } else if (sclEditor.hasCaret() &&
                         sclEditor.caretAtBoundary("right")) { // caret at right boundary of syllable
-                adjNode = sclEditor.prevAdjacent();
-                //check for sclEditor state next to right side auxilary element boundary, TCM or linebreak
-                if (adjNode.hasClass('TCM')){
+                $adjNode = sclEditor.nextAdjacent();
+                //move over TCM so we check beyond TCM
+                if ($adjNode && $adjNode.hasClass('TCM')){
+                  $adjNode = $adjNode.next();
+                }
+                if ($adjNode && $adjNode.hasClass('TCM')){
                   //todo: process removing TCM ?? ignore right now
                   DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
-                } else if (adjNode.hasClass('boundary')) {
+                } else if ($adjNode && $adjNode.hasClass('boundary')) {
                   //process removing boundary
                   DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to boundary node");
                   ednVE.combineTokens('next');
-                } else if (adjNode.hasClass('linebreak')) {
+                } else if ($adjNode && $adjNode.hasClass('linebreak')) {
                   //process removing compound split before linebreak
-                  if (adjNode.hasClass('cmpsplit')) {
-                    ednVE.combineTokens('next');
-                  } else {
-                    ednVE.mergeLine('next');
+                  headerClasses = $adjNode.attr('class');
+                  ordL = headerClasses.match(/ordL(\d+)/);
+                  if (ordL && ordL.length >1) {
+                    ordL = ordL[1];
+                    ordL = parseInt(ordL);
+                    ordL++;
+                    $nextHeader = $('.textDivHeader.ordL'+ordL,ednVE.contentDiv);
+                    if ($nextHeader && $nextHeader.length && !$nextHeader.hasClass('freetext')) {
+                      //process cobining cross line words
+                      ednVE.combineTokens('next');
+                      break;
+                    }
                   }
-                  DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
+                  UTILITY.beep();
+                  DEBUG.log("warn","Ctrl Del with adjacent freetext line, ignoring keystroke");
+                  alert("warning combining word with freetext line not allowed, ignoring keystroke");
                 } else {//send ctrl + del to VSE on unknown boundary ????
                   UTILITY.beep();
-                  DEBUG.log("warn","BEEP! Ctrl Backspace at unknown location, ignoring keystroke");
+                  DEBUG.log("warn","BEEP! Ctrl Del at unknown adjacent node, ignoring keystroke");
                 }
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
@@ -3639,6 +3706,33 @@ mergeLine: function (direction,cbError) {
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
               }
+            } else if (sclEditor.caretAtEOL()){ //simple del at end of line so try to merge with next line
+                $adjNode = sclEditor.nextAdjacent();
+                //move over TCM so we check beyond TCM
+                if ($adjNode.hasClass('TCM')){
+                  $adjNode = $adjNode.next();
+                }
+                if ($adjNode.hasClass('TCM')){
+                  //todo: process removing TCM ?? ignore right now
+                  DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
+                } else if ($adjNode.hasClass('linebreak')) {
+                  headerClasses = $adjNode.attr('class');
+                  ordL = headerClasses.match(/ordL(\d+)/);
+                  if (ordL && ordL.length >1) {
+                    ordL = ordL[1];
+                    ordL = parseInt(ordL);
+                    ordL++;
+                    $nextHeader = $('.textDivHeader.ordL'+ordL,ednVE.contentDiv);
+                    if ($nextHeader && $nextHeader.length && !$nextHeader.hasClass('freetext')) {
+                      //process removing linebreak
+                      ednVE.mergeLine('next');
+                      break;
+                    }
+                  }
+                  UTILITY.beep();
+                  DEBUG.log("warn","Ctrl Del with adjacent freetext line, ignoring keystroke");
+                  alert("warning merging with freetext line not allowed, ignoring keystroke");
+                }
             } else {
               var ret = sclEditor.preprocessKey("Del",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
               if (ret === false) {

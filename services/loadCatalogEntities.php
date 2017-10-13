@@ -81,7 +81,7 @@
   $catalog = new Catalog($catID);
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
     array_push($warnings,"Warning no catalog available for id $catID .");
-  } else {
+  } else if (!$catalog->isMarkedDelete()){
     $catID = $catalog->getID();
     $entities['update']['cat'][$catID] = array('description'=> $catalog->getDescription(),
                                                'id' => $catID,
@@ -152,7 +152,9 @@
         $entities["update"]['cat'][$catID]['lemIDs'] = $lemIDs;
       }
     }
-  } // else
+  } else {
+    array_push($errors,"Error no catalog available for id $catID .");
+  }
   if (count( $atbIDs) > 0) {
     $entityIDs['atb'] = $atbIDs;
   }

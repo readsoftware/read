@@ -253,7 +253,7 @@ if (count($errors) == 0) {
   // and remove from local cache
   addRemoveEntityReturnData('lem',$lemma->getID());
   //update catalog info
-  $lemmas = new Lemmas("lem_catalog_id = $lemCatID","lem_id",null,null);
+  $lemmas = new Lemmas("lem_catalog_id = $lemCatID and not lem_owner_id = 1","lem_id",null,null);
   if ($lemmas && !$lemmas->getError()){
     $catLemIDs = array();
     if ($lemmas->getCount()>0) {

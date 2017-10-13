@@ -1810,6 +1810,7 @@ EDITORS.EntityPropVE.prototype = {
             if (entPropVE.controlVE && entPropVE.controlVE.layoutMgr) {
               entPropVE.controlVE.layoutMgr.clearPane(entPropVE.config.id);
               entPropVE.controlVE.layoutMgr.refreshCursor();
+              entPropVE.controlVE.layoutMgr.refreshCatalogResources();
             }
             if (data['errors']) {
               alert("Error(s) occurred while trying to delete Glossary . Error(s): " +
