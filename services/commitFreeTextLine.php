@@ -328,13 +328,15 @@
   } else {
     $ignoreTypeIDs = null; //this will ignore none or use default for addInLine
     $ignoreTypeIDs = array(
-      Entity::getIDofTermParentLabel('analysis-sequencetype'),
-      Entity::getIDofTermParentLabel('chapter-analysis'),
-      Entity::getIDofTermParentLabel('rootref-textreference'),
-      Entity::getIDofTermParentLabel('textreference-analysis')
+      Entity::getIDofTermParentLabel('textphysical-sequencetype'),//warning!!! term dependency
+      Entity::getIDofTermParentLabel('linephysical-textphysical'),//warning!!! term dependency
+      Entity::getIDofTermParentLabel('analysis-sequencetype'),//warning!!! term dependency
+      Entity::getIDofTermParentLabel('chapter-analysis'),//warning!!! term dependency
+      Entity::getIDofTermParentLabel('rootref-textreference'),//warning!!! term dependency
+      Entity::getIDofTermParentLabel('textreference-sequencetype')//warning!!! term dependency
     );
     if ($seqText) {
-        array_push($ignoreTypeIDs, Entity::getIDofTermParentLabel('text-sequencetype'));
+        array_push($ignoreTypeIDs, Entity::getIDofTermParentLabel('text-sequencetype'));//warning!!! term dependency
     }
     $parser->saveParseResults(null,true,$ignoreTypeIDs);
     if (count($parser->getErrors())) {
@@ -383,28 +385,48 @@
       }
       //check sequence adding new
       $sequences = $parser->getSequences();
+      $textDivision = null;
+      $newTextDivision = null;
+      $newTextSeq = null;
       if (count($sequences)) {
         foreach ($sequences as $sequence) {
           $seqType = $sequence->getType();
+          $seqID = $sequence->getID();
           if ($seqType == "LinePhysical") {//term dependency
             //add linephysical GIDs to freetextLine
-            $freetextLine->setEntityIDs($sequence->getEntityIDs());
+            $lpEntNonces = $sequence->getEntityIDs();
+            $lpEntGIDs = array();
+            foreach ($lpEntNonces as $nonce) {
+              $gid = $parser->getGIDFromNonce($nonce);
+              if ($gid) {
+                array_push($lpEntGIDs,$gid);
+              }
+            }
+            $freetextLine->setEntityIDs($lpEntGIDs);
             //change freetextLine type to linePhysical
             $freetextLine->setTypeID($sequence->getTypeID());
             $freetextLine->save();
             //update freetextSeqID entityIDs data
             addUpdateEntityReturnData('seq',$freetextLine->getID(),'entityIDs',$freetextLine->getEntityIDs());
             addUpdateEntityReturnData('seq',$freetextLine->getID(),'typeID',$freetextLine->getTypeID());
+            if ($seqID !== null) {
+              $sequence->markForDelete();
+            }
           } else if ($seqType == "TextDivision") {//term dependency
-            $newTextDivision = $sequence;
-            addNewEntityReturnData('seq',$newTextDivision);
-            $retVal['newTextDivSeqID'] = $newTextDivision->getID();
-          } else if ($seqType == "Text") {//term dependency
+            if (!$seqID) {
+              array_push($warnings,"Warning saving freetext has unsaved textdivision sequence");
+              $textDivision = $sequence;
+            } else {
+              $newTextDivision = $sequence;
+              addNewEntityReturnData('seq',$newTextDivision);
+              $retVal['newTextDivSeqID'] = $newTextDivision->getID();
+            }
+          } else if ($seqType == "Text" && $seqID) {//term dependency
             $newTextSeq = $sequence;
           }
         }
       }
-      if (!$seqText) {//if no seqText add new text seq to edition and add update info for edition
+      if (!$seqText && $newTextSeq) {//if no seqText add new text seq to edition and add update info for edition
         $ednsequenceIDs = $edition->getSequenceIDs();
         array_push($ednsequenceIDs,$newTextSeq->getID());
         $edition->setSequenceIDs($ednsequenceIDs);

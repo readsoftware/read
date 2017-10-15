@@ -883,7 +883,7 @@ MANAGERS.LayoutManager.prototype = {
   getTextDefaultBlnID: function(txtID){
     var layoutMgr = this,i,blnID = null,
         textEntity = this.dataMgr.getEntity('txt',txtID);
-    if (textEntity.blnIDs.length) {
+    if (textEntity && textEntity.blnIDs && textEntity.blnIDs.length > 0) {
       for (i=0; i < textEntity.blnIDs.length; i++) {
         blnID = textEntity.blnIDs[i];
         if (this.dataMgr.checkEntityType(this.dataMgr.getEntity('bln',blnID),'Image')) {

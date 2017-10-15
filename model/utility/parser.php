@@ -80,6 +80,7 @@ class Parser {
             $_compounds,
             $_errors,
             $_termLookups,
+            $_idLookup,
             $_sessUid,
             $_breakOnError,
             $_configs;
@@ -125,9 +126,25 @@ class Parser {
     $this->_breakOnError = false;
     $this->_termLookups = getTermInfoForLangCode('en');
     $this->_termLookups = $this->_termLookups['idByTerm_ParentLabel'];
+    $this->_idLookup = array();
   }
 
   //*******************************PUBLIC FUNCTIONS************************************
+
+    /**
+    * saveParseResults - saves parse entities fixing up any links need
+    *
+    * @return boolean true if successful parse, false otherwise
+    */
+    public function getGIDFromNonce($nonce = null) {
+      $gid = null;
+      $idLookup = $this->_idLookup;
+      if ($nonce && array_key_exists(str_replace(":","_",$nonce),$idLookup)) {
+        $prefix = substr($nonce,0,3);
+        $gid = $prefix.":".$idLookup[str_replace(":","_",$nonce)];
+      }
+      return $gid;
+    }
 
     /**
     * saveParseResults - saves parse entities fixing up any links need
@@ -313,7 +330,7 @@ class Parser {
         }
         $idLookup[mb_strstr($nonce,"#",true)] = $compound->getID();
       }
-      // save each sequence without Entity IDs since a sequence can contain other sequences where temp IDs need to be translated
+      // save each sequence with temp Entity IDs since a sequence can contain other sequences where temp IDs need to be translated
       foreach ($this->_sequences as $sequence){
         //if converting freetext then we ignore structural markers as the calling service will implement
         if ($isAddInLine && (in_array($sequence->getTypeID(), $ignoreSeqTypeIDs))) {
@@ -383,7 +400,8 @@ class Parser {
         }
       }
 //      $dbMgr->commit();
-   }
+      $this->_idLookup = $idLookup;
+    }
     /**
     * parseGraphemes - parses a stream of characters into graphemes
     *

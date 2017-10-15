@@ -4603,7 +4603,8 @@ mergeLine: function (direction,cbError) {
             }
             if (endNode) {
               //if not same syllable need to contract to end of selectNode
-              endOrdPos = parseInt(endNode.className.match(/ord(\d+)/)[1]);
+              ord =endNode.className.match(/ord(\d+)/);
+              endOrdPos = (ord?parseInt(ord[1]):null);
               if (endOrdPos < selectOrdPos &&
                   sclID != endNode.className.match(/scl(\d+)/)[1]) { //syllable to right of select syllable so end is last text of syllable
                   //get the last group for this sclID and set offset to end of text

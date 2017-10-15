@@ -2081,16 +2081,20 @@ function checkEditionHealth($ednID, $verbose = true) {
                 //ToDo:  add code to add <a> for a service to correct the issue.
               }
               $txtDivGIDs = $sequence->getEntityIDs();
-              $stripTokCmpGIDs = preg_replace("/(tok|cmp)\:/","",$txtDivGIDs);
-              if (strpos(join(' ',$stripTokCmpGIDs),":") !== false) {
-                array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) not all entity GIDs are token or compound type. (".join(',',$txtDivGIDs).").");
+              if (!$txtDivGIDs) {
+                array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) is Empty");
               } else {
-                if (count($dups = array_intersect($tokCmpGIDs,$txtDivGIDs))) {
-                    array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) has duplicate Tok/Cmp GIDs (".join(',',$dups).").");
-                }
-                $tokCmpGIDs = array_unique(array_merge($tokCmpGIDs,$txtDivGIDs));
-                foreach ($txtDivGIDs as $txtDivGID) {
-                  $gid2SeqMap[$txtDivGID] = "seq:$seqID";
+                $stripTokCmpGIDs = preg_replace("/(tok|cmp)\:/","",$txtDivGIDs);
+                if (strpos(join(' ',$stripTokCmpGIDs),":") !== false) {
+                  array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) not all entity GIDs are token or compound type. (".join(',',$txtDivGIDs).").");
+                } else {
+                  if (count($dups = array_intersect($tokCmpGIDs,$txtDivGIDs))) {
+                      array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) has duplicate Tok/Cmp GIDs (".join(',',$dups).").");
+                  }
+                  $tokCmpGIDs = array_unique(array_merge($tokCmpGIDs,$txtDivGIDs));
+                  foreach ($txtDivGIDs as $txtDivGID) {
+                    $gid2SeqMap[$txtDivGID] = "seq:$seqID";
+                  }
                 }
               }
             }
