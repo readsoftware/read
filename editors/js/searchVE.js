@@ -761,6 +761,14 @@ EDITORS.SearchVE.prototype = {
                               srchVE.showCursorResources(e,btn);
                             });
       }
+      if ($('.res-published',resBtnBar).length > 0){
+        this.curCmd = "showpublished";
+        this.searchCurResourcePanel.toggleClass(this.curCmd);
+      } else {
+        this.curCmd = "showresearch";
+        this.searchCurResourcePanel.toggleClass(this.curCmd);
+      }
+
       if ($('.draghandle',this.searchCurResourcePanel).length) {
         $('.draghandle',this.searchCurResourcePanel).jqxDragDrop({dropTarget: $('.editContainer'),
                                                                     dropAction: 'none',
