@@ -1844,10 +1844,11 @@ mergeLine: function (direction,cbError) {
                           DEBUG.log("data","after combineTokens dump sequence \n" + DEBUG.dumpSeqData(seqID,0,1,ednVE.lookup.gra));
                         }
                       }
-                    } else if (txtDivSeqID) {
-                      ednVE.calcTextDivGraphemeLookups(txtDivSeqID);
-                      DEBUG.log("data","after combineTokens dump sequence \n" + DEBUG.dumpSeqData(txtDivSeqID,0,1,ednVE.lookup.gra));
                     }
+                  }
+                  if (txtDivSeqID) {
+                    ednVE.calcTextDivGraphemeLookups(txtDivSeqID);
+                    DEBUG.log("data","after combineTokens dump sequence \n" + DEBUG.dumpSeqData(txtDivSeqID,0,1,ednVE.lookup.gra));
                   }
                   // calcLineGraphemeLookups
                   ednVE.calcLineGraphemeLookups(physLineSeqID);
@@ -3561,6 +3562,8 @@ mergeLine: function (direction,cbError) {
                 if ($prevNode.hasClass('startHeader') || $prevNode.hasClass('freetext')) {
                   UTILITY.beep();
                   DEBUG.log("warn","Ctrl Backspace at beginning of edition or on freetext line, ignoring keystroke");
+                  e.stopImmediatePropagation();
+                  return false;//eat all other keys
                 } else {
                   headerClasses = $prevNode.attr('class');
                   ordL = headerClasses.match(/ordL(\d+)/);
@@ -3572,7 +3575,8 @@ mergeLine: function (direction,cbError) {
                     if ($prevHeader && $prevHeader.length && !$prevHeader.hasClass('freetext')) {
                       //process removing linebreak
                       ednVE.mergeLine('prev');
-                      break;
+                      e.stopImmediatePropagation();
+                      return false;//eat all other keys
                     }
                   }
                   UTILITY.beep();
@@ -3686,7 +3690,8 @@ mergeLine: function (direction,cbError) {
                     if ($nextHeader && $nextHeader.length && !$nextHeader.hasClass('freetext')) {
                       //process cobining cross line words
                       ednVE.combineTokens('next');
-                      break;
+                      e.stopImmediatePropagation();
+                      return false;//eat all other keys
                     }
                   }
                   UTILITY.beep();
@@ -3715,6 +3720,8 @@ mergeLine: function (direction,cbError) {
                 if ($adjNode.hasClass('TCM')){
                   //todo: process removing TCM ?? ignore right now
                   DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
+                  e.stopImmediatePropagation();
+                  return false;//eat all other keys
                 } else if ($adjNode.hasClass('linebreak')) {
                   headerClasses = $adjNode.attr('class');
                   ordL = headerClasses.match(/ordL(\d+)/);
@@ -3726,7 +3733,8 @@ mergeLine: function (direction,cbError) {
                     if ($nextHeader && $nextHeader.length && !$nextHeader.hasClass('freetext')) {
                       //process removing linebreak
                       ednVE.mergeLine('next');
-                      break;
+                      e.stopImmediatePropagation();
+                      return false;//eat all other keys
                     }
                   }
                   UTILITY.beep();
