@@ -1054,16 +1054,26 @@ EDITORS.WordlistVE.prototype = {
         srchDir = 'before';
       }
     } else {
+      force = false;
       while ($node = $srchNode.prev()) {
-        match = $node.find('.lemma,.word').attr('class').match(/(lem|cmp|tok)\d+/);
-        srchWord = this.dataMgr.getEntityFromGID(match[0]);
-        if (srchWord.sort < lemma.sort) {
+        if ($node.hasClass('wordlistentry')) {
+          $word = $node.find('.lemma,.word');
+          wGID = $word.attr('class').match(/(lem|cmp|tok)\d+/);
+          if (wGID && wGID.length) {
+            srchWord = this.dataMgr.getEntityFromGID(wGID[0]);
+            if (srchWord.sort < lemma.sort) {
+              break;
+            }
+          }
+          $srchNode = $node;
+        } else {//at beginning
+          $node = $srchNode;
+          force = true;
           break;
         }
-        $srchNode = $node;
       }
       srchDir = 'before';
-      if ($node) {
+      if ($node && !force) {
         $srchNode = $node;
         srchDir = 'after';
       }
@@ -1149,16 +1159,26 @@ EDITORS.WordlistVE.prototype = {
         srchDir = 'before';
       }
     } else {
+      force = false;
       while ($node = $srchNode.prev()) {
-        match = $node.find('.lemma,.word').attr('class').match(/(lem|cmp|tok)\d+/);
-        srchWord = this.dataMgr.getEntityFromGID(match[0]);
-        if (srchWord.sort < word.sort) {
+        if ($node.hasClass('wordlistentry')) {
+          $word = $node.find('.lemma,.word');
+          wGID = $word.attr('class').match(/(lem|cmp|tok)\d+/);
+          if (wGID && wGID.length) {
+            srchWord = this.dataMgr.getEntityFromGID(wGID[0]);
+            if (srchWord.sort < word.sort) {
+              break;
+            }
+          }
+          $srchNode = $node;
+        } else {//at beginning
+          $node = $srchNode;
+          force = true;
           break;
         }
-        $srchNode = $node;
       }
       srchDir = 'before';
-      if ($node) {
+      if ($node && !force) {
         $srchNode = $node;
         srchDir = 'after';
       }
