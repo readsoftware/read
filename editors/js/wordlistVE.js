@@ -757,7 +757,7 @@ EDITORS.WordlistVE.prototype = {
   calcLemmaHtml: function (lemID) {
     var wordlistVE = this,i,j,k,cnt,html = "",tag, wtag, word, wordGIDs, inflection, infGIDs, val,
         isNoun, isPronoun, isAdjective, isNumeral, isVerb, isInflectable, cf, tempLabel, pos,
-        displayValue = '', wordAnnoTag, wordAnno;
+        displayValue = '', wordAnnoTag, wordAnno, lemma, lemmaAnnoTag, lemmaAnno;
     if (this.dataMgr.entities && this.dataMgr.entities.lem && this.dataMgr.entities.lem[lemID]) {
       lemma = this.dataMgr.entities.lem[lemID];
       if (!lemma.tag) {
@@ -781,7 +781,18 @@ EDITORS.WordlistVE.prototype = {
       }
       //output lemma header with gloss and POS
       if (lemma && lemma.value) {
+        lemmaAnno = '';
         displayValue = lemma.value.replace(/ʔ/g,'');//.replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨');
+        if (lemma.linkedAnoIDsByType && lemma.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
+          lemmaAnnoTag = "ano"+lemma.linkedAnoIDsByType[this.glossAnnoType][0];
+          temp = this.dataMgr.getEntityFromGID(lemmaAnnoTag);
+          if (temp && temp.text && temp.text.length) {
+            lemmaAnno = temp.text;
+            if (lemmaAnno.length > 250) {
+              lemmaAnno = lemmaAnno.substring(0,249) + "…";
+            }
+          }
+        }
       } else {
         displayValue = '';
       }
@@ -789,7 +800,8 @@ EDITORS.WordlistVE.prototype = {
               ' srch="'+displayValue.replace(/ʔ/g,'')+'">' + displayValue + ' </span>' +
               (lemma.gloss?'<span class="lemmagloss">'+lemma.gloss + ' </span>':"")+
               '<span class="POS">'+ tempLabel + ' </span>' +
-              (lemma.trans? '<span class="lemmatrans">'+lemma.trans+'</span>':"");
+              (lemma.trans? '<span class="lemmatrans">'+lemma.trans+'</span>':"") +
+              (lemmaAnno?' ('+lemmaAnno+')':"");
       if (lemma.entityIDs && lemma.entityIDs.length ) {
         html += '&nbsp;&nbsp;&nbsp;';
         // output all attestations with location info (edition/line no. in sequence order if same line
