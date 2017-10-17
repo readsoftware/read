@@ -546,6 +546,13 @@ EDITORS.WordlistVE.prototype = {
         if (this.dataMgr.entities.lem[lemIDs[i]]) {
           lemma = this.dataMgr.getEntity('lem',lemIDs[i]);
           lemma.tag = 'lem'+lemIDs[i];
+          if (lemma.compAnalysis) {
+            if (this.lemLookup[lemma.compAnalysis]) {//error should only be one
+              DEBUG.log('warn',"Lemma "+lemma.id+" has same companalysis as lemma "+this.lemLookup[lemma.compAnalysis]+", skipping");
+            } else {
+              this.lemLookup[lemma.compAnalysis] = [lemma.id];
+            }
+          }
           if (lemma.value) {
             val = lemma.value.replace(/ʔ/g,'');
             if (this.lemLookup[val]) {
@@ -990,13 +997,41 @@ EDITORS.WordlistVE.prototype = {
 
 
 /**
+* update lemma lookup
+*
+* @param int lemID Lemma entity id
+*/
+
+  updateLemmaLookup: function (lemTag,oldCompAnalysis) {
+    var lemma = this.dataMgr.getEntityFromGID(lemTag), val;
+    if (lemma.compAnalysis) {
+      if (oldCompAnalysis && oldCompAnalysis != lemma.compAnalysis
+          && this.lemLookup[oldCompAnalysis]) {//remove old
+        delete this.lemLookup[oldCompAnalysis];
+      }
+      this.lemLookup[lemma.compAnalysis] = [lemma.id];
+    }
+    if (lemma.value) {
+      val = lemma.value.replace(/ʔ/g,'');
+      if (this.lemLookup[val]) {
+        if (this.lemLookup[val].indexOf(lemma.id) == -1) {
+          this.lemLookup[val].push(lemma.id);
+        }
+      } else {
+        this.lemLookup[val] = [lemma.id];
+      }
+    }
+  },
+
+
+/**
 * update lemma entry
 *
 * @param int lemID Lemma entity id
 */
 
   updateLemmaEntry: function (lemID) {
-    var lemTag = 'lem'+lemID, $lemmaEntry,
+    var lemTag = 'lem'+lemID, $lemmaEntry, lemmaHTML;
     //calc lemma new HTML
     lemmaHTML = this.calcLemmaHtml(lemID);
     //find entry and replace html
@@ -1294,12 +1329,16 @@ EDITORS.WordlistVE.prototype = {
 */
 
   removeWordlistEntry: function (entTag) {
-    var wordlistVE = this, wordLemIDs, index,
+    var wordlistVE = this, wordLemIDs, index, lemma,
         prefix = entTag.substring(0,3),
         entID = entTag.substring(3), value,
         wlEntry = $('div.wordlistentry:has(span.'+entTag+')');
     if (wlEntry.length) {
       if (prefix == 'lem') {
+        lemma = this.dataMgr.getEntityFromGID(entTag);
+        if (lemma && lemma.compAnalysis && wordlistVE.lemLookup[lemma.compAnalysis]) {
+          delete wordlistVE.lemLookup[lemma.compAnalysis];
+        }
         value = wlEntry.children('.lemma').html().trim();
         wordlemIDs = wordlistVE.lemLookup[value];
         if (wordlemIDs && wordlemIDs.length) {

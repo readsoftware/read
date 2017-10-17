@@ -349,7 +349,6 @@ EDITORS.LemmaVE.prototype = {
       $('.saveDiv',this.compUI).unbind("click").bind("click",function(e) {
         var lemProp = {}, compAnalysis, nodeKey, rootKey = null, rootNode, compKeys;
 
-
 /**
 * put your comment there...
 *
@@ -417,7 +416,7 @@ EDITORS.LemmaVE.prototype = {
         if ($('.propEditUI',lemmaVE.compUI).hasClass('dirty')) {
           val = $('div.valueInputDiv input',lemmaVE.compUI).val();
           compAnalysis = lemmaVE.validateCompAnalysis(val);
-          if (compAnalysis) {
+          if (compAnalysis) {//validates
             compKeys = Object.keys(compAnalysis);
             for (i in compKeys) {
               nodeKey = compKeys[i];
@@ -482,14 +481,28 @@ EDITORS.LemmaVE.prototype = {
         value = markup.replace(reCompMarkup,"");
         nodeLookup[key] = { 'markup':markup,
                             'value':value};
-        lemmaIDs = this.wordlistVE.lookupLemma(value);
-        if (lemmaIDs && lemmaIDs.length) {
-          for (k=0; k<lemmaIDs.length; k++) {
-            lemID = lemmaIDs[k];
-            lemma = this.dataMgr.getEntity('lem',lemID);
-            if (lemma && !lemma.compAnalysis) {
-              nodeLookup[key]['lemID'] = lemID;
-              break;
+        //detect if existing lemma match for linking
+        lemID = this.wordlistVE.lookupLemma(markup);
+        if (lemID) {//search by companalysis
+          lemID = lemID[0];
+          lemma = this.dataMgr.getEntity('lem',lemID);
+          if (lemma && ((lemma.compAnalysis &&
+              (markup == lemma.compAnalysis)) || markup == compAnal)) {
+            nodeLookup[key]['lemID'] = lemID;
+            if (lemID == this.entID) {
+              nodeLookup[key]['root'] = 1;
+            }
+          }
+        } else {//search by lemma value, we might find a lemma that matches and we want to attach compound analysis
+          lemmaIDs = this.wordlistVE.lookupLemma(value);
+          if (lemmaIDs && lemmaIDs.length) {
+            for (k=0; k<lemmaIDs.length; k++) {
+              lemID = lemmaIDs[k];
+              lemma = this.dataMgr.getEntity('lem',lemID);
+              if (lemma && !lemma.compAnalysis) {
+                nodeLookup[key]['lemID'] = lemID;
+                break;
+              }
             }
           }
         }
@@ -507,7 +520,7 @@ EDITORS.LemmaVE.prototype = {
           l++;
           key = "n"+l;
           markup = compNodes[i];
-          value = markup.replace(reCompMarkup,"");
+          value = markup.replace(reCompMarkup,"");//recompute value from markup
           subNodes = value.match(/(n\d+)/g);//find all node keys
           hasHead = false;
           for (j in subNodes) {
@@ -538,18 +551,32 @@ EDITORS.LemmaVE.prototype = {
           if (isHead) {
             nodeLookup[key]['head'] = 1;
           }
-          lemmaIDs = this.wordlistVE.lookupLemma(value);
-          if (lemmaIDs && lemmaIDs.length) {
-            for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
-              lemID = lemmaIDs[k];
-              lemma = this.dataMgr.getEntity('lem',lemID);
-              if (lemma && ((lemma.compAnalysis &&
-                  (markup == lemma.compAnalysis)) || markup == compAnal)) {
-                nodeLookup[key]['lemID'] = lemID;
-                if (lemID == this.entID) {
-                  nodeLookup[key]['root'] = 1;
+          //detect if existing lemma match for linking
+          lemID = this.wordlistVE.lookupLemma(markup);
+          if (lemID) {//search by companalysis
+            lemID = lemID[0];
+            lemma = this.dataMgr.getEntity('lem',lemID);
+            if (lemma && ((lemma.compAnalysis &&
+                (markup == lemma.compAnalysis)) || markup == compAnal)) {
+              nodeLookup[key]['lemID'] = lemID;
+              if (lemID == this.entID) {
+                nodeLookup[key]['root'] = 1;
+              }
+            }
+          } else {//search by lemma value, we might find a lemma that matches and we want to attach compound analysis
+            lemmaIDs = this.wordlistVE.lookupLemma(value);
+            if (lemmaIDs && lemmaIDs.length) {
+              for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
+                lemID = lemmaIDs[k];
+                lemma = this.dataMgr.getEntity('lem',lemID);
+                if (lemma && ((lemma.compAnalysis &&
+                    (markup == lemma.compAnalysis)) || markup == compAnal)) {
+                  nodeLookup[key]['lemID'] = lemID;
+                  if (lemID == this.entID) {
+                    nodeLookup[key]['root'] = 1;
+                  }
+                  break;
                 }
-                break;
               }
             }
           }
@@ -558,8 +585,8 @@ EDITORS.LemmaVE.prototype = {
             return false;
           }
           strAnalysis = strAnalysis.replace(compNodes[i],key);
-        }
-      }
+        }// end for compent nodes
+      }// end while constituent nodes exist
     } else {
       alert("Compound Analysis must have more than 1 subnode, please correct before saving.");
       return false;
@@ -599,22 +626,42 @@ EDITORS.LemmaVE.prototype = {
                           'subKeys': subNodes,
                           'root': 1,
                           'value':value};
-      lemmaIDs = this.wordlistVE.lookupLemma(value);
-      if (lemmaIDs && lemmaIDs.length) {
-        for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
-          lemID = lemmaIDs[k];
-          lemma = this.dataMgr.getEntity('lem',lemID);
-          if (lemma && ((lemma.compAnalysis &&
-              (markup == lemma.compAnalysis)) || markup == compAnal)) {
-            nodeLookup[key]['lemID'] = lemID;
-            break;
+      lemID = this.wordlistVE.lookupLemma(markup);
+      if (lemID) {//search by companalysis
+        lemID = lemID[0];
+        lemma = this.dataMgr.getEntity('lem',lemID);
+        if (lemma && ((lemma.compAnalysis &&
+            (markup == lemma.compAnalysis)) || markup == compAnal)) {
+          nodeLookup[key]['lemID'] = lemID;
+        }
+      } else {//search by lemma value, we might find a lemma that matches and we want to attach compound analysis
+        lemmaIDs = this.wordlistVE.lookupLemma(value);
+        if (lemmaIDs && lemmaIDs.length) {
+          for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
+            lemID = lemmaIDs[k];
+            lemma = this.dataMgr.getEntity('lem',lemID);
+            if (lemma && lemma.compAnalysis &&
+                (markup == lemma.compAnalysis)) {
+              nodeLookup[key]['lemID'] = lemID;
+              break;
+            }
           }
         }
       }
     }
-    if (nodeLookup[key].value  != lemmaVE.entity.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')) {
-      alert("Compound Analysis compound does not match constituents, please correct before saving.");
+    if (nodeLookup[key]['lemID'] && nodeLookup[key]['lemID'] != lemmaVE.entity.id) {
+      alert('Lemma id='+nodeLookup[key]['lemID']+' has matching compound analysis where duplicates are not allowed. Please change analysis and try again.');
       return false;
+    } else if (nodeLookup[key].value  != lemmaVE.entity.value.replace(/ʔ/g,'')) {
+      if(!confirm("Compound Analysis lemma value"+nodeLookup[key].value+
+              " does not match lemma "+lemmaVE.entity.value.replace(/ʔ/g,'')+
+              ", which can happen with sandhi compounds. "+
+              "Press OK to continue saving or cancel to review spelling")) {
+        return false;
+      } else {
+        nodeLookup[key].value = lemmaVE.entity.value.replace(/ʔ/g,'')
+        nodeLookup[key]['lemID'] = lemmaVE.entity.id;
+      }
     }
     return nodeLookup;
   },
@@ -2423,8 +2470,11 @@ EDITORS.LemmaVE.prototype = {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var newLemID, newCatID,updLemID;
+              var newLemID, newCatID,updLemID, oldCompAnalysis;
               if (typeof data == 'object' && data.success && data.entities) {
+                if (lemmaVE.isLemma && lemmaVE.entity && lemmaVE.entity.compAnalysis) {
+                  oldCompAnalysis = lemmaVE.entity.compAnalysis;
+                }
                 //update data
                 lemmaVE.dataMgr.updateLocalCache(data,null);
                 if (compAnalysis) {
@@ -2434,14 +2484,17 @@ EDITORS.LemmaVE.prototype = {
                       Object.keys(data.entities.insert.lem).length) {
                     for (newLemID in data.entities.insert.lem) {
                       lemmaVE.wordlistVE.insertLemmaEntry(newLemID);
+                      lemmaVE.wordlistVE.updateLemmaLookup('lem'+newLemID);
                     }
                   }
                   if (data.entities && data.entities.update && data.entities.update.lem &&
                       Object.keys(data.entities.update.lem).length) {
                     for (updLemID in data.entities.update.lem) {
                       lemmaVE.wordlistVE.updateLemmaEntry(updLemID);
+                      lemmaVE.wordlistVE.updateLemmaLookup('lem'+updLemID,((updLemID == lemmaVE.entID)?oldCompAnalysis:null));
                     }
                   }
+                  lemmaVE.entity = lemmaVE.dataMgr.getEntity('lem',lemmaVE.entID);
                 }
                 lemmaVE.showLemma();
               }
