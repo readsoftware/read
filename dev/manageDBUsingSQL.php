@@ -52,19 +52,19 @@ if (!$cmd && !$dbname && !$sqlfilename) {
   ob_end_flush();
   return;
 } else {
-// windows  $psqlPath = defined("PSQL_PATH")? PSQL_PATH."\\" :"";//configured tool dir or assume in PATH
-// windows  $sqlFilePath = defined("READ_FILE_STORE")?READ_FILE_STORE."\\":"";//set dir for sql file
-  $psqlPath = defined("PSQL_PATH")? PSQL_PATH."/" :"";//configured tool dir or assume in PATH
-  $sqlFilePath = defined("READ_FILE_STORE")?READ_FILE_STORE."/":"";//set dir for sql file
+  $psqlPath = defined("PSQL_PATH")? PSQL_PATH."\\" :"";//configured tool dir or assume in PATH windows
+  $sqlFilePath = defined("READ_FILE_STORE")?READ_FILE_STORE."\\":"";//set dir for sql file windows
+//  $psqlPath = defined("PSQL_PATH")? PSQL_PATH."/" :"";//configured tool dir or assume in PATH
+//  $sqlFilePath = defined("READ_FILE_STORE")?READ_FILE_STORE."/":"";//set dir for sql file
   switch ($cmd) {
     case "restore"://WARNING this set of commands may shut of a connection causing a warning first connection to the new/restored db
                   //This can be avoided by checking PHP.ini for pgsql.auto_reset_persistent and set it to On.
-      $command = 'export PGPASSWORD=postgrespwd; '.$psqlPath.'psql -U postgres -h 127.0.0.1 -c "REVOKE CONNECT ON DATABASE '.$dbname.' FROM PUBLIC;"';
+      $command = $psqlPath.'psql -U postgres -h 127.0.0.1 -c "REVOKE CONNECT ON DATABASE '.$dbname.' FROM PUBLIC;"';
       if (runShellCommand($command,"REVOKED connection on $dbname database","Aborting - failed to revoke connections to database $dbname")){
-        $command = 'export PGPASSWORD=postgrespwd; '.$psqlPath.'psql -U postgres -h 127.0.0.1 '.
+        $command = $psqlPath.'psql -U postgres -h 127.0.0.1 '.
                     '-c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '."'$dbname';\"";
         if (runShellCommand($command,"DROPPED connections to $dbname database","Aborting - failed to drop connections to database $dbname")){
-          $command = 'export PGPASSWORD=postgrespwd; '.$psqlPath.'psql -U postgres -h 127.0.0.1 -c "DROP DATABASE IF EXISTS '.$dbname.';"';
+          $command = $psqlPath.'psql -U postgres -h 127.0.0.1 -c "DROP DATABASE IF EXISTS '.$dbname.';"';
           if (!runShellCommand($command,"DROPPED $dbname database","Aborting - failed to drop database $dbname")){
             echo "unable to restore $dbname from $sqlFilePath$sqlfilename. Please read error <br>";
             break;
@@ -78,18 +78,19 @@ if (!$cmd && !$dbname && !$sqlfilename) {
         break;
       }
     case "create":
-      $command = 'export PGPASSWORD=postgrespwd; '.$psqlPath.'psql -U postgres -h 127.0.0.1 -c "CREATE DATABASE '."$dbname WITH OWNER = ".USERNAME." ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'C' LC_CTYPE = 'C'".' CONNECTION LIMIT = -1 TEMPLATE template0;"';
+      $command = $psqlPath.'psql -U postgres -h 127.0.0.1 -c "CREATE DATABASE '."$dbname WITH OWNER = ".USERNAME." ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'C' LC_CTYPE = 'C'".' CONNECTION LIMIT = -1 TEMPLATE template0;"';
       if (runShellCommand($command,"CREATED $dbname database","Aborting - failed to create database $dbname")){
-        $command = 'export PGPASSWORD=postgrespwd; '.$psqlPath.'psql -U postgres -h 127.0.0.1 '." -d $dbname -f ".$sqlFilePath.$sqlfilename;
+        $command = $psqlPath.'psql -U postgres -h 127.0.0.1 '." -d $dbname -f ".$sqlFilePath.$sqlfilename;
         if (runShellCommand($command,"Loaded $dbname database from $sqlFilePath$sqlfilename","Aborting - failed to load database $dbname from $sqlFilePath$sqlfilename")) {
-          $command = 'export PGPASSWORD=postgrespwd; '.$psqlPath.'psql -U postgres -h 127.0.0.1 -c "GRANT CONNECT ON DATABASE '.$dbname.' TO PUBLIC;"';
+          $command = $psqlPath.'psql -U postgres -h 127.0.0.1 -c "GRANT CONNECT ON DATABASE '.$dbname.' TO PUBLIC;"';
+          $command = $psqlPath.'psql -U postgres -h 127.0.0.1 -c "GRANT CONNECT ON DATABASE '.$dbname.' TO PUBLIC;"';
           runShellCommand($command,"GRANTED connection on $dbname database","Aborting - failed to GRANTED connections to database $dbname");
         }
       }
       break;
 
     case "snapshot":
-      $command = "export PGPASSWORD=postgrespwd; '.$psqlPath.'pg_dump -U postgres -h 127.0.0.1 --no-privileges --no-owner $dbname > $sqlFilePath"."snapshot$sqlfilename";
+      $command = $psqlPath."pg_dump -U postgres -h 127.0.0.1 --no-privileges --no-owner $dbname > $sqlFilePath"."snapshot$sqlfilename";
       if (runShellCommand($command,"Dump $dbname database to $sqlFilePath"."snapshot$sqlfilename","Aborting - failed to dump database $dbname to $sqlFilePath"."snapshot$sqlfilename")) {
         $info = new SplFileInfo("$sqlFilePath"."snapshot$sqlfilename");
         if ($info && $info->isFile()) {
