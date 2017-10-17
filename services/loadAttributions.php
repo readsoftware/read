@@ -85,7 +85,7 @@
     if ($atbID && !array_key_exists($atbID, $entities['atb'])) {
       $entities['atb'][$atbID] = array( 'title'=> $attribution->getTitle(),
                              'id' => $atbID,
-                              'value'=> $attribution->getTitle().($attribution->getDetail()?$attribution->getDetail():''),
+                              'value'=> $attribution->getTitle().($attribution->getDetail()?": ".$attribution->getDetail():''),
                               'readonly' => $attribution->isReadonly(),
                               'grpID' => $attribution->getGroupID(),
                               'bibID' => $attribution->getBibliographyID(),
@@ -98,7 +98,7 @@
         $anoIDs = array_merge($anoIDs,$AnoIDs);
       }
       array_push($attrs,array(
-        'label' => $attribution->getTitle().($attribution->getDetail()?$attribution->getDetail():''),
+        'label' => $attribution->getTitle().($attribution->getDetail()?": ".$attribution->getDetail():''),
         'id' => 'atb'.$atbID,
         'value' => 'atb:'.$atbID,
       ));

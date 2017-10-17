@@ -872,7 +872,7 @@
               if ($atbID && !array_key_exists($atbID, $entities['atb'])) {
                 $entities['atb'][$atbID] = array( 'title'=> $attribution->getTitle(),
                                         'id' => $atbID,
-                                        'value'=> $attribution->getTitle().($attribution->getDetail()?$attribution->getDetail():''),
+                                        'value'=> $attribution->getTitle().($attribution->getDetail()?": ".$attribution->getDetail():''),
                                         'readonly' => $attribution->isReadonly(),
                                         'grpID' => $attribution->getGroupID(),
                                         'bibID' => $attribution->getBibliographyID(),

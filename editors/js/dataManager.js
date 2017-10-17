@@ -403,9 +403,9 @@ MANAGERS.DataManager.prototype = {
               }
             break;
           case "lem":
-              if (entity.readonly) {
+//              if (entity.readonly) {
                 return false;
-              }
+//              }
             break;
           case "tok":
           case "cmp":
