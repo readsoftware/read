@@ -484,6 +484,7 @@ EDITORS.SearchVE.prototype = {
     rowID = srchVE.gridDiv.jqxGrid('addrow',null,rowData);
     if (srchVE.newRowID !== null) {
       srchVE.gridDiv.jqxGrid('selectrow',srchVE.newRowID);
+      srchVE.gridDiv.jqxGrid('ensurerowvisible',srchVE.newRowID);
     }
   },
 
