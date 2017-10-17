@@ -932,7 +932,7 @@ EDITORS.WordlistVE.prototype = {
                   }
                   html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +
                           '" srch="'+word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
-                          (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
+                          ((k>0 || j>0)?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
                           ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                           (wordAnno?' ('+wordAnno+')':"") + '</span>';
                 }
