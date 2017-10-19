@@ -193,9 +193,11 @@ EDITORS.EditionVE.prototype = {
           items.push(item);
         }
       }
-    }
-    if (items.length == 0) {
-      items.push({id:'off',label:'Off',value:'off'});
+      if (items.length == 0) {
+        items.push({id:'off',label:'Off',value:'off'});
+      } else {
+        items = [{ label:"All", expanded:true, items:items}];
+      }
     }
     return items;
   },
@@ -343,6 +345,7 @@ EDITORS.EditionVE.prototype = {
                };
         items.push(item);
       }
+      items = [{ label:"All", expanded:true, items:items}];
     }
     return items;
   },
@@ -905,7 +908,7 @@ EDITORS.EditionVE.prototype = {
     this.showTagDdBtn = $('#'+ddbtnShowTagName,this.showTagBtnDiv);
     this.showTagTree.jqxTree({
            source: this.getUsedTagsList(),
-           hasThreeStates: false, checkboxes: true,
+           hasThreeStates: true, checkboxes: true,
            width: '250px',
            theme:'energyblue'
     });
@@ -946,7 +949,7 @@ EDITORS.EditionVE.prototype = {
     this.showSeqDdBtn = $('#'+ddbtnShowSeqName,this.showSeqBtnDiv);
     this.showSeqTree.jqxTree({
            source: this.getUsedSeqsList(),
-           hasThreeStates: false, checkboxes: true,
+           hasThreeStates: true, checkboxes: true,
            width: '250px',
            theme:'energyblue'
     });
