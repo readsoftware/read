@@ -653,10 +653,7 @@ EDITORS.LemmaVE.prototype = {
       alert('Lemma id='+nodeLookup[key]['lemID']+' has matching compound analysis where duplicates are not allowed. Please change analysis and try again.');
       return false;
     } else if (nodeLookup[key].value  != lemmaVE.entity.value.replace(/ʔ/g,'')) {
-      if(!confirm("Compound Analysis lemma value"+nodeLookup[key].value+
-              " does not match lemma "+lemmaVE.entity.value.replace(/ʔ/g,'')+
-              ", which can happen with sandhi compounds. "+
-              "Press OK to continue saving or cancel to review spelling")) {
+      if(!confirm("Compound Analysis does not match lemma. Press OK to continue saving or cancel to review spelling.")) {
         return false;
       } else {
         nodeLookup[key].value = lemmaVE.entity.value.replace(/ʔ/g,'')
