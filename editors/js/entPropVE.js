@@ -370,6 +370,7 @@ EDITORS.EntityPropVE.prototype = {
       //click to edit
       if (valueEditable) {
         $('div.valueLabelDiv',this.valueUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.valueUI.addClass("edit");
           $('div.valueInputDiv input',this.valueUI).focus();
           //$('div.valueInputDiv input',this.valueUI).select();
@@ -490,6 +491,7 @@ EDITORS.EntityPropVE.prototype = {
       //click to edit
       if (!this.entity.readonly) {
         $('div.valueLabelDiv',this.supUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.supUI.addClass("edit");
           $('div.valueInputDiv input',this.supUI).focus();
           //$('div.valueInputDiv input',this.supUI).select();
@@ -554,6 +556,7 @@ EDITORS.EntityPropVE.prototype = {
       //click to edit
       if (!this.entity.readonly) {
         $('div.valueLabelDiv',this.refUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.refUI.addClass("edit");
           $('div.valueInputDiv input',this.refUI).focus();
           //$('div.valueInputDiv input',this.refUI).select();
@@ -617,6 +620,7 @@ EDITORS.EntityPropVE.prototype = {
       //click to edit
       if (!this.entity.readonly) {
         $('div.valueLabelDiv',this.invUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.invUI.addClass("edit");
           $('div.valueInputDiv input',this.invUI).focus();
           //$('div.valueInputDiv input',this.invUI).select();
@@ -765,6 +769,7 @@ EDITORS.EntityPropVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.typeUI).unbind("click").bind("click",function(e) {
+        $('div.edit',entPropVE.contentDiv).removeClass("edit");
         entPropVE.typeUI.addClass("edit");
       });
     DEBUG.traceExit("createTypeUI");
@@ -889,6 +894,7 @@ EDITORS.EntityPropVE.prototype = {
       if (valueEditable) {
       //click to edit
         $('div.valueLabelDiv',this.subTypeUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.subTypeUI.addClass("edit");
           //init tree to current type
           var curItem = $('#trm'+(entPropVE.entity.subtypeID?entPropVE.entity.subtypeID:entPropVE.entity.typeID), entPropVE.subSeqTypeTree),
@@ -1021,6 +1027,7 @@ EDITORS.EntityPropVE.prototype = {
               $('.saveDiv',sandhiUI).html('Save');
             }
             //show edit UI
+            $('div.edit',entPropVE.contentDiv).removeClass("edit");
             graSandhiUI.addClass("edit");//mark component's sandhiUI div
             inputElem.focus().select();
           });
@@ -1158,6 +1165,7 @@ EDITORS.EntityPropVE.prototype = {
     //attach event handlers
     $('span.addButton',this.componentsUI).unbind("click").bind("click",function(e) {
       if ($(this).text() == 'Add edition') {
+        $('div.edit',entPropVE.contentDiv).removeClass("edit");
         entPropVE.componentsUI.addClass("edit");
       } else if ($(this).text() == 'Add component') {//switch to linking mode
         if (entPropVE.prefix == 'seq' && entPropVE.controlVE && entPropVE.controlVE.type == 'EditionVE') {

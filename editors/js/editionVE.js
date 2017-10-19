@@ -5448,10 +5448,15 @@ mergeLine: function (direction,cbError) {
   */
   calcTextDivGraphemeLookups : function(textDivSeqID) {
     var textDiv = this.dataMgr.entities['seq'][textDivSeqID],
-        i, textDivTag, textDivGID, textDivGIDs = textDiv.entityIDs;
-    for (i=0; i<textDivGIDs.length; i++) {//iterate through the entities of this sequence
-      textDivGID = textDivGIDs[i];
-      this.walkTokenContext(textDivGID,'seq'+textDivSeqID,true,null);
+        i, textDivTag, textDivGID, textDivGIDs;
+    if (textDiv && textDiv.entityIDs) {
+      textDivGIDs = textDiv.entityIDs;
+      for (i=0; i<textDivGIDs.length; i++) {//iterate through the entities of this sequence
+        textDivGID = textDivGIDs[i];
+        this.walkTokenContext(textDivGID,'seq'+textDivSeqID,true,null);
+      }
+    } else {
+      DEBUG.log("warn", "warnings Calculating Text Division lookup entity not available - skipping seq:" + textDivSeqID);
     }
   },
 

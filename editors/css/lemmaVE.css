@@ -662,3 +662,6 @@ img.thumb100 {
   margin-left: 5px;
   vertical-align: middle;
 }
+.propertyVEContainer {
+  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode"!important;
+}
