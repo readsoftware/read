@@ -638,7 +638,7 @@ EDITORS.EditionVE.prototype = {
     if (prefix == "seq") {
 // todo define cases where this makes sense like structure sequence changes.
     } else {
-      $elems = $("."+entTag);
+      $elems = $(".grpGra."+entTag,ednVE.contentDiv);
       if ($elems.length > 0) {
         classes = $elems.get(0).className;
         match = classes.match(/seq(\d+)/);
