@@ -461,16 +461,20 @@
                         $rtf .= ", ";
                       }
                       $rtf .= $attestedStyle.$formTranscr.$endStyle;
-                      ksort($locInfo['loc']);
+                      $sortedLocs = array_keys($locInfo['loc']);
+                      usort($sortedLocs,"compareWordLocations");
                       $isFirstLoc = true;
-                      foreach ($locInfo['loc'] as $formLoc => $cntLoc) {
+                      foreach ($sortedLocs as $formLoc) {
+                        $cntLoc = $locInfo['loc'][$formLoc];
                         if ($isFirstLoc) {
                           $rtf .= $space.$eol.$linRefStyle;
                           $isFirstLoc = false;
                         } else {
                           $rtf .= ", ";
                         }
-                        $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
+                        //remove internal ordinal
+                        list($tref,$ord,$label) = explode(":",$formLoc);
+                        $rtf .= $tref.":".$label.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
                       }
                       $rtf .= $endStyle.$eol;
                     }
@@ -635,6 +639,7 @@
         }
       }
       if ($physSeqGIDs && count($physSeqGIDs)) {// capture each physical line sequence once
+        $ord = 1;
         foreach ($physSeqGIDs as $physSeqGID) {
           $sequence = new Sequence(substr($physSeqGID,4));
           $label = $sequence->getSuperScript();
@@ -646,11 +651,13 @@
           }
           $sclGIDs = $sequence->getEntityIDs();
           if ($label && count($sclGIDs)) {//create lookup for location of word span B11-B12
+            $label = "$ord:".$label; //save ordinal of line for sorting later.
             foreach ($sclGIDs as $sclGID) {
               $tag = preg_replace("/:/","",$sclGID);
               $sclTagToLabel[$tag] = $label;
             }
           }
+          $ord++;
         }
       }
       if ($ednLblBySeqTag && count($ednLblBySeqTag) > 0) {

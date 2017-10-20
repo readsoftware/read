@@ -466,9 +466,14 @@
                         $attestedHtml .= ",";
                       }
                       $attestedHtml .= "<span class=\"attestedform\">$formTranscr</span>";
-                      ksort($locInfo['loc']);
+                      $sortedLocs = array_keys($locInfo['loc']);
+                      usort($sortedLocs,"compareWordLocations");
                       $isFirstLoc = true;
-                      foreach ($locInfo['loc'] as $formLoc => $cntLoc) {
+                      foreach ($sortedLocs as $formLoc) {
+                        $cntLoc = $locInfo['loc'][$formLoc];
+                        //remove internal ordinal
+                        list($tref,$ord,$label) = explode(":",$formLoc);
+                        $formLoc = $tref.":".$label;
                         if ($isFirstLoc) {
                           $isFirstLoc = false;
                           $attestedHtml .= "<span class=\"attestedformloc\">".html_entity_decode($formLoc).($cntLoc>1?" [".$cntLoc."×]":"");
@@ -659,6 +664,7 @@
         }
       }
       if ($physSeqGIDs && count($physSeqGIDs)) {// capture each physical line sequence once
+        $ord = 1;
         foreach ($physSeqGIDs as $physSeqGID) {
           $sequence = new Sequence(substr($physSeqGID,4));
           $label = $sequence->getSuperScript();
@@ -670,6 +676,7 @@
           }
           $sclGIDs = $sequence->getEntityIDs();
           if ($label && count($sclGIDs)) {//create lookup for location of word span B11-B12
+            $label = "$ord:".$label; //save ordinal of line for sorting later.
             foreach ($sclGIDs as $sclGID) {
               $tag = preg_replace("/:/","",$sclGID);
               $sclTagToLabel[$tag] = $label;

@@ -2739,6 +2739,25 @@ function getUserGroupIDforName($name) {
   return $row?$row['ugr_id']:null;
 }
 
+function compareWordLocations($locW1,$locW2) {
+  list($tref1,$ord1,$label1) = explode(":",$locW1);
+  list($tref2,$ord2,$label2) = explode(":",$locW2);
+  if ($tref1 > $tref2) {
+    return 1;
+  } else if ($tref1 < $tref2) {
+    return -1;
+  } else {
+    $ord1 = intval($ord1);
+    $ord2 = intval($ord2);
+    if ($ord1 > $ord2) {
+      return 1;
+    } else if ($ord1 < $ord2) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
+}
 
 function changeVisibility($prefix,$table,$ids,$vis,$owner) {
   $dbMgr = new DBManager();
