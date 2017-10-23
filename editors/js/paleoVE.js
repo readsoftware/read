@@ -727,32 +727,30 @@ EDITORS.PaleoVE.prototype = {
     sclSort = sclGrpSort = null;
     for (i=0; i<entities.length; i++) {
       syllable = entities[i];
-      if (syllable && syllable.sort > 0 && syllable.sort < 0.7 && !syllable.value.match(/\.$/)) { //syllable loaded so add to cell object
-        sclSort = syllable.sort;
-        sclSort = sclSort.replace(/24$/,"");
-        sclSort = sclSort.replace(/24$/,"");
-        sclSort = sclSort.replace(/25$/,"");
-        rowColumnInfo = getRowColumnInfo(sclSort);
-        sclGrpSort = rowColumnInfo[0]; //gSort, columnLabel, columnOffset, rowLabel
-        if (!sclCellsBySortCode[sclGrpSort]) {//start a new group
-          sclCellsBySortCode[sclGrpSort] = {syllables:[syllable],gSort:sclGrpSort};
-          if (rowColumnInfo[1]) {// columnLabel
-            sclCellsBySortCode[sclGrpSort]['cLabel'] = rowColumnInfo[1]
-          }
-          if (rowColumnInfo[2]) {// columnNumber
-            sclCellsBySortCode[sclGrpSort]['cNum'] = rowColumnInfo[2]
-          }
-          if (rowColumnInfo[3]) {// rowLabel
-            sclCellsBySortCode[sclGrpSort]['rLabel'] = rowColumnInfo[3]
-          }
-        } else {
-          sclCellsBySortCode[sclGrpSort]['syllables'].push(syllable);
+      rowColumnInfo = getRowColumnInfo(syllable);
+      if (rowColumnInfo === false) {//error or skip
+        continue;
+      }
+      sclGrpSort = rowColumnInfo[0]; //gSort, columnLabel, columnOffset, rowLabel
+      if (!sclCellsBySortCode[sclGrpSort]) {//start a new group
+        sclCellsBySortCode[sclGrpSort] = {syllables:[syllable],gSort:sclGrpSort};
+        if (rowColumnInfo[1]) {// columnLabel
+          sclCellsBySortCode[sclGrpSort]['cLabel'] = rowColumnInfo[1]
         }
+        if (rowColumnInfo[2]) {// columnNumber
+          sclCellsBySortCode[sclGrpSort]['cNum'] = rowColumnInfo[2]
+        }
+        if (rowColumnInfo[3]) {// rowLabel
+          sclCellsBySortCode[sclGrpSort]['rLabel'] = rowColumnInfo[3]
+        }
+      } else {
+        sclCellsBySortCode[sclGrpSort]['syllables'].push(syllable);
       }
     }
     this.sclCellsBySortCode = sclCellsBySortCode;
     // create Report Title
-    html = '<h3 class="paleographicReportHeader '+(this.catID?'cat'+this.catID:'edn'+this.ednID)+'">'+(catalog?catalog.value:'Paleography for '+edition.value)+'</h3>';
+    html = '<h3 class="paleographicReportHeader '+(this.catID?'cat'+this.catID:'edn'+this.ednID)+'">'+
+            (catalog?catalog.value:'Paleography for '+edition.value)+'</h3>';
     //create chart table div
     this.contentDiv.html(html);
     this.pChartFrame = $('<div class="paleoFrameDiv"/>');
@@ -763,6 +761,7 @@ EDITORS.PaleoVE.prototype = {
     if (!sktSort) {
       this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr>' +
         '<td><div class="columnHeader"/></td>' +
+        '<td><div class="columnHeader"/>&nbsp;</td>' +
         '<td><div class="columnHeader">a</div></td>' +
         '<td><div class="columnHeader">i</div></td>' +
         '<td><div class="columnHeader">u</div></td>' +
@@ -771,10 +770,11 @@ EDITORS.PaleoVE.prototype = {
         '<td><div class="lastColumnHeader"/></td>' +
         '</tr></thead>'
       ));
-      colNum = 5;
+      colNum = 6;
     } else {
       this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr>' +
-        '<td><div class="columnHeader"/></td>' +
+        '<td><div class="columnHeader"/>&nbsp;</td>' +
+        '<td><div class="columnHeader">&nbsp;</div></td>' +
         '<td><div class="columnHeader">a</div></td>' +
         '<td><div class="columnHeader">ā</div></td>' +
         '<td><div class="columnHeader">i</div></td>' +
@@ -789,7 +789,7 @@ EDITORS.PaleoVE.prototype = {
         '<td><div class="lastColumnHeader"/></td>' +
         '</tr></thead>'
       ));
-      colNum = 11;
+      colNum = 12;
     }
     this.pChartTable.append($('<tbody><tr><td colspan="'+(colNum+2)+'"><div class="paleoChart" /></td></tr></tbody>'));
     this.pChart = $('.paleoChart',this.pChartTable);
@@ -1196,45 +1196,82 @@ EDITORS.PaleoVE.prototype = {
 }
 
 /**
-* calculate the information for constructing the rows and columns for a given sort code
+* calculate the information for constructing the rows and columns for a given syllable
 * for the paleography table
 *
-* @param sortCode string representing the sorting information for the current syllable
+* @param syllable entity to calculate information for
 *
 * @returns {Array}
 */
 
-function getRowColumnInfo(sortCode) {
+function getRowColumnInfo(syllable) {
   var columnLabel = '', columnOffset = -1, rowLabel = '',
-  vSort = sortCode.substring(sortCode.length-2), gSort = "0.",
-  cSort = (sortCode.indexOf('0.') == 0 ?
-    sortCode.substring(2,sortCode.length-2):
-    sortCode.substring(0,sortCode.length-2)),
-  cOffsetMap;
-  if (!sktSort) {
-    cOffsetMap = {"a":1,"i":2,"u":3,"e":4,"o":5};
-  } else {
-    cOffsetMap = {"a":1,"ā":2,"i":3,"ī":4,"u":5,"ū":6,"ṛ":7,"e":8,"ai":9,"o":10,"au":11};
-  }
-  columnLabel = sortCodeToCharLookup[vSort+'0'][0];
-  columnOffset = cOffsetMap[columnLabel];
-  if (!cSort.length || cSort == '19') {// vowel only case
-    rowLabel = 'vowel';
-  } else {
-    while(cSort && cSort.length) {
-      rowLabel += sortCodeToCharLookup[cSort.substring(0,2)+'0'][0];//ignore sort2 for table
-      gSort += cSort.substring(0,2);
-      cSort = cSort.substring(2);
+      sclSort, sort2, lkIndex, vSort, cSort, gSort = "0.", cOffsetMap;
+  if (syllable && syllable.sort &&
+      syllable.sort.length &&
+      syllable.sort >= 0 &&
+      syllable.sort < 0.9  && // skip missing + ? 990 953, / /// # … 959 954 955 956
+      !syllable.value.match(/\./) &&
+      !syllable.value.match(/_/)) {
+    //check for non paleographic cases
+    // space 885, _ 559, . 189, ʔ 195,
+    sclSort = syllable.sort;
+    sort2 = syllable.sort2.substring(2);
+    if (sclSort == "0.88" && sort2 == "0.5" ||
+        sclSort == "0.55" && sort2 == "0.9" ||
+        sclSort == "0.18" && sort2 == "0.9" ||
+        sclSort == "0.19" && sort2 == "0.5") {
+      return false;
     }
+    sclSort = sclSort.replace(/01$/,"");//remove vowel modifier sort code
+    sclSort = sclSort.replace(/24$/,"");//remove vowel modifier sort code
+    sclSort = sclSort.replace(/25$/,"");//remove vowel modifier sort code
+    if (!sktSort) {
+      cOffsetMap = {" ":1,"a":2,"i":3,"u":4,"e":5,"o":6};
+    } else {
+      cOffsetMap = {" ":1,"a":2,"ā":3,"i":4,"ī":5,"u":6,"ū":7,"ṛ":8,"e":9,"ai":10,"o":11,"au":12};
+    }
+    if (sclSort.length > 4) {//multi character syllable so has vowel
+      vSort = sclSort.substring(sclSort.length-2);
+      if (vSort == "09" || vSort == "01") {// virama to first column
+        vSort = "00";
+      }
+      //get everything but the vowel sort
+      cSort = (sclSort.indexOf('0.') == 0 ? sclSort.substring(2,sclSort.length-2): sclSort.substring(0,sclSort.length-2));
+    } else { // map all single symbol graphemes P, N, O to first column with no header value
+      vSort = "00";
+      cSort = (sclSort.indexOf('0.') == 0 ? sclSort.substring(2): sclSort);
+    }
+    columnLabel = sortCodeToCharLookup[vSort+'0'][0];
+    columnOffset = cOffsetMap[columnLabel];
+    if (!cSort.length || cSort == '19') {// vowel only case
+      rowLabel = 'vowel';
+    } else {
+      while(cSort && cSort.length) {
+        lkIndex = cSort.substring(0,2);
+        // punctuation cases require sort2 code
+        if (lkIndex >= 70 || lkIndex == "09") {//don't group numbers, symbols or *
+          lkIndex += sort2[0];
+        } else {//group in primary sort
+          lkIndex += "0";
+        }
+        rowLabel += sortCodeToCharLookup[lkIndex][0];
+        gSort += lkIndex;
+        cSort = cSort.substring(2);
+        sort2 = sort2.substring(2);
+      }
+    }
+    gSort += (vSort!="00"?vSort:"");
+    return [gSort, columnLabel, columnOffset, rowLabel];
   }
-  gSort += vSort;
-  return [gSort, columnLabel, columnOffset, rowLabel];
+  return false;
 }
 
 // sort code mappings to grapheme multibyte sequences
 if (!sktSort) {
   sortCodeToCharLookup = {
-    "000": [ "*" ],
+    "000": [ " " ],
+    "099": [ "*" ],
     "100": [ "a" ],
     "101": [ "ā̆", "ā" ],
     "102": [ "á", "ā́" ],
@@ -1407,8 +1444,10 @@ if (!sktSort) {
     "801": [ "×" ],
     "802": [ "·" ],
     "803": [ ":" ],
+    "804": [ "∙" ],
     "810": [ "◦" ],
     "820": [ "○" ],
+    "821": [ "◯" ],
     "830": [ "∈" ],
     "840": [ "☸" ],
     "845": [ "☒" ],
