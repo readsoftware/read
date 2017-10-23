@@ -58,7 +58,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
   this.id = imgVECfg['id'] ? imgVECfg['id']: null;
   this.image = imgVECfg['image'] ? imgVECfg['image']:null;
   this.imgCanvas = imgVECfg['imageCanvas'] ? imgVECfg['imageCanvas']:null;
-  this.vwPercent = imgVECfg['initViewPercent'] ? imgVECfg['initViewPercent']:150;
+  this.zoomFactor = imgVECfg['initViewPercent'] ? imgVECfg['initViewPercent']:150;
   this.vwOffset = imgVECfg['initViewOffset'] && !isNaN(imgVECfg['initViewOffset'].x) && !isNaN(imgVECfg['initViewOffset'].y) ? imgVECfg['initViewOffset']:{x:0,y:0};
   this.navOpacity = imgVECfg['navOpacity'] ? imgVECfg['navOpacity']/100:0.5;
   this.navSizePercent = imgVECfg['navSizePercent'] ? imgVECfg['navSizePercent']:10;
@@ -87,7 +87,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
   this.blnEntity = imgVECfg['baseline']?imgVECfg['baseline']: null;
   this.imgEntity = imgVECfg['imgEntity']?imgVECfg['imgEntity']: null;
   this.navParent = imgVECfg['imageEditDiv']?imgVECfg['imageEditDiv']: document.getElementById('body');
-  this.vwPercentRange = { min:20,max:150,inc:2 };
+  this.zoomFactorRange = { min:20,max:150,inc:2 };
   this.polygons = [];
   this.polygonLookup = {};
   this.fadeColors = {};
@@ -855,16 +855,16 @@ EDITORS.ImageVE.prototype = {
 
   initViewport: function () {
     this.navAspectRatio = this.imgCanvas.width/this.imgCanvas.height;
-    var vpWidth  = Math.floor(this.navCanvas.width * this.vwPercent/100),
+    var vpWidth  = Math.floor(this.navCanvas.width * this.zoomFactor/100),
         vpHeight = Math.floor(vpWidth/this.navAspectRatio);
     if (vpHeight > this.navCanvas.height) {
       vpHeight = this.navCanvas.height;
       vpWidth = Math.floor(vpHeight * this.navAspectRatio);
     }
     this.vpMaxLoc = { x: this.navCanvas.width - vpWidth, y: this.navCanvas.height - vpHeight };
-//    this.vpLoc = { x: Math.min(this.vwOffset.x * this.vwPercent, this.vpMaxLoc.x) || 0,
+//    this.vpLoc = { x: Math.min(this.vwOffset.x * this.zoomFactor, this.vpMaxLoc.x) || 0,
     this.vpLoc = { x:  this.vpMaxLoc.x,
-      y: Math.min( this.vwOffset.y * this.vwPercent, this.vpMaxLoc.y) || 0 };
+      y: Math.min( this.vwOffset.y * this.zoomFactor, this.vpMaxLoc.y) || 0 };
     this.vpSize = { width: vpWidth || 50, height: vpHeight || 50 };
     this.vpLastLoc =  { x: 0, y: 0 };
   },
@@ -1105,9 +1105,9 @@ EDITORS.ImageVE.prototype = {
 */
 
   scaleViewport: function () {
-    var width  = this.navCanvas.width * this.vwPercent/100,
+    var width  = this.navCanvas.width * this.zoomFactor/100,
         height = Math.floor(width/this.navAspectRatio);
-//        height = this.navCanvas.height * this.vwPercent/100;
+//        height = this.navCanvas.height * this.zoomFactor/100;
 //    if (height > this.navCanvas.height) {
 //      height = this.navCanvas.height;
 //      width = Math.floor(height * this.navAspectRatio);
@@ -1347,8 +1347,8 @@ EDITORS.ImageVE.prototype = {
         yScaleFactor = e.layerY/this.imgCanvas.height,
     xNavAllign = xScaleFactor * this.vpSize.width + this.vpLoc.x,
     yNavAllign = yScaleFactor * this.vpSize.height + this.vpLoc.y;
-    this.vwPercent = Math.max(this.vwPercentRange.min,
-                              Math.min(this.vwPercentRange.max,(this.vwPercent + ( this.vwPercentRange.inc * delta))));
+    this.zoomFactor = Math.max(this.zoomFactorRange.min,
+                              Math.min(this.zoomFactorRange.max,(this.zoomFactor + ( this.zoomFactorRange.inc * delta))));
     this.scaleViewport();
     var xNew = Math.round(xNavAllign - xScaleFactor * this.vpSize.width),
         yNew = Math.round(yNavAllign - yScaleFactor * this.vpSize.height);
@@ -1362,7 +1362,7 @@ EDITORS.ImageVE.prototype = {
                       "yNavAllign="+yNavAllign+
                       "xNew="+xNew+
                       "yNew="+yNew+
-                      "vwPercent="+this.vwPercent);
+                      "zoomFactor="+this.zoomFactor);
     e.preventDefault();//stop window scroll, for dual purpose could use CTRL key to disallow default
   },
 
@@ -1376,8 +1376,8 @@ EDITORS.ImageVE.prototype = {
   zoomCenter: function (direction) {
     var xNavAllign = this.vpSize.width/2 + this.vpLoc.x,
         yNavAllign = this.vpSize.height/2 + this.vpLoc.y;
-    this.vwPercent = Math.max(this.vwPercentRange.min,
-                              Math.min(this.vwPercentRange.max,this.vwPercent + ( this.vwPercentRange.inc * direction)));
+    this.zoomFactor = Math.max(this.zoomFactorRange.min,
+                              Math.min(this.zoomFactorRange.max,this.zoomFactor + ( this.zoomFactorRange.inc * direction)));
     this.scaleViewport();
     var xNew = Math.round(xNavAllign - this.vpSize.width/2),
         yNew = Math.round(yNavAllign - this.vpSize.height/2);
@@ -1731,8 +1731,8 @@ EDITORS.ImageVE.prototype = {
         imgVE.redrawPath();
       }else if (imgVE.segMode == "path"){
         if ( imgVE.path && imgVE.path.length > 2 && //user click on start point so end polygon draw
-            Math.abs(imgVE.path[0][0] - x) <= 3 *imgVE.image.width/imgVE.imgCanvas.width*imgVE.vwPercent/100 &&
-            Math.abs(imgVE.path[0][1] - y)<= 3 *imgVE.image.height/imgVE.imgCanvas.height*imgVE.vwPercent/100) {
+            Math.abs(imgVE.path[0][0] - x) <= 3 *imgVE.image.width/imgVE.imgCanvas.width*imgVE.zoomFactor/100 &&
+            Math.abs(imgVE.path[0][1] - y)<= 3 *imgVE.image.height/imgVE.imgCanvas.height*imgVE.zoomFactor/100) {
           imgVE.segMode = "done";
           imgVE.redrawPath();
         }else{ //add point to path
@@ -1748,11 +1748,13 @@ EDITORS.ImageVE.prototype = {
     imgVE.rbRect,imgVE.drgStart,imgVE.rbImageData = null;
     $(imgVE.imgCanvas).unbind("mousedown touchstart").bind("mousedown touchstart", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgVE.id);
-      if ((e.ctrlKey || e.metaKey)) { //user wants to drag navigation
+      if ((e.ctrlKey || e.metaKey) && (e.buttons == 1 || e.type == "touchstart")) { //user wants to drag navigation
         //set cursor to grabbing and flag dragnavigation
         imgVE.imgCanvas.style.cursor = 'pointer';
         imgVE.dragnav = 'down';
         //store drag start
+        imgVE.drgStart = imgVE.eventToCanvas(e, imgVE.imgCanvas);
+        e.preventDefault();
         return;
       }
       if (imgVE.segMode == "path"){//likely that the user is clicking a new vertice
@@ -1773,11 +1775,16 @@ EDITORS.ImageVE.prototype = {
 
     $(imgVE.imgCanvas).unbind("mousemove touchmove").bind("mousemove touchmove", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgVE.id);
-      if ((e.ctrlKey || e.metaKey) && e.buttons == 1) { // ctrl+left mouse button with move user is drag navigation
+      if ((e.ctrlKey || e.metaKey) && (e.buttons == 1 || e.type == "touchmove")) { // ctrl+left mouse button with move user is drag navigation
         imgVE.dragnav = 'move';
         imgVE.imgCanvas.style.cursor = 'grabbing';
-        //adjust picture postion
-        //save new location
+        //get new postion
+        newPos = imgVE.eventToCanvas(e, imgVE.imgCanvas);
+        //move image to new location
+        imgVE.moveViewportRelative((imgVE.drgStart[0] - newPos[0])*imgVE.vpSize.width/imgVE.imgCanvas.width,
+                                    (imgVE.drgStart[1] - newPos[1])*imgVE.vpSize.height/imgVE.imgCanvas.height);
+        imgVE.drgStart = newPos;
+        imgVE.draw()
         return;
       }else{
         imgVE.imgCanvas.style.cursor = 'crosshair';
@@ -1809,11 +1816,11 @@ EDITORS.ImageVE.prototype = {
 
     $(imgVE.imgCanvas).unbind("mouseup touchend").bind("mouseup touchend", function (e){
       DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE canvas "+imgVE.id);
-      if ((e.ctrlKey || e.metaKey)) { // || isDragNavigation ) { //user ending drag navigation
+      if ((e.ctrlKey || e.metaKey) || e.type == "touchend") { // || isDragNavigation ) { //user ending drag navigation
         //close flag
         //reset cursor to grab if ctrl else to pointer
-        if (imgVE.dragnav == 'move') {
-          imgVE.dragnav = 'up';
+        if (imgVE.dragnav == 'move' || imgVE.dragnav == 'down') {
+          delete imgVE.dragnav;
           imgVE.imgCanvas.style.cursor = 'crosshair';
           e.stopImmediatePropagation();
         }else{
