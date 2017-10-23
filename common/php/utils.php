@@ -555,7 +555,7 @@ function loadURLContent($url,$raw = false) {
     return false;
   } else if (!$data || preg_match("/401 Unauthorized/",$data)) {
     curl_close($ch);
-    if (preg_match("/37\.252\.124\.228/",$data) || !$data) {
+    if (preg_match("/130\.223\.29\.184/",$data) || !$data) {
       $path = preg_replace("/^.*images/",DOCUMENT_ROOT."/images",$url);
       $data = file_get_contents($path);
       if($data){
