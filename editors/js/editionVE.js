@@ -327,7 +327,7 @@ EDITORS.EditionVE.prototype = {
         colorChoices = ['cyan','yellowgreen','coral','yellow','cadetblue','aqua',
                         'gold','khaki','lavender','lightcyan','lightgrey','lightsteelblue','palegreen',
                         'plum','pink','skyblue','sandbrown','silver','springgreen','violet','tan'],
-        items = [], i, item, tagID, label, color, cssSelectors,scope = "#"+this.contentDiv.attr('id');
+        items = [], i, item, tagID, label, color;
 
     //if empty nothing tagged create single item "off" using off for all item values
     if (!usedSeqIDs || usedSeqIDs.length == 0) {
@@ -592,6 +592,7 @@ EDITORS.EditionVE.prototype = {
         checkedItems, i, item, seqID, sequence, $marker;
     checkedItems = this.showSeqTree.jqxTree('getCheckedItems');
     this.calcSeqList();
+    this.removeAllSeqMarkers();
     this.showSeqTree.jqxTree('clear');
     this.showSeqTree.jqxTree('addTo', this.getUsedSeqsList());
 //    this.removeAllSeqMarkers();
@@ -629,7 +630,7 @@ EDITORS.EditionVE.prototype = {
   },
 
   removeAllSeqMarkers: function () {
-    $('sup',this.editDiv).remove();
+    $('sup:not(.footnote)',this.editDiv).remove();
   },
 
  afterUpdate: function(entTag) {
@@ -953,7 +954,7 @@ EDITORS.EditionVE.prototype = {
            width: '250px',
            theme:'energyblue'
     });
-    this.showSeqTree.on('checkChange', function (event) {
+/*    this.showSeqTree.on('checkChange', function (event) {
         var args = event.args, element = args.element, checked = args.checked,
             dropDownContent = '', i, item = ednVE.showSeqTree.jqxTree('getItem',element),
             segTypeTag = item.id, color = item.value,
@@ -962,6 +963,7 @@ EDITORS.EditionVE.prototype = {
         if (checked) {
           if ($('sup.'+segTypeTag,ednVE.editDiv).length == 0) {
             ednVE.injectSeqMarkers(segTypeTag,color);
+//            ednVE.refreshSeqMarkers();
           }
         } else {
             ednVE.removeSeqMarkers(segTypeTag);
@@ -976,6 +978,19 @@ EDITORS.EditionVE.prototype = {
           ednVE.showSeqDdBtn.jqxDropDownButton('setContent', '<div class="listDropdownButton">Off</div>');
           //if stylesheet exist clear it to remove tagging
         }
+    });*/
+    this.showSeqTree.on('checkChange', function (event) {
+        var dropDownContent = '',checkedItems =  ednVE.showSeqTree.jqxTree('getCheckedItems');
+        if (checkedItems.length) {
+          dropDownContent = '<div class="listDropdownButton">' + checkedItems[0].label + (checkedItems.length>1?"...":"")+ '</div>';
+          ednVE.showSeqDdBtn.jqxDropDownButton('setContent', dropDownContent);
+          //aggregate the checked values to create css tagging rules for injection
+        } else {
+          //nothing selected so show tags is "off"
+          ednVE.showSeqDdBtn.jqxDropDownButton('setContent', '<div class="listDropdownButton">Off</div>');
+          //if stylesheet exist clear it to remove tagging
+        }
+        setTimeout(function(){ednVE.refreshSeqMarkers();},10);
     });
     this.showSeqDdBtn.jqxDropDownButton({width:95, height:30 });
     this.showSeqDdBtn.jqxDropDownButton('setContent', '<div class="listDropdownButton">Off</div>');
