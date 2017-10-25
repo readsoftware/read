@@ -48,7 +48,7 @@ if ($dbMgr->getRowCount() == 0) {
 } else {
   $user = $dbMgr->fetchResultRow();
 //  $dbMgr->query("SELECT * FROM usergroup WHERE ugr_id != ".$user['ugr_id']." AND ".$user['ugr_id']." = ANY(\"ugr_member_ids\") ");
-  $dbMgr->query("SELECT * FROM usergroup WHERE ".$user['ugr_id']." = ANY(\"ugr_member_ids\") OR ugr_id in (2,3)");
+  $dbMgr->query("SELECT * FROM usergroup WHERE ".$user['ugr_id']." = ANY(\"ugr_member_ids\") OR ugr_id in (2,3,6)");
   if ($dbMgr->getRowCount() > 0) {
     $groups = array();
     while ($row = $dbMgr->fetchResultRow(null,false,PGSQL_ASSOC)) {

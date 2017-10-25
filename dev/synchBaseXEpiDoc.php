@@ -66,7 +66,7 @@
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
 
   if (!isLoggedIn()) {
-    set_session(session_id(),1,"superuser","admin",null,null,array(1,2,3));
+    set_session(session_id(),1,"superuser","admin",null,null,array(1,2,3,6));
   }
 
   include_once(dirname(__FILE__).'/../services/utilRML.php');

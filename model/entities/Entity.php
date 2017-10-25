@@ -769,7 +769,7 @@
     * @return boolean indicating that this object is public
     */
     public function isPublic() {
-      return in_array(2,$this->getVisibilityIDs());
+      return (in_array(2,$this->getVisibilityIDs()) || in_array(6,$this->getVisibilityIDs()));
     }
 
     /**

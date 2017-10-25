@@ -146,9 +146,9 @@
     if ($seqIDs && count($seqIDs) > 0) {
       $condition = "seq_id in (".join(",",$seqIDs).")";
       if ($publicOnly){//get only public entities
-        $condition .= ' and 2 = ANY ("seq_visibility_ids")';
+        $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
       } else if (isLoggedIn() && $edition->isReadonly()) {
-        $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
+        $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
       }
       $sequences = new Sequences($condition,null,null,null);
       $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -203,7 +203,7 @@
         if ($linePhysSeqIDs && count($linePhysSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$linePhysSeqIDs).")";
           if ($publicOnly){//get only public entities
-            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
+            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
           }
           $sequences = new Sequences($condition,null,null,null);
           $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -250,7 +250,8 @@
         if ($txtDivSeqIDs && count($txtDivSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$txtDivSeqIDs).")";
           if ($publicOnly){//get only public entities
-            $condition .= ' and 2 = ANY ("seq_visibility_ids")';
+            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+//            $condition .= ' and 2 = ANY ("seq_visibility_ids")';
 //            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
           }
           $sequences = new Sequences($condition,null,null,null);
@@ -290,7 +291,8 @@
         if ($structuralSeqIDs && count($structuralSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$structuralSeqIDs).")";
           if ($publicOnly){//get only public entities
-            $condition .= ' and 2 = ANY ("seq_visibility_ids")';
+//            $condition .= ' and 2 = ANY ("seq_visibility_ids")';
+            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
 //            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
           }
           $sequences = new Sequences($condition,null,null,null);
@@ -409,7 +411,8 @@
           case 'seq':
             $condition = "seq_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("seq_visibility_ids")';
+              $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+//              $condition .= ' and 2 = ANY ("seq_visibility_ids")';
 //              $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
             }
             $sequences = new Sequences($condition,null,null,null);
@@ -460,7 +463,8 @@
           case 'cmp':
             $condition = "cmp_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("cmp_visibility_ids")';
+//              $condition .= ' and 2 = ANY ("cmp_visibility_ids")';
+              $condition .= ' and (2 = ANY ("cmp_visibility_ids") or 6 = ANY ("cmp_visibility_ids"))';
 //              $condition .= ' and (2 = ANY ("cmp_visibility_ids") or 3 = ANY ("cmp_visibility_ids"))';
             }
             $compounds = new Compounds($condition,null,null,null);
@@ -515,7 +519,8 @@
           case 'tok':
             $condition = "tok_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities   TODO check if readonly should be a check for visibility on usrgroups for this user
-              $condition .= ' and 2 = ANY ("tok_visibility_ids")';
+//              $condition .= ' and 2 = ANY ("tok_visibility_ids")';
+              $condition .= ' and (2 = ANY ("tok_visibility_ids") or 6 = ANY ("tok_visibility_ids"))';
 //              $condition .= ' and (2 = ANY ("tok_visibility_ids") or 3 = ANY ("tok_visibility_ids"))';
             }
             $tokens = new Tokens($condition,null,null,null);
@@ -566,8 +571,9 @@
           case 'gra':
             $condition = "gra_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("gra_visibility_ids")';
- //             $condition .= ' and (2 = ANY ("gra_visibility_ids") or 3 = ANY ("gra_visibility_ids"))';
+//              $condition .= ' and 2 = ANY ("gra_visibility_ids")';
+               $condition .= ' and (2 = ANY ("gra_visibility_ids") or 6 = ANY ("gra_visibility_ids"))';
+//             $condition .= ' and (2 = ANY ("gra_visibility_ids") or 3 = ANY ("gra_visibility_ids"))';
             }
             $graphemes = new Graphemes($condition,null,null,null);
             $graphemes->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -603,7 +609,8 @@
           case 'scl':
             $condition = "scl_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("scl_visibility_ids")';
+//              $condition .= ' and 2 = ANY ("scl_visibility_ids")';
+              $condition .= ' and (2 = ANY ("scl_visibility_ids") or 6 = ANY ("scl_visibility_ids"))';
 //              $condition .= ' and (2 = ANY ("scl_visibility_ids") or 3 = ANY ("scl_visibility_ids"))';
             }
             $syllables = new SyllableClusters($condition,null,null,null);
@@ -672,7 +679,7 @@
           case 'seg':
             $condition = "seg_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("seg_visibility_ids")';
+              $condition .= ' and (2 = ANY ("seg_visibility_ids") or 6 = ANY ("seg_visibility_ids"))';
 //              $condition .= ' and (2 = ANY ("seg_visibility_ids") or 3 = ANY ("seg_visibility_ids"))';
             }
             $segments = new Segments($condition,null,null,null);
@@ -775,7 +782,7 @@
                                         'url' => $annotation->getURL(),
                                         'typeID' => $annotation->getTypeID());
                 $vis = $annotation->getVisibilityIDs();
-                if (in_array(2,$vis)) {
+                if (in_array(6,$vis)) {
                   $vis = "Public";
                 } else if (in_array(3,$vis)) {
                   $vis = "User";
@@ -907,7 +914,7 @@
                                         'url' => $annotation->getURL(),
                                         'typeID' => $annotation->getTypeID());
                 $vis = $annotation->getVisibilityIDs();
-                if (in_array(2,$vis)) {
+                if (in_array(6,$vis)) {
                   $vis = "Public";
                 } else if (in_array(3,$vis)) {
                   $vis = "User";
@@ -967,11 +974,11 @@
   function saveCachedEdition($ednID, $jsonString) {  // save json string to cache
     global $publicOnly;
     if(USECACHE) {
-      $cacheKey = "edn".$ednID.($publicOnly?"userID2":"userID".getUserID());
+      $cacheKey = "edn".$ednID.($publicOnly?"userID2a6":"userID".getUserID());
       $jsonCache = new JsonCache();
       $jsonCache->setLabel($cacheKey);
       $jsonCache->setJsonString($jsonString);
-      $jsonCache->setVisibilityIDs('{"'.($publicOnly?'2':getUserID()).'"}');
+      $jsonCache->setVisibilityIDs('{"'.($publicOnly?'2,6':getUserID()).'"}');
       $jsonCache->save();
     }
   }

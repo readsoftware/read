@@ -1045,7 +1045,7 @@ function getCustomTags($trmID,$ctxPos = "") {
 */
 
 function getTagGIDValue($trmID) {
-  $annoRepresentations = new Annotations("ano_type_id = $trmID and not ano_owner_id in (2,3)".
+  $annoRepresentations = new Annotations("ano_type_id = $trmID and not ano_owner_id in (2,3,6)".
                                               " and ano_owner_id in (".join(",",getUserMembership()).")",
                                           "ano_text",null,null);
   if ($annoRepresentations && $annoRepresentations->getCount() > 0 ) {
@@ -1689,7 +1689,7 @@ function getUserDefaultAttributionID(){
   $user = new UserGroup(getUserID());
   if (!$user || $user->hasError()) {
     return null;
-  } else if (! $user->getDefaultAttributionID() && getUserID() != 2) {
+  } else if (! $user->getDefaultAttributionID() && getUserID() != 2 && getUserID() != 6) {
     //create attribution group
     $atg = new AttributionGroup();//todo  lookup ATG for user ??
     $atg->setRealname($user->getRealname());

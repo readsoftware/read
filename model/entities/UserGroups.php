@@ -64,7 +64,7 @@
       $this->_pageSize = $pageSize;
       $this->_offset = $offset;
       if ($condition) $this->_condition = $condition;
-      $this->_security = isSysAdmin()?null:($condition?" AND ":"")." (".getUserID()." = ANY (\"ugr_member_ids\") or ".getUserID()." = ANY (\"ugr_admin_ids\") or ugr_id in (2,3))";
+      $this->_security = isSysAdmin()?null:($condition?" AND ":"")." (".getUserID()." = ANY (\"ugr_member_ids\") or ".getUserID()." = ANY (\"ugr_admin_ids\") or ugr_id in (2,3,6))";
 //      $this->_security = parent::getEntityAccessCondition("ugr");
       $this->_sort = $sort;
       $this->_dbMgr = new DBManager();

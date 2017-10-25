@@ -82,7 +82,7 @@ if (!$data) {
         $vis = array(3);
       }
       if ( $data['vis'] == "Public"){
-        $vis = array(2);
+        $vis = array(6);
       }
       if ( $data['vis'] == "Private"){
         $vis =$defVisIDs;
@@ -187,7 +187,7 @@ if (count($errors) == 0) {
           if ($vis){
             $image->setVisibilityIDs($vis);
             $vis = $image->getVisibilityIDs();
-            if (in_array(2,$vis)) {
+            if (in_array(6,$vis)) {
               $vis = "Public";
             } else if (in_array(3,$vis)) {
               $vis = "User";

@@ -42,7 +42,7 @@
   */
   function getUserID() {
     global $userID;
-    return (isset($_SESSION['ka_userid']) && count($_SESSION['ka_userid'])) ? intval($_SESSION['ka_userid']):(isset($userID)?$userID:2);
+    return (isset($_SESSION['ka_userid']) && count($_SESSION['ka_userid'])) ? intval($_SESSION['ka_userid']):(isset($userID)?$userID:6);
   }
 
   /**
@@ -103,7 +103,7 @@
   */
   function getUserMembership() {
     global $userID;
-    return (isset($_SESSION['ka_groups']) && count($_SESSION['ka_groups'])) ? array_keys($_SESSION['ka_groups']): (isLoggedIn()? ($userID?array($userID,2,3):array(2,3)): array(2));
+    return (isset($_SESSION['ka_groups']) && count($_SESSION['ka_groups'])) ? array_keys($_SESSION['ka_groups']): (isLoggedIn()? ($userID?array($userID,2,3,6):array(2,3,6)): array(2,6));
   }
 
   /**

@@ -236,7 +236,7 @@
                                       'url' => $annotation->getURL(),
                                       'typeID' => $annotation->getTypeID());
               $vis = $annotation->getVisibilityIDs();
-              if (in_array(2,$vis)) {
+              if (in_array(6,$vis)) {
                 $vis = "Public";
               } else if (in_array(3,$vis)) {
                 $vis = "User";
