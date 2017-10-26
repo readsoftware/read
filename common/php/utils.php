@@ -2025,8 +2025,10 @@ function checkEditionHealth($ednID, $verbose = true) {
                     }
                     $blnSrfID = $baseline->getSurfaceID();
                     if (!$blnSrfID) {
-                      array_push($hlthwarnings,"Warning Baseline ($blnGID) is not linked to any surfaces.");
-                    } else {
+                      if ( "Transcription"!= $baseline->getTermFromID($baseline->getType())) {
+                        array_push($hlthwarnings,"Warning Baseline ($blnGID) is not linked to any surfaces.");
+                      }
+                      } else {
                       array_push($srfIDs,$blnSrfID);
                       $srfIDs = array_unique($srfIDs);
                       if ( array_key_exists($blnSrfID,$srfID2BlnIDsMap)) {

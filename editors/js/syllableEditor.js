@@ -1540,7 +1540,7 @@ EDITORS.sclEditor.prototype = {
   caretAtBOL: function(){
     return (this.caretAtBoundary('left') &&
             (this.prevAdjacent().hasClass('textDivHeader') ||
-              this.prevAdjacent().prev().hasClass('textDivHeader')));
+              this.prevAdjacent().prev().hasClass('textDivHeader')));//in case of TCM
   },
 
 
@@ -1553,7 +1553,7 @@ EDITORS.sclEditor.prototype = {
   caretAtEOL: function(){
     return (this.caretAtBoundary('right') &&
             (this.nextAdjacent().hasClass('linebreak') ||
-              this.nextAdjacent().next().hasClass('linebreak')));
+              this.nextAdjacent().next().hasClass('linebreak')));//in case of TCM
   },
 
 
@@ -1601,9 +1601,9 @@ EDITORS.sclEditor.prototype = {
 
   getTokenID: function(refSclID){
     var sclID = refSclID?refSclID:this.sclID,
-        refNode = $('.grpGra.scl'+sclID,this.contentDiv).get(0);
-    if (refNode && refNode.className && refNode.className.match(/tok(\d+)/)) {
-      return refNode.className.match(/tok(\d+)/)[1];
+        refNode = $('.grpGra.scl'+sclID,this.contentDiv);
+    if (refNode && refNode.length && refNode.get(0).className && refNode.get(0).className.match(/tok(\d+)/)) {
+      return refNode.get(0).className.match(/tok(\d+)/)[1];
     }
     return null;
   },

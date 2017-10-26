@@ -355,7 +355,9 @@ MANAGERS.DataManager.prototype = {
     if (tokIDs.length > 0) {
       for (i in tokIDs) {
         entity = this.getEntity("tok",tokIDs[i]);
-        graIDs = graIDs.concat( entity.graphemeIDs);
+        if (entity && entity.graphemeIDs && entity.graphemeIDs.length > 0) {
+          graIDs = graIDs.concat( entity.graphemeIDs);
+        }
       }
     }
     if (graIDs.length > 0) {

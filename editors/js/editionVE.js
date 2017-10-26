@@ -1622,10 +1622,11 @@ mergeLine: function (direction,cbError) {
 * @param function cbError Error callback function\n*/
 
   createCompound: function (cbError) {
-    var ednVE = this, sclEd = this.sclEd, startNode, prevNode, headerNode, grdCnt = 500,
+    var ednVE = this, sclEd = this.sclEd, startNode, prevNode, headerNode, grdCnt = 500, refreshCmpTag,
         context,refDivSeqID, grpClass = "",hdrClass = "", sclIDs, bndryVal = sclEd.getCurTokenBoundary(),
-        refSclID, newTokID, physLineSeqID, lineOrdTag, isLastLine, createcompounddata;
-    if (sclEd) {
+        refSclID, newTokID, physLineSeqID, adjPhysLineSeqID, adjPhysLineSeqIDs = [], trgTokTag, $tokNodes,
+        curLineOrdTag, lineOrdTag, adjLineOrdTag, isLastLine, createcompounddata;
+    if (sclEd && sclEd.syllable && sclEd.syllable.length && bndryVal == 0) {
       context = sclEd.syllable[0].className.replace(/grpGra/,"")
                                       .replace(/ord\d+/,"")
                                       .replace(/ordL\d+/,"")
@@ -1637,6 +1638,10 @@ mergeLine: function (direction,cbError) {
                                       .trim()
                                       .replace(/\s+/g,",")
                                       .split(",");
+      if (sclEd.syllable[0].className.match(/cmp\d+/)) {
+        refreshCmpTag = sclEd.syllable[0].className.match(/cmp\d+/)[0];
+      }
+      refSclID = sclEd.sclID;
       lineOrdTag = sclEd.syllable[0].className.match(/ordL\d+/)[0];
       headerNode = $('.textDivHeader.'+lineOrdTag,ednVE.contentDiv);
       physLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
@@ -1647,6 +1652,37 @@ mergeLine: function (direction,cbError) {
         context: context,
         insPos: sclEd.getTokenCurPos()
       };
+      if (sclEd.syllable[0].className.match(/tok\d+/)) {
+        trgTokTag = sclEd.syllable[0].className.match(/tok\d+/)[0];
+        $tokNodes = $('.grpGra.'+trgTokTag,ednVE.contentDiv);
+        adjPhysLineSeqIDs = $tokNodes.map(function(index,elem)  {
+            tempOrdTag = elem.className.match(/ordL\d+/)[0];
+            if (tempOrdTag == curLineOrdTag || tempOrdTag == lineOrdTag) {
+              return null;
+            }
+            curLineOrdTag = tempOrdTag;
+            headerNode = $('.textDivHeader.'+curLineOrdTag,ednVE.contentDiv);
+            if (headerNode && headerNode.length) {
+              adjPhysLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
+            }
+            return [[curLineOrdTag,adjPhysLineSeqID]];
+          });
+      }
+/*      if (sclEd.caretAtBOL()) {//find previous line seq ID
+        adjLineOrdTag = 'ordL'+ (parseInt(lineOrdTag.substring(4))-1);
+        headerNode = $('.textDivHeader.'+adjLineOrdTag,ednVE.contentDiv);
+        if (headerNode && headerNode.length) {
+          adjPhysLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
+        }
+      } else if (sclEd.caretAtEOL()){//find following line seq ID
+        adjLineOrdTag = 'ordL'+ (parseInt(lineOrdTag.substring(4))+1);
+        headerNode = $('.textDivHeader.'+adjLineOrdTag,ednVE.contentDiv);
+        if (headerNode && headerNode.length) {
+          adjPhysLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
+        }
+      }
+      DEBUG.log("err","physLine id = "+physLineSeqID+", adjPhysLine id = "+adjPhysLineSeqID);
+      */
       if (DEBUG.healthLogOn) {
         createcompounddata['hlthLog'] = 1;
       }
@@ -1671,7 +1707,7 @@ mergeLine: function (direction,cbError) {
           data: createcompounddata,
           asynch: true,
           success: function (data, status, xhr) {
-              var oldSeqIDTag, newSeqIDTag;
+              var oldSeqIDTag, newSeqIDTag,i;
               if (typeof data == 'object' && data.success && data.entities) {
                 //update data
                 ednVE.dataMgr.updateLocalCache(data,ednVE.edition.txtID);
@@ -1694,23 +1730,52 @@ mergeLine: function (direction,cbError) {
                 ednVE.calcLineGraphemeLookups(physLineSeqID);
                 //redraw line
                 ednVE.reRenderPhysLine(lineOrdTag,physLineSeqID);
+                if (adjPhysLineSeqIDs && adjPhysLineSeqIDs.length > 0) {
+                  for (i=0; i < adjPhysLineSeqIDs.length; i++) {
+                    adjLineOrdTag = adjPhysLineSeqIDs[i][0];
+                    adjPhysLineSeqID = adjPhysLineSeqIDs[i][1];
+                    if (adjLineOrdTag && adjPhysLineSeqID) {
+                      // calcLineGraphemeLookups
+                      ednVE.calcLineGraphemeLookups(adjPhysLineSeqID);
+                      //redraw line
+                      ednVE.reRenderPhysLine(adjLineOrdTag,adjPhysLineSeqID);
+                    }
+                  }
+                }
                 ednVE.refreshSeqMarkers();
                 //position sylED on new syllable
                 if (typeof sclEd != "undefined") {
+                  sclIDs = [];
                   if (data.entities.update && data.entities.update.tok) {//split an owned token
                     for (tokID in data.entities.update.tok) {
-                      newTokID = tokID;
-                      break;
+                      if (data.entities.update.tok[tokID].syllableClusterIDs) {
+                        sclIDs = sclIDs.concat(data.entities.update.tok[tokID].syllableClusterIDs);
+                      }
                     }
-                  } else { // cloned the token before splitting
+                  }
+                  if (data.entities.insert && data.entities.insert.tok) {//split an owned token
                     for (tokID in data.entities.insert.tok) {
-                      newTokID = tokID;
+                      if (data.entities.insert.tok[tokID].syllableClusterIDs) {
+                        sclIDs = sclIDs.concat(data.entities.insert.tok[tokID].syllableClusterIDs);
+                      }
+                    }
+                  }
+                  if (sclIDs && sclIDs.length && (!refSclID || sclIDs.indexOf(refSclID) == -1)) {
+                    sclEd.moveToSyllable(sclIDs[0],'caretAtStart');
+                  } else {
+                    sclEd.init(sclEd.syllable);
+                  }
+                }
+                if (ednVE.propMgr && ednVE.propMgr.setEntity) {
+                  if (!refreshCmpTag && data.entities.insert && data.entities.insert.cmp) {
+                    for (cmpID in data.entities.insert.cmp) {
+                      refreshCmpTag = "cmp"+cmpID;
                       break;
                     }
                   }
-                  sclIDs = entities.tok[newTokID].syllableClusterIDs;
-                  refSclID = sclIDs[0];
-                  sclEd.moveToSyllable(refSclID,'caretAtStart');
+                  if (refreshCmpTag) {
+                    ednVE.propMgr.setEntity(refreshCmpTag);
+                  }
                 }
                 if (data.editionHealth) {
                   DEBUG.log("health","***Create Compound***");
@@ -1731,6 +1796,20 @@ mergeLine: function (direction,cbError) {
               }
           }
       });// end ajax
+    } else {
+      //invalid call to create compound
+      UTILITY.beep();
+      if (bndryVal < 0) {//at beginning of token get prev compound or token to combine with
+        DEBUG.log("err"," createCompound at token boundary with previous token underconstruction");
+        //if compound and token is not first or if token at beginning of edition then beep
+        //else find prev entity and add to data
+      } else if (bndryVal > 0) {//at end of token get next compound or token to combine with
+        DEBUG.log("err","createCompound at token boundary with following token underconstruction");
+        //if compound and token is not last or if token at end of edition then beep
+        //else find prev entity and add to data
+      } else {
+        DEBUG.log("err"," invalid call to createCompound, either no syllable editor found, cursor not at syllable boundary or editor on invalid syllable");
+      }
     }
   },
 
@@ -2972,6 +3051,8 @@ mergeLine: function (direction,cbError) {
       if (senderID == ednVE.id) {
         return;
       }
+
+
       DEBUG.log("event","link abort recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource+" and target "+linkTarget);
       ednVE.linkMode = false;
     };
@@ -3531,7 +3612,8 @@ mergeLine: function (direction,cbError) {
                       if ($prevHeader && $prevHeader.length && !$prevHeader.hasClass('freetext')) {
                         //process removing linebreak
                         ednVE.combineTokens('prev');
-                        break;
+                        e.stopImmediatePropagation();
+                        return false;//eat all other keys
                       }
                     }
                     UTILITY.beep();
@@ -3850,22 +3932,32 @@ mergeLine: function (direction,cbError) {
                 if (sclEditor.caretAtBoundary("left")) {
                   adjNode = sclEditor.prevAdjacent();
                   direction = "prev";
+                  if (adjNode.hasClass("TCM")){
+                    adjNode = adjNode.prev();
+                  }
                 } else {
                   adjNode = sclEditor.nextAdjacent();
                   direction = "next";
+                  if (adjNode.hasClass("TCM")){
+                    adjNode = adjNode.next();
+                  }
                 }
                 //if next to cmp toksep change to simple boundary - separate compound
                 if (adjNode.hasClass("toksep")) {
                   UTILITY.beep();
                   DEBUG.log("warn","BEEP! Call to create compound next to compound separator not allowed for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                //if cursor next to a boundry (not cmp toksep) then error
+                //cursor next to a boundry (not cmp toksep)
                 } else if (adjNode.hasClass("boundary")) {
                   DEBUG.log("gen","Call to create compound next to boundary for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
                   ednVE.createCompound();
-                //if cursor next to a linebreak then error
-                } else if (adjNode.hasClass("linebreak")) {
-                  UTILITY.beep();
-                  DEBUG.log("warn","BEEP! Call to create compound next to linebreak not implemented for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                //cursor next to a linebreak
+                } else if (adjNode.hasClass("linebreak")){
+                  DEBUG.log("gen","Call to token break at end of line break for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                  ednVE.createCompound();
+                //cursor next to a line header
+                } else if (adjNode.hasClass("textDivHeader")){
+                  DEBUG.log("gen","Call to token break at beginning of line break for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                  ednVE.createCompound();
                 //else intra token
                 } else {
                   DEBUG.log("gen","Call to token break intra token for '"+sclEditor.curSyl+"' with state "+sclEditor.state);

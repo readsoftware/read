@@ -150,6 +150,18 @@ MANAGERS.PropertyManager.prototype = {
   },
 
 /**
+* call current property editors setEntity method
+*
+*/
+
+  setEntity: function (gid) {
+    if (gid && this.currentVE && this.currentVE.setEntity) {
+      this.currentVE.setEntity(gid);
+    }
+  },
+
+
+/**
 * call current property editors clear method
 *
 */
