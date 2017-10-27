@@ -180,6 +180,7 @@ EDITORS.EntityPropVE.prototype = {
 
   showEntity: function(prefix,id) {
     DEBUG.traceEntry("showEntity");
+    var entPropVE = this;
     if (prefix && id && this.dataMgr.getEntity(prefix,id)) {
       this.prefix = prefix;
       this.entID = id;
@@ -223,6 +224,9 @@ EDITORS.EntityPropVE.prototype = {
         this.createComponentsUI();
       }
       this.contentDiv.append('<hr class="viewEndRule">');
+      this.contentDiv.unbind("click").bind("click",function(e) {
+        $('div.edit',entPropVE.contentDiv).removeClass("edit");
+      });
     } else {
       this.contentDiv.html('Entity Property Viewer - no entity information found.');
     }
@@ -278,6 +282,8 @@ EDITORS.EntityPropVE.prototype = {
           var classes = $(this).attr('class'), entTag;
           entTag = classes.match(/(?:seq|scl|ano|tok|cmp)\d+/)[0];
           entPropVE.switchEntity(entPropVE.tag,entTag);
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     }
@@ -374,6 +380,8 @@ EDITORS.EntityPropVE.prototype = {
           entPropVE.valueUI.addClass("edit");
           $('div.valueInputDiv input',this.valueUI).focus();
           //$('div.valueInputDiv input',this.valueUI).select();
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         $('div.valueInputDiv input',this.valueUI).unbind("blur").bind("blur",function(e) {
@@ -439,6 +447,8 @@ EDITORS.EntityPropVE.prototype = {
               }
             }
             entPropVE.valueUI.removeClass("edit");
+            e.stopImmediatePropagation();
+            return false;
           }
         });
       }
@@ -447,6 +457,8 @@ EDITORS.EntityPropVE.prototype = {
         if (entPropVE.propMgr && entPropVE.propMgr.showVE) {
           entPropVE.propMgr.showVE("tabPropVE",entPropVE.propMgr.currentVE.tag);
         }
+        e.stopImmediatePropagation();
+        return false;
       });
 /*      //previous entity
       $('.med-prevword',this.valueUI).unbind("click").bind("click",function(e) {
@@ -495,6 +507,8 @@ EDITORS.EntityPropVE.prototype = {
           entPropVE.supUI.addClass("edit");
           $('div.valueInputDiv input',this.supUI).focus();
           //$('div.valueInputDiv input',this.supUI).select();
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         $('div.valueInputDiv input',this.supUI).unbind("blur").bind("blur",function(e) {
@@ -524,6 +538,8 @@ EDITORS.EntityPropVE.prototype = {
             }
           }
           entPropVE.supUI.removeClass("edit");
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     DEBUG.traceExit("createSuperScriptDisplay");
@@ -560,6 +576,8 @@ EDITORS.EntityPropVE.prototype = {
           entPropVE.refUI.addClass("edit");
           $('div.valueInputDiv input',this.refUI).focus();
           //$('div.valueInputDiv input',this.refUI).select();
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         $('div.valueInputDiv input',this.refUI).unbind("blur").bind("blur",function(e) {
@@ -589,6 +607,8 @@ EDITORS.EntityPropVE.prototype = {
             }
           }
           entPropVE.refUI.removeClass("edit");
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     DEBUG.traceExit("createTextRefDisplay");
@@ -624,6 +644,8 @@ EDITORS.EntityPropVE.prototype = {
           entPropVE.invUI.addClass("edit");
           $('div.valueInputDiv input',this.invUI).focus();
           //$('div.valueInputDiv input',this.invUI).select();
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         $('div.valueInputDiv input',this.invUI).unbind("blur").bind("blur",function(e) {
@@ -653,6 +675,8 @@ EDITORS.EntityPropVE.prototype = {
             }
           }
           entPropVE.invUI.removeClass("edit");
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     DEBUG.traceExit("createTextInvDisplay");
@@ -721,6 +745,8 @@ EDITORS.EntityPropVE.prototype = {
       if (entPropVE.prefix == 'cat') {
         entPropVE.changeCatalogType($(this).prop('trmID'));
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     return radioGroup;
   },
@@ -771,6 +797,8 @@ EDITORS.EntityPropVE.prototype = {
       $('div.valueLabelDiv',this.typeUI).unbind("click").bind("click",function(e) {
         $('div.edit',entPropVE.contentDiv).removeClass("edit");
         entPropVE.typeUI.addClass("edit");
+        e.stopImmediatePropagation();
+        return false;
       });
     DEBUG.traceExit("createTypeUI");
   },
@@ -835,6 +863,8 @@ EDITORS.EntityPropVE.prototype = {
           setTimeout(function(){
               $('.seqTypeUI',entPropVE.typeUI).scrollTop(offset);
             },50);
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         this.seqTypeTree.unbind("blur").bind("blur",function(e) {
@@ -922,6 +952,8 @@ EDITORS.EntityPropVE.prototype = {
           setTimeout(function(){
               $('.seqSubTypeUI',entPropVE.subTypeUI).scrollTop(offset);
             },50);
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         this.subSeqTypeTree.unbind("blur").bind("blur",function(e) {
@@ -948,6 +980,8 @@ EDITORS.EntityPropVE.prototype = {
         $('span.addButton',entPropVE.subTypeUI).unbind("click").bind("click",function(e) {
             var subTypeID = entPropVE.entity.subtypeID?entPropVE.entity.subtypeID:entPropVE.entity.typeID;
             entPropVE.addNewSubSequenceType(subTypeID);
+            e.stopImmediatePropagation();
+            return false;
         });
       }
     DEBUG.traceExit("createSubTypeUI");
@@ -1030,6 +1064,8 @@ EDITORS.EntityPropVE.prototype = {
             $('div.edit',entPropVE.contentDiv).removeClass("edit");
             graSandhiUI.addClass("edit");//mark component's sandhiUI div
             inputElem.focus().select();
+            e.stopImmediatePropagation();
+            return false;
           });
           //blur to cancel
           $('div.valueInputDiv input',sandhiUI).unbind("blur").bind("blur",function(e) {
@@ -1070,6 +1106,8 @@ EDITORS.EntityPropVE.prototype = {
               entPropVE.saveSandhi(entTag,val);
             }
             graSandhiUI.removeClass("edit");
+            e.stopImmediatePropagation();
+            return false;
           });
         }
         displayUI.append(componentEntry);
@@ -1160,6 +1198,8 @@ EDITORS.EntityPropVE.prototype = {
         } else {
           alert("unlinking of "+entPropVE.prefix+" type entity components is under construction");
         }
+        e.stopImmediatePropagation();
+        return false;
       });
     }
     //attach event handlers
@@ -1185,6 +1225,8 @@ EDITORS.EntityPropVE.prototype = {
         $(this).html('<u>Add component</u>');
         entPropVE.controlVE.setComponentLinkMode(false);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     DEBUG.traceExit("createComponentsUI");
   },
