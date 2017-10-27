@@ -436,7 +436,7 @@
                   if ($isFirstKey1) {
                     $isFirstKey1 = false;
                     if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {
-                      if ($termLookup[$lemmaPos] != 'adv.' && $termLookup[$lemmaPos] != 'ind.'){ //term dependency
+                      if ($lemmaPos && $termLookup[$lemmaPos] != 'adv.' && $termLookup[$lemmaPos] != 'ind.'){ //term dependency
                         $attestedHtml .= "<span class=\"inflectdescript\">unclear: </span>";
                       }
                     } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 != '?') {
@@ -682,6 +682,7 @@
               $sclTagToLabel[$tag] = $label;
             }
           }
+          $ord++;
         }
       }
       if ($ednLblBySeqTag && count($ednLblBySeqTag) > 0) {
@@ -727,17 +728,19 @@
               if ($label) {
                 $lToken = $tokens[count($tokens)-1];
                 $sclIDs = $lToken->getSyllableClusterIDs();
-                $lSclID = $sclIDs[count($sclIDs)-1];
-                $sclTag = 'scl'.$lSclID;
-                if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                  $label2 = $sclTagToLabel[$sclTag];
-                } else {
-                  $tokID = $lToken->getID();
-                  error_log("no end label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                  $label2 = null;
-                }
-                if($label2 && $label2 != $label) {
-                  $label .= "-" . $label2;
+                if (count($sclIDs) > 0) {
+                  $lSclID = $sclIDs[count($sclIDs)-1];
+                  $sclTag = 'scl'.$lSclID;
+                  if ( array_key_exists($sclTag,$sclTagToLabel)) {
+                    $label2 = $sclTagToLabel[$sclTag];
+                  } else {
+                    $tokID = $lToken->getID();
+                    error_log("no end label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                    $label2 = null;
+                  }
+                  if($label2 && $label2 != $label) {
+                    $label .= "-" . $label2;
+                  }
                 }
                 $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
               } else {
@@ -745,12 +748,17 @@
               }
             } else if ($prefix == 'tok') {
               $sclIDs = $word->getSyllableClusterIDs();
-              $fSclID = $sclIDs[0];
-              $sclTag = 'scl'.$fSclID;
-              if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                $label = $sclTagToLabel[$sclTag];
+              if (count($sclIDs) > 0) {
+                $fSclID = $sclIDs[0];
+                $sclTag = 'scl'.$fSclID;
+                if ( array_key_exists($sclTag,$sclTagToLabel)) {
+                  $label = $sclTagToLabel[$sclTag];
+                } else {
+                  error_log("no start label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                  $label = null;
+                }
               } else {
-                error_log("no start label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                error_log("no syllable IDs found for ".$word->getGlobalID()." processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
                 $label = null;
               }
               if ($label) {
