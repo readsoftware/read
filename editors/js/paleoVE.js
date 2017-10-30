@@ -735,13 +735,15 @@ EDITORS.PaleoVE.prototype = {
       if (!sclCellsBySortCode[sclGrpSort]) {//start a new group
         sclCellsBySortCode[sclGrpSort] = {syllables:[syllable],gSort:sclGrpSort};
         if (rowColumnInfo[1]) {// columnLabel
-          sclCellsBySortCode[sclGrpSort]['cLabel'] = rowColumnInfo[1]
+          sclCellsBySortCode[sclGrpSort]['cLabel'] = rowColumnInfo[1];
+        } else {// columnLabel
+          sclCellsBySortCode[sclGrpSort]['cLabel'] = "";
         }
         if (rowColumnInfo[2]) {// columnNumber
-          sclCellsBySortCode[sclGrpSort]['cNum'] = rowColumnInfo[2]
+          sclCellsBySortCode[sclGrpSort]['cNum'] = rowColumnInfo[2];
         }
         if (rowColumnInfo[3]) {// rowLabel
-          sclCellsBySortCode[sclGrpSort]['rLabel'] = rowColumnInfo[3]
+          sclCellsBySortCode[sclGrpSort]['rLabel'] = rowColumnInfo[3];
         }
       } else {
         sclCellsBySortCode[sclGrpSort]['syllables'].push(syllable);
@@ -761,7 +763,6 @@ EDITORS.PaleoVE.prototype = {
     if (!sktSort) {
       this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr>' +
         '<td><div class="columnHeader"/></td>' +
-        '<td><div class="columnHeader"/>&nbsp;</td>' +
         '<td><div class="columnHeader">a</div></td>' +
         '<td><div class="columnHeader">i</div></td>' +
         '<td><div class="columnHeader">u</div></td>' +
@@ -770,7 +771,7 @@ EDITORS.PaleoVE.prototype = {
         '<td><div class="lastColumnHeader"/></td>' +
         '</tr></thead>'
       ));
-      colNum = 6;
+      colNum = 5;
     } else {
       this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr>' +
         '<td><div class="columnHeader"/>&nbsp;</td>' +
@@ -1227,23 +1228,26 @@ function getRowColumnInfo(syllable) {
     sclSort = sclSort.replace(/24$/,"");//remove vowel modifier sort code
     sclSort = sclSort.replace(/25$/,"");//remove vowel modifier sort code
     if (!sktSort) {
-      cOffsetMap = {" ":1,"a":2,"i":3,"u":4,"e":5,"o":6};
+      cOffsetMap = {"a":1,"i":2,"u":3,"e":4,"o":5};
     } else {
       cOffsetMap = {" ":1,"a":2,"ā":3,"i":4,"ī":5,"u":6,"ū":7,"ṛ":8,"e":9,"ai":10,"o":11,"au":12};
     }
     if (sclSort.length > 4) {//multi character syllable so has vowel
       vSort = sclSort.substring(sclSort.length-2);
-      if (vSort == "09" || vSort == "01") {// virama to first column
-        vSort = "00";
+      if (vSort == "09" || vSort == "01") {//map virama to first column
+        columnLabel = sortCodeToCharLookup[(sktSort?"000":"100")][0];
+      } else {
+        columnLabel = sortCodeToCharLookup[vSort+'0'][0];
       }
+      columnOffset = cOffsetMap[columnLabel];
       //get everything but the vowel sort
       cSort = (sclSort.indexOf('0.') == 0 ? sclSort.substring(2,sclSort.length-2): sclSort.substring(0,sclSort.length-2));
     } else { // map all single symbol graphemes P, N, O to first column with no header value
-      vSort = "00";
+      vSort = "";
       cSort = (sclSort.indexOf('0.') == 0 ? sclSort.substring(2): sclSort);
+      columnLabel = "";
+      columnOffset = 1;
     }
-    columnLabel = sortCodeToCharLookup[vSort+'0'][0];
-    columnOffset = cOffsetMap[columnLabel];
     if (!cSort.length || cSort == '19') {// vowel only case
       rowLabel = 'vowel';
     } else {
@@ -1261,7 +1265,7 @@ function getRowColumnInfo(syllable) {
         sort2 = sort2.substring(2);
       }
     }
-    gSort += (vSort!="00"?vSort:"");
+    gSort += vSort;
     return [gSort, columnLabel, columnOffset, rowLabel];
   }
   return false;
