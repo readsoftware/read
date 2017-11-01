@@ -1542,7 +1542,7 @@ function getSwitchInfo($txtIDs) {
 function getUserPersistedPreferences(){
   //check user scratch for preferences array
   $user = new UserGroup(getUserID());
-  if (!$user || $user->hasError()) {
+  if (!$user || !$user->getID() || $user->hasError()) {
     return null;
   }
   return $user->getPreferences();
@@ -1577,7 +1577,7 @@ function setUserDefEditorID($ugrID){
     $_SESSION['userPrefs']['defaultEditUserID'] = $ugrID;
   } else {
     $user = new UserGroup(getUserID());
-    if (!$user || $user->hasError()) {
+    if (!$user || !$user->getID() || $user->hasError()) {
       return;
     } else {
       $prefs = getUserPreferences();

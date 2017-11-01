@@ -206,8 +206,8 @@ EDITORS.UserVE.prototype = {
                      userVE.username = username;
                      userVE.userData = data;
                      userVE.loadHeader();
-                     userVE.updateEditInfo();
                      userVE.loadUserInfoUI();
+                     userVE.updateEditInfo();
                      userVE.layoutMgr.closeUserPanel();
                      userVE.layoutMgr.refresh("search");
                    }
