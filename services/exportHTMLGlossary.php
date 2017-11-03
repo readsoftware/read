@@ -473,7 +473,11 @@
                         $cntLoc = $locInfo['loc'][$formLoc];
                         //remove internal ordinal
                         list($tref,$ord,$label) = explode(":",$formLoc);
-                        $formLoc = $tref.":".$label;
+                        if (strpos($tref,"sort") === 0) {
+                          $formLoc = $label;
+                        } else {
+                          $formLoc = $tref.$label;
+                        }
                         if ($isFirstLoc) {
                           $isFirstLoc = false;
                           $attestedHtml .= "<span class=\"attestedformloc\">".html_entity_decode($formLoc).($cntLoc>1?" [".$cntLoc."×]":"");
@@ -636,7 +640,7 @@
         if ($text && !$text->hasError()) {
           $ednLabel = $text->getRef();
           if (!$ednLabel) {
-            $ednLabel='t'.$text->getID();
+            $ednLabel='sort'.$text->getID();
           }
         }
         $ednSequences = $edition->getSequences(true);

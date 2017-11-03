@@ -2744,6 +2744,10 @@ function getUserGroupIDforName($name) {
 function compareWordLocations($locW1,$locW2) {
   list($tref1,$ord1,$label1) = explode(":",$locW1);
   list($tref2,$ord2,$label2) = explode(":",$locW2);
+  if (preg_match("/^sort\d+/",$tref1) && preg_match("/^sort\d+/",$tref2)) {
+    $tref1 = intval(substr($tref1,4));
+    $tref2 = intval(substr($tref2,4));
+  }
   if ($tref1 > $tref2) {
     return 1;
   } else if ($tref1 < $tref2) {

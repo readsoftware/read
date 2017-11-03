@@ -655,10 +655,10 @@ EDITORS.WordlistVE.prototype = {
       //for each token sequence
       for (tag in ednLblByEntTag) {
         ednLabel = ednLblByEntTag[tag];
-        ednTag = seqTag2EdnTag[tag];
-        if (ednLabel) {
-          ednLabel += ": ";
+        if (ednLabel.match(/^sort\d+/)) {
+          ednLabel = "";
         }
+        ednTag = seqTag2EdnTag[tag];
         sequence = this.dataMgr.getEntity(tag.substr(0,3),tag.substr(3));
         defLabel = ednLabel + (sequence.sup?sequence.sup:sequence.label);
         wordGIDs = sequence.entityIDs;

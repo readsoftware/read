@@ -474,7 +474,12 @@
                         }
                         //remove internal ordinal
                         list($tref,$ord,$label) = explode(":",$formLoc);
-                        $rtf .= $tref.":".$label.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
+                        if (strpos($tref,"sort") === 0) {
+                          $formLoc = $label;
+                        } else {
+                          $formLoc = $tref.$label;
+                        }
+                        $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
                       }
                       $rtf .= $endStyle.$eol;
                     }
@@ -611,7 +616,7 @@
         if ($text && !$text->hasError()) {
           $ednLabel = $text->getRef();
           if (!$ednLabel) {
-            $ednLabel='t'.$text->getID();
+            $ednLabel='sort'.$text->getID();
           }
         }
         $ednSequences = $edition->getSequences(true);
