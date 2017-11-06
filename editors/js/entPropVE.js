@@ -1091,9 +1091,9 @@ EDITORS.EntityPropVE.prototype = {
               $(this).parent().parent().removeClass("dirty");
             }
             if (entity.decomp && (!val || val.length == 0)){
-              $('.saveDiv',sandhiUI).html('Delete');
+              $('.saveDiv',sandhiUI).html('Delete').css('color','red');
             } else {
-              $('.saveDiv',sandhiUI).html('Save');
+              $('.saveDiv',sandhiUI).html('Save').css('color','white');
             }
           });
           //save data
