@@ -60,10 +60,11 @@
     exit("Error: ".$dbMgr->getError());
   }
   $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Attributions'");
+  $jsonCache = null;
   if ($dbMgr->getRowCount() > 0 && USECACHE) {
     $row = $dbMgr->fetchResultRow();
     $jsonCache = new JsonCache($row);
-    if (!$jsonCache->hasError()) {
+    if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
       $jsonRetVal = $jsonCache->getJsonString();
       if (array_key_exists("callback",$_REQUEST)) {
         $cb = $_REQUEST['callback'];
@@ -127,10 +128,15 @@
     $retVal["errors"] = $errors;
   }
   if (count($errors) == 0 && USECACHE) {
-    $jsonCache = new JsonCache();
-    $jsonCache->setLabel('Attributions');
-    $jsonCache->setJsonString($jsonRetVal);
-    $jsonCache->setVisibilityIDs(array(2));
+    if (!$jsonCache) {
+      $jsonCache = new JsonCache();
+      $jsonCache->setLabel('Attributions');
+      $jsonCache->setJsonString($jsonRetVal);
+      $jsonCache->setVisibilityIDs(array(6));
+    } else {
+      $jsonCache->clearDirty();
+      $jsonCache->setJsonString($jsonRetVal);
+    }
     $jsonCache->save();
   }
   if (array_key_exists("callback",$_REQUEST)) {

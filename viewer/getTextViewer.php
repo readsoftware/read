@@ -96,8 +96,9 @@
       $multiEditionHeaderDivHtml = getMultiEditionHeaderHtml($ednIDs);
     }
     $glossaryEntTag = "edn".$ednID;
+    $catTag = null;
     if ( isset($data['catID'])) {//optional override
-      $glossaryEntTag = "cat".$data['catID'];
+      $catTag = $glossaryEntTag = "cat".$data['catID'];
     }
   }
   $showContentOutline = isset($data['showTOC'])?(!$data['showTOC']?false:true):(defined("SHOWVIEWERCONTENTOUTLINE")?SHOWVIEWERCONTENTOUTLINE:true);

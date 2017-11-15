@@ -56,6 +56,8 @@
   $edn2CatMap = array();
   $segID2sclIDs = array();
   $cknLookup = array();
+  $catID = (array_key_exists('cat',$_REQUEST)? $_REQUEST['cat']:null);
+//  $ednID = (array_key_exists('edn',$_REQUEST)? $_REQUEST['edn']:null);
   $entities = array( 'insert' => array(),
                      'update' => array());
   $entities["update"] = array( 'edn' => array(),
@@ -67,8 +69,6 @@
                                'tok' => array(),
                                'ano' => array(),
                                'atb' => array());
-  $catID = (array_key_exists('cat',$_REQUEST)? $_REQUEST['cat']:null);
-  $ednID = (array_key_exists('edn',$_REQUEST)? $_REQUEST['edn']:null);
   $termInfo = getTermInfoForLangCode('en');
 
   $anoIDs = array();

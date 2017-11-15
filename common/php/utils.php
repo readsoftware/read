@@ -1394,6 +1394,25 @@ function invalidateCachedSeq($seqID = null,$usrID = null) { // setDirty flag
 }
 
 /**
+* invalidate matching entries or entire cache
+*
+* @param string $cacheKey string to match cache entries
+*/
+
+function invalidateCache($cacheKey = null) { // setDirty flag of matching entries or entire cache
+  $dbMgr = new DBManager();
+  $dbMgr->query("SELECT * FROM jsoncache".($cacheKey?" WHERE jsc_label like '$cacheKey'":""));
+//  error_log("invalidate entire cache entry");
+  while ($row = $dbMgr->fetchResultRow()) {
+    $jsonCache = new JsonCache($row);
+    if (!$jsonCache->hasError() && $jsonCache->getID()) {
+      $jsonCache->setDirty();
+      $jsonCache->save();
+    }
+  }
+}
+
+/**
 * calculate switch information
 *
 * for each text identified calculate a start stop seg range marking hash

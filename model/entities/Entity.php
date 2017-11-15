@@ -97,6 +97,10 @@
       if (!self::$_termInfo) {
         self::$_termInfo = getTermInfoForLangCode('en');
       }
+       if (!$termID) {
+         error_log("call to retrieve term with empty term id");
+         return "";
+       }
       return self::$_termInfo['labelByID'][$termID];
     }
 

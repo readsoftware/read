@@ -959,6 +959,7 @@
         $jsonCache->save();
       } else if ($jsonCache->isDirty() && ! $jsonCache->isReadonly()) {
         $jsonCache->setJsonString(getChildEntitiesJsonString($sequence->getEntityIDs()));
+        $jsonCache->clearDirty();
         $jsonCache->save();
       }
       if ($jsonCache->getID() && !$jsonCache->hasError()) {
@@ -975,10 +976,13 @@
     global $publicOnly;
     if(USECACHE) {
       $cacheKey = "edn".$ednID.($publicOnly?"userID2a6":"userID".getUserID());
-      $jsonCache = new JsonCache();
-      $jsonCache->setLabel($cacheKey);
+      $jsonCache = new JsonCache($cacheKey);
+      if ($jsonCache->hasError() || !$jsonCache->getID()) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel($cacheKey);
+        $jsonCache->setVisibilityIDs("{".($publicOnly?'2,6':getUserID()).'}');
+      }
       $jsonCache->setJsonString($jsonString);
-      $jsonCache->setVisibilityIDs('{"'.($publicOnly?'2,6':getUserID()).'"}');
       $jsonCache->save();
     }
   }
@@ -988,7 +992,7 @@
       $cacheKey = "edn".$ednID."userID".getUserID();
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->hasError() || !$jsonCache->getID()) {
-        $cacheKey = "edn".$ednID."userID2";//try public edition
+        $cacheKey = "edn".$ednID."userID2a6";//try public edition
         $jsonCache = new JsonCache($cacheKey);
       }
       if ($jsonCache->getID() && !$jsonCache->hasError()) {

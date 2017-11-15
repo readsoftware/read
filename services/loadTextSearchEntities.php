@@ -138,10 +138,28 @@
   if ( isset($_REQUEST['refresh'])) {
     $refresh = $_REQUEST['refresh'];
   }
+  $jsonRetVal = "";
+  $jsonCache = null;
+  $isSearchAll = ($condition === "");
+  if ($condition === "" && !$refresh &&
+      defined("USECACHE") && USECACHE) {
+    // check for cache
+    $dbMgr = new DBManager();
+    if (!$dbMgr->getError()) {
+      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults'");
+      if ($dbMgr->getRowCount() > 0 ) {
+        $row = $dbMgr->fetchResultRow();
+        $jsonCache = new JsonCache($row);
+        if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
+          $jsonRetVal = $jsonCache->getJsonString();
+          $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] = "all";
+        }
+      }
+    }
+  }
 
   $termInfo = getTermInfoForLangCode('en');
-  if (!isset($_SESSION['ka_searchAllResults_'.DBNAME]) || $refresh ||
-      (defined("USECACHE") && !USECACHE)) {//if not in SESSION or refresh request
+  if (!$jsonRetVal) {//if not cached value for search all
     $imgIDs = array();
     $anoIDs = array();
     $atbIDs = array();
@@ -248,9 +266,21 @@
     if (count($entities)) {
       $retVal["entities"] = array("insert"=>$entities);//dependencies for this to remain "insert"
     }
-    $_SESSION['ka_searchAllResults_'.DBNAME] = json_encode($retVal);
+    $jsonRetVal = json_encode($retVal);
+    if (count($errors) == 0 && $isSearchAll && USECACHE) {
+      if (!$jsonCache) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel('SearchAllResults');
+        $jsonCache->setJsonString($jsonRetVal);
+        $jsonCache->setVisibilityIDs(array(6));
+      } else {
+        $jsonCache->clearDirty();
+        $jsonCache->setJsonString($jsonRetVal);
+      }
+      $jsonCache->save();
+    }
+    $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] = $txtIDs;
   }
-  $jsonRetVal = $_SESSION['ka_searchAllResults_'.DBNAME];
   if (array_key_exists("callback",$_REQUEST)) {
     $cb = $_REQUEST['callback'];
     if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap

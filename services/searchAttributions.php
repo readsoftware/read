@@ -44,6 +44,7 @@
   $dbMgr = new DBManager();
   $condition = "";
   $maxRows = null;
+  $jsonRetVal = null;
   $attrs = array();
   // check for cache
   if ( array_key_exists('titleContains',$_REQUEST) && $_REQUEST['titleContains']) {
@@ -55,18 +56,46 @@
   if ( array_key_exists('maxRows',$_REQUEST) && $_REQUEST['maxRows']) {
     $maxRows = $_REQUEST['maxRows'];
   }
+
+  $jsonCache = null;
+  if ($condition == "" && USECACHE) {// check cache for all
+    $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllAttributions'");
+    if ($dbMgr->getRowCount() > 0) {
+      $row = $dbMgr->fetchResultRow();
+      $jsonCache = new JsonCache($row);
+      if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
+        $jsonRetVal = $jsonCache->getJsonString();
+      }
+    }
+  }
 //error_log(print_r($_REQUEST,true));
   //get all visible attributions
-  $attributions = new Attributions($condition,'atb_title',null,$maxRows);
-  $attributions->setAutoAdvance(false);
-  foreach ($attributions as $attribution){
-    $atbID = $attribution->getID();
-    array_push($attrs,array(
-      'label' => $attribution->getTitle().($attribution->getDetail()?' ('.$attribution->getDetail().')':''),
-      'value' => $atbID
-    ));
-  } //for attributions
-  $jsonRetVal = "(".json_encode($attrs).")";
+  if (!$jsonRetVal) {
+    $attributions = new Attributions($condition,'atb_title',null,$maxRows);
+    $attributions->setAutoAdvance(false);
+    foreach ($attributions as $attribution){
+      $atbID = $attribution->getID();
+      array_push($attrs,array(
+        'label' => $attribution->getTitle().($attribution->getDetail()?' ('.$attribution->getDetail().')':''),
+        'value' => $atbID
+      ));
+    } //for attributions
+    $jsonRetVal = "(".json_encode($attrs).")";
+
+    if ($condition == "" && USECACHE) {
+      if (!$jsonCache) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel('SearchAllAttributions');
+        $jsonCache->setJsonString($jsonRetVal);
+        $jsonCache->setVisibilityIDs(array(6));
+      } else {
+        $jsonCache->clearDirty();
+        $jsonCache->setJsonString($jsonRetVal);
+      }
+      $jsonCache->save();
+    }
+  }
+
   if (array_key_exists("callback",$_REQUEST)) {
     $cb = $_REQUEST['callback'];
     echo $cb.$jsonRetVal;

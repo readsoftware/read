@@ -3987,7 +3987,7 @@ mergeLine: function (direction,cbError) {
 //        e.stopImmediatePropagation();
 //        return false;//eat all other keys
        } else {
-        if ((e.ctrlKey || e.metaKey) && key.toLowerCase() == "v") {// paste so eat it
+        if ((e.ctrlKey || e.metaKey) && key && key.toLowerCase() == "v") {// paste so eat it
           DEBUG.log("event","Call to keypress with paste");
           e.stopImmediatePropagation();
           return false;//eat all other keys
@@ -5683,7 +5683,8 @@ mergeLine: function (direction,cbError) {
             continue;
           }
           nextGraID = (j+1 < graIDs.length)? graIDs[j+1] :
-                        (nextSclID ? entities['scl'][nextSclID].graphemeIDs[0]:null);
+                        ((nextSclID && entities['scl'][nextSclID]&&
+                          entities['scl'][nextSclID].graphemeIDs) ? entities['scl'][nextSclID].graphemeIDs[0]:null);
           if (!this.lookup.gra[graID]) {
             this.lookup.gra[graID] = {};
           }

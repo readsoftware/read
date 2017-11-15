@@ -96,17 +96,36 @@
                                'atb' => array());
 //  $entities["update"] = array( 'txt' => array());
   $txtIDs = (array_key_exists('ids',$_REQUEST)? $_REQUEST['ids']:null);
-  if (!$txtIDs && isset($_SESSION['ka_searchAllResults_'.DBNAME])) {
-    //decode the cached text
-    $textSearchAllRetVal = json_decode($_SESSION['ka_searchAllResults_'.DBNAME],true);
-    if (isset($textSearchAllRetVal['entities']) &&
-        isset($textSearchAllRetVal['entities']['insert'])&&//depends on loadTextSearchEntities using "insert"
-        isset($textSearchAllRetVal['entities']['insert']['txt'])){
-      $txtIDs = array_keys($textSearchAllRetVal['entities']['insert']['txt']);
+  $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:false);
+  $jsonRetVal = "";
+  $jsonCache = null;
+  $isLoadAll = false;
+  if (!$txtIDs ) {
+    if (!array_key_exists('ka_lastSearchTxtIDs_'.DBNAME, $_SESSION) ||
+        isset($_SESSION['ka_lastSearchTxtIDs_'.DBNAME]) && $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] == "all") {
+      if (!$refresh && defined("USECACHE") && USECACHE) {
+        // check for cache
+        $dbMgr = new DBManager();
+        if (!$dbMgr->getError()) {
+          $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources'");
+          if ($dbMgr->getRowCount() > 0 ) {
+            $row = $dbMgr->fetchResultRow();
+            $jsonCache = new JsonCache($row);
+            if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
+              $jsonRetVal = $jsonCache->getJsonString();
+            }
+          }
+        }
+      }
+      if (!$jsonRetVal) {
+        $allTexts = new Texts("","txt_id",null,null);
+        $txtIDs = $allTexts->getKeys();
+        $isLoadAll = true;
+      }
     }
   }
 
-  if ($txtIDs && count($txtIDs) > 0) {
+  if (!$jsonRetVal && $txtIDs && count($txtIDs) > 0) {
     $imgIDs = array();
     $anoIDs = array();
     $atbIDs = array();
@@ -349,21 +368,33 @@
         unset($entities[$prefix]);
       }
     }
+    $retVal["success"] = false;
+    if (count($errors)) {
+      $retVal["errors"] = $errors;
+    } else {
+      $retVal["success"] = true;
+    }
+    if (count($warnings)) {
+      $retVal["warnings"] = $warnings;
+    }
+    if (count($entities)) {
+      $retVal["entities"] = $entities;
+    }
+    $jsonRetVal = json_encode($retVal);
+    if (count($errors) == 0 && USECACHE && $isLoadAll) {
+      if (!$jsonCache) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel('AllTextResources');
+        $jsonCache->setJsonString($jsonRetVal);
+        $jsonCache->setVisibilityIDs(array(6));
+      } else {
+        $jsonCache->clearDirty();
+        $jsonCache->setJsonString($jsonRetVal);
+      }
+      $jsonCache->save();
+    }
   }
 
-  $retVal["success"] = false;
-  if (count($errors)) {
-    $retVal["errors"] = $errors;
-  } else {
-    $retVal["success"] = true;
-  }
-  if (count($warnings)) {
-    $retVal["warnings"] = $warnings;
-  }
-  if (count($entities)) {
-    $retVal["entities"] = $entities;
-  }
-  $jsonRetVal = json_encode($retVal);
   if (array_key_exists("callback",$_REQUEST)) {
     $cb = $_REQUEST['callback'];
     if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap

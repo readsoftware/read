@@ -191,7 +191,8 @@ MANAGERS.DataManager.prototype = {
       }
       for (prefix in inserts) {
         for (entID in inserts[prefix]) {
-          if (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp') {
+//          if (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp') {
+          if (prefix == 'tok' || prefix == 'cmp') {
             this.calcSwitchHash(prefix,entID);
           }
         }
@@ -224,7 +225,8 @@ MANAGERS.DataManager.prototype = {
         for (entID in updates[prefix]) {
           for (prop in updates[prefix][entID]) {
             if ((prop == 'entityIDs' || prop == 'graphemeIDs') &&
-                (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp')) {
+                (prefix == 'tok' || prefix == 'cmp')) {
+//                (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp')) {
               this.calcSwitchHash(prefix,entID);
               continue;
             }
@@ -506,11 +508,13 @@ MANAGERS.DataManager.prototype = {
       }
     } else {
       strTokCompare = strTok.substring(strTok.length - cntScl);
-      split = cntScl;
-      while ( strScl != strTokCompare) {
-        split--;
-        strTokCompare = strTokCompare.substring(1);//remove lead char
-        strScl = strScl.substring(0, strScl.length - 1);
+      if (strScl != strTokCompare) {
+        split = cntScl;
+        while ( strScl != strTokCompare) {
+          split--;
+          strTokCompare = strTokCompare.substring(1);//remove lead char
+          strScl = strScl.substring(0, strScl.length - 1);
+        }
       }
     }
     return split;
