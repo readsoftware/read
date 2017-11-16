@@ -133,7 +133,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
         this.addImagePolygon(segment.boundary[0],"seg"+segID,false,segment['sclIDs'],segment.center,(segment.ordinal?segment.ordinal:null));//WARNING!! todo code change boundary can be multiple polygons
       }
     }
-    this.nextSegOrdinal = 1 + parseInt(maxOrdinal);
+    this.maxOrdinal = (1 + parseInt(maxOrdinal));
   }
 
   //adjust initial size of image canvas
@@ -280,7 +280,7 @@ EDITORS.ImageVE.prototype = {
         }
       }
     }
-    this.nextSegOrdinal = 1 + parseInt(maxOrdinal);
+    this.ordinalSetInput.val(1 + parseInt(maxOrdinal));
   },
 
 
@@ -550,7 +550,7 @@ EDITORS.ImageVE.prototype = {
 
     var btnSegOrdinalName = this.id+'orderSeg';
     this.orderSegBtnDiv = $('<div class="toolbuttondiv">' +
-                            '<button class="toolbutton iconbutton" id="'+btnSegOrdinalName +
+                            '<button class="toolbutton" id="'+btnSegOrdinalName +
                               '" title="Set segment order by numbering">Off</button>'+
                             '<div class="toolbuttonlabel">Number segs.</div>'+
                            '</div>');
@@ -566,7 +566,7 @@ EDITORS.ImageVE.prototype = {
           switch (imgVE.orderSegMode) {
             case 'off':
               //ask user if continue or restart
-              if (!confirm("Press OK to continue numbering from "+ imgVE.nextSegOrdinal +
+              if (!confirm("Press OK to continue numbering from "+ imgVE.ordinalSetInput.val() +
                            ". Press cancel to remove all nos. and restart numbering at 1.")) {
                 //restart - call service to clear seg ordinals with success update cache, set nextOrdinal = 1 and redraw
                 savedata["cmd"] = "clearOrdinals";
@@ -606,7 +606,7 @@ EDITORS.ImageVE.prototype = {
                           imgVE.orderSegBtn.html("On");
                           imgVE.drawImage();
                           imgVE.drawImagePolygons();
-                          imgVE.nextSegOrdinal = 1;
+                          imgVE.ordinalSetInput.val(1);
                         }
                         if (data.editionHealth) {
                           DEBUG.log("health","***Save Lemma cmd="+cmd+"***");
@@ -714,7 +714,7 @@ EDITORS.ImageVE.prototype = {
       $('#'+btnAutoLinkOrdName,this.autoLinkOrdBtnDiv).unbind('click')
                                  .bind('click',function(e) {
         var blnID = imgVE.blnEntity.id, defaultMode;
-        if (imgVE.nextSegOrdinal && imgVE.nextSegOrdinal > 1) {
+        if (imgVE.ordinalSetInput.val() && imgVE.ordinalSetInput.val() > 1) {
           mode = Object.keys(imgVE.selectedPolygons).length;
           imgVE.autoLinkOrdMode = true;
           $('.editContainer').trigger('autoLinkOrdRequest',[imgVE.id,blnID,mode]);
@@ -723,6 +723,78 @@ EDITORS.ImageVE.prototype = {
         }
       });
     }
+
+    var inputSetOrdinalName = this.id+'setOrd';
+    this.ordinalSetInputDiv = $('<div class="toolnumberinputdiv">' +
+                            '<input type="number" class="toolnumberinput" id="'+inputSetOrdinalName +
+                              '" title="Set segment order number" value="'+this.maxOrdinal+'"/>'+
+                            '<div class="toolinputlabel">Seg. Number</div>'+
+                           '</div>');
+    this.ordinalSetInput = $('#'+inputSetOrdinalName,this.ordinalSetInputDiv);
+    //set segment order
+    this.ordinalSetInput.unbind('change').bind('change',function(e) {
+        var savedata ={}, setOrdVal = imgVE.ordinalSetInput.val(),
+            cnt = Object.keys(imgVE.selectedPolygons).length;
+        if (imgVE.linkMode) {
+          return;
+        }
+        if (cnt == 1) {
+          segTag = Object.keys(imgVE.selectedPolygons)[0];
+          savedata["cmd"] = "setOrdinal";
+          savedata["segID"] = segTag.substring(3);
+          savedata["ord"] = setOrdVal;
+          //jqAjax synch save
+          $.ajax({
+              type: 'POST',
+              dataType: 'json',
+              url: basepath+'/services/orderSegment.php?db='+dbName,//caution dependency on context having basepath and dbName
+              data: savedata,
+              async: true,
+              success: function (data, status, xhr) {
+                  var segID, polygon, baseline;
+                  if (typeof data == 'object' && data.success && data.entities) {
+                    //update data
+                    imgVE.dataMgr.updateLocalCache(data,null);
+                    if (data.entities.update && data.entities.update.seg) {
+                      for (segID in data.entities.update.seg) {
+                        if (data.entities.update.seg[segID]['ordinal']) {
+                          polygon = imgVE.polygons[imgVE.polygonLookup['seg'+segID]-1];
+                          if (polygon) {
+                            polygon.order = data.entities.update.seg[segID]['ordinal'];
+                          }
+                        }
+                        //update baseline entity
+                        segment = imgVE.dataMgr.getEntity('seg',segID);
+                        blnIDs = segment.baselineIDs;
+                        if (blnIDs.length) {
+                          for (i =0; i<blnIDs.length; i++) {
+                            baseline = imgVE.dataMgr.getEntity('bln',blnIDs[i]);
+                            if (baseline && baseline.segIDs && baseline.segIDs.indexOf(segID) == -1) {
+                              baseline.segIDs.push(segID);
+                            }
+                          }
+                        }
+                      }
+                    }
+                    imgVE.drawImage();
+                    imgVE.drawImagePolygons();
+                  }
+                  if (data.editionHealth) {
+                    DEBUG.log("health","***Save Lemma cmd="+cmd+"***");
+                    DEBUG.log("health","Params: "+JSON.stringify(savedata));
+                    DEBUG.log("health",data.editionHealth);
+                  }
+                  if (data.errors) {
+                    alert("An error occurred while trying to set segment ordinal for segment "+segTag+". Error: " + data.errors.join());
+                  }
+              },
+              error: function (xhr,status,error) {
+                  // add record failed.
+                  alert("An error occurred while trying to set segment ordinal for segment "+segTag+". Error: " + error);
+              }
+          });
+        }
+    });
 
     if (this.blnEntity && linkToSyllablePattern) {
       var btnAutoLinkPatternName = this.id+'AutoLinkPattern';
@@ -734,7 +806,7 @@ EDITORS.ImageVE.prototype = {
       $('#'+btnAutoLinkPatternName,this.autoLinkPatternBtnDiv).unbind('click')
                                  .bind('click',function(e) {
         var blnID = imgVE.blnEntity.id, defaultMode;
-        if (imgVE.nextSegOrdinal && imgVE.nextSegOrdinal > 1) {
+        if (imgVE.ordinalSetInput.val() && imgVE.ordinalSetInput.val() > 1) {
           mode = 0;// 0 = auto immediate return - just need the edition
           imgVE.autoLinkPatternMode = true;
           $('.editContainer').trigger('autoLinkOrdRequest',[imgVE.id,blnID,mode]);
@@ -844,7 +916,8 @@ EDITORS.ImageVE.prototype = {
                   .append(this.replacePolyBtnDiv)
                   .append(this.deleteSegBtnDiv)
                   .append(this.orderSegBtnDiv)
-                  .append(this.autoLinkOrdBtnDiv);
+                  .append(this.autoLinkOrdBtnDiv)
+                  .append(this.ordinalSetInputDiv);
       if (this.autoLinkPatternBtnDiv) {
         this.editToolbar.append(this.autoLinkPatternBtnDiv);
       }
@@ -1559,7 +1632,7 @@ EDITORS.ImageVE.prototype = {
         //adjust point to be image coordinates
         var x = (imgVE.vpLoc.x * imgVE.image.width / imgVE.navCanvas.width + imgVE.vpSize.width/imgVE.navCanvas.width*imgVE.image.width * pt[0]/imgVE.imgCanvas.width),
             y = (imgVE.vpLoc.y * imgVE.image.height / imgVE.navCanvas.height + imgVE.vpSize.height/imgVE.navCanvas.height*imgVE.image.height * pt[1]/imgVE.imgCanvas.height),
-            i,index,gid,bBox;
+            i,index,gid,bBox, firstPoly,firstPolyVerts,selectedPoly;
         //hittest for target polygons
         var hitPolyIndices = imgVE.hitTestPolygons(x,y);
         //unselect existing if no ctrl key pressed
@@ -1585,6 +1658,10 @@ EDITORS.ImageVE.prototype = {
           if ( Object.keys(imgVE.selectedPolygons).length == 1) {
             //enable delete button
             imgVE.delSegBtn.removeAttr('disabled');
+            selectedPoly = imgVE.polygons[imgVE.polygonLookup[Object.keys(imgVE.selectedPolygons)[0]]-1];
+            if (selectedPoly.order){
+              imgVE.ordinalSetInput.val(selectedPoly.order);
+            }
           } else {//check for duplicate overlaying polygons
             selectedTags = Object.keys(imgVE.selectedPolygons);
             firstPoly = imgVE.polygons[imgVE.polygonLookup[selectedTags[0]]-1];
@@ -1648,7 +1725,7 @@ EDITORS.ImageVE.prototype = {
             segTag = imgVE.polygons[index -1].label;
             savedata["cmd"] = "setOrdinal";
             savedata["segID"] = segTag.substring(3);
-            savedata["ord"] = imgVE.nextSegOrdinal;
+            savedata["ord"] = imgVE.ordinalSetInput.val();
             // set state on
             imgVE.orderSegMode = "setting";
             //update btn html
@@ -1665,7 +1742,7 @@ EDITORS.ImageVE.prototype = {
                     if (typeof data == 'object' && data.success && data.entities) {
                       //update data
                       imgVE.dataMgr.updateLocalCache(data,null);
-                      imgVE.nextSegOrdinal = 1 + parseInt(imgVE.nextSegOrdinal);
+                      imgVE.ordinalSetInput.val(1 + parseInt(imgVE.ordinalSetInput.val()));
                       if (data.entities.update && data.entities.update.seg) {
                         for (segID in data.entities.update.seg) {
                           if (data.entities.update.seg[segID]['ordinal']) {

@@ -197,11 +197,17 @@ sup{
   display: inline-block;
 }
 
-.toolbuttondiv {
+.toolbuttondiv, .toolnumberinputdiv {
   max-width: 100px;
   margin: 5px 20px 5px 5px;
   font-size: medium;
   display: inline-block;
+}
+
+.toolnumberinput{
+  max-width: 93px;
+  border: 1px solid #656565;
+  height: 21px;
 }
 
 .toolbutton.iconbutton {
@@ -242,7 +248,7 @@ sup{
   color: #A0A0A0;
 }
 
-.toolbuttonlabel {
+.toolbuttonlabel ,.toolinputlabel {
   font-size: smaller;
   color: #2F5597;
 }
