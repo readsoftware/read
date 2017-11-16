@@ -755,10 +755,15 @@ EDITORS.ImageVE.prototype = {
                                  .bind('click',function(e) {
         if ( this.textContent == "Show") {
           imgVE.viewAllPolygons = true;
+          this.textContent = "Numbers";
+          this.title = "Show ordinal numbers";
+        } else if ( this.textContent == "Numbers") {
+          imgVE.showPolygonNumbers = true;
           this.textContent = "Hide";
           this.title = "Hide image segments";
         } else {
           imgVE.viewAllPolygons = false;
+          imgVE.showPolygonNumbers = false;
           this.textContent = "Show";
           this.title = "Show image segments";
         }
@@ -2505,7 +2510,7 @@ EDITORS.ImageVE.prototype = {
       }
       if ( this.orderSegMode != "on" ) {
         this.imgContext.strokeStyle = polygon.hilite? "white" : (this.selectedPolygons[polygon.label]? "white" : polygon.color);
-        if (polygon.order) {// draw order numer if there is one
+        if (this.showPolygonNumbers && polygon.order) {// draw order numer if there is one
           this.imgContext.lineWidth = 1;
           this.imgContext.fillStyle = this.imgContext.strokeStyle;
           this.imgContext.fillText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
@@ -2513,7 +2518,7 @@ EDITORS.ImageVE.prototype = {
         }
         this.imgContext.lineWidth = (this.selectedPolygons[polygon.label]? 3 : polygon.width); //polygon width
       } else {
-        if (polygon.order) {// draw order numer if there is one
+        if (this.showPolygonNumbers && polygon.order) {// draw order numer if there is one
           this.imgContext.lineWidth = 1;
           this.imgContext.strokeStyle = "white";
           this.imgContext.fillStyle = "white";
