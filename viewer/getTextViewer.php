@@ -156,7 +156,6 @@
         $edBlnPosLookupByEdn .= ", '$ednID':";
         $edPolysByBlnTagTokCmpTagByEdn .= ", '$ednID':";
       } else {
-        $isFirst = false;
         $defaultEdnID = $ednID;
         $edStructHtmlByEdn .= "'$ednID':";
         $edFootnotesByEdn .= "'$ednID':";
@@ -166,9 +165,15 @@
         $edBlnPosLookupByEdn .= "'$ednID':";
         $edPolysByBlnTagTokCmpTagByEdn .= "'$ednID':";
       }
+
         $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
         $edFootnotesByEdn .= getEditionFootnoteTextLookup();
-        $edGlossaryLookupByEdn .= getEditionGlossaryLookup('edn'.$ednID,$refreshLookUps);
+        if ($isFirst) {
+          $isFirst = false;
+          $edGlossaryLookupByEdn .= getEditionGlossaryLookup(($catTag?$catTag:'edn'.$ednID),$ednID,$refreshLookUps);
+        } else {
+          $edGlossaryLookupByEdn .= getEditionGlossaryLookup('edn'.$ednID,$ednID,$refreshLookUps);
+        }
         $edTocHtmlByEdn .= "'".getEditionTOCHtml()."'";
         $edUrlBlnImgLookupByEdn .= getImageBaselineURLLookup();//reset and calc'd in getEditionsStructuralViewHtml
         $edBlnPosLookupByEdn .= getBaselinePosByEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
@@ -188,7 +193,7 @@
           multiEdition = false,
           edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs,$refreshLookUps)?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
-          edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag,$refreshLookUps)?>//calc'd for first edition assuming all editions are inclusive
+          edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag,null,$refreshLookUps)?>//calc'd for first edition assuming all editions are inclusive
 <?php
   }
 ?>

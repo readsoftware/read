@@ -140,7 +140,7 @@ function getEditionTranslationFootnoteTextLookup() {
 * gets the editions glossary lookup html
 *
 */
-function getEditionGlossaryLookup($entTag,  $refresh = false) {
+function getEditionGlossaryLookup($entTag, $scopeEdnID = null, $refresh = false) {
   $catID = null;
   if (substr($entTag,0,3) == "cat") {
     $catID = substr($entTag,3);
@@ -153,7 +153,7 @@ function getEditionGlossaryLookup($entTag,  $refresh = false) {
     }
   }
   if ($catID) {
-    return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $refresh));
+    return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, $refresh));
   }
   return "{}";
 }
@@ -1886,16 +1886,40 @@ function formatEtym($lemmaEtymString) {
 }
 
 
-function getWrdTag2GlossaryPopupHtmlLookup($catID,$refreshWordMap = false, $useTranscription = true, $hideHyphens = true) {
+function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWordMap = false, $useTranscription = true, $hideHyphens = true) {
   $catalog = new Catalog($catID);
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
     error_log("Warning need valid catalog id $catID.");
     return array();
   } else {
+    if ($scopeEdnID){
+      $textTypeID = Entity::getIDofTermParentLabel('text-sequencetype');
+      $query = "select regexp_replace(array_to_string(seq_entity_ids,','),'seq:','','g') from edition left join sequence on seq_id = ANY(edn_sequence_ids) where edn_id = $scopeEdnID and seq_type_id = $textTypeID;";
+      $dbMgr = new DBManager();
+      $dbMgr->query($query);
+      if ($dbMgr->getRowCount()==0) {
+        error_log("Warning no text div for edition $scopeEdnID.");
+        return array();
+      } else {
+        $strTxtDivSeqIDs = $dbMgr->fetchResultRow();
+        $strTxtDivSeqIDs = $strTxtDivSeqIDs[0];
+      }
+      $condition = " not lem_owner_id = 1 and lem_component_ids && ".
+              "(select array_agg(ids.gid) ".
+               "from (select unnest(seq_entity_ids) as gid from sequence where seq_id in ($strTxtDivSeqIDs)) as ids)".
+         " union ".
+         "select * from lemma where not lem_owner_id = 1 and ".
+            "cast(lem_component_ids as text[]) && (select array_agg(igids.gid) ".
+                          "from (select concat('inf:',inf_id) as gid from inflection where inf_component_ids && ".
+                                  "cast((select array_agg(ids.gid) from (select unnest(seq_entity_ids) as gid from sequence ".
+                                                                         "where seq_id in ($strTxtDivSeqIDs)) as ids) as text[])) as igids)";
+    } else {
+      $condition = "lem_catalog_id = $catID and not lem_owner_id = 1";
+    }
     $glossaryCommentTypeID = Entity::getIDofTermParentLabel('glossary-commentarytype'); //term dependency
     $cmpTokTag2LocLabel = getWordTagToLocationLabelMap($catalog,$refreshWordMap);
     $entTag2GlossaryHtml = array();
-    $lemmas = new Lemmas("lem_catalog_id = $catID and not lem_owner_id = 1","lem_sort_code,lem_sort_code2",null,null);
+    $lemmas = new Lemmas($condition,"lem_sort_code,lem_sort_code2",null,null);
     if ($lemmas->getCount() > 0) {
       $glossaryHRefUrl = READ_DIR."/services/exportHTMLGlossary.php?db=".DBNAME."&catID=$catID";
       $lemIDs = array();
