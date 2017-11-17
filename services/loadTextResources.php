@@ -122,6 +122,10 @@
         $txtIDs = $allTexts->getKeys();
         $isLoadAll = true;
       }
+    } else if (isset($_SESSION['ka_lastSearchTxtIDs_'.DBNAME]) &&
+               is_array($_SESSION['ka_lastSearchTxtIDs_'.DBNAME]) &&
+               count($_SESSION['ka_lastSearchTxtIDs_'.DBNAME]) > 0) {
+      $txtIDs = $_SESSION['ka_lastSearchTxtIDs_'.DBNAME];
     }
   }
 
@@ -393,6 +397,8 @@
       }
       $jsonCache->save();
     }
+  } else if (!$jsonRetVal){
+    $jsonRetVal = json_encode(array("success"=>true));
   }
 
   if (array_key_exists("callback",$_REQUEST)) {
