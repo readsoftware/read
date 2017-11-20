@@ -100,57 +100,53 @@
   $jsonRetVal = "";
   $jsonCache = null;
   $isLoadAll = false;
-  if (!$txtIDs ) {
-    if (!array_key_exists('ka_lastSearchTxtIDs_'.DBNAME, $_SESSION) ||
-        isset($_SESSION['ka_lastSearchTxtIDs_'.DBNAME]) && $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] == "all") {
-      if (!$refresh && defined("USECACHE") && USECACHE) {
-        // check for cache
-        $dbMgr = new DBManager();
-        if (!$dbMgr->getError()) {
-          $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources'");
-          if ($dbMgr->getRowCount() > 0 ) {
-            $row = $dbMgr->fetchResultRow();
-            $jsonCache = new JsonCache($row);
-            if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
-              $jsonRetVal = $jsonCache->getJsonString();
-            }
-          }
+  if (!$txtIDs  && !$refresh && defined("USECACHE") && USECACHE) {
+    // check for cache
+    $dbMgr = new DBManager();
+    if (!$dbMgr->getError()) {
+      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources".getUserDefEditorID()."'");
+      if ($dbMgr->getRowCount() > 0 ) {
+        $row = $dbMgr->fetchResultRow();
+        $jsonCache = new JsonCache($row);
+        if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
+          $jsonRetVal = $jsonCache->getJsonString();
         }
       }
-      if (!$jsonRetVal) {
-        $allTexts = new Texts("","txt_id",null,null);
-        $txtIDs = $allTexts->getKeys();
-        $isLoadAll = true;
-      }
-    } else if (isset($_SESSION['ka_lastSearchTxtIDs_'.DBNAME]) &&
-               is_array($_SESSION['ka_lastSearchTxtIDs_'.DBNAME]) &&
-               count($_SESSION['ka_lastSearchTxtIDs_'.DBNAME]) > 0) {
-      $txtIDs = $_SESSION['ka_lastSearchTxtIDs_'.DBNAME];
     }
   }
 
-  if (!$jsonRetVal && $txtIDs && count($txtIDs) > 0) {
+  if (!$jsonRetVal) {
     $imgIDs = array();
     $anoIDs = array();
     $atbIDs = array();
-    if (is_string($txtIDs)){
-      $txtIDs = explode(',',$txtIDs);
+    if ($txtIDs && count($txtIDs) > 0) {
+      if (is_array($txtIDs)){
+        $condition = "txt_id in (".join(',',$txtIDs).")";
+      } else {
+        $condition = "txt_id in ($txtIDs)";
+      }
+      $texts = new Texts($condition,"txt_id",null,null);
+    } else {
+      $texts = new Texts("","txt_id",null,null);
+      $isLoadAll = true;
     }
     $termInfo = getTermInfoForLangCode('en');
     $dictionaryCatalogTypeID = $termInfo['idByTerm_ParentLabel']['dictionary-catalogtype'];//term dependency
 
-    foreach ($txtIDs as $txtID){
+    foreach ($texts as $text){
+      $txtID = $text->getID();
       if ($txtID && !array_key_exists($txtID, $entities['update']['txt'])) {//skip duplicates if any
         $entities['update']['txt'][$txtID] = array('tmdIDs' => array(),
                                                    'ednIDs' => array(),
+                                                   'imageIDs' => array(),
                                                    'blnIDs' => array());
-        $text = new Text($txtID);
         $txtImgIDs = $text->getImageIDs();
         if ($txtImgIDs && count($txtImgIDs) > 0) {
           $imgIDs = array_unique(array_merge($imgIDs,$txtImgIDs));
+          $entities['update']['txt'][$txtID]['imageIDs'] = $txtImgIDs;
         }
       }
-    } //for txtIDs
+    } //for texts
     $txtIDs = array_keys($entities['update']['txt']);
     $strTxtIDs = join(",",$txtIDs);
     //find surfaces for all texts
@@ -342,7 +338,9 @@
         if (count($catIDs)) {
           $entities['update']['edn'][$ednID]['catIDs'] = $catIDs;
         }
-        array_push($entities['update']['txt'][$edition->getTextID()]['ednIDs'],$ednID);
+        if (!in_array($ednID,$entities['update']['txt'][$edition->getTextID()]['ednIDs'])) {
+          array_push($entities['update']['txt'][$edition->getTextID()]['ednIDs'],$ednID);
+        }
         $AnoIDs = $edition->getAnnotationIDs();
         if (count($AnoIDs) > 0) {
           $entities['update']['edn'][$ednID]['annotationIDs'] = $AnoIDs;
@@ -367,9 +365,26 @@
       getRelatedEntities($entityIDs);
     }
     // strip away empty entityType arrays
-    foreach ($entities as $prefix => $entityArray) {
+    foreach ($entities['update']['txt'] as $txtID => $propsArray) {
+      if (count($propsArray['tmdIDs']) == 0) {
+        unset($entities['update']['txt'][$txtID]['tmdIDs']);
+      }
+      if (count($propsArray['imageIDs']) == 0) {
+        unset($entities['update']['txt'][$txtID]['imageIDs']);
+      }
+      if (count($propsArray['blnIDs']) == 0) {
+        unset($entities['update']['txt'][$txtID]['blnIDs']);
+      }
+      if (count($propsArray['ednIDs']) == 0) {
+        unset($entities['update']['txt'][$txtID]['ednIDs']);
+      }
+      if (count($propsArray) == 0) {
+        unset($entities['update']['txt'][$txtID]);
+      }
+    }
+    foreach ($entities['update'] as $prefix => $entityArray) {
       if ( count($entityArray) == 0) {
-        unset($entities[$prefix]);
+        unset($entities['update'][$prefix]);
       }
     }
     $retVal["success"] = false;
@@ -387,17 +402,21 @@
     $jsonRetVal = json_encode($retVal);
     if (count($errors) == 0 && USECACHE && $isLoadAll) {
       if (!$jsonCache) {
-        $jsonCache = new JsonCache();
-        $jsonCache->setLabel('AllTextResources');
-        $jsonCache->setJsonString($jsonRetVal);
-        $jsonCache->setVisibilityIDs(array(6));
-      } else {
-        $jsonCache->clearDirty();
-        $jsonCache->setJsonString($jsonRetVal);
+        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources".getUserDefEditorID()."'");
+        if ($dbMgr->getRowCount() > 0 ) {
+          $row = $dbMgr->fetchResultRow();
+          $jsonCache = new JsonCache($row);
+        } else {
+          $jsonCache = new JsonCache();
+          $jsonCache->setLabel('AllTextResources'.getUserDefEditorID());
+          $jsonCache->setVisibilityIDs(array(6));
+        }
       }
+      $jsonCache->setJsonString($jsonRetVal);
       $jsonCache->save();
     }
-  } else if (!$jsonRetVal){
+  }
+  if (!$jsonRetVal){
     $jsonRetVal = json_encode(array("success"=>true));
   }
 

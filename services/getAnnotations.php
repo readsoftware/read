@@ -66,7 +66,7 @@ if (!$jsonRetVal) {
       $jsonCache->setJsonString($jsonRetVal);
       $jsonCache->setVisibilityIDs(array(6));
     } else {
-      $jsonCache->clearDirty();
+      $jsonCache->clearDirtyBit();
       $jsonCache->setJsonString($jsonRetVal);
     }
     $jsonCache->save();

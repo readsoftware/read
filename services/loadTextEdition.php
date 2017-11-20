@@ -959,7 +959,7 @@
         $jsonCache->save();
       } else if ($jsonCache->isDirty() && ! $jsonCache->isReadonly()) {
         $jsonCache->setJsonString(getChildEntitiesJsonString($sequence->getEntityIDs()));
-        $jsonCache->clearDirty();
+        $jsonCache->clearDirtyBit();
         $jsonCache->save();
       }
       if ($jsonCache->getID() && !$jsonCache->hasError()) {

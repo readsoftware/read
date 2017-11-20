@@ -217,7 +217,7 @@
     * Clear scratch dirty flag
     *
     */
-    public function clearDirty() {
+    public function clearDirtyBit() {
       $this->storeScratchProperty('dirtyBit',0);
     }
 
@@ -321,7 +321,7 @@
     public function setJsonString($json) {
       if($this->_json_string != $json) {
         $this->_dirty = true;
-        $this->clearDirty();
+        $this->clearDirtyBit();
         $this->setDataKeyValuePair("jsc_json_string",$json);
       }
       $this->_json_string = $json;

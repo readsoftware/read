@@ -1393,9 +1393,9 @@ MANAGERS.DataManager.prototype = {
           success: function (data, status, xhr) {
               DEBUG.traceEntry("dataMgr.loadBaseline.SuccessCB","blnID = " + blnID);
               var loadedBlnID;
-              dataMgr.loadingBaseline = 0;
               if (typeof data == 'object' && data.entities && data.entities.update &&
-                    data.entities.update.bln && Object.keys(data.entities.update.bln).length > 0) {
+                    data.entities.update.bln && Object.keys(data.entities.update.bln).length > 0 &&
+                    data.entities.update.bln[blnID]) {
                 dataMgr.updateLocalCache(data, null);
                 //flag baseline as loaded
                 loadedBlnID = Object.keys(data.entities.update.bln)[0];
@@ -1403,6 +1403,7 @@ MANAGERS.DataManager.prototype = {
               } else {//nothing found for blnID so mark it as not available
                 dataMgr.baselineUnavailable[blnID] = 1;
               }
+              dataMgr.loadingBaseline = 0;
               if (data.warnings) {
                 DEBUG.log("warn", "warnings during loadBaseline - " + data.warnings.join(" : "));
               }

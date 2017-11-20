@@ -141,18 +141,20 @@
   $jsonRetVal = "";
   $jsonCache = null;
   $isSearchAll = ($condition === "");
-  if ($condition === "" && !$refresh &&
+  if ($isSearchAll && !$refresh && // if search all text then check cache.
       defined("USECACHE") && USECACHE) {
     // check for cache
     $dbMgr = new DBManager();
     if (!$dbMgr->getError()) {
-      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults'");
+      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults".getUserDefEditorID()."'");
       if ($dbMgr->getRowCount() > 0 ) {
         $row = $dbMgr->fetchResultRow();
         $jsonCache = new JsonCache($row);
         if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
           $jsonRetVal = $jsonCache->getJsonString();
-          $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] = "all";
+//          $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] = "all";
+        } else if (!$jsonCache->hasError()){
+          $jsonRetVal = null;
         }
       }
     }
@@ -242,6 +244,23 @@
       getRelatedEntities($entityIDs);
     }
     // strip away empty entityType arrays
+    foreach ($entities['txt'] as $txtID => $propsArray) {
+      if (count($propsArray['tmdIDs']) == 0) {
+        unset($entities['txt'][$txtID]['tmdIDs']);
+      }
+      if (array_key_exists('imageIDs',$propsArray) && count($propsArray['imageIDs']) == 0) {
+        unset($entities['txt'][$txtID]['imageIDs']);
+      }
+      if (count($propsArray['blnIDs']) == 0) {
+        unset($entities['txt'][$txtID]['blnIDs']);
+      }
+      if (count($propsArray['ednIDs']) == 0) {
+        unset($entities['txt'][$txtID]['ednIDs']);
+      }
+      if (count($propsArray) == 0) {
+        unset($entities['txt'][$txtID]);
+      }
+    }
     foreach ($entities as $prefix => $entityArray) {
       if ( count($entityArray) == 0) {
         unset($entities[$prefix]);
@@ -267,19 +286,22 @@
       $retVal["entities"] = array("insert"=>$entities);//dependencies for this to remain "insert"
     }
     $jsonRetVal = json_encode($retVal);
-    if (count($errors) == 0 && $isSearchAll && USECACHE) {
+    if (count($errors) == 0 && $isSearchAll && USECACHE) {//only cache searchAll
       if (!$jsonCache) {
-        $jsonCache = new JsonCache();
-        $jsonCache->setLabel('SearchAllResults');
-        $jsonCache->setJsonString($jsonRetVal);
-        $jsonCache->setVisibilityIDs(array(6));
-      } else {
-        $jsonCache->clearDirty();
-        $jsonCache->setJsonString($jsonRetVal);
+        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults".getUserDefEditorID()."'");
+        if ($dbMgr->getRowCount() > 0 ) {
+          $row = $dbMgr->fetchResultRow();
+          $jsonCache = new JsonCache($row);
+        } else {
+          $jsonCache = new JsonCache();
+          $jsonCache->setLabel('SearchAllResults'.getUserDefEditorID());
+          $jsonCache->setVisibilityIDs(array(6));
+        }
       }
+      $jsonCache->setJsonString($jsonRetVal);
       $jsonCache->save();
     }
-    $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] = $txtIDs;
+//    $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] = $txtIDs;
   }
   if (array_key_exists("callback",$_REQUEST)) {
     $cb = $_REQUEST['callback'];
