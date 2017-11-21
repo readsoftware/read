@@ -566,8 +566,8 @@ EDITORS.ImageVE.prototype = {
           switch (imgVE.orderSegMode) {
             case 'off':
               //ask user if continue or restart
-              if (!confirm("Press OK to continue numbering from "+ imgVE.ordinalSetInput.val() +
-                           ". Press cancel to remove all nos. and restart numbering at 1.")) {
+              if (!confirm("Press OK to start set Seg. number to "+ imgVE.ordinalSetInput.val() +
+                           "(or set manually). Press Cancel to remove all numbers and set Seg. number to 1.")) {
                 //restart - call service to clear seg ordinals with success update cache, set nextOrdinal = 1 and redraw
                 savedata["cmd"] = "clearOrdinals";
                 savedata["blnID"] = imgVE.blnEntity.id;
@@ -726,7 +726,7 @@ EDITORS.ImageVE.prototype = {
 
     var inputSetOrdinalName = this.id+'setOrd';
     this.ordinalSetInputDiv = $('<div class="toolnumberinputdiv">' +
-                            '<input type="number" class="toolnumberinput" id="'+inputSetOrdinalName +
+                            '<input type="number" min="1" oninput='+"\"this.value=this.value.replace(/[^0-9]/g,'').replace(/^0/,'');\""+' class="toolnumberinput" id="'+inputSetOrdinalName +
                               '" title="Set segment order number" value="'+this.maxOrdinal+'"/>'+
                             '<div class="toolinputlabel">Seg. Number</div>'+
                            '</div>');
@@ -773,6 +773,14 @@ EDITORS.ImageVE.prototype = {
                               baseline.segIDs.push(segID);
                             }
                           }
+                        }
+                      }
+                    } else if (data.entities.removeprop &&
+                                data.entities.removeprop.seg) {
+                      for (segID in data.entities.removeprop.seg) {
+                        polygon = imgVE.polygons[imgVE.polygonLookup['seg'+segID]-1];
+                        if (polygon && polygon.order) {
+                          delete polygon.order;
                         }
                       }
                     }
@@ -1761,6 +1769,14 @@ EDITORS.ImageVE.prototype = {
                                 baseline.segIDs.push(segID);
                               }
                             }
+                          }
+                        }
+                      } else if (data.entities.removeprop &&
+                                  data.entities.removeprop.seg) {
+                        for (segID in data.entities.removeprop.seg) {
+                          polygon = imgVE.polygons[imgVE.polygonLookup['seg'+segID]-1];
+                          if (polygon && polygon.order) {
+                            delete polygon.order;
                           }
                         }
                       }
