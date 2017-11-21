@@ -120,6 +120,7 @@ if (count($errors)) {
   $retVal["errors"] = $errors;
 } else {
   $retVal["success"] = true;
+  invalidateCache('AllTextResources'.getUserDefEditorID());
 }
 if (count($warnings)) {
   $retVal["warnings"] = $warnings;
