@@ -204,10 +204,12 @@ EDITORS.UserVE.prototype = {
                      $('#errorMsg',userVE.signInUI).html(data.error);
                    } else {
                      userVE.username = username;
+                     userVE.dataMgr.username = username;
                      userVE.userData = data;
                      userVE.loadHeader();
                      userVE.loadUserInfoUI();
                      userVE.updateEditInfo();
+                     userVE.layoutMgr.resetLayoutManager();
                      userVE.layoutMgr.closeUserPanel();
                      userVE.layoutMgr.refresh("search");
                    }
@@ -236,11 +238,13 @@ EDITORS.UserVE.prototype = {
         asynch: false,
         success: function (data, status, xhr) {
                    delete userVE.username;
+                   userVE.dataMgr.username = null;
                    delete userVE.userData;
                    delete userVE.userPreference;
                    userVE.loadHeader();
                    userVE.updateEditInfo();
                    userVE.loadSigninUI();
+                   userVE.layoutMgr.resetLayoutManager();
                    userVE.layoutMgr.closeUserPanel();
                    userVE.layoutMgr.refresh("landing");
                  },// end success cb

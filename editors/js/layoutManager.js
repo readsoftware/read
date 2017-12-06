@@ -140,7 +140,9 @@ MANAGERS.LayoutManager.prototype = {
   },
 
   refreshCursor: function(){
-    this.editors.searchVE.updateCursorInfoBar();
+    if (this.editors.searchVE) {
+      this.editors.searchVE.updateCursorInfoBar();
+    }
   },
 
 
@@ -785,7 +787,7 @@ MANAGERS.LayoutManager.prototype = {
       //for each pane editor clean up old layout
       for (paneID in this.editors) {
         //if text Page Editor
-        if (paneID.indexOf('pane') ==0) {
+        if (paneID.indexOf('pane') == 0) {
           //read entID,txtID from editor config
           txtIDs[paneID] = this.editors[paneID].config.txtID;
           entGIDs[paneID] = this.editors[paneID].config.entGID;
@@ -836,6 +838,21 @@ MANAGERS.LayoutManager.prototype = {
     if ($("."+paneID,this.curLayout).length) {//remove children
       $("."+paneID,this.curLayout).children().remove();
       $("."+paneID,this.curLayout).html(this.editPlaceholderHTML);
+    }
+  },
+
+
+/**
+* resetLayoutManager
+*
+* clear all editors and resets all layouts to placeholder
+*/
+
+  resetLayoutManager: function(){
+    for (paneID in this.editors) {
+      if (paneID.indexOf('pane') == 0) {
+        this.clearPane(paneID);
+      }
     }
   },
 

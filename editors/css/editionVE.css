@@ -49,6 +49,8 @@ div.modify .TCM {
 #textEditPage .textDivHeader::-moz-selection{ background: transparent; color:black;}
 #textEditPage div.editContainer > div::selection{ background: transparent; color:black;}
 #textEditPage div.editContainer > div::-moz-selection{ background: transparent; color:black;}
+#textEditPage .boundary::selection{ background: transparent; color:black;}
+#textEditPage .boundary::-moz-selection{ background: transparent; color:black;}
 #textEditPage .linebreak::selection{ background: transparent; color:black;}
 #textEditPage .linebreak::-moz-selection{ background: transparent; color:black;}
 #textEditPage .selected::selection{ background: #2F5597; color:white}

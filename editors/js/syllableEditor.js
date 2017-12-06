@@ -365,12 +365,12 @@ EDITORS.sclEditor.prototype = {
         (this.savingHash || this.savingHash != this.sclID + this.rawSyl + this.curSyl)) {//ignore already in save process
       //save the syllable requires the context (edn, seq-tok-scl, prevGra) and newSyl graphemes.
       this.savingHash = this.sclID + this.rawSyl + this.curSyl;
-      var VSE = this, ednID = this.ednVE.edition.id,
-          ednVE = this.ednVE, lineOrdTag, headerNode, physLineSeqID,
-          tNodes = this.textNodes.map(function(index,elem){return elem.textContent;}),
-          prevTCM = null, cntGuard = 0, savedata={},
+      var VSE = this, ednID = VSE.ednVE.edition.id,
+          ednVE = VSE.ednVE, lineOrdTag, headerNode, physLineSeqID,
+          tNodes = VSE.textNodes.map(function(index,elem){return elem.textContent;}),
+          prevTCM = null, cntGuard = 0, savedata={},prevGrapheme,
           prevNode = $(this.syllable.get(0)).prev(), prevCtxStrings = '', ctxStrings = [], i,
-          contxt = this.syllable.map(function(index,elem){return elem.className.replace(/grpGra/,"")
+          contxt = VSE.syllable.map(function(index,elem){return elem.className.replace(/grpGra/,"")
                                                                                 .replace(/ord\d+/,"")
                                                                                 .replace(/ordL\d+/,"")
                                                                                 .replace(/firstLine/,"")
@@ -388,16 +388,24 @@ EDITORS.sclEditor.prototype = {
       while ( !prevNode.hasClass("grpGra") && !prevNode.hasClass("textDivHeader") && cntGuard++ < 500) {
         prevNode = prevNode.prev();
       }
-      lineOrdTag = this.syllable[0].className.match(/ordL\d+/)[0];
+      lineOrdTag = VSE.syllable[0].className.match(/ordL\d+/)[0];
       headerNode = $('.textDivHeader.'+lineOrdTag,ednVE.contentDiv);
       physLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
       if (prevNode.hasClass("grpGra")) {//find the previous syllable's last grapheme's TCM
-        sclID = prevNode.get(0).className.match(/scl(\d+)/)[1];
-        graIDs = entities['scl'][sclID].graphemeIDs;
-        prevTCM = entities['gra'][graIDs[graIDs.length-1]].txtcrit;
+        sclID = prevNode.get(0).className.match(/scl(\d+)/);
+        if (sclID) {
+          sclID = sclID[1];
+          graIDs = entities['scl'][sclID].graphemeIDs;
+          if (graIDs & graIDs.length) {
+            prevGrapheme = entities['gra'][graIDs[graIDs.length-1]];
+            if (prevGrapheme) {
+              prevTCM = entities['gra'][graIDs[graIDs.length-1]].txtcrit;
+            }
+          }
+        }
       }
       // if not owned then save raw to new.
-      DEBUG.log("gen","in code to calculate save data with origStr "+this.rawSyl+" and curStr "+this.curSyl);
+      DEBUG.log("gen","in code to calculate save data with origStr "+VSE.rawSyl+" and curStr "+VSE.curSyl);
       DEBUG.log("data","before saveSyllable sequence dump\n" + DEBUG.dumpSeqData(ednVE.physSeq.id,0,1,ednVE.lookup.gra));
       DEBUG.log("data","before saveSyllable sequence dump\n" + DEBUG.dumpSeqData(physLineSeqID,0,1,ednVE.lookup.gra));
       DEBUG.log("data","before saveSyllable sequence dump\n" + DEBUG.dumpSeqData(ednVE.textSeq.id,0,1,ednVE.lookup.gra));
@@ -520,7 +528,7 @@ EDITORS.sclEditor.prototype = {
         prevSyllable, nextSyllable;
     DEBUG.log("event","call to move syllable "+ direction +
                 (skipSynch?" skipping synch":"") +
-                " with origStr "+this.rawSyl+" and curStr "+this.curSyl);
+                " with origStr "+VSE.rawSyl+" and curStr "+VSE.curSyl);
     //if no syllable in direction beep otherwise move editor to first character of next or
     //last character of previous syllable according to direction
     if (isPrev && this.ordFirst == 1) {
@@ -529,47 +537,47 @@ EDITORS.sclEditor.prototype = {
         return true;
     }
     if (isPrev) {
-      prevSyllable = $('.grpGra.ord'+( -1 + parseInt(this.ordFirst)),this.contentDiv);
+      prevSyllable = $('.grpGra.ord'+( -1 + parseInt(VSE.ordFirst)),VSE.contentDiv);
       if (!prevSyllable.length) { //might have erased ordinal so try 2
-        prevSyllable = $('.grpGra.ord'+(-2 + parseInt(this.ordFirst)),this.contentDiv);
+        prevSyllable = $('.grpGra.ord'+(-2 + parseInt(VSE.ordFirst)),VSE.contentDiv);
       }
       if (prevSyllable && prevSyllable.hasClass("grpGra")) { // found syllable
-        if (this.curSyl != this.rawSyl && this.dirty) {
-          this.save( function () {
+        if (VSE.curSyl != VSE.rawSyl && VSE.dirty) {
+          VSE.save( function () {
                       VSE.init(prevSyllable,"last",false);
                       });
         } else {
           VSE.init(prevSyllable,"last",skipSynch);
         }
-      } else if (this.curSyl != this.rawSyl && this.dirty) {
-          this.save( function () {
+      } else if (VSE.curSyl != VSE.rawSyl && VSE.dirty) {
+          VSE.save( function () {
                       VSE.init(VSE.syllable,"last",false);
                       });
       } else {
-        DEBUG.log("err","error handling move prev no syllable found before '"+this.curSyl+"'");
+        DEBUG.log("err","error handling move prev no syllable found before '"+VSE.curSyl+"'");
       }
     } else {
-      nextSyllable = $('.grpGra.ord'+(1 + parseInt(this.ordLast)),this.contentDiv);
+      nextSyllable = $('.grpGra.ord'+(1 + parseInt(VSE.ordLast)),VSE.contentDiv);
       if (!nextSyllable.length) { //might have erased ordinal so try 2
-        nextSyllable = $('.grpGra.ord'+(2 + parseInt(this.ordLast)),this.contentDiv);
+        nextSyllable = $('.grpGra.ord'+(2 + parseInt(VSE.ordLast)),VSE.contentDiv);
       }
       if (nextSyllable && nextSyllable.hasClass("grpGra")) { // found syllable
-        if (this.curSyl != this.rawSyl && this.dirty && !this.invalid) {
-          this.save( function () {
+        if (this.curSyl != VSE.rawSyl && VSE.dirty && !VSE.invalid) {
+          VSE.save( function () {
                       VSE.init(nextSyllable,"first",false);
                       });
         } else {
           VSE.init(nextSyllable,"first",skipSynch);
         }
-      } else if (this.curSyl != this.rawSyl && this.dirty) {
-          this.save( function () {
+      } else if (VSE.curSyl != VSE.rawSyl && VSE.dirty) {
+          this.VSE( function () {
                       VSE.init(VSE.syllable,"endOfSyllable",false);
                       });
-      } else if (this.ednVE.autoInsert) {
+      } else if (VSE.ednVE.autoInsert) {
         this.insertNew();
       } else {
         UTILITY.beep();
-        DEBUG.log("err","error handling move next no syllable found after '"+this.curSyl+"'");
+        DEBUG.log("err","error handling move next no syllable found after '"+VSE.curSyl+"'");
       }
     }
     return true;

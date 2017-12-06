@@ -727,7 +727,7 @@ EDITORS.ImageVE.prototype = {
     var inputSetOrdinalName = this.id+'setOrd';
     this.ordinalSetInputDiv = $('<div class="toolnumberinputdiv">' +
                             '<input type="number" min="1" oninput='+"\"this.value=this.value.replace(/[^0-9]/g,'').replace(/^0/,'');\""+' class="toolnumberinput" id="'+inputSetOrdinalName +
-                              '" title="Set segment order number" value="'+this.maxOrdinal+'"/>'+
+                              '" title="Set segment order number" value="'+(this.maxOrdinal?this.maxOrdinal:"")+'"/>'+
                             '<div class="toolinputlabel">Seg. Number</div>'+
                            '</div>');
     this.ordinalSetInput = $('#'+inputSetOrdinalName,this.ordinalSetInputDiv);
