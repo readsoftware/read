@@ -154,6 +154,8 @@ if (!$data) {
           $sclGIDs = array_merge($sclGIDs,findSclGIDsFromPattern($pattern,$linesOfSclGIDs));
         }
         // Create linkSclIDs array
+      } else if (count($orderedSclGIDs) > 0) {
+        $sclGIDs = $orderedSclGIDs;
       }
       $sclIDs = preg_replace("/scl\:/","",$sclGIDs);
     }
@@ -209,23 +211,23 @@ if (!$data) {
     //currently only deal with one baseline at a time.
     //create query for ordered set of segments
     // get an ordered list of segment IDs for the base lines supplied or for the entire database.
-    $query = "select seg_id, seg_baseline_ids[1] as blnID, substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int as ord".
+    $query = "select seg_id, seg_baseline_ids[1] as blnID, substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int as ord".
              " from segment".
-             " where substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int is not null and seg_image_pos is not null".
+             " where substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int is not null and seg_image_pos is not null".
              " and seg_baseline_ids[1] in (".join(',',$blnIDs).") ";
     if ($startSegOrd || $endSegOrd) {
       if ($startSegOrd && is_numeric($startSegOrd)) {
         $startSegOrd = intval($startSegOrd);
-        $query .= " and substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int >= $startSegOrd";
+        $query .= " and substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int >= $startSegOrd";
       }
       if ($endSegOrd && is_numeric($endSegOrd)) {
         $endSegOrd = intval($endSegOrd);
-        $query .= " and substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int <= $endSegOrd";
+        $query .= " and substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int <= $endSegOrd";
       }
     } else if (count($segIDs)) {
       $query .= " and seg_id in (".join(",",$segIDs).")";
     }
-    $query .= " order by blnID,ord";
+    $query .= " and not seg_owner_id = 1 order by blnID,ord";
     $log .= "query = '$query'\n";
     $dbMgr->query($query);
     $ordSegIDs = array();
@@ -239,6 +241,7 @@ if (!$data) {
     }
   }
   $segCnt = count($ordSegIDs);
+  $log .= "segCnt = '$segCnt'\n";
   // verify syllable ownership
   $orderedSyllables = array();;
   foreach ($sclIDs as $sclID) {
@@ -246,6 +249,23 @@ if (!$data) {
     if ($syllable->isReadonly()) {
       array_push($errors,"link to readonly syllables is not allowed");
       break;
+    }
+    $graphemes = $syllable->getGraphemes(true);
+    $cntGra = $graphemes->getCount();
+    if (!$graphemes || $cntGra == 0){
+      array_push($errors,"attempt to link to syllable $sclID and unable to access graphemes, aborting");
+      break;
+    }
+    $cntTcmA = 0;
+    //check for scribal addition of entire syllable
+    foreach ($graphemes as $grapheme){
+      if ($grapheme->getTextCriticalMark() == "A") {
+        $cntTcmA++;
+      }
+    }
+    if ($cntTcmA && $cntTcmA == $cntGra) {// scribal addition of aksara
+      array_push($warnings,"syllable $sclID is scribal insertion, skipping");
+      continue;
     }
     array_push($orderedSyllables,$syllable);
     if (--$segCnt == 0) {//only check and accumulate those to be matched with a segment
