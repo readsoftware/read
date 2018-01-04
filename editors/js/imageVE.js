@@ -298,17 +298,24 @@ EDITORS.ImageVE.prototype = {
     imgVE.clearPath();
     var i,
         savedata = {seg:[]},
-        polygon,
+        polygon, segData,
         cnt = imgVE.newPolyIndices.length;
     if (cnt && imgVE.blnEntity) { //save segments to baseline
-      var blnID = imgVE.blnEntity.id;
+      var blnID = imgVE.blnEntity.id, setOrdVal = parseInt(imgVE.ordinalSetInput.val());
       //for each new or dirty segment polygon
       for(i=0; i<cnt; i++) {
         polygon = imgVE.polygons[imgVE.newPolyIndices[i]-1];
         //build combined data structure calculate url cropped
-        savedata.seg.push( {seg_id:polygon.label,seg_baseline_ids:'{'+blnID+'}',//warning seg_id assumes new##  not a seg##  id
-                            seg_image_pos:'{"'+JSON.stringify(polygon.polygon).replace(/\[/g,"(").replace(/\]/g,")")+'"}',
-                            seg_layer:1,seg_visibility_ids:"{3}"});
+        segData = {seg_id:polygon.label,seg_baseline_ids:'{'+blnID+'}',//warning seg_id assumes new##  not a seg##  id
+                   seg_image_pos:'{"'+JSON.stringify(polygon.polygon).replace(/\[/g,"(").replace(/\]/g,")")+'"}',
+                   seg_layer:1,seg_visibility_ids:"{3}"};
+        if ( setOrdVal ) {
+          scratchObj = {"blnOrdinal": "" + setOrdVal};
+          segData["seg_scratch"] = JSON.stringify(scratchObj);
+          setOrdVal++;
+          imgVE.ordinalSetInput.val(setOrdVal);
+        }
+        savedata.seg.push( segData);
       }
       //reset new indices
       imgVE.newPolyIndices = [];
@@ -326,10 +333,11 @@ EDITORS.ImageVE.prototype = {
                 if (data['segment'].columns &&
                     data['segment'].records[0] &&
                     data['segment'].columns.indexOf('seg_id') > -1) {
-                  var record, segID, segIDToTemp = {}, tempID, polygonObj, blnIDs,
+                  var record, segID, segIDToTemp = {}, tempID, polygonObj, blnIDs, scratch, blnOrd,
                       pkeyIndex = data['segment'].columns.indexOf('seg_id'),
                       blnIdsIndex = data['segment'].columns.indexOf('seg_baseline_ids'),
                       imgPosIndex = data['segment'].columns.indexOf('seg_image_pos'),
+                      scratchIndex = data['segment'].columns.indexOf('seg_scratch'),
                       layerIndex = data['segment'].columns.indexOf('seg_layer');
                   cnt = data['segment'].records.length;
                   for (tempID in data['segment'].tempIDMap) {
@@ -339,6 +347,10 @@ EDITORS.ImageVE.prototype = {
                   for(i=0; i<cnt; i++) {
                     record = data['segment'].records[i];
                     segID = record[pkeyIndex];
+                    scratch = JSON.parse(record[scratchIndex]);
+                    if (scratch["blnOrdinal"]) {
+                      blnOrd = scratch["blnOrdinal"];
+                    }
                     segLabel = 'seg'+segID;
                     // save new info to imgVE.dataMgr.entities[seg][id]
                     if (imgVE.dataMgr.entities && !imgVE.dataMgr.entities.seg) {
@@ -349,8 +361,11 @@ EDITORS.ImageVE.prototype = {
                                               center:UTILITY.getCentroid(record[imgPosIndex]),
                                               layer: record[layerIndex],
                                               surfaceID: imgVE.blnEntity.surfaceID,
-                                              id:segID,
+                                              id:segID
                                               };
+                    if (blnOrd) {
+                      imgVE.dataMgr.entities['seg'][segID]["ordinal"] = blnOrd;
+                    }
                     //update baseline entity
                     blnIDs = record[blnIdsIndex];
                     if (blnIDs.length) {
@@ -368,6 +383,9 @@ EDITORS.ImageVE.prototype = {
                     imgVE.polygons[imgVE.polygonLookup[segLabel]-1].label = segLabel;
                     imgVE.polygons[imgVE.polygonLookup[segLabel]-1].color = "red";
                     imgVE.polygons[imgVE.polygonLookup[segLabel]-1].hidden = true;
+                    if (blnOrd) {
+                      imgVE.polygons[imgVE.polygonLookup[segLabel]-1].order = blnOrd;
+                    }
                     imgVE.selectedPolygons[segLabel] = 1;
                   }
                   if (imgVE.selectedPolygons && Object.keys(imgVE.selectedPolygons).length == 1) {
