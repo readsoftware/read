@@ -151,12 +151,16 @@
         if ($lemmaPos) {
           $isVerb = ($lemmaPos == 'v.');
         }
-        $lemmaSpos = $lemma->getSubpartOfSpeech();
+        $lemmaSposID = $lemma->getSubpartOfSpeech();
+        $lemmaSpos = $lemmaSposID && array_key_exists($lemmaSposID,$termLookup) ? $termLookup[$lemmaSposID] : '';
+        if ($lemmaSpos  == "common adj.") {//warning term dependency
+          $lemmaSpos = "adj.";
+        }
         $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
         if ($lemmaGender) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
           $rtf .= $space.$eol.$posStyle.$termLookup[$lemmaGender].($lemmaCF[2]==2?'(?)':'').$endStyle.$eol;
         } else if ($lemmaSpos) {
-          $rtf .= $space.$eol.$posStyle.$termLookup[$lemmaSpos].($lemmaCF[1]==2?'(?)':'').$endStyle.$eol;
+          $rtf .= $space.$eol.$posStyle.$lemmaSpos.($lemmaCF[1]==2?'(?)':'').$endStyle.$eol;
         }else if ($lemmaPos) {
           $rtf .= $space.$eol.$posStyle.$lemmaPos.($lemmaCF[0]==2?'(?)':'').$endStyle.$eol;
         }
@@ -212,9 +216,18 @@
               $infString = '';
               if ($isVerb) { //term dependency
                 if ($vmood) {
-                  $vtensemood = $termLookup[$vmood].($ingCF[2]==2?'(?)':'');
+                  $vmood = $termLookup[$vmood];
+                }
+                if ($vtense) {
+                  $vtense = $termLookup[$vtense];
+                  if (strtolower($vtense) == "pres." && strtolower($vmood) == "indic.") {
+                    $vmood = null;
+                  }
+                }
+                if ($vmood) {
+                  $vtensemood = $vmood.($ingCF[2]==2?'(?)':'');
                 } else if ($vtense) {
-                  $vtensemood = $termLookup[$vtense].($ingCF[0]==2?'(?)':'');
+                  $vtensemood = $vtense.($ingCF[0]==2?'(?)':'');
                 } else {
                   $vtensemood = '?';
                 }
