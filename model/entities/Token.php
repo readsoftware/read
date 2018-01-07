@@ -184,7 +184,7 @@
             $grapheme->calculateSort();
           }
           $graSort = $grapheme->getSortCode();
-          if ($decomp && ($i === 0 || $i == $last) && $grapheme->getType()==$typeVowel) {// handle sandhi vowels
+          if ($decomp && ($i === 0 || $i == $last) ) {// handle sandhi vowels
             $sandhi = explode(":",$decomp);
             $str = $i?$sandhi[0]:$sandhi[2];
 //            $str = $i?$sandhi[0]:"ʔ".$sandhi[1];

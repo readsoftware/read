@@ -121,8 +121,11 @@ if (!$data) {
   if ( isset($data['decomp'])) {//get decomposition string
     $decomp = $data['decomp'];
     if (strlen($decomp)) {
-      $matchCnt = preg_match("/([aāiīïüuūeēoō’l̥̄rṛṝ]+)(?:([\s-‐])([aāiīïüuūeēoō’l̥̄rṛṝ]+))?/",$decomp,$decompParts);
+      $matchCnt = preg_match("/([-‐]|[aāiīïüuūeēoō’l̥̄rṛṝ]+)(?:([\s-‐])([aāiīïüuūeēoō’l̥̄rṛṝ]+))?/",$decomp,$decompParts);
       if ($matchCnt == 1 && $decomp == array_shift($decompParts)) {
+        if (count($decompParts) == 1) {
+          $decompParts = array("",$decompParts[0],"");
+        }
         $decomp = join(":",$decompParts);// create decomp sting of form tok1endvowel:sep:tok2startvowel
       } else {
         array_push($errors,"invalid parameter to save sandhi ");

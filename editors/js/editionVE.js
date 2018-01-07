@@ -1686,14 +1686,6 @@ mergeLine: function (direction,cbError) {
       if (DEBUG.healthLogOn) {
         createcompounddata['hlthLog'] = 1;
       }
-      if (bndryVal < 0) {//at beginning of token get prev compound or token to combine with
-        //if compound and token is not first or if token at beginning of edition then beep
-        //else find prev entity and add to data
-      }
-      if (bndryVal > 0) {//at end of token get next compound or token to combine with
-        //if compound and token is not last or if token at end of edition then beep
-        //else find prev entity and add to data
-      }
       DEBUG.log("gen","call to create Compound for tokID "+ sclEd.getTokenID() +
                   " at position " + createcompounddata.insPos +
                   " in text division sequence id " + createcompounddata.refDivSeqID +
@@ -3976,7 +3968,7 @@ mergeLine: function (direction,cbError) {
             e.stopImmediatePropagation();
             return false;
           }
-        }
+        }//end compound separator
         if (((e.keyCode || e.which) == 32 && e.key == ' ') || //since some special key combinations pass keycode == 32 which are not a space
             !sclEditor.preprocessKey(key,(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e)) {
           e.stopImmediatePropagation();
