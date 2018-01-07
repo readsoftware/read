@@ -810,17 +810,19 @@ class Parser {
               $replaceCmd = mb_strstr(mb_substr($script,$i+1),"~",true);
               //todo write test for posSep
               $posSep = mb_strpos($replaceCmd,",");
+              error_log("replacement = '$replaceCmd' and posSep = $posSep");
               $matchGrapheme = mb_substr($replaceCmd,0,$posSep);
               $replacementString = mb_substr($replaceCmd,$posSep+1);
+              error_log("matchGrapheme = $matchGrapheme and replacementString = '$replacementString'");
               if (@$matchGrapheme != $prevGrapheme) {//check marker is the same as previous grapheme
                 array_push($this->_errors,"replacement sequence at character $i of $ckn.$lineMask has marker grapheme $matchGrapheme that doesn't match previous grapheme $prevGrapheme"." cfg line # $cfgLnCnt");
               }
               //parse grapheme decomposition
-              if ($posSep = mb_strpos($replacementString," ")){
+              if (($posSep = mb_strpos($replacementString," ")) !== false){
                 $isCompSep = false;
-              } else if ($posSep = mb_strpos($replacementString,"-")){
+              } else if (($posSep = mb_strpos($replacementString,"-")) !== false){
                 $isCompSep = true;
-              } else if ($posSep = mb_strpos($replacementString,"‐")){
+              } else if (($posSep = mb_strpos($replacementString,"‐")) !== false){
                 $isCompSep = true;
               }else{
                 array_push($this->_errors,"sandhi replacement sequence at character $i of $ckn.$lineMask has no valid separator"." cfg line # $cfgLnCnt");
@@ -1085,7 +1087,7 @@ class Parser {
                     array_push($this->_errors,"divison sequence - compound marker (line $lineMask character $i), last entity $lastentityGID does not match tok:$tokTempID"." cfg line # $cfgLnCnt");
                   }
                 }
-                if (@$curQuoteSeqIndex) { //there is a line seq so remove the previous token and add compound id
+                if (@$curQuoteSeqIndex) { //there is a quote seq so remove the previous token and add compound id
                   $entityIDs = $curQuoteSequence->getEntityIDs();
                   $lastentityGID = array_pop($entityIDs);
                   if ((!@$lastentityGID && $cmpTempID) || $lastentityGID == "tok:$tokTempID"){//we can replace the token with compound globalID
@@ -1117,14 +1119,14 @@ class Parser {
                 }
               }
               $graIndex = null;
-              $sclIndex = null;
-              $segIndex = null;
+//              $sclIndex = null;
+//              $segIndex = null;
               $tokIndex = null;
               $tokTempID = null;
               $graTempID = null;
-              $segTempID = null;
-              $sclTempID = null;
-              $segState = "S";//signal new syllable
+//              $segTempID = null;
+//              $sclTempID = null;
+//              $segState = "S";//signal new syllable
               $i++;
               $atCompoundSeparator = true; // use when changing lines to all compound to span lines.
               break;
@@ -1501,20 +1503,27 @@ class Parser {
                     $tokTempID = 0 - $tokIndex;
                     $this->_tokens[$tokIndex-1]->storeScratchProperty("nonce","tok_".$tokTempID.$parseGUID);
                     $this->_tokens[$tokIndex-1]->storeScratchProperty("cknLine",$ckn.".$lineMask");
-                    if (@$curStructDivSeqIndex && !@$cmpIndex) { //there is a structural division marker and not in compound so add token to sequence
-                        $entityIDs = $this->_sequences[$curStructDivSeqIndex-1]->getEntityIDs();
-                        array_push($entityIDs,"tok:".$tokTempID);
-                        $this->_sequences[$curStructDivSeqIndex-1]->setEntityIDs($entityIDs);
-                    }
-                    if (@$curQuoteSeqIndex && !@$cmpIndex) { //there is a quote sequence and not in compound so add token to sequence
-                        $entityIDs = $curQuoteSequence->getEntityIDs();
-                        array_push($entityIDs,"tok:".$tokTempID);
-                        $curQuoteSequence->setEntityIDs($entityIDs);
-                    }
-                    if (@$tokLineSeqIndex && !@$cmpIndex) { //there is a tokenisation sequence and not in compound so add token to sequence
-                        $entityIDs = $curTokLineSequence->getEntityIDs();
-                        array_push($entityIDs,"tok:".$tokTempID);
-                        $curTokLineSequence->setEntityIDs($entityIDs);
+                    //if compound update with new token
+                    if (@$cmpIndex){
+                      $components = $this->_compounds[$cmpIndex-1]->getComponentIDs();
+                      array_push($components,"tok:".$tokTempID);
+                      $this->_compounds[$cmpIndex-1]->setComponentIDs($components);
+                    }else if (@$tokLineSeqIndex || @$curStructDivSeqIndex || $curQuoteSeqIndex) { //there is a division marker and not in compound so add token to sequence
+                      if (@$curStructDivSeqIndex) { //there is a structural division marker and not in compound so add token to sequence
+                          $entityIDs = $this->_sequences[$curStructDivSeqIndex-1]->getEntityIDs();
+                          array_push($entityIDs,"tok:".$tokTempID);
+                          $this->_sequences[$curStructDivSeqIndex-1]->setEntityIDs($entityIDs);
+                      }
+                      if (@$curQuoteSeqIndex) { //there is a quote sequence and not in compound so add token to sequence
+                          $entityIDs = $curQuoteSequence->getEntityIDs();
+                          array_push($entityIDs,"tok:".$tokTempID);
+                          $curQuoteSequence->setEntityIDs($entityIDs);
+                      }
+                      if (@$tokLineSeqIndex) { //there is a tokenisation sequence and not in compound so add token to sequence
+                          $entityIDs = $curTokLineSequence->getEntityIDs();
+                          array_push($entityIDs,"tok:".$tokTempID);
+                          $curTokLineSequence->setEntityIDs($entityIDs);
+                      }
                     }
                   }else{// update token with new grapheme
                     $graphemes = $this->_tokens[$tokIndex-1]->getGraphemeIDs();
