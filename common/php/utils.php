@@ -1373,6 +1373,18 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
 }
 
 /**
+* invalidate cache for readonly users by edition id
+*
+* @param int $ednID Sequence id
+* @param int $usrID UserGroup id
+*/
+
+function invalidateCachedEdn($ednID = null,$usrID = null) { // setDirty flag
+  $cacheKey = "edn".($ednID?$ednID:'%')."userID".($usrID?$usrID:'%');
+  invalidateCache($cacheKey);
+}
+
+/**
 * invalidate cache by user id and sequence id
 *
 * @param int $seqID Sequence id
@@ -1381,16 +1393,7 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
 
 function invalidateCachedSeq($seqID = null,$usrID = null) { // setDirty flag
   $cacheKey = "seq".($seqID?$seqID:'%')."userID".($usrID?$usrID:'%');
-  $dbMgr = new DBManager();
-  $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label like '$cacheKey'");
-//  error_log("invalidate $cacheKey cache entry");
-  while ($row = $dbMgr->fetchResultRow()) {
-    $jsonCache = new JsonCache($row);
-    if (!$jsonCache->hasError() && $jsonCache->getID()) {
-      $jsonCache->setDirty();
-      $jsonCache->save();
-    }
-  }
+  invalidateCache($cacheKey);
 }
 
 /**
@@ -1406,7 +1409,7 @@ function invalidateCache($cacheKey = null) { // setDirty flag of matching entrie
   while ($row = $dbMgr->fetchResultRow()) {
     $jsonCache = new JsonCache($row);
     if (!$jsonCache->hasError() && $jsonCache->getID()) {
-      $jsonCache->setDirty();
+      $jsonCache->setDirtyBit();
       $jsonCache->save();
     }
   }

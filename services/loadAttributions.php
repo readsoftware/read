@@ -132,7 +132,7 @@
       $jsonCache = new JsonCache();
       $jsonCache->setLabel('Attributions');
       $jsonCache->setJsonString($jsonRetVal);
-      $jsonCache->setVisibilityIDs(array(6));
+      $jsonCache->setVisibilityIDs(array(2,6));
     } else {
       $jsonCache->clearDirtyBit();
       $jsonCache->setJsonString($jsonRetVal);

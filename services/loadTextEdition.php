@@ -129,7 +129,7 @@
                                '"txtID":"'.$edition->getTextID().'",'.
                                '"seqIDs":["'.join('","',$edition->getSequenceIDs()).'"]';
     $publicOnly = $edition->isPublic();
-    $saveToCache = $edition->isReadonly();
+//    $saveToCache = $edition->isReadonly();
     $AnoIDs = $edition->getAnnotationIDs();
     if ($AnoIDs && count($AnoIDs) > 0) {
       $retString .= ',"annotationIDs":["'.join('","',$AnoIDs).'"]';
@@ -219,7 +219,7 @@
                                             '"value":"'.$sequence->getLabel().'",'.
                                             '"readonly":'.($sequence->isReadonly()?'true':'false').','.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
-                                            '"children":'.getSeqData($sequence,$edition->getOwnerID()).','.
+                                            '"children":'.getSeqData($sequence,($publicOnly?'2","6':$edition->getOwnerID())).','.
                                             '"entityIDs":['.(count($seqEntityIDs)?'"'.join('","',$seqEntityIDs).'"':'').']';
               $superscript = $sequence->getSuperScript();
               if ($superscript && count($superscript) > 0) {
@@ -268,7 +268,7 @@
                                             '"value":"'.$sequence->getLabel().'",'.
                                             '"readonly":'.($sequence->isReadonly()?'true':'false').','.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
-                                            '"children":'.getSeqData($sequence,$edition->getOwnerID()).','.
+                                            '"children":'.getSeqData($sequence,($publicOnly?'2","6':$edition->getOwnerID())).','.
                                             '"entityIDs":["'.((isset($seqEntityIDs) && count($seqEntityIDs)>0)?join('","',$seqEntityIDs):'').'"]';
               $superscript = $sequence->getSuperScript();
               if ($superscript && count($superscript) > 0) {
@@ -309,7 +309,7 @@
                                             '"value":"'.$sequence->getLabel().'",'.
                                             '"readonly":'.($sequence->isReadonly()?'true':'false').','.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
-                                            '"children":'.getSeqData($sequence,$edition->getOwnerID()).
+                                            '"children":'.getSeqData($sequence,($publicOnly?'2","6':$edition->getOwnerID())).
                                             (count(@$seqEntityIDs)?',"entityIDs":["'.join('","',$seqEntityIDs).'"]':'');
               $superscript = $sequence->getSuperScript();
               if ($superscript && count($superscript) > 0) {
@@ -948,8 +948,9 @@
   }
 
   function getSeqData($sequence,$userID = null) {  // check for cache
+    global $publicOnly;
     if(USECACHE) {
-      $cacheKey = "seq".$sequence->getID()."userID".getUserID();
+      $cacheKey = "seq".$sequence->getID()."userID".($publicOnly?"2a6":getUserID());
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->hasError() || !$jsonCache->getID()) {
         $jsonCache = new JsonCache();
@@ -957,7 +958,7 @@
         $jsonCache->setJsonString(getChildEntitiesJsonString($sequence->getEntityIDs()));
         $jsonCache->setVisibilityIDs('{"'.($userID?$userID:'3').'"}');
         $jsonCache->save();
-      } else if ($jsonCache->isDirty() && ! $jsonCache->isReadonly()) {
+      } else if ($jsonCache->isDirty() && !$jsonCache->isReadonly()) {
         $jsonCache->setJsonString(getChildEntitiesJsonString($sequence->getEntityIDs()));
         $jsonCache->clearDirtyBit();
         $jsonCache->save();
@@ -975,7 +976,7 @@
   function saveCachedEdition($ednID, $jsonString) {  // save json string to cache
     global $publicOnly;
     if(USECACHE) {
-      $cacheKey = "edn".$ednID.($publicOnly?"userID2a6":"userID".getUserID());
+      $cacheKey = "edn".$ednID."userID".($publicOnly?"2a6":getUserID());
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->hasError() || !$jsonCache->getID()) {
         $jsonCache = new JsonCache();
@@ -988,14 +989,15 @@
   }
 
   function getCachedEdition($ednID) {  // check for cached edition for user or public
+    global $publicOnly;
     if(USECACHE) {
-      $cacheKey = "edn".$ednID."userID".getUserID();
+      $cacheKey = "edn".$ednID."userID".($publicOnly?"2a6":getUserID());
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->hasError() || !$jsonCache->getID()) {
         $cacheKey = "edn".$ednID."userID2a6";//try public edition
         $jsonCache = new JsonCache($cacheKey);
       }
-      if ($jsonCache->getID() && !$jsonCache->hasError()) {
+      if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty()) {
         return $jsonCache->getJsonString();
       } else {
         return "";

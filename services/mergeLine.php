@@ -201,6 +201,7 @@
         array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
       }else{
         addUpdateEntityReturnData('edn',$edition->getID(),'seqIDs',$edition->getSequenceIDs());
+        invalidateCachedEdn($edition->getID());
       }
     }
   }

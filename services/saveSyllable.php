@@ -885,9 +885,9 @@ if (count($errors) == 0) {
               //changed components on a cached sequence so invalidate cache to recalc on next refresh
               addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
             }
+            invalidateCachedSeq($textDivSeq->getID());
           }
         }
-        invalidateCachedSeq($textDivSeq->getID());
         // update Text (Text Division Container) Sequence if needed
         if (count($errors) == 0 && $oldTxtDivSeqGID && $oldTxtDivSeqGID != $newTxtDivSeqGID){//cloned so update container
           //clone text sequence if not owned
@@ -935,6 +935,7 @@ if (count($errors) == 0) {
             $edition->setSequenceIDs($edSeqIds);
           }
           $edition->save();
+          invalidateCachedEdn($edition->getID());
           if ($edition->hasError()) {
             array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
           }else{

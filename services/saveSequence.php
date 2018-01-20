@@ -288,6 +288,7 @@ if (count($errors) == 0 && $edition) {
   //touch edition for synch code
   $edition->storeScratchProperty("lastModified",$edition->getModified());
   $edition->save();
+  invalidateCachedEdn($edition->getID());
 }
 
 $retVal["success"] = false;
@@ -321,7 +322,7 @@ function invalidateParentCache($seqGID,$ednSeqIDs) {
   $containers = new Sequences("'$seqGID' = ANY(seq_entity_ids)",null,null,null);
   if ($containers && count($containers) > 0){
     foreach($containers as $seqContainer){
-      invalidateCachedSeq($seqContainer->getID());
+      ($seqContainer->getID());
     }
   }
 }

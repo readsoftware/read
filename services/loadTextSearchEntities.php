@@ -146,7 +146,9 @@
     // check for cache
     $dbMgr = new DBManager();
     if (!$dbMgr->getError()) {
-      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults".getUserDefEditorID()."'");
+      $userDefID = getUserDefEditorID();
+      $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults$cacheUserLabel'");
       if ($dbMgr->getRowCount() > 0 ) {
         $row = $dbMgr->fetchResultRow();
         $jsonCache = new JsonCache($row);
@@ -288,17 +290,20 @@
     $jsonRetVal = json_encode($retVal);
     if (count($errors) == 0 && $isSearchAll && USECACHE) {//only cache searchAll
       if (!$jsonCache) {
-        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults".getUserDefEditorID()."'");
+        $userDefID = getUserDefEditorID();
+        $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults$cacheUserLabel'");
         if ($dbMgr->getRowCount() > 0 ) {
           $row = $dbMgr->fetchResultRow();
           $jsonCache = new JsonCache($row);
         } else {
           $jsonCache = new JsonCache();
-          $jsonCache->setLabel('SearchAllResults'.getUserDefEditorID());
-          $jsonCache->setVisibilityIDs(array(6));
+          $jsonCache->setLabel('SearchAllResults'.$cacheUserLabel);
+          $jsonCache->setVisibilityIDs(array(2,6));
         }
       }
       $jsonCache->setJsonString($jsonRetVal);
+      $jsonCache->clearDirtyBit();
       $jsonCache->save();
     }
 //    $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] = $txtIDs;

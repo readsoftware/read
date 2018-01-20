@@ -104,7 +104,9 @@
     // check for cache
     $dbMgr = new DBManager();
     if (!$dbMgr->getError()) {
-      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources".getUserDefEditorID()."'");
+      $userDefID = getUserDefEditorID();
+      $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
       if ($dbMgr->getRowCount() > 0 ) {
         $row = $dbMgr->fetchResultRow();
         $jsonCache = new JsonCache($row);
@@ -402,17 +404,20 @@
     $jsonRetVal = json_encode($retVal);
     if (count($errors) == 0 && USECACHE && $isLoadAll) {
       if (!$jsonCache) {
-        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources".getUserDefEditorID()."'");
+        $userDefID = getUserDefEditorID();
+        $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
         if ($dbMgr->getRowCount() > 0 ) {
           $row = $dbMgr->fetchResultRow();
           $jsonCache = new JsonCache($row);
         } else {
           $jsonCache = new JsonCache();
-          $jsonCache->setLabel('AllTextResources'.getUserDefEditorID());
-          $jsonCache->setVisibilityIDs(array(6));
+          $jsonCache->setLabel('AllTextResources'.$cacheUserLabel);
+          $jsonCache->setVisibilityIDs(array(2,6));
         }
       }
       $jsonCache->setJsonString($jsonRetVal);
+      $jsonCache->clearDirtyBit();
       $jsonCache->save();
     }
   }

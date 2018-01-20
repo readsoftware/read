@@ -209,7 +209,7 @@
     * Set scratch dirty flag
     *
     */
-    public function setDirty() {
+    public function setDirtyBit() {
       $this->storeScratchProperty('dirtyBit',1);
     }
 
