@@ -1706,8 +1706,8 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
   $wrdTag2LocLabel = array();
   $sclTagToLabel = array();
   $ednLblBySeqTag = array();
-  $seqTag2EdnTag = array();
   foreach ($editionIDs as $ednID) {
+    //check for cached json mapping for this edition
     $txtSeqGIDs = array();
     $physSeqGIDs = array();
     $ednLabel = '';
@@ -1718,7 +1718,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
       if ($text && !$text->hasError()) {
         $ednLabel = $text->getRef();
         if (!$ednLabel) {
-          //          $ednLabel='t'.$text->getID();
+                    $ednLabel='t'.$text->getID();
         }
       }
       $ednSequences = $edition->getSequences(true);
@@ -1742,7 +1742,6 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
           continue;
         }
         $ednLblBySeqTag[$tag] = $ednLabel;//todo: this overwrites the edition, ?? do we need to associate a line sequence with a primary edition for the reuse case??
-        $seqTag2EdnTag[$tag] = $ednTag;
       }
     }
     if ($physSeqGIDs && count($physSeqGIDs)) {// capture each physical line sequence once
@@ -1764,106 +1763,107 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
         }
       }
     }
-    if ($ednLblBySeqTag && count($ednLblBySeqTag) > 0) {
-      //for each token sequence
-      foreach ($ednLblBySeqTag as $ednSeqTag => $ednLabel) {
-        if ($ednLabel) {
-          $ednLabel .= ":";
-        }
-        $ednTag = $seqTag2EdnTag[$ednSeqTag];
-        $sequence = new Sequence(substr($ednSeqTag,3));
-        $defLabel = $ednLabel . ($sequence->getSuperScript()?$sequence->getSuperScript():($sequence->getLabel()?$sequence->getLabel():$ednSeqTag));
-        $words = $sequence->getEntities(true);
-        if ($words->getCount() == 0) {
-          error_log("no words for sequence $ednSeqTag having edition label $ednLabel");
+  }
+  if ($ednLblBySeqTag && count($ednLblBySeqTag) > 0) {
+    //for each token sequence
+    foreach ($ednLblBySeqTag as $ednSeqTag => $ednLabel) {
+      if ($ednLabel) {
+        $ednLabel .= ":";
+      }
+      $sequence = new Sequence(substr($ednSeqTag,3));
+      $defLabel = $ednLabel . ($sequence->getSuperScript()?$sequence->getSuperScript():($sequence->getLabel()?$sequence->getLabel():$ednSeqTag));
+      $words = $sequence->getEntities(true);
+      if ($words->getCount() == 0) {
+        error_log("no words for sequence $ednSeqTag having edition label $ednLabel");
+        continue;
+      }else{
+        //error_log("words for sequence $ednSeqTag having edition label $ednLabel include ".join(',',$words->getKeys()));
+      }
+      //calculate a location label for each word and add to $wrdTag2LocLabel
+      foreach ($words as $word) {
+        $fSclID = $lSclID = null;
+        $prefix = $word->getEntityTypeCode();
+        $id = $word->getID();
+        $wtag = $prefix.$id;
+        if ($word->getSortCode() >= 0.7) {
           continue;
-        }else{
-          //error_log("words for sequence $ednSeqTag having edition label $ednLabel include ".join(',',$words->getKeys()));
         }
-        //calculate a location label for each word and add to $wrdTag2LocLabel
-        foreach ($words as $word) {
-          $fSclID = $lSclID = null;
-          $prefix = $word->getEntityTypeCode();
-          $id = $word->getID();
-          $wtag = $prefix.$id;
-          if ($word->getSortCode() >= 0.7) {
-            continue;
-          }
-          // find first and last SclID for word to calc attested form location
-          if ($prefix == 'cmp') {
-            $tokenSet = $word->getTokens();
-            $tokens = $tokenSet->getEntities();
-            $fToken = $tokens[0];
-            $sclIDs = $fToken->getSyllableClusterIDs();
-            if (count($sclIDs) > 0) {
-              $fSclID = $sclIDs[0];
-              $sclTag = 'scl'.$fSclID;
-              if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                $label = $sclTagToLabel[$sclTag];
-              } else {
-                $tokID = $fToken->getID();
-                error_log("no start label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                $label = null;
-              }
-            }
-            if ($label) {
-              $lToken = $tokens[count($tokens)-1];
-              $sclIDs = $lToken->getSyllableClusterIDs();
-              if (count($sclIDs) > 0) {
-                $lSclID = $sclIDs[count($sclIDs)-1];
-                $sclTag = 'scl'.$lSclID;
-                if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                  $label2 = $sclTagToLabel[$sclTag];
-                } else {
-                  $tokID = $lToken->getID();
-                  error_log("no end label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                  $label2 = null;
-                }
-                if($label2 && $label2 != $label) {
-                  $label .= "&ndash;" . $label2;
-                }
-              }
-              $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
+        // find first and last SclID for word to calc attested form location
+        if ($prefix == 'cmp') {
+          $tokenSet = $word->getTokens();
+          $tokens = $tokenSet->getEntities();
+          $fToken = $tokens[0];
+          $sclIDs = $fToken->getSyllableClusterIDs();
+          if (count($sclIDs) > 0) {
+            $fSclID = $sclIDs[0];
+            $sclTag = 'scl'.$fSclID;
+            if ( array_key_exists($sclTag,$sclTagToLabel)) {
+              $label = $sclTagToLabel[$sclTag];
             } else {
-              $wrdTag2LocLabel[$wtag] = $defLabel;
-            }
-          } else if ($prefix == 'tok') {
-            $sclIDs = $word->getSyllableClusterIDs();
-            if (count($sclIDs) > 0) {
-              $fSclID = $sclIDs[0];
-              $sclTag = 'scl'.$fSclID;
-              if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                $label = $sclTagToLabel[$sclTag];
-              } else {
-                error_log("no start label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                $label = null;
-              }
-            } else {
-              error_log("no syllable IDs found for ".$word->getGlobalID()." processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+              $tokID = $fToken->getID();
+              error_log("no start label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
               $label = null;
             }
-            if ($label) {
+          }
+          if ($label) {
+            $lToken = $tokens[count($tokens)-1];
+            $sclIDs = $lToken->getSyllableClusterIDs();
+            if (count($sclIDs) > 0) {
               $lSclID = $sclIDs[count($sclIDs)-1];
               $sclTag = 'scl'.$lSclID;
               if ( array_key_exists($sclTag,$sclTagToLabel)) {
                 $label2 = $sclTagToLabel[$sclTag];
               } else {
-                error_log("no end label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+                $tokID = $lToken->getID();
+                error_log("no end label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
                 $label2 = null;
               }
               if($label2 && $label2 != $label) {
                 $label .= "&ndash;" . $label2;
               }
-              $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
-            } else {
-              $wrdTag2LocLabel[$wtag] = $defLabel;
             }
+            $wrdTag2LocLabel[$wtag] = $ednLabel . $label;//todo change to edition only calc  for caching by edition
+          } else {
+            $wrdTag2LocLabel[$wtag] = $defLabel;//todo change to edition only calc  for caching by edition
+          }
+        } else if ($prefix == 'tok') {
+          $sclIDs = $word->getSyllableClusterIDs();
+          if (count($sclIDs) > 0) {
+            $fSclID = $sclIDs[0];
+            $sclTag = 'scl'.$fSclID;
+            if ( array_key_exists($sclTag,$sclTagToLabel)) {
+              $label = $sclTagToLabel[$sclTag];
+            } else {
+              error_log("no start label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+              $label = null;
+            }
+          } else {
+            error_log("no syllable IDs found for ".$word->getGlobalID()." processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+            $label = null;
+          }
+          if ($label) {
+            $lSclID = $sclIDs[count($sclIDs)-1];
+            $sclTag = 'scl'.$lSclID;
+            if ( array_key_exists($sclTag,$sclTagToLabel)) {
+              $label2 = $sclTagToLabel[$sclTag];
+            } else {
+              error_log("no end label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
+              $label2 = null;
+            }
+            if($label2 && $label2 != $label) {
+              $label .= "&ndash;" . $label2;
+            }
+            $wrdTag2LocLabel[$wtag] = $ednLabel . $label;//todo change to edition only calc  for caching by edition
+          } else {
+            $wrdTag2LocLabel[$wtag] = $defLabel;//todo change to edition only calc  for caching by edition
           }
         }
       }
+      //TODO if edition mapping is not empty then merge into $wrdTag2LocLabel and update cache for catID ednID
     }
   }
-  $_SESSION["cache-cat$catID"]['wrdTag2LocLabel'] = $wrdTag2LocLabel;
+  //update cache for catID word to loc map
+  $_SESSION["cache-cat$catID".DBNAME]['wrdTag2LocLabel'] = $wrdTag2LocLabel;
   return $wrdTag2LocLabel;
 }
 
@@ -2213,7 +2213,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
           } else {
             $displayOrder1 = array('m.','m.(?)','mn.','mn.(?)','n.','n.(?)','mnf.','mnf.(?)','nf.','nf.(?)','f.','f.(?)','mf.','mf.(?)','?');
             $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
-            $displayOrder3 = array('nom.','nom.(?)','acc.','acc.(?)','instr.','instr.(?)','dat.','dat.(?)','dat/gen.','dat/gen.(?)','abl.','abl.(?)','gen.','gen.(?)','loc.','loc.(?)','voc.','voc.(?)','?');
+            $displayOrder3 = array('dir.','dir.(?)','nom.','nom.(?)','acc.','acc.(?)','instr.','instr.(?)','dat.','dat.(?)','dat/gen.','dat/gen.(?)','abl.','abl.(?)','gen.','gen.(?)','loc.','loc.(?)','voc.','voc.(?)','?');
             $displayOrder4 = array('desid.','desid.(?)','intens.','intens.(?)','?');
           }
           $firstComponent = true;
