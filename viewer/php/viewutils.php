@@ -144,16 +144,41 @@ function getEditionGlossaryLookup($entTag, $scopeEdnID = null, $refresh = false)
   $catID = null;
   if (substr($entTag,0,3) == "cat") {
     $catID = substr($entTag,3);
+    $catalog = new Catalog($catID);
+    if ($catalog->hasError() || $catalog->getID() != $catID){
+      $catID = null;
+    }
   } else if (substr($entTag,0,3) == "edn") {
     $glossaryTypeID = Entity::getIDofTermParentLabel('glossary-catalogtype'); //term dependency
-    $catalogs = new Catalogs(substr($entTag,3)." = ANY(cat_edition_ids) and cat_type_id = $glossaryTypeID","cat_id",null,null);
+    $catalogs = new Catalogs(substr($entTag,3)." = ANY(VALUES(cat_edition_ids)) and cat_type_id = $glossaryTypeID","cat_id",null,null);
     if (!$catalogs->getError() && $catalogs->getCount() > 0) {
       $catalog = $catalogs->current();//choose the first
       $catID = $catalog->getID();
     }
   }
   if ($catID) {
-    return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, $refresh));
+    if(USECACHE) {
+      $cacheKey = "glosscat$catID"."edn".($scopeEdnID?$scopeEdnID:"all");
+      $jsonCache = new JsonCache($cacheKey);
+      if ($jsonCache->hasError() || !$jsonCache->getID()) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel($cacheKey);
+        $jsonCache->setJsonString(json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, $refresh)));
+        $jsonCache->setVisibilityIDs($catalog->getVisibilityIDs());
+        $jsonCache->save();
+      } else if ($jsonCache->isDirty() && !$jsonCache->isReadonly()) {
+        $jsonCache->setJsonString(json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, $refresh)));
+        $jsonCache->clearDirtyBit();
+        $jsonCache->save();
+      }
+      if ($jsonCache->getID() && !$jsonCache->hasError()) {
+        return $jsonCache->getJsonString();
+      } else {
+        return '""';
+      }
+    } else {
+      return json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, $refresh));
+    }
   }
   return "{}";
 }
@@ -895,6 +920,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
     $wordHtml .= '<span class="grpTok '.($ctxClass?$ctxClass.' ':'').$entTag.' ord'.$wordCnt.'">';
     //for each token in word
     $tokCnt = count($tokIDs);
+    $prevGraID = null;
     for($i =0; $i < $tokCnt; $i++) {
       $tokID = $tokIDs[$i];
       $token = new Token($tokID);
@@ -906,6 +932,9 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
       $graCnt = count($graIDs);
       for($j=0; $j<$graCnt; $j++) {
         $graID = $graIDs[$j];
+        if ($prevGraID == $graID){//sandhi case of repeated grapheme
+          continue;
+        }
         $grapheme = new Grapheme($graID);
         if (!$grapheme) {
           error_log("err,calculating word html and grapheme not available for graID $graID");
@@ -955,6 +984,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
         }
         $prevTCMS = $tcms;
         $wordHtml .= $graTemp;
+        $prevGraID = $graID;
         if ($graTemp == "a") {
           $previousA = true;
         } else {

@@ -757,7 +757,7 @@
     * @return boolean indicating that this object is readonly
     */
     public function isReadonly() {
-      if ($this->_visibility_ids && $this->getVisibilityIDs() && in_array(2,$this->getVisibilityIDs()) ||
+      if ($this->_visibility_ids && $this->getVisibilityIDs() && in_array(2,$this->getVisibilityIDs()) && !in_array(6,$this->getVisibilityIDs()) ||
            $this->getOwnerID() == 2 ||
           ($this->getOwnerID() &&
             $this->getOwnerID()!= getUserDefEditorID() &&
@@ -765,6 +765,15 @@
        return true;
       }
       return false;
+    }
+
+    /**
+    * Query published
+    *
+    * @return boolean indicating that this object is published and immutable
+    */
+    public function isPublished() {
+      return (in_array(2,$this->getVisibilityIDs()));
     }
 
     /**

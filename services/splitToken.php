@@ -270,7 +270,7 @@ if (count($errors) == 0 ) {
   //update edition seqIDs
   $edition->setSequenceIDs($edSeqIds);
   $edition->save();
-  invalidateCachedEdn($edition->getID());
+  invalidateCachedEdn($edition->getID(),null,$edition->getCatalogID());
   if ($edition->hasError()) {
     array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
   }else{

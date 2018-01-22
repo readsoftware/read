@@ -1373,14 +1373,28 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
 }
 
 /**
-* invalidate cache for readonly users by edition id
+* invalidate cache edition id
 *
 * @param int $ednID Sequence id
 * @param int $usrID UserGroup id
+* @param int $catID Catalog id
 */
 
-function invalidateCachedEdn($ednID = null,$usrID = null) { // setDirty flag
+function invalidateCachedEdn($ednID = null,$usrID = null, $catID = null) { // setDirty flag
   $cacheKey = "edn".($ednID?$ednID:'%')."userID".($usrID?$usrID:'%');
+  invalidateCache($cacheKey);
+  invalidateCachedCat($catID,$ednID);
+}
+
+/**
+* invalidate cache by catalog id and edition id
+*
+* @param int $catID Catalog id
+* @param int $ednID Edition id
+*/
+
+function invalidateCachedCat($catID = null,$ednID = null) { // setDirty flag
+  $cacheKey = "glosscat".($catID?$catID:'%')."edn".($ednID?$ednID:"%");
   invalidateCache($cacheKey);
 }
 
