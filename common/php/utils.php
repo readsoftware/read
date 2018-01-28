@@ -1376,12 +1376,11 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
 * invalidate cache edition id
 *
 * @param int $ednID Sequence id
-* @param int $usrID UserGroup id
 * @param int $catID Catalog id
 */
 
-function invalidateCachedEdn($ednID = null,$usrID = null, $catID = null) { // setDirty flag
-  $cacheKey = "edn".($ednID?$ednID:'%')."userID".($usrID?$usrID:'%');
+function invalidateCachedEdn($ednID = null, $catID = null) { // setDirty flag
+  $cacheKey = "edn".($ednID?$ednID:'').'%';
   invalidateCache($cacheKey);
   invalidateCachedCat($catID,$ednID);
 }
@@ -1394,7 +1393,7 @@ function invalidateCachedEdn($ednID = null,$usrID = null, $catID = null) { // se
 */
 
 function invalidateCachedCat($catID = null,$ednID = null) { // setDirty flag
-  $cacheKey = "glosscat".($catID?$catID:'%')."edn".($ednID?$ednID:"%");
+  $cacheKey = "glosscat".($catID?$catID:'%')."edn".($ednID?$ednID:'').'%';
   invalidateCache($cacheKey);
 }
 
@@ -1406,7 +1405,7 @@ function invalidateCachedCat($catID = null,$ednID = null) { // setDirty flag
 */
 
 function invalidateCachedSeq($seqID = null,$usrID = null) { // setDirty flag
-  $cacheKey = "seq".($seqID?$seqID:'%')."userID".($usrID?$usrID:'%');
+  $cacheKey = "seq".($seqID?$seqID:'%')."ednOwnerID".($usrID?$usrID:'%');
   invalidateCache($cacheKey);
 }
 

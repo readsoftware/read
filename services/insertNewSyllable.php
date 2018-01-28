@@ -531,7 +531,7 @@
               $retVal['newTextDivSeqGID'] = $newTxtDivSeqGID;
             }else { // only updated
               //changed components on a cached sequence so invalidate cache to recalc on next refresh
-              invalidateCachedSeq($textDivSeq->getID());
+              invalidateCachedSeq($textDivSeq->getID(), $ednOwnerID);
               addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
             }
           }
@@ -581,7 +581,7 @@
             $edition->setSequenceIDs($edSeqIds);
           }
           $edition->save();
-          invalidateCachedEdn($edition->getID(),null,$edition->getCatalogID());
+          invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
           if ($edition->hasError()) {
             array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
           }else{

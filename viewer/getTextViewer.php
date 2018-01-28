@@ -166,18 +166,18 @@
         $edPolysByBlnTagTokCmpTagByEdn .= "'$ednID':";
       }
 
-        $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
-        $edFootnotesByEdn .= getEditionFootnoteTextLookup();
-        if ($isFirst) {
-          $isFirst = false;
-          $edGlossaryLookupByEdn .= getEditionGlossaryLookup(($catTag?$catTag:'edn'.$ednID),$ednID,$refreshLookUps);
-        } else {
-          $edGlossaryLookupByEdn .= getEditionGlossaryLookup('edn'.$ednID,$ednID,$refreshLookUps);
-        }
-        $edTocHtmlByEdn .= "'".getEditionTOCHtml()."'";
-        $edUrlBlnImgLookupByEdn .= getImageBaselineURLLookup();//reset and calc'd in getEditionsStructuralViewHtml
-        $edBlnPosLookupByEdn .= getBaselinePosByEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
-        $edPolysByBlnTagTokCmpTagByEdn .= getPolygonByBaselineEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
+      $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
+      $edFootnotesByEdn .= getEditionFootnoteTextLookup();
+      if ($isFirst) {
+        $isFirst = false;
+        $edGlossaryLookupByEdn .= getEditionGlossaryLookup(($catTag?$catTag:'edn'.$ednID),$ednID,$refreshLookUps);
+      } else {
+        $edGlossaryLookupByEdn .= getEditionGlossaryLookup('edn'.$ednID,$ednID,$refreshLookUps);
+      }
+      $edTocHtmlByEdn .= "'".getEditionTOCHtml()."'";
+      $edUrlBlnImgLookupByEdn .= getImageBaselineURLLookup();//reset and calc'd in getEditionsStructuralViewHtml
+      $edBlnPosLookupByEdn .= getBaselinePosByEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
+      $edPolysByBlnTagTokCmpTagByEdn .= getPolygonByBaselineEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
     }
 ?>
           multiEdition = true,
@@ -284,7 +284,7 @@
           $edChayaStructHtmlByEdn .= "'$ednID':";
           $edChayaFootnotesByEdn .= "'$ednID':";
         }
-          $edChayaStructHtmlByEdn .= getEditionsStructuralTranslationHtml(array($ednID), Entity::getIDofTermParentLabel('chaya-translation'),$refreshLookUps);
+          $edChayaStructHtmlByEdn .= getEditionsStructuralTranslationHtml(array($ednID), Entity::getIDofTermParentLabel('chaya-translation'),$refreshLookUps); //warning!! term dependency
           $edChayaFootnotesByEdn .= getEditionTranslationFootnoteTextLookup();//reset and calc'd in getEditionsStructuralTranslationHtml
       }
 ?>
@@ -649,7 +649,7 @@ if (editionIsPublic) {
             });
             $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
               var classes = $(this).attr("class"), entTag, entTags, lemTag, lemmaInfo, entGlossInfo,
-                  popupHtml = null, popupHtml = null, $glossaryPopup;
+                  popupHtml = null, $glossaryPopup;
                   //popupHtml = "No lemma info for " + $(this).text();
               if ( entTags = classes.match(/cmp\d+/)) {//use first cmp tag for tool tip
                 entTag = entTags[0];
@@ -692,7 +692,7 @@ if (editionIsPublic) {
                   $(this).jqxTooltip('destroy');
                 });
                 $(this).jqxTooltip('open');
-                $(this).addClass('showing');
+                $('.grpTok.'+entTag,$textViewerContent).addClass('showing');
                 $('.glossaryExpander').unbind('click').bind('click', function(e) {
                       var $popupWrapperDiv = $(this).parent().parent(), $expander = $(this),
                           $extraInfoDiv = $('.glossExtraInfoDiv',$popupWrapperDiv);

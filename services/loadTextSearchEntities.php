@@ -147,8 +147,9 @@
     $dbMgr = new DBManager();
     if (!$dbMgr->getError()) {
       $userDefID = getUserDefEditorID();
-      $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
-      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults$cacheUserLabel'");
+//      $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+//      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults$cacheUserLabel'");
+      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults'");
       if ($dbMgr->getRowCount() > 0 ) {
         $row = $dbMgr->fetchResultRow();
         $jsonCache = new JsonCache($row);
@@ -291,15 +292,18 @@
     if (count($errors) == 0 && $isSearchAll && USECACHE) {//only cache searchAll
       if (!$jsonCache) {
         $userDefID = getUserDefEditorID();
-        $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
-        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults$cacheUserLabel'");
+//        $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+//        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults$cacheUserLabel'");
+        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults'");
         if ($dbMgr->getRowCount() > 0 ) {
           $row = $dbMgr->fetchResultRow();
           $jsonCache = new JsonCache($row);
         } else {
           $jsonCache = new JsonCache();
-          $jsonCache->setLabel('SearchAllResults'.$cacheUserLabel);
-          $jsonCache->setVisibilityIDs(array(2,6));
+          //$jsonCache->setLabel('SearchAllResults'.$cacheUserLabel);
+          $jsonCache->setLabel('SearchAllResults');
+          $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+          $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
         }
       }
       $jsonCache->setJsonString($jsonRetVal);

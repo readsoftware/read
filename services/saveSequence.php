@@ -288,7 +288,7 @@ if (count($errors) == 0 && $edition) {
   //touch edition for synch code
   $edition->storeScratchProperty("lastModified",$edition->getModified());
   $edition->save();
-  invalidateCachedEdn($edition->getID(),null,$edition->getCatalogID());
+  invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
 }
 
 $retVal["success"] = false;

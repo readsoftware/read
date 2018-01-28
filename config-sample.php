@@ -26,9 +26,14 @@
   if(!defined("PASSWORD")) define("PASSWORD","password");
   if(!defined("DEFAULTVISIBILITY")) define("DEFAULTVISIBILITY","Users");
   if(!defined("USECACHE")) define("USECACHE",false);
+  if(!defined("USEVIEWERCACHING")) define("USEVIEWERCACHING",true);
+  if(!defined("DEFAULTCACHEOWNERID")) define("DEFAULTCACHEOWNERID",6);
+  if(!defined("DEFAULTCACHEVISID")) define("DEFAULTCACHEVISID",6);
   if(!defined("ENABLECATALOGRESOURCE")) define("ENABLECATALOGRESOURCE",'0');//0 = not enable else enabled
 //  if(!defined("LINKSYLPATTERN")) define("LINKSYLPATTERN","L1:S1,L5+5:S1");
 //  if(!defined("USESKTSORT")) define("USESKTSORT",'1');
+//  if(!defined("READ_FILE_STORE")) define("READ_FILE_STORE",'\\xampp\\readfilestore');//simple script for managing db snapshot and restore
+//  if(!defined("PSQL_PATH")) define("PSQL_PATH",'\\xampp\\PostgreSQL\\9.3\\bin');////simple script for managing db snapshot and restore
   if(!defined("MAX_UPLOAD_SIZE")) {
     $maxUpload = intval(ini_get("upload_max_filesize"));
     $maxPost = intval(ini_get("post_max_size"));
@@ -39,8 +44,11 @@
   //configure viewer for site
   define("SHOWVIEWERCONTENTOUTLINE",false);
   define("SHOWIMAGEVIEW",true);
+  define("USEPHYSICALVIEW",false);
   define("SHOWTRANSLATIONVIEW",true);
   define("SHOWCHAYAVIEW",false);
+  define("FORMATENCODEDETYM",true);
+  define("SHOWETYMPARENS",false);
 
   $info = new SplFileInfo(SEGMENT_CACHE_BASE_PATH);
   if (!$info->isDir()) {
@@ -53,7 +61,8 @@
   if (!$info->isDir()) {
     $isDir = mkdir($info, 0775, true);
     if (!$isDir) {//point at the temp dir which will only can temporarily
-      uopz_redefine("SEGMENT_CACHE_BASE_PATH", DOCUMENT_ROOT);
+      uopz_redefine("XML_EXPORT_ROOT", DOCUMENT_ROOT);
+      uopz_redefine("EPIDOC_EXPORT_ROOT", DOCUMENT_ROOT."/epidoc");
     }
   }
 ?>

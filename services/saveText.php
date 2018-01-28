@@ -193,8 +193,10 @@ if (count($errors)) {
   $retVal["errors"] = $errors;
 } else {
   $retVal["success"] = true;
-  invalidateCache('AllTextResources'.getUserDefEditorID());
-  invalidateCache('SearchAllResults'.getUserDefEditorID());
+//  invalidateCache('AllTextResources'.getUserDefEditorID());
+//  invalidateCache('SearchAllResults'.getUserDefEditorID());
+  invalidateCache('AllTextResources');
+  invalidateCache('SearchAllResults');
 }
 if (count($warnings)) {
   $retVal["warnings"] = $warnings;

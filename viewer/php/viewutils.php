@@ -52,7 +52,7 @@ require_once dirname(__FILE__) . '/../../model/entities/Attribution.php';
 /**
 * gets the editions footnote lookup html as json
 *
-* @returns string json representing the lookup for footnotes of this  object with a string representing the html and a footnote lookup table
+* @returns string json representing the lookup for footnotes of this object with a string representing the html and a footnote lookup table
 */
 function getEditionFootnoteTextLookup() {
   global $fnRefTofnText;
@@ -154,10 +154,11 @@ function getEditionGlossaryLookup($entTag, $scopeEdnID = null, $refresh = false)
     if (!$catalogs->getError() && $catalogs->getCount() > 0) {
       $catalog = $catalogs->current();//choose the first
       $catID = $catalog->getID();
+      $scopeEdnID = $entTag;
     }
   }
   if ($catID) {
-    if(USECACHE) {
+    if(USEVIEWERCACHING) {
       $cacheKey = "glosscat$catID"."edn".($scopeEdnID?$scopeEdnID:"all");
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->hasError() || !$jsonCache->getID()) {
@@ -165,11 +166,15 @@ function getEditionGlossaryLookup($entTag, $scopeEdnID = null, $refresh = false)
         $jsonCache->setLabel($cacheKey);
         $jsonCache->setJsonString(json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, $refresh)));
         $jsonCache->setVisibilityIDs($catalog->getVisibilityIDs());
+        $jsonCache->setOwnerID($catalog->getOwnerID());
         $jsonCache->save();
-      } else if ($jsonCache->isDirty() && !$jsonCache->isReadonly()) {
-        $jsonCache->setJsonString(json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, $refresh)));
+      } else if (($refresh || $jsonCache->isDirty()) && !$jsonCache->isReadonly()) {
+        $jsonCache->setJsonString(json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, $refresh || $jsonCache->isDirty())));
         $jsonCache->clearDirtyBit();
         $jsonCache->save();
+      } else {
+        error_log("warning: cache $cacheKey with cacheID (".($jsonCache->getID()?$jsonCache->getID():"null").
+                  ") fall through with refresh = $refresh, dirty = ".$jsonCache->isDirty()." and readonly =".$jsonCache->isReadonly());
       }
       if ($jsonCache->getID() && !$jsonCache->hasError()) {
         return $jsonCache->getJsonString();
@@ -287,7 +292,6 @@ function getEntityTranslation($entity) {
   return $transText;
 }
 
-
 /**
 * returns the Html for a word's translation or nothing
 *
@@ -332,7 +336,6 @@ function getWordTransHtml($entity) {
   }
   return $wordHtml;
 }
-
 
 /**
 * finds the list of annotation types for a nested sequences
@@ -405,10 +408,10 @@ function getEditionAnnotationTypes($ednIDs) {
 /**
 * returns the html for a nested structure translations
 *
-* recursively calls itself for substructures
+* recursively calls itself for substructures without adding boundary HTML
 *
 * @param object $sequence has a structure type containing other structures or entities
-* @param int $level indicate the level of nest in the structural hierarchy
+* @param boolean $addBoundaryHtml determines if boundary HTML element is added, default false
 */
 function getStructTransHtml($sequence, $addBoundaryHtml = false) {
   global $edition, $preMarker, $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
@@ -602,6 +605,40 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
   $analysisSeqIDs = array();
   $sourceNameLookup = array();
   $isFirstEdn = true;
+  if (count($ednIDs) == 1) {
+    if(USEVIEWERCACHING) {
+      if (!$annoTypeID || !Entity::getTermFromID($annoTypeID)) {
+        $annoTypeID = Entity::getIDofTermParentLabel('Translation-AnnotationType');//warning!!!! term dependency
+        $transType = "Translation";
+      } else {
+        $transType = Entity::getTermFromID($annoTypeID);
+      }
+      $cacheKey = "edn".$ednIDs[0].$transType."HTML";
+      $jsonCache = null;
+      $jsonCache = new JsonCache($cacheKey);
+      if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty() && !$forceRecalc) {
+        $cachedEditionData = json_decode($jsonCache->getJsonString(),true);
+        //set dependent globals before returning html string
+        $tfnRefToTfnText = $cachedEditionData['tfnRefToTfnText'];
+        //return html
+        return json_encode($cachedEditionData['transHtml']);
+      } else if ($jsonCache->hasError() || !$jsonCache->getID()) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel($cacheKey);
+        if (!$edition) {
+          $edition = new Edition($ednIDs[0]);
+        }
+        if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
+          array_push($warnings,"Warning need valid accessible edition id ".$ednIDs[0].". Skipping.".
+            ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
+          $jsonCache = null;
+        } else {
+          $jsonCache->setVisibilityIDs($edition->getVisibilityIDs());
+          $jsonCache->setOwnerID($edition->getOwnerID());
+        }
+      }
+    }
+  }
   foreach ($ednIDs as $ednID) {//accumulate in order all subsequence for text, text physical and analysis
     $edition = new Edition($ednID);
     if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
@@ -740,6 +777,16 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
     $sourceHtml .= "</span></div>";
   }
   $html .= $sourceHtml;
+  if(USEVIEWERCACHING && $jsonCache) {
+    $cachedEditionData = array();
+    //store dependent globals used to calc html
+    $cachedEditionData['tfnRefToTfnText'] = $tfnRefToTfnText;
+    //save html
+    $cachedEditionData['transHtml'] = $html;
+    $jsonCache->setJsonString(json_encode($cachedEditionData));
+    $jsonCache->clearDirtyBit();
+    $jsonCache->save();
+  }
   return json_encode($html);
 }
 
@@ -1040,7 +1087,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $ctxClass
 * @param int $level indicate the level of nest in the structural hierarchy
 */
 function getStructHTML($sequence, $addBoundaryHtml = false) {
-  global $edition, $editionTOCHtml, $seqBoundaryMarkerHtmlLookup, $polysByBlnTagTokCmpTag, $blnPosByEntTag, $curStructHeaderbyLevel;
+  global $edition, $editionTOCHtml, $seqBoundaryMarkerHtmlLookup, $blnPosByEntTag, $curStructHeaderbyLevel;
   $structureHtml = "";
   if ($sequence) {
     $seqEntGIDs = $sequence->getEntityIDs();
@@ -1167,7 +1214,6 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
   return $structureHtml;
 }
 
-
 /**
 * returns the html for tokenisation in physical line layout
 *
@@ -1175,7 +1221,7 @@ function getStructHTML($sequence, $addBoundaryHtml = false) {
 * @param boolean $addBoundaryHtml determine whether to add boundary info for each edition in a multi edition calculation
 */
 function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
-  global $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $seqBoundaryMarkerHtmlLookup, $polysByBlnTagTokCmpTag, $blnPosByEntTag, $curStructHeaderbyLevel;
+  global $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
 
   $wordCnt = 0;
   $prevTCMS = "";
@@ -1281,6 +1327,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                 ++$wordCnt;
                 //for each token in word
                 $tokCnt = count($tokIDs);
+                $prevGraID = null;
                 for($k =0; $k < $tokCnt; $k++) {
                   $tokID = $tokIDs[$k];
                   $firstT = ($k==0);
@@ -1292,6 +1339,9 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                   $graCnt = count($graIDs);
                   for($l=0; $l<$graCnt; $l++) {
                     $graID = $graIDs[$l];
+                    if ($prevGraID == $graID){//sandhi case of repeated grapheme
+                      continue;
+                    }
                     $grapheme = new Grapheme($graID);
                     if (!$grapheme) {
                       error_log("err,calculating word html and grapheme not available for graID $graID");
@@ -1353,6 +1403,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                     }
                     $prevTCMS = $tcms;
                     $wordHtml .= $graTemp;
+                    $prevGraID = $graID;
                     if ($graTemp == "a") {
                       $previousA = true;
                     } else {
@@ -1365,9 +1416,13 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
                 if ($nextToken) {//find tcm for first grapheme of next token to check for closing brackets
                   $nextGraIDs = $nextToken->getGraphemeIDs();
                   if (count($nextGraIDs) > 0) {
-                    $firstGraID = $nextGraIDs[0];
-                    $nextStartsOnNewLine = ($firstGraID && array_key_exists($firstGraID,$graID2LineHtmlMarkerlMap));
-                    $nextGrapheme = new Grapheme($firstGraID);
+                    $nextGraID = $nextGraIDs[0];
+                    $nextGrapheme = new Grapheme($nextGraID);
+                    if ($nextGrapheme->getValue() == "ʔ") {
+                      $nextGraID = $nextGraIDs[1];
+                      $nextGrapheme = new Grapheme($nextGraID);
+                    }
+                    $nextStartsOnNewLine = ($nextGraID && array_key_exists($nextGraID,$graID2LineHtmlMarkerlMap));
                     $nextTCMS = $nextGrapheme->getTextCriticalMark();
                     if ($nextStartsOnNewLine) {
                       $postTCMBrackets = getTCMTransitionBrackets($tcms,"S");
@@ -1418,7 +1473,6 @@ function getPhysicalLinesHTML($textDivSeqIDs, $addBoundaryHtml = false) {
   return $physicalLinesHtml;
 }
 
-
 /**
 * gets the editions Structural layout html
 *
@@ -1460,6 +1514,39 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   $sclTagLineStart = array();
   $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
   $isFirstEdn = true;
+  if (count($ednIDs) == 1) {
+    if(USEVIEWERCACHING) {
+      $cacheKey = "edn".$ednIDs[0]."structviewHTML";
+      $jsonCache = null;
+      $jsonCache = new JsonCache($cacheKey);
+      if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty() && !$forceRecalc) {
+        $cachedEditionData = json_decode($jsonCache->getJsonString(),true);
+        //set dependent globals before returning html string
+        $fnRefTofnText = $cachedEditionData['fnRefTofnText'];
+        $editionTOCHtml = $cachedEditionData['editionTOCHtml'];
+        $imgURLsbyBlnImgTag = $cachedEditionData['imgURLsbyBlnImgTag'];
+        $blnPosByEntTag = $cachedEditionData['blnPosByEntTag'];
+        $polysByBlnTagTokCmpTag = $cachedEditionData['polysByBlnTagTokCmpTag'];
+        //return html
+        return json_encode($cachedEditionData['editionHtml']);
+      } else if ($jsonCache->hasError() || !$jsonCache->getID()) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel($cacheKey);
+        if (!$edition) {
+          $edition = new Edition($ednID);
+        }
+        if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
+          array_push($warnings,"Warning need valid accessible edition id $ednID. Skipping.".
+            ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
+          $jsonCache = null;
+        } else {
+          $jsonCache->setVisibilityIDs($edition->getVisibilityIDs());
+          $jsonCache->setOwnerID($edition->getOwnerID());
+        }
+      }
+    }
+  }
+
   foreach ($ednIDs as $ednID) {//accumulate in order all subsequence for text, text physical and analysis
     $edition = new Edition($ednID);
     if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
@@ -1562,7 +1649,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
     array_push($warnings,"Warning no structural analysis found for edition id $ednID. Skipping.");
   } else {//process analysis
     //calculate  post grapheme id to physical line label map
-    $useInlineLabel = (count($analysisSeqIDs) > 0);
+    $useInlineLabel = (count($analysisSeqIDs) > 0 && !USEPHYSICALVIEW);
     if (count($physicalLineSeqIDs) > 0) {
       foreach ($physicalLineSeqIDs as $physicalLineSeqGID) {
         $physicalLineSeq = new Sequence(substr($physicalLineSeqGID,4));
@@ -1669,7 +1756,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
     }
     $fnCnt = 0;
     $tokCnt = 0;
-    if (count($analysisSeqIDs) > 0) {
+    if (count($analysisSeqIDs) > 0 && !USEPHYSICALVIEW) {
       //start to calculate HTML using each entity of the analysis container
       foreach ($analysisSeqIDs as $entGID) {
         $prefix = substr($entGID,0,3);
@@ -1721,16 +1808,45 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
     $sourceHtml .= "</span></div>";
   }
   $html .= $sourceHtml;
+  if(USEVIEWERCACHING && $jsonCache) {
+    $cachedEditionData = array();
+    //store dependent globals used to calc html
+    $cachedEditionData['fnRefTofnText'] = $fnRefTofnText;
+    $cachedEditionData['editionTOCHtml'] = $editionTOCHtml;
+    $cachedEditionData['imgURLsbyBlnImgTag'] = $imgURLsbyBlnImgTag;
+    $cachedEditionData['blnPosByEntTag'] = $blnPosByEntTag;
+    $cachedEditionData['polysByBlnTagTokCmpTag'] = $polysByBlnTagTokCmpTag;
+    //save html
+    $cachedEditionData['editionHtml'] = $html;
+    $jsonCache->setJsonString(json_encode($cachedEditionData));
+    $jsonCache->clearDirtyBit();
+    $jsonCache->save();
+  }
   return json_encode($html);
 }
+
 
 function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
   $textTypeTrmID = Entity::getIDofTermParentLabel('text-sequencetype'); //term dependency
   $physTextTypeTrmID = Entity::getIDofTermParentLabel('textphysical-sequencetype'); //term dependency
   $catID = $catalog->getID();
-  if (!$refreshWordMap && array_key_exists("cache-cat$catID".DBNAME,$_SESSION) &&
+  if ($catID) {
+    $cacheKey = "cat$catID"."wrdTag2LocLabel";
+    $jsonCache = null;
+    if(USEVIEWERCACHING) {
+      $jsonCache = new JsonCache($cacheKey);
+      if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty() && !$refreshWordMap) {
+        return json_decode($jsonCache->getJsonString(),true);
+      } else if ($jsonCache->hasError() || !$jsonCache->getID()) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel($cacheKey);
+        $jsonCache->setVisibilityIDs($catalog->getVisibilityIDs());
+        $jsonCache->setOwnerID($catalog->getOwnerID());
+      }
+    } else/**/ if (!$refreshWordMap && array_key_exists("cache-cat$catID".DBNAME,$_SESSION) &&
         array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID".DBNAME])) {
-    return $_SESSION["cache-cat$catID".DBNAME]['wrdTag2LocLabel'];
+      return $_SESSION["cache-cat$catID".DBNAME]['wrdTag2LocLabel'];
+    }
   }
   $editionIDs = $catalog->getEditionIDs();
   $wrdTag2LocLabel = array();
@@ -1894,8 +2010,14 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
   }
   //update cache for catID word to loc map
   $_SESSION["cache-cat$catID".DBNAME]['wrdTag2LocLabel'] = $wrdTag2LocLabel;
+  if (USEVIEWERCACHING && $jsonCache) {
+    $jsonCache->setJsonString(json_encode($wrdTag2LocLabel));
+    $jsonCache->clearDirtyBit();
+    $jsonCache->save();
+  }/**/
   return $wrdTag2LocLabel;
 }
+
 
 function formatEtym($lemmaEtymString) {
   $formattedEtyms = "";
@@ -1982,8 +2104,9 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
         $lemHtml .= "</span>";
         if ($lemmaEtym = $lemma->getDescription()) {
           //replace embedded HTML markup
-          $lemHtml .= "<span class=\"etymology\">";
-          $lemHtml .= formatEtym($lemmaEtym).",</span>";
+          $lemHtml .= "<span class=\"etymology\">".(SHOWETYMPARENS?"(":"");
+          $lemHtml .= (FORMATENCODEDETYM?formatEtym($lemmaEtym):$lemmaEtym);
+          $lemHtml .= (SHOWETYMPARENS?")":"").",</span>";
         }
         if ($lemmaGloss = $lemma->getTranslation()) {
           //replace embedded HTML markup

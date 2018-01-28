@@ -87,7 +87,8 @@
         $jsonCache = new JsonCache();
         $jsonCache->setLabel('SearchAllAttributions');
         $jsonCache->setJsonString($jsonRetVal);
-        $jsonCache->setVisibilityIDs(array(2,6));
+        $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+        $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
       } else {
         $jsonCache->clearDirtyBit();
         $jsonCache->setJsonString($jsonRetVal);

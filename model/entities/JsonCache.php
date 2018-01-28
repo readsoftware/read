@@ -99,6 +99,8 @@
           //ensure everything is encoded for save
           $this->_data = $this->prepBaseEntityData($arg);
           $this->_dirty = true;
+        } else {
+          $this->_dirty = $this->getScratchProperty("dirtyBit") == 1;
         }
       }
     }

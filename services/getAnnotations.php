@@ -42,7 +42,7 @@ $dbMgr = new DBManager();
 if ($dbMgr->getError()) {
   exit("Error: ".$dbMgr->getError());
 }
-$dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Anotations'");
+$dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Annotations'");
 $jsonCache = null;
 if ($dbMgr->getRowCount() > 0 && USECACHE) {
   $row = $dbMgr->fetchResultRow();
@@ -62,9 +62,10 @@ if (!$jsonRetVal) {
   if (USECACHE) {
     if (!$jsonCache) {
       $jsonCache = new JsonCache();
-      $jsonCache->setLabel('Anotations');
+      $jsonCache->setLabel('Annotations');
       $jsonCache->setJsonString($jsonRetVal);
-      $jsonCache->setVisibilityIDs(array(2,6));
+      $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+      $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
     } else {
       $jsonCache->clearDirtyBit();
       $jsonCache->setJsonString($jsonRetVal);

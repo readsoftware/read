@@ -105,8 +105,9 @@
     $dbMgr = new DBManager();
     if (!$dbMgr->getError()) {
       $userDefID = getUserDefEditorID();
-      $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
-      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
+ //     $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+ //     $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
+      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources'");
       if ($dbMgr->getRowCount() > 0 ) {
         $row = $dbMgr->fetchResultRow();
         $jsonCache = new JsonCache($row);
@@ -405,15 +406,17 @@
     if (count($errors) == 0 && USECACHE && $isLoadAll) {
       if (!$jsonCache) {
         $userDefID = getUserDefEditorID();
-        $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
-        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
+//        $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+//        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
+        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources'");
         if ($dbMgr->getRowCount() > 0 ) {
           $row = $dbMgr->fetchResultRow();
           $jsonCache = new JsonCache($row);
         } else {
           $jsonCache = new JsonCache();
-          $jsonCache->setLabel('AllTextResources'.$cacheUserLabel);
-          $jsonCache->setVisibilityIDs(array(2,6));
+          $jsonCache->setLabel('AllTextResources');
+          $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+          $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
         }
       }
       $jsonCache->setJsonString($jsonRetVal);

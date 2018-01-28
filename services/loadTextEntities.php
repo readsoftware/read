@@ -969,7 +969,8 @@
           $jsonCache->setLabel($ckn);
         }
         $jsonCache->setJsonString($jsonRetVal);
-        $jsonCache->setVisibilityIDs(array(2));
+        $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+        $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
         $jsonCache->save();
         if (!$jsonCache->hasError()) {
           $text->setJsonCacheID($jsonCache->getID());
