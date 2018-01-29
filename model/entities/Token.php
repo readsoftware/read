@@ -333,7 +333,7 @@
       $graIDs = $this->getGraphemeIDs();
       while ($graIDs && $graID = array_shift($graIDs)) {//for each token grapheme
         if (count($sclGraIDs)==0){//get syllable for the current grapheme
-          $syls = new SyllableClusters("$graID = ANY(VALUES(scl_grapheme_ids))",null,null,null);
+          $syls = new SyllableClusters("$graID = ANY(scl_grapheme_ids)",null,null,null);
           if (!$syls || $syls->getCount() == 0) {
               array_push($this->_errors,"invalid token state tok:".$this->_id."has grapheme gra:$graID not associated with a visible syllableCluster");
               return null;
