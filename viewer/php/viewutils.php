@@ -1919,7 +1919,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
       $sequence = new Sequence(substr($ednSeqTag,3));
       $defLabel = $ednLabel . ($sequence->getSuperScript()?$sequence->getSuperScript():($sequence->getLabel()?$sequence->getLabel():$ednSeqTag));
       $words = $sequence->getEntities(true);
-      if ($words->getCount() == 0) {
+      if ($words && $words->getCount() == 0) {
         error_log("no words for sequence $ednSeqTag having edition label $ednLabel");
         continue;
       }else{
@@ -2073,7 +2073,8 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
     $entTag2GlossaryHtml = array();
     $lemmas = new Lemmas($condition,"lem_sort_code,lem_sort_code2",null,null);
     if ($lemmas->getCount() > 0) {
-      $glossaryHRefUrl = READ_DIR."/services/exportHTMLGlossary.php?db=".DBNAME."&catID=$catID";
+    //  $glossaryHRefUrl = READ_DIR."/services/exportHTMLGlossary.php?db=".DBNAME."&catID=$catID";
+      $glossaryHRefUrl = READ_DIR."/plugins/dictionary/?search=";
       $lemIDs = array();
       foreach($lemmas as $lemma) {
         $hasAttestations = false;
@@ -2084,7 +2085,8 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
           $lemHtml .= "<sup class=\"homographic\">".$lemmaOrder."</sup>";
         }
         $lemmaValue = preg_replace('/ʔ/','',$lemma->getValue());
-        $lemHtml .= "<span class=\"lemmaheadword\"><a target=\"mygloss\" href=\"$glossaryHRefUrl#$lemTag\">$lemmaValue</a></span><span class=\"lemmapos\">";
+    //    $lemHtml .= "<span class=\"lemmaheadword\"><a target=\"mygloss\" href=\"$glossaryHRefUrl#$lemTag\">$lemmaValue</a></span><span class=\"lemmapos\">";
+        $lemHtml .= "<span class=\"lemmaheadword\"><a target=\"mygloss\" href=\"$glossaryHRefUrl".$lemmaValue."\">$lemmaValue</a></span><span class=\"lemmapos\">";
         $lemmaGenderID = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
         $lemmaPos = $lemmaPosID && is_numeric($lemmaPosID) && Entity::getTermFromID($lemmaPosID) ? Entity::getTermFromID($lemmaPosID) : '';
