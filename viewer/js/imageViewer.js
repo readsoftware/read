@@ -208,7 +208,7 @@ VIEWERS.ImageViewer.prototype = {
         $resDiv.unbind('click').bind('click', function(e) {
           var lkupID = $(this).prop('lkupID');
           if (!$(e.target).hasClass('downloadbtndiv')) {
-            imgV.loadBaselineAt(lkupID, {x:imgV.vpLoc.x, y:0});
+            imgV.loadBaselineAt(lkupID, {x:(imgV.vpLoc?imgV.vpLoc.x:0), y:0});
             imgV.$blnMenuPanel.removeClass('showMenu');
             e.stopImmediatePropagation();
             return false;
