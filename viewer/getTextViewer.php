@@ -101,6 +101,7 @@
       $catTag = $glossaryEntTag = "cat".$data['catID'];
     }
   }
+  $isStaticView = (!isset($data['staticview'])||$data['staticview']==0)?false:true;
   $showContentOutline = isset($data['showTOC'])?(!$data['showTOC']?false:true):(defined("SHOWVIEWERCONTENTOUTLINE")?SHOWVIEWERCONTENTOUTLINE:true);
   $showImageView = isset($data['showImage'])?(!$data['showImage']?false:true):(defined("SHOWIMAGEVIEW")?SHOWIMAGEVIEW:true);
   $showTranslationView = isset($data['showTrans'])?(!$data['showTrans']?false:true):(defined("SHOWTRANSLATIONVIEW")?SHOWTRANSLATIONVIEW:true);
@@ -123,14 +124,25 @@
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.base.css" type="text/css" />
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.energyblue.css" type="text/css" />
     <link rel="stylesheet" href="./css/readviewer.css" type="text/css" />
-    <script src="/jquery/jquery-1.11.0.min.js"></script>
+    <script src="/jquery/jquery-1.11.1.min.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtouch.js"></script>
     <script src="/jqwidget/jqwidgets/jqxdata.js"></script>
     <script src="/jqwidget/jqwidgets/jqxexpander.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtooltip.js"></script>
+<?php
+  if ($isStaticView){
+?>
+    <script src="./js/utility.js"></script>
+    <script src="./js/debug.js"></script>
+<?php
+  }else{
+?>
     <script src="../editors/js/utility.js"></script>
     <script src="../editors/js/debug.js"></script>
+<?php
+  }
+?>
     <script src="./js/imageViewer.js"></script>
     <script type="text/javascript">
       var dbName = '<?=DBNAME?>',imgViewer,
@@ -903,9 +915,6 @@ if (editionIsPublic) {
 </body>
 </html>
 <?php
-  function returnXMLSuccessMsgPage($msg) {
-    die("<html><body><success>$msg</success></body></html>");
-  }
 
   function returnXMLErrorMsgPage($msg) {
     die("<?xml version='1.0' encoding='UTF-8'?>\n<error>$msg</error>");

@@ -30,6 +30,7 @@
 
 require_once (dirname(__FILE__) . '/../../config.php');//get defines
 require_once (dirname(__FILE__) . '/../../common/php/DBManager.php');//get database interface
+require_once (dirname(__FILE__) . '/../../common/php/utils.php');//get utilies
 require_once dirname(__FILE__) . '/../../model/entities/Terms.php';
 // add required for switchInfo
 require_once dirname(__FILE__) . '/../../model/entities/Graphemes.php';
@@ -150,11 +151,11 @@ function getEditionGlossaryLookup($entTag, $scopeEdnID = null, $refresh = false)
     }
   } else if (substr($entTag,0,3) == "edn") {
     $glossaryTypeID = Entity::getIDofTermParentLabel('glossary-catalogtype'); //term dependency
-    $catalogs = new Catalogs(substr($entTag,3)." = ANY(VALUES(cat_edition_ids)) and cat_type_id = $glossaryTypeID","cat_id",null,null);
+    $catalogs = new Catalogs(substr($entTag,3)." = ANY(cat_edition_ids) and cat_type_id = $glossaryTypeID","cat_id",null,null);
     if (!$catalogs->getError() && $catalogs->getCount() > 0) {
       $catalog = $catalogs->current();//choose the first
       $catID = $catalog->getID();
-      $scopeEdnID = $entTag;
+      $scopeEdnID = substr($entTag,3);
     }
   }
   if ($catID) {
@@ -1833,7 +1834,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
   if ($catID) {
     $cacheKey = "cat$catID"."wrdTag2LocLabel";
     $jsonCache = null;
-    if(USEVIEWERCACHING) {
+    if(!$refreshWordMap && USEVIEWERCACHING) {
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty() && !$refreshWordMap) {
         return json_decode($jsonCache->getJsonString(),true);
@@ -1864,7 +1865,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
       if ($text && !$text->hasError()) {
         $ednLabel = $text->getRef();
         if (!$ednLabel) {
-                    $ednLabel='t'.$text->getID();
+          $ednLabel='sort'.$text->getID();
         }
       }
       $ednSequences = $edition->getSequences(true);
@@ -1891,6 +1892,7 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
       }
     }
     if ($physSeqGIDs && count($physSeqGIDs)) {// capture each physical line sequence once
+      $ord = 1;
       foreach ($physSeqGIDs as $physSeqGID) {
         $sequence = new Sequence(substr($physSeqGID,4));
         $label = $sequence->getSuperScript();
@@ -1902,11 +1904,13 @@ function getWordTagToLocationLabelMap($catalog, $refreshWordMap = false) {
         }
         $sclGIDs = $sequence->getEntityIDs();
         if ($label && count($sclGIDs)) {//create lookup for location of word span B11-B12
+          $label = "$ord:".$label; //save ordinal of line for sorting later.
           foreach ($sclGIDs as $sclGID) {
             $tag = preg_replace("/:/","",$sclGID);
             $sclTagToLabel[$tag] = $label;
           }
         }
+        $ord++;
       }
     }
   }
@@ -2428,9 +2432,19 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
                         $attestedHtml .= ", ";
                       }
                       $attestedHtml .= "<span class=\"attestedform\">$formTranscr</span>";
-                      ksort($locInfo['loc']);
+                      $sortedLocs = array_keys($locInfo['loc']);
+                      usort($sortedLocs,"compareWordLocations");
+//                      ksort($locInfo['loc']);
                       $isFirstLoc = true;
-                      foreach ($locInfo['loc'] as $formLoc => $cntLoc) {
+                      foreach ($sortedLocs as $formLoc) {
+                        $cntLoc = $locInfo['loc'][$formLoc];
+                        //remove internal ordinal
+                        list($tref,$ord,$label) = explode(":",$formLoc);
+                        if (strpos($tref,"sort") === 0) {
+                          $formLoc = $label;
+                        } else {
+                          $formLoc = $tref.$label;
+                        }
                         if ($isFirstLoc) {
                           $isFirstLoc = false;
                           $attestedHtml .= "<span class=\"attestedformloc\">".$formLoc.($cntLoc>1?" [".$cntLoc."×]":"");

@@ -9,7 +9,7 @@
   if(!defined("REQSCHEMA")) define("REQSCHEMA",(@$_SERVER['REQUEST_SCHEME']?$_SERVER['REQUEST_SCHEME']:"http"));
   if(!defined("DOCUMENT_ROOT")) define("DOCUMENT_ROOT",$_SERVER['DOCUMENT_ROOT']);
   if(!defined("SITE_ROOT")) define("SITE_ROOT",REQSCHEMA."://".HOSTNAME);
-  if(!defined("SITE_BASE_PATH")) define("SITE_BASE_PATH",REQSCHEMA."://".HOSTNAME.READ_DIR);
+  if(!defined("SITE_BASE_PATH")) define("SITE_BASE_PATH",SITE_ROOT.READ_DIR);
   if(!defined("READ_ROOT")) define("READ_ROOT",DOCUMENT_ROOT.READ_DIR);
   if(!defined("IMAGE_ROOT")) define("IMAGE_ROOT",DOCUMENT_ROOT."/images");
   if(!defined("EXPORT_ROOT")) define("EXPORT_ROOT",DOCUMENT_ROOT."/export");
@@ -49,18 +49,26 @@
   define("SHOWCHAYAVIEW",false);
   define("FORMATENCODEDETYM",true);
   define("SHOWETYMPARENS",false);
+  if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer");
+// to export with separation of project databases use the line below. Also consider
+// symbolic links to READ's viewer support subdirectories css and js in viewer export
+// directory for automatic system update
+//  if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer/".DBNAME);
+  if(!defined("VIEWER_EXPORT_PATH")) define("VIEWER_EXPORT_PATH",DOCUMENT_ROOT.VIEWER_EXPORT_SUBDIR);
+  if(!defined("VIEWER_BASE_URL")) define("VIEWER_BASE_URL",SITE_ROOT.VIEWER_EXPORT_SUBDIR);
+
 
   $info = new SplFileInfo(SEGMENT_CACHE_BASE_PATH);
   if (!$info->isDir()) {
     $isDir = mkdir($info, 0775, true);
-    if (!$isDir) {//point at the temp dir which will only can temporarily
-      uopz_redefine("SEGMENT_CACHE_BASE_PATH", sys_get_temp_dir()); //tod this has issues with multiple databases. Perhaps we place the db name on the file.
+    if (!$isDir) {//point at the temp dir which will only store temporarily
+      uopz_redefine("SEGMENT_CACHE_BASE_PATH", sys_get_temp_dir()); //todo this has issues with multiple databases. Perhaps we place the db name on the file.
     }
   }
   $info = new SplFileInfo(XML_EXPORT_ROOT);
   if (!$info->isDir()) {
     $isDir = mkdir($info, 0775, true);
-    if (!$isDir) {//point at the temp dir which will only can temporarily
+    if (!$isDir) {//point at the temp dir which will only store temporarily
       uopz_redefine("XML_EXPORT_ROOT", DOCUMENT_ROOT);
       uopz_redefine("EPIDOC_EXPORT_ROOT", DOCUMENT_ROOT."/epidoc");
     }

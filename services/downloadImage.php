@@ -81,7 +81,7 @@ if (!$imgID && !$blnID & !$url) {
     curl_setopt($ch, CURLOPT_HEADER, 0);  //don't include header in output
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);  // follow server header redirects
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);  // don't verify peer cert
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);  // timeout after ten seconds
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);  // timeout after 30 seconds
     curl_setopt($ch, CURLOPT_MAXREDIRS, 5);  // no more than 5 redirections
 
     $data = curl_exec($ch);

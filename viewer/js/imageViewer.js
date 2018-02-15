@@ -307,7 +307,7 @@ VIEWERS.ImageViewer.prototype = {
         imgV.imgContext.imageSmoothingEnabled = false;
         imgV.initImage();
       };
-      this.image.crossOrigin = "anonymous";
+//      this.image.crossOrigin = "anonymous";
     }
     if (this.image.src != this.imgSrc) {
       this.image.src = this.imgSrc;

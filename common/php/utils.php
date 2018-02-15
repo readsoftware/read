@@ -2782,6 +2782,9 @@ function compareWordLocations($locW1,$locW2) {
   if (preg_match("/^sort\d+/",$tref1) && preg_match("/^sort\d+/",$tref2)) {
     $tref1 = intval(substr($tref1,4));
     $tref2 = intval(substr($tref2,4));
+  } else if (is_numeric($tref1)&& is_numeric($tref2)) {
+    $tref1 = intval($tref1);
+    $tref2 = intval($tref2);
   }
   if ($tref1 > $tref2) {
     return 1;
@@ -2873,4 +2876,114 @@ $prefixToTableName = array(
           "era" => "era"
 );
 
+function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $maxSizeX = 150, $maxSizeY = 150) {
+  $sourcefile = $srcPath.$srcFilename;
+  $thumbfile = $targetPath.getThumbFromFilename($srcFilename);
+  list($imageW,$imageH) = getimagesize($sourcefile);
+  //shrink and preserve aspect
+  $percent = $maxSizeX/$imageW;
+  if ($percent>1) {
+    $percent = 1;
+  }
+  if ($percent*$imageH > $maxSizeY) {
+    $percent = $maxSizeY/$imageH;
+  }
+  $thumbW = round($percent*$imageW);
+  $thumbH = round($percent*$imageH);
+
+  $thumbImage = imagecreatetruecolor($thumbW,$thumbH);
+
+  switch($ext){
+    case 'png':
+      $sourceImage = imagecreatefrompng($sourcefile);
+      break;
+    case 'gif':
+      $sourceImage = imagecreatefromgif($sourcefile);
+      break;
+    case 'jpg':
+    case 'jpeg':
+    default:
+      $sourceImage = imagecreatefromjpeg($sourcefile);
+  }
+
+  if ($sourceImage) {
+    imagecopyresampled($thumbImage,$sourceImage,0,0,0,0,$thumbW,$thumbH,$imageW,$imageH);
+    switch($ext){
+      case 'png':
+        $ret = imagepng($thumbImage,$thumbfile,9);
+        break;
+      case 'gif':
+        $ret = imagegif($thumbImage,$thumbfile,100);
+        break;
+      case 'jpg':
+      case 'jpeg':
+      default:
+        $ret = imagejpeg($thumbImage,$thumbfile,100);
+    }
+    imagedestroy($thumbImage);
+    imagedestroy($sourceImage);
+    if ($ret) {
+      return $thumbBaseURL.getThumbFromFilename($srcFilename);
+    }
+  }
+  return false;
+}
+
+function getServiceContent($url){
+  $content = null;
+  if ($url) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, '/dev/null');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);  //return the output as a string from curl_exec
+    curl_setopt($ch, CURLOPT_BINARYTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_NOBODY, 0);
+    curl_setopt($ch, CURLOPT_HEADER, 0);  //don't include header in output
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);  // follow server header redirects
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);  // don't verify peer cert
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);  // timeout after 30 seconds
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 5);  // no more than 5 redirections
+
+    $content = curl_exec($ch);
+    //error_log(" data = ". $data);
+
+    $error = curl_error($ch);
+    if ($error) {
+      $code = intval(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+      error_log("get Service content error: $error ($code) url = $url");
+      curl_close($ch);
+      return null;
+    }
+    curl_close($ch);
+  }
+  return $content;
+}
+
+function startLog() {
+  global $logHTML;
+  $logHTML = "<html>\n<body>\n";
+}
+
+function logAddMsg($msg) {
+  global $logHTML;
+  $logHTML .= "<div class=\"logmessage\">$msg</div>\n";
+}
+
+function logAddMsgExit($msg) {
+  global $logHTML;
+  $logHTML .= "<div class=\"logmessage\">$msg</div>\n";
+  flushLog();
+  exit();
+}
+
+function logAddLink($msg,$url) {
+  global $logHTML;
+  $logHTML .= "<div class=\"loglink\"><a href=\"$url\" target=\"_new\">$msg</a></div>\n";
+}
+
+function flushLog() {
+  global $logHTML;
+  $logHTML .= "</body>\n</html>\n";
+  echo $logHTML;
+  $logHTML = "";
+}
 ?>

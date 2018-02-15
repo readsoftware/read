@@ -116,7 +116,7 @@ function returnXMLSuccessMsgPage($msg) {
     if (@$verbose) {
 	    die("<html><body><success>$msg</success></body></html>");
     }else{
-      error_log("successful transform ".$msg);
+      error_log("successful epidoc transform ".$msg);
     }
 }
 
@@ -125,7 +125,7 @@ function returnXMLErrorMsgPage($msg) {
 	if (@$verbose) {
         die("<?xml version='1.0' encoding='UTF-8'?>\n<error>$msg</error>");
     }
-   error_log("errored transform ".$msg);
+   error_log("errorant epidoc transform ".$msg);
 }
 
 function errorHandler($errno, $errmsg, $file, $line)
