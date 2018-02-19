@@ -41,12 +41,15 @@
   }
   define("CROP_IMAGE_SERVICE_PATH",SITE_BASE_PATH."/common/php/cropImagePoly.php");
 
-  //configure viewer for site
+  //configure viewer defaults for site
   define("SHOWVIEWERCONTENTOUTLINE",false);
   define("SHOWIMAGEVIEW",true);
   define("USEPHYSICALVIEW",false);
   define("SHOWTRANSLATIONVIEW",true);
   define("SHOWCHAYAVIEW",false);
+  define("EXPORTFULLGLOSSARY",false);
+  define("ALLOWIMAGEDOWNLOAD",false);
+  define("ALLOWTEIDOWNLOAD",true);
   define("FORMATENCODEDETYM",true);
   define("SHOWETYMPARENS",false);
   if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer");

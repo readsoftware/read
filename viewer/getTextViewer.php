@@ -43,25 +43,50 @@
   if (!$data) {
     returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
   } else {
+    //get parameters
     $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:true;//default (parameter missing) not multi edition
     $multiEdition = (!isset($data['multiEd']) || !$data['multiEd'])? false:true;//default (parameter missing) not multi edition
+    $isStaticView = (!isset($data['staticView'])||$data['staticView']==0)?false:true;
     $txtID = null;
+    if(!$isStaticView) {
+      $title = (isset($data['title'])?$data['title']:null);
+    }
+    $ednIDs = $ednID = null;
+    $catIDs = $catID = $ednToCatID = null;
     if (isset($data['txtID']) && is_numeric($data['txtID'])) {
       $txtID = intval($data['txtID']);
       if (!is_int($txtID)) {
         $txtID = null;
       }
     }
-    $ednID = null;
-    if ( isset($data['ednID'])) {//required
+    if ( isset($data['ednID'])) {
       $ednID = $data['ednID'];
       $ednIDs = explode(",",$ednID);
-      $ednID = intval($ednIDs[0]);
+      $ednID = intval($ednIDs[0]); //first id is primary
       if (!is_int($ednID)) {
         $ednIDs = $ednID = null;
       }
     }
-    $title = "unknown text";
+    if ( isset($data['catID'])) {//optional override
+      $catID = $data['catID'];
+      $catIDs = explode(",",$catID);
+      $catID = intval($catIDs[0]); //first id is primary
+      if (!is_int($catID)) {
+        $catIDs = $catID = null;
+      } else if (!$txtID && $ednIDs){
+        $cntCat = count($catIDs);
+        $ednToCatID = array();
+        for ($i = 0; $i < count($ednIDs); $i++){
+          if ($cntCat == 1){
+            $ednToCatID[$ednIDs[i]] = $catIDs[0];//single catalog case
+          } else if ($i < $cntCat) {
+            $ednToCatID[$ednIDs[i]] = $catIDs[$i];//multiple catalog case
+          } else {
+            $ednToCatID[$ednIDs[i]] = null;//too many ednIDs case
+          }
+        }
+      }
+    }
     if (!$txtID && !$ednID) {
       returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
     } else if ($txtID) {
@@ -69,16 +94,25 @@
       if ($text->hasError()) {
         returnXMLErrorMsgPage("unable to load text $txtID - ".join(",",$text->getErrors()));
       }
-      $editions = $text->getEditions(true);
+      $editions = $text->getEditions();
       if ($editions->getError() || $editions->getCount() == 0) {
         returnXMLErrorMsgPage("unable to load any text editions - ".$editions->getError());
       }
       $edition = $editions->current();
+      //get this text's default edition
       $ednIDs = $editions->getKeys();
       $sortedEdnIDs = $ednIDs;
       sort($sortedEdnIDs,SORT_NUMERIC);
       $ednID = $sortedEdnIDs[0];
-      $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
+      if ($catID) {
+        $ednToCatID = array($ednID=>$catID);//single catalog case
+      }
+      if (!$multiEdition){
+        $ednIDs = null;
+      }
+      if (!$title){//if not being
+        $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
+      }
     } else {
       $edition = new Edition($ednID);
       if ($edition->hasError()) {
@@ -88,28 +122,56 @@
       if (!$text || $text->hasError()) {
         returnXMLErrorMsgPage("invalid viewer request - access denied");
       }
-      $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
+      if (!$title){//if not being
+        $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
+      }
       $txtID = $text->getID();
     }
     $multiEditionHeaderDivHtml = null;
     if ($multiEdition && $ednIDs && count($ednIDs) > 1) {//setup edition info strcture
       $multiEditionHeaderDivHtml = getMultiEditionHeaderHtml($ednIDs);
     }
-    $glossaryEntTag = "edn".$ednID;
-    $catTag = null;
-    if ( isset($data['catID'])) {//optional override
-      $catTag = $glossaryEntTag = "cat".$data['catID'];
-    }
   }
-  $isStaticView = (!isset($data['staticview'])||$data['staticview']==0)?false:true;
-  $showContentOutline = isset($data['showTOC'])?(!$data['showTOC']?false:true):(defined("SHOWVIEWERCONTENTOUTLINE")?SHOWVIEWERCONTENTOUTLINE:true);
-  $showImageView = isset($data['showImage'])?(!$data['showImage']?false:true):(defined("SHOWIMAGEVIEW")?SHOWIMAGEVIEW:true);
-  $showTranslationView = isset($data['showTrans'])?(!$data['showTrans']?false:true):(defined("SHOWTRANSLATIONVIEW")?SHOWTRANSLATIONVIEW:true);
-  $showChayaView = isset($data['showChaya'])?(!$data['showChaya']?false:true):(defined("SHOWCHAYAVIEW")?SHOWCHAYAVIEW:true);
+
+  if (!$isStaticView){
+    $exportGlossary = isset($data['expGlossary'])?(!$data['expGlossary']?false:true):
+                          (defined("EXPORTFULLGLOSSARY")?EXPORTFULLGLOSSARY:false);
+    $allowImageDownload = isset($data['imgDownload'])?(!$data['imgDownload']?false:true):
+                          (defined("ALLOWIMAGEDOWNLOAD")?ALLOWIMAGEDOWNLOAD:false);
+    $allowTeiDownload = isset($data['teiDownload'])?(!$data['teiDownload']?false:true):
+                          (defined("ALLOWTEIDOWNLOAD")?ALLOWTEIDOWNLOAD:true);
+    $showContentOutline = isset($data['showTOC'])?(!$data['showTOC']?false:true):
+                          (defined("SHOWVIEWERCONTENTOUTLINE")?SHOWVIEWERCONTENTOUTLINE:true);
+    $showImageView = isset($data['showImage'])?(!$data['showImage']?false:true):
+                          (defined("SHOWIMAGEVIEW")?SHOWIMAGEVIEW:true);
+    $showTranslationView = isset($data['showTrans'])?(!$data['showTrans']?false:true):
+                                (defined("SHOWTRANSLATIONVIEW")?SHOWTRANSLATIONVIEW:true);
+    $showChayaView = isset($data['showChaya'])?(!$data['showChaya']?false:true):
+                          (defined("SHOWCHAYAVIEW")?SHOWCHAYAVIEW:true);
+  } else {// static view calculation - need to check for variables from being included
+    $exportGlossary = isset($exportGlossary)?$exportGlossary:
+                          (defined("EXPORTFULLGLOSSARY")?EXPORTFULLGLOSSARY:false);
+    $allowImageDownload = isset($allowImageDownload)?$allowImageDownload:
+                          (defined("ALLOWIMAGEDOWNLOAD")?ALLOWIMAGEDOWNLOAD:false);
+    $allowTeiDownload = isset($allowTeiDownload)?$allowTeiDownload:
+                          (defined("ALLOWTEIDOWNLOAD")?ALLOWTEIDOWNLOAD:true);
+    $showContentOutline = isset($showContentOutline)?$showContentOutline:
+                          (defined("SHOWVIEWERCONTENTOUTLINE")?SHOWVIEWERCONTENTOUTLINE:true);
+    $showImageView = isset($showImageView)?$showImageView:
+                          (defined("SHOWIMAGEVIEW")?SHOWIMAGEVIEW:true);
+    $showTranslationView = isset($showTranslationView)?$showTranslationView:
+                                (defined("SHOWTRANSLATIONVIEW")?SHOWTRANSLATIONVIEW:true);
+    $showChayaView = isset($showChayaView)?$showChayaView:
+                          (defined("SHOWCHAYAVIEW")?SHOWCHAYAVIEW:true);
+  }
 
   //get list of all edition annotation types and use to test if there are any translations and/or chaya
-  //note this is the same for multi-editions so teh interface is built and hidden or shown based on each edition's data
-  $edAnnoTypes = getEditionAnnotationTypes($ednIDs);
+  //note this is the same for multi-editions so the interface is built and hidden or shown based on each edition's data
+  if ($ednIDs && count($ednIDs)) {
+    $edAnnoTypes = getEditionAnnotationTypes($ednIDs);
+  } else if ($ednID) {
+    $edAnnoTypes = getEditionAnnotationTypes(array($ednID));
+  }
   $hasTranslation = in_array(Entity::getIDofTermParentLabel('translation-annotationtype'),$edAnnoTypes);
   $hasChaya = in_array(Entity::getIDofTermParentLabel('chaya-translation'),$edAnnoTypes);
 ?>
@@ -130,13 +192,22 @@
     <script src="/jqwidget/jqwidgets/jqxdata.js"></script>
     <script src="/jqwidget/jqwidgets/jqxexpander.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtooltip.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxcheckbox.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxbuttons.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxwindow.js"></script>
 <?php
+  $exportStaticURL = null;
   if ($isStaticView){
 ?>
     <script src="./js/utility.js"></script>
     <script src="./js/debug.js"></script>
 <?php
   }else{
+    $exportStaticBaseURL = SITE_BASE_PATH."\/viewer\/exportTextViewer.php?db=".DBNAME.
+                            (isset($data['txtID'])?"&txtID=".$data['txtID']:($data['ednID']?"&ednID=".$data['ednID']:"")).
+                            (isset($data['multiEd'])?"&multiEd=".$data['multiEd']:"").
+                            (isset($data['catID'])?"&catID=".$data['catID']:"").
+                            (isset($ednIDs)?"&xednIDs=".join(',',$ednIDs):"&xednIDs=$ednID");
 ?>
     <script src="../editors/js/utility.js"></script>
     <script src="../editors/js/debug.js"></script>
@@ -149,6 +220,13 @@
           srvbasepath="<?=SITE_ROOT?>",
           basepath="<?=SITE_BASE_PATH?>",
 <?php
+  if (!$isStaticView) {
+?>
+          exportStaticBaseURL = "<?=$exportStaticBaseURL?>",
+<?php
+    $urlMap = array("tei"=>array());
+    $teiBaseURL = SITE_BASE_PATH."/services/exportEditionToEpiDoc.php?db=".DBNAME."&download=1&ednID=";
+  }
   if ($multiEdition) {
     $edStructHtmlByEdn = "";
     $edFootnotesByEdn = "";
@@ -168,6 +246,7 @@
         $edBlnPosLookupByEdn .= ", '$ednID':";
         $edPolysByBlnTagTokCmpTagByEdn .= ", '$ednID':";
       } else {
+        $isFirst = false;
         $defaultEdnID = $ednID;
         $edStructHtmlByEdn .= "'$ednID':";
         $edFootnotesByEdn .= "'$ednID':";
@@ -180,16 +259,18 @@
 
       $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
       $edFootnotesByEdn .= getEditionFootnoteTextLookup();
-      if ($isFirst) {
-        $isFirst = false;
-        $edGlossaryLookupByEdn .= getEditionGlossaryLookup(($catTag?$catTag:'edn'.$ednID),$ednID,$refreshLookUps);
+      if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
+        $edGlossaryLookupByEdn .= getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps);
       } else {
-        $edGlossaryLookupByEdn .= getEditionGlossaryLookup('edn'.$ednID,$ednID,$refreshLookUps);
+        $edGlossaryLookupByEdn .= '{}';
       }
       $edTocHtmlByEdn .= "'".getEditionTOCHtml()."'";
       $edUrlBlnImgLookupByEdn .= getImageBaselineURLLookup();//reset and calc'd in getEditionsStructuralViewHtml
       $edBlnPosLookupByEdn .= getBaselinePosByEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
       $edPolysByBlnTagTokCmpTagByEdn .= getPolygonByBaselineEntityTagLookup();//reset and calc'd in getEditionsStructuralViewHtml
+      if (!$isStaticView) {
+        $urlMap["tei"]["edn$ednID"] = $teiBaseURL.$ednID;
+      }
     }
 ?>
           multiEdition = true,
@@ -203,16 +284,20 @@
   } else {
 ?>
           multiEdition = false,
-          edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs,$refreshLookUps)?>,
+          edStructHtml = <?=getEditionsStructuralViewHtml(array($ednID),$refreshLookUps)?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
-          edGlossaryLookup = <?=getEditionGlossaryLookup($glossaryEntTag,null,$refreshLookUps)?>//calc'd for first edition assuming all editions are inclusive
+          edGlossaryLookup = <?=getEditionGlossaryLookup("cat".$catID,$ednID,$refreshLookUps)?>
 <?php
+    if (!$isStaticView) {
+      $urlMap["tei"]["edn$ednID"] = $teiBaseURL.$ednID;
+    }
   }
 ?>
-          epiDownloadURLBase = "<?=SITE_BASE_PATH."/services/exportEditionToEpiDoc.php?db=".DBNAME."&download=1&ednID="?>",
+,
+          ednToEpiDownloadURLs = <?=json_encode($urlMap['tei'])?>,
           editionIsPublic = <?=($edition->isResearchEdition()?"false":"true")?>,
           curEdnID = "<?=$edition->getID()?>",
-          curEpidocDownloadURL = epiDownloadURLBase + curEdnID
+          curEpidocDownloadURL = ednToEpiDownloadURLs["edn"+curEdnID]
 <?php
   if ($showContentOutline) {
     if ($multiEdition) {
@@ -433,6 +518,48 @@
             $epidocDownloadLink = $('.epidocDownloadLink',$textViewerHdr),
             $textViewerContent = $('#textViewerContent')
 <?php
+  if (!$isStaticView) {
+    //calculate static view configuration form initial values
+    //save in session and use defaults is no session variable
+    //todo  figure out a good place to save config based on live viewer context (text or edition or ??)
+    if (array_key_exists('cfgStaticView',$_SESSION)) {
+      $staticViewSettings = $_SESSION['cfgStaticView'];
+    } else {
+      $staticViewLayout = 0;
+      if ($exportGlossary){
+        $staticViewLayout += 64; //bit 6
+      }
+      if ($allowImageDownload){
+        $staticViewLayout += 32; //bit 5
+      }
+      if ($allowTeiDownload){
+        $staticViewLayout += 16; //bit 4
+      }
+      if ($showContentOutline){
+        $staticViewLayout += 8; //bit 3
+      }
+      if ($showImageView){
+        $staticViewLayout += 4; //bit 2
+      }
+      if ($showTranslationView){
+        $staticViewLayout += 2; //bit 1
+      }
+      if ($showChayaView){
+        $staticViewLayout += 1; //bit 0
+      }
+
+      $staticViewSettings = array("fname"=>($text && $text->getCKN()?str_replace(' ','_',trim($text->getCKN())):"tempfname"),
+                              "title"=>($title?$title:"unknown title"),
+                              "cfgStaticLayout"=>$staticViewLayout);
+      $_SESSION['cfgStaticView'] = $staticViewSettings;
+    }
+?>
+,
+            $btnExportStatic = $('#btnExportStatic'),
+            $btnSetting = $('#btnSetting'),
+            staticViewSettings=<?= json_encode($staticViewSettings) ?>
+<?php
+  }
   if ($showContentOutline) {
 ?>
 ,
@@ -450,8 +577,6 @@
             $imageViewerContent= $('#imageViewerContent')
 <?php
   }
-?>
-<?php
   if ($showTranslationView && $hasTranslation) {
     $cntPanels++;
 ?>
@@ -477,18 +602,100 @@
            cntPanels = <?=$cntPanels?>,
            avgContentPanelHeight = ($(window).height()-$('.headline').height())/cntPanels - $textViewerHdr.height() -15
 ;
-if (editionIsPublic) {
-  $epidocDownloadLink.attr('href',curEpidocDownloadURL);
-  if (!$epidocDownloadLink.hasClass('public')){
-    $epidocDownloadLink.addClass('public');
-  }
-} else {
-  $epidocDownloadLink.attr('href',"#");
-  if ($epidocDownloadLink.hasClass('public')){
-    $epidocDownloadLink.removeClass('public');
-  }
-}
+          if (editionIsPublic) {
+            $epidocDownloadLink.attr('href',curEpidocDownloadURL);
+            if (!$epidocDownloadLink.hasClass('public')){
+              $epidocDownloadLink.addClass('public');
+            }
+          } else {
+            $epidocDownloadLink.attr('href',"#");
+            if ($epidocDownloadLink.hasClass('public')){
+              $epidocDownloadLink.removeClass('public');
+            }
+          }
 <?php
+  if (!$isStaticView) {
+?>
+          function updateExportStaticLinkURL() {
+            newURL = exportStaticBaseURL;
+            if (staticViewSettings['title']){
+              newURL += "&title="+staticViewSettings['title']
+            }
+            if (staticViewSettings['fname']){
+              newURL += "&fname="+staticViewSettings['fname']
+            }
+            if (staticViewSettings['cfgStaticLayout']){
+              newURL += "&cfgStatic="+staticViewSettings['cfgStaticLayout']
+            }
+            $btnExportStatic.attr('href',newURL);
+          }
+          updateExportStaticLinkURL();
+          function initSettingsDialog() {
+            var mainContainer = $('body'),
+                offset = mainContainer.offset();
+                offset.xcenter = mainContainer.innerWidth()/2;
+                offset.ycenter = mainContainer.innerHeight()/2;
+                dlgWidth = 400;
+                dlgHeight = 285;
+            $('#settingsDialog').jqxWindow({  width: dlgWidth,
+                height: dlgHeight, resizable: true,
+                cancelButton: $('#btnCancel'),
+                position: { x: offset.left + offset.xcenter - dlgWidth/2, y: offset.top +offset.ycenter - dlgHeight/2},
+                initContent: function () {
+                  var cfgLayout = staticViewSettings.cfgStaticLayout;
+                  $('#btnSaveSetting').jqxButton({ width: '80px', disabled: false });
+                  $('#btnSaveSetting').unbind('click').bind('click',function(){
+                      staticViewSettings.fname = $('#fname').val();
+                      staticViewSettings.title = $('#title').val();
+                      cfgLayout = 0;
+                      if ($('#fullGlossaryCheckBox').jqxCheckBox('checked')) {
+                        cfgLayout += 64;
+                      }
+                      if ($('#dlImagesCheckBox').jqxCheckBox('checked')) {
+                        cfgLayout += 32;
+                      }
+                      if ($('#dlTEI').jqxCheckBox('checked')) {
+                        cfgLayout += 16;
+                      }
+                      if ($('#showTOCCheckBox').jqxCheckBox('checked')) {
+                        cfgLayout += 8;
+                      }
+                      if ($('#showImageCheckBox').jqxCheckBox('checked')) {
+                        cfgLayout += 4;
+                      }
+                      if ($('#showTranslation').jqxCheckBox('checked')) {
+                        cfgLayout += 2;
+                      }
+                      if ($('#showChaya').jqxCheckBox('checked')) {
+                        cfgLayout += 1;
+                      }
+                      staticViewSettings.cfgStaticLayout = cfgLayout;
+                      $('#settingsDialog').jqxWindow('close');
+                      updateExportStaticLinkURL();
+                  });
+                  $('#btnCancel').jqxButton({ width: '80px', disabled: false });
+                  $('#fname').val(staticViewSettings.fname);
+                  $('#title').val(staticViewSettings.title);
+                  $('#fullGlossaryCheckBox').jqxCheckBox({ width: '150px', checked:(cfgLayout&64?true:false)});
+                  $('#dlImagesCheckBox').jqxCheckBox({ width: '150px', checked:(cfgLayout&32?true:false)});
+                  $('#dlTEI').jqxCheckBox({ width: '150px', checked:(cfgLayout&16?true:false)});
+                  $('#showTOCCheckBox').jqxCheckBox({ width: '150px', checked:(cfgLayout&8?true:false)});
+                  $('#showImageCheckBox').jqxCheckBox({ width: '150px', checked:(cfgLayout&4?true:false)});
+                  $('#showTranslation').jqxCheckBox({ width: '150px', checked:(cfgLayout&2?true:false)});
+                  $('#showChaya').jqxCheckBox({ width: '150px', checked:(cfgLayout&1?true:false)});
+                }
+            });
+            $('#settingsDialog').jqxWindow('close');
+          }
+          initSettingsDialog();
+          $btnSetting.unbind('click').bind('click', function (e) {
+            //open dialog
+            $('#settingsDialog').jqxWindow('open');
+          });
+
+
+<?php
+  }
   if ($multiEdition && $multiEditionHeaderDivHtml) {
 ?>
           $textViewerHdr.append('<?=$multiEditionHeaderDivHtml?>');
@@ -502,7 +709,7 @@ if (editionIsPublic) {
             setTextViewHtmlandEvents(edStructHtmlByEdn[ednID], edFootnotesByEdn[ednID], edGlossaryLookupByEdn[ednID]);
             editionIsPublic = isPublished;
             curEdnID = ednID;
-            curEpidocDownloadURL = epiDownloadURLBase + curEdnID;
+            curEpidocDownloadURL = ednToEpiDownloadURLs["edn"+curEdnID];
             if (editionIsPublic) {
               $epidocDownloadLink.attr('href',curEpidocDownloadURL);
               if (!$epidocDownloadLink.hasClass('public')){
@@ -594,7 +801,6 @@ if (editionIsPublic) {
           } else {
             $tocNavButton.hide();
           }
-
 
 <?php
   }
@@ -869,15 +1075,23 @@ if (editionIsPublic) {
   if ($showContentOutline) {
 ?>
   <div id="tocNavPanel" class="tocNavPanel"></div>
-  <div class="headline"><div class="tocNavButton" title="Table of Contents">&#9776;</div><div class="titleDiv"><?=$title?></div></div>
+  <div class="headline"><div class="tocNavButton" title="Table of Contents">&#9776;</div><div class="titleDiv"><?=$title?></div>
 <?php
   } else {
 ?>
-  <div class="headline"><div class="titleDiv"><?=$title?></div></div>
+  <div class="headline"><div class="titleDiv"><?=$title?></div>
 <?php
   }
+  if (!$isStaticView) {
 ?>
+  <a id="btnExportStatic" class="expStaticButton" target="_new" title="Export Static Viewer">export html</a>
+  <button id="btnSetting" class="settingButton" title="set export preferences" style="font-size: large;">&#x2699;</button></div>
 <?php
+  } else {
+?>
+  </div>
+<?php
+  }
   if ($showImageView && (count($imgURLsbyBlnImgTag['bln']) > 0 || count($imgURLsbyBlnImgTag['img']) > 0)) {
 ?>
     <div id="imageViewer" class="viewer syncScroll">
@@ -908,6 +1122,50 @@ if (editionIsPublic) {
     <div id="chayaViewer" class="viewer syncScroll">
       <div id="chayaViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Chāyā</div></div>
       <div id="chayaViewerContent" class="viewerContent">test</div>
+    </div>
+<?php
+  }
+?>
+<?php
+  if (!$isStaticView) {
+?>
+    <div id="settingsDialog">
+        <div id="settingsDialogHeader">
+            <span id="captureContainer" style="float: left">Export Viewer Settings</span>
+        </div>
+        <div id="settingsDialogContent" style="overflow: hidden">
+            <div style="margin: 10px">
+              <div class="dlgInputBox">
+                <span id="lblFName" class="dlgInputLabel">Filename  :</span>
+                <input type="text" class="dlgInput" id="fname" />
+              </div>
+              <div class="dlgInputBox">
+                <span id="lblTitle" class="dlgInputLabel">View Title :</span>
+                <input type="text" class="dlgInput" id="title" />
+              </div>
+              <div class="dlgResourceBox">
+                <span class="dlgOptionsGroupLabel">include :</span>
+                <div id="resourceOptions" >
+                  <div id="fullGlossaryCheckBox" class="dlgCheckBox bit64">full glossary</div>
+                  <div id="dlImagesCheckBox"  class="dlgCheckBox bit32">download images</div>
+                  <div id="dlTEI"  class="dlgCheckBox bit16">download TEI</div>
+                </div>
+              </div>
+              <div class="dlgResourceBox">
+                <span class="dlgViewOptionsGroupLabel">show :</span>
+                <div id="viewOptions" >
+                  <div id="showTOCCheckBox"  class="dlgCheckBox bit8">TOC</div>
+                  <div id="showImageCheckBox"  class="dlgCheckBox bit4">images</div>
+                  <div id="showTranslation"  class="dlgCheckBox bit2">translation</div>
+                  <div id="showChaya"  class="dlgCheckBox bit1">chāyā</div>
+                </div>
+              </div>
+              <div style="float: right">
+                  <input type="button" class="dlgButton" value="Save" style="margin-bottom: 5px;" id="btnSaveSetting" />
+                  <input type="button" class="dlgButton" value="Cancel" id="btnCancel" />
+              </div>
+            </div>
+        </div>
     </div>
 <?php
   }

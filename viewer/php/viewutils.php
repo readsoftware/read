@@ -142,6 +142,9 @@ function getEditionTranslationFootnoteTextLookup() {
 *
 */
 function getEditionGlossaryLookup($entTag, $scopeEdnID = null, $refresh = false) {
+  if (!$entTag) {
+    return '{}';
+  }
   $catID = null;
   if (substr($entTag,0,3) == "cat") {
     $catID = substr($entTag,3);
@@ -149,7 +152,7 @@ function getEditionGlossaryLookup($entTag, $scopeEdnID = null, $refresh = false)
     if ($catalog->hasError() || $catalog->getID() != $catID){
       $catID = null;
     }
-  } else if (substr($entTag,0,3) == "edn") {
+  } else if (substr($entTag,0,3) == "edn") {// find all catalogs this edition belongs to and choose the first one.
     $glossaryTypeID = Entity::getIDofTermParentLabel('glossary-catalogtype'); //term dependency
     $catalogs = new Catalogs(substr($entTag,3)." = ANY(cat_edition_ids) and cat_type_id = $glossaryTypeID","cat_id",null,null);
     if (!$catalogs->getError() && $catalogs->getCount() > 0) {
@@ -2050,6 +2053,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
   } else {
     if ($scopeEdnID){
       $textTypeID = Entity::getIDofTermParentLabel('text-sequencetype');
+      //find the text division sequence ids for the scoped edition as a comma separated list
       $query = "select regexp_replace(array_to_string(seq_entity_ids,','),'seq:','','g') from edition left join sequence on seq_id = ANY(edn_sequence_ids) where edn_id = $scopeEdnID and seq_type_id = $textTypeID;";
       $dbMgr = new DBManager();
       $dbMgr->query($query);
@@ -2060,6 +2064,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
         $strTxtDivSeqIDs = $dbMgr->fetchResultRow();
         $strTxtDivSeqIDs = $strTxtDivSeqIDs[0];
       }
+      // query to find only lemma where tokens of the scoped edition are attestations
       $condition = " not lem_owner_id = 1 and lem_component_ids && ".
               "(select array_agg(ids.gid) ".
                "from (select unnest(seq_entity_ids) as gid from sequence where seq_id in ($strTxtDivSeqIDs)) as ids)".
@@ -2073,6 +2078,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
       $condition = "lem_catalog_id = $catID and not lem_owner_id = 1";
     }
     $glossaryCommentTypeID = Entity::getIDofTermParentLabel('glossary-commentarytype'); //term dependency
+    // word map for the entire catalog - this can take a while if the glossary a large number of editions and tokens.
     $cmpTokTag2LocLabel = getWordTagToLocationLabelMap($catalog,$refreshWordMap);
     $entTag2GlossaryHtml = array();
     $lemmas = new Lemmas($condition,"lem_sort_code,lem_sort_code2",null,null);

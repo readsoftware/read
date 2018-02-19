@@ -57,6 +57,7 @@
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $exportFilename = (array_key_exists('filename',$_REQUEST)? $_REQUEST['filename']:null);//will export to READ_FILE_STORE/DBNAME/catTag
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
+  $isStaticView = (array_key_exists('staticView',$_REQUEST)? ($_REQUEST['staticView']==0?false:true):null);
   $useTranscription = (!array_key_exists('usevalue',$_REQUEST)? true:false);
   $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
   $refreshWordMap = (array_key_exists('refreshWordMap',$_REQUEST)? true:false);
@@ -90,7 +91,9 @@
             '<meta name="description" content="'.($catalog->getDescription()?$catalog->getDescription():'').'"/>'.
             '<meta name="revisit-after" content="15 days"/>'.
             '<title>Untitled</title>'.
-            '<link rel="stylesheet" href="'.SITE_BASE_PATH.'/common/css/exGlossary.css" type="text/css"/>'.
+            ($isStaticView?
+            '<link rel="stylesheet" href="./css/exGlossary.css" type="text/css"/>':
+            '<link rel="stylesheet" href="'.SITE_BASE_PATH.'/common/css/exGlossary.css" type="text/css"/>').
           '</head>'.
           '<body/>'.
           '</html>');
@@ -114,6 +117,7 @@
     $lemmas = new Lemmas("lem_catalog_id = $catID and not lem_owner_id = 1","lem_sort_code,lem_sort_code2");
     if ($lemmas->getCount() > 0) {
       $lemIDs = array();
+      $isVerb = false;
       foreach($lemmas as $lemma) {
         $hasAttestations = false;
         $lemGID = $lemma->getGlobalID();
