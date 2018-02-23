@@ -2137,6 +2137,9 @@ EDITORS.LemmaVE.prototype = {
       savedata["cmd"] = "inflectTok";
       savedata["lemID"] = this.entID;
       savedata["tokGID"] = tokGID;
+      if (infID) {
+        savedata["infID"] = infID;
+      }
       if (infProps) {
         savedata["infProps"] = infProps;
       }

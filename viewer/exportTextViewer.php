@@ -220,7 +220,7 @@
       $basefilename = "tempfname";
     }
     $catIDs = $catID = null;
-    if ( isset($data['catID'])) {//optional override
+    if ( isset($data['catID'])) {
       $catID = $data['catID'];
       $catIDs = explode(",",$catID);
       $catID = intval($catIDs[0]); //first id is primary

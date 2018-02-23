@@ -8,32 +8,38 @@
   border: 1px solid white;
 }
 
-.expStaticButton{
-  text-decoration: none;
-  font-size: small;
-  padding-right: 2px;
-  background-color: rgb(240,240,230);
-  border: 1px solid gray;
-  width: 80px;
-  cursor: pointer;
-  text-align: center;
+.expStaticButton {
+    text-decoration: none;
+    font-size: 10pt;
+    padding: 4px;
+    padding-top: 4px;
+    background-color: rgb(240,240,230);
+    border: 1px solid gray;
+    width: 100px;
+    cursor: pointer;
+    text-align: center;
+    padding-top: 6px;
+    margin-right: 15px;
+    color: rgba(0, 0, 0, 0.80);
 }
-
-.settingButton{
-  font-size: large;
-  border: none;
-  background-color: transparent;
+.settingButton {
+    font-size: 19pt;
+    border: none;
+    background-color: transparent;
+    width: 45px;
+    padding-bottom: 4px;
+    padding-right: 10px;
+    color: rgba(0, 0, 0, 0.60);
 }
-
 .viewerHeaderLabel {
   display: inline-flex;
   justify-content: left; /* align horizontal */
   align-items: center; /* align vertical */
-  font-size: 18pt;
+  font-size: 16pt;
   font-weight: bold;
   background-color: inherit;
   height: 40px;
-  padding-left: 25px;
+  padding-left: 15px;
 }
 
 .viewerHeader, #imageViewerHdr {
@@ -52,6 +58,10 @@
   font-size: large;
   resize: vertical;
   padding-left: 20px;
+  font-family: serif;
+}
+.jqx-widget {
+  font-family: serif;
 }
 .viewer {
   border: 1px solid white;
@@ -199,6 +209,8 @@ sup.showing {
   margin-top: 8px;
   padding-top: 8px;
   border-top: solid 1px grey;
+  overflow-y: auto;
+  max-height: 350px;
 }
 .inflectdescript {
   padding-right: 5px;
