@@ -37,6 +37,7 @@
   align-items: center; /* align vertical */
   font-size: 16pt;
   font-weight: bold;
+  font-family: serif;
   background-color: inherit;
   height: 40px;
   padding-left: 15px;
@@ -48,6 +49,7 @@
   width: 100%;
   border: none;
   padding: 0px;
+  font-family: serif;
 }
 
 .viewerContent {
@@ -156,6 +158,8 @@ font-weight: bold;
   max-width: 450px;
   text-align: left;
   display: table;
+  font-size: 16px;
+  font-family: serif;
 }
 sup.showing {
   background: lightgreen !important;
