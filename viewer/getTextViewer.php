@@ -78,11 +78,11 @@
         $ednToCatID = array();
         for ($i = 0; $i < count($ednIDs); $i++){
           if ($cntCat == 1){
-            $ednToCatID[$ednIDs[i]] = $catIDs[0];//single catalog case
+            $ednToCatID[$ednIDs[$i]] = $catIDs[0];//single catalog case
           } else if ($i < $cntCat) {
-            $ednToCatID[$ednIDs[i]] = $catIDs[$i];//multiple catalog case
+            $ednToCatID[$ednIDs[$i]] = $catIDs[$i];//multiple catalog case
           } else {
-            $ednToCatID[$ednIDs[i]] = null;//too many ednIDs case
+            $ednToCatID[$ednIDs[$i]] = null;//too many ednIDs case
           }
         }
       }
@@ -226,6 +226,9 @@
 <?php
     $urlMap = array("tei"=>array());
     $teiBaseURL = SITE_BASE_PATH."/services/exportEditionToEpiDoc.php?db=".DBNAME."&download=1&ednID=";
+    $glossaryUrlLookup = null;
+  } else {
+    $glossaryUrlLookup = (isset($urlMap) && isset($urlMap['gloss']))?$urlMap['gloss']:null;
   }
   if ($multiEdition) {
     $edStructHtmlByEdn = "";
@@ -260,7 +263,7 @@
       $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
       $edFootnotesByEdn .= getEditionFootnoteTextLookup();
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
-        $edGlossaryLookupByEdn .= getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps);
+        $edGlossaryLookupByEdn .= getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps,$glossaryUrlLookup);
       } else {
         $edGlossaryLookupByEdn .= '{}';
       }
@@ -286,7 +289,14 @@
           multiEdition = false,
           edStructHtml = <?=getEditionsStructuralViewHtml(array($ednID),$refreshLookUps)?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
-          edGlossaryLookup = <?=getEditionGlossaryLookup("cat".$catID,$ednID,$refreshLookUps)?>
+<?php
+      if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
+        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps,$glossaryUrlLookup);
+      } else {
+        $edGlossaryLookup = '{}';
+      }
+?>
+          edGlossaryLookup = <?=$edGlossaryLookup?>
 <?php
     if (!$isStaticView) {
       $urlMap["tei"]["edn$ednID"] = $teiBaseURL.$ednID;
@@ -602,6 +612,7 @@
            cntPanels = <?=$cntPanels?>,
            avgContentPanelHeight = ($(window).height()-$('.headline').height())/cntPanels - $textViewerHdr.height() -15
 ;
+          $epidocDownloadLink.html('<div class="epidownloadbtndiv"/>');
           if (editionIsPublic) {
             $epidocDownloadLink.attr('href',curEpidocDownloadURL);
             if (!$epidocDownloadLink.hasClass('public')){
@@ -886,8 +897,18 @@
                     }
                     popupHtml += '</div>';
                     if (lemmaInfo['attestedHtml'] || lemmaInfo['relatedHtml']) {
+<?php
+  if (USESCROLLLEMMAPOPUP) {
+?>
+                      popupHtml += '<div class="glossExtraInfoDiv expanded">';
+<?php
+  } else {
+?>
                       popupHtml += '<div class="glossExpanderDiv"><span class="glossaryExpander">+</span></div>';
                       popupHtml += '<div class="glossExtraInfoDiv">';
+<?php
+  }
+?>
                       if (lemmaInfo['attestedHtml']) {
                         popupHtml += lemmaInfo['attestedHtml'];
                       }
@@ -911,6 +932,9 @@
                 });
                 $(this).jqxTooltip('open');
                 $('.grpTok.'+entTag,$textViewerContent).addClass('showing');
+<?php
+  if (!USESCROLLLEMMAPOPUP) {
+?>
                 $('.glossaryExpander').unbind('click').bind('click', function(e) {
                       var $popupWrapperDiv = $(this).parent().parent(), $expander = $(this),
                           $extraInfoDiv = $('.glossExtraInfoDiv',$popupWrapperDiv);
@@ -924,6 +948,9 @@
                       e.stopImmediatePropagation();
                       return false;
                 });
+<?php
+  }
+?>
               }
               e.stopImmediatePropagation();
               return false;
@@ -1103,7 +1130,17 @@
 ?>
 
     <div id="textViewer" class="viewer syncScroll">
-      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div><a class="epidocDownloadLink" download href="" title="Download Epidoc TEI">&#x2B73;</a></div>
+<?php
+  if ($allowTeiDownload) {
+?>
+      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div><a class="epidocDownloadLink" download href="" title="Download Epidoc TEI">Dl</a></div> <!--&#x2B73;</a></div-->
+<?php
+  } else {
+?>
+      <div id="textViewerHdr" class="viewerHeader"><div class="viewerHeaderLabel"><button class="linkScroll" title="sync scroll on">&#x1F517;</button>Text</div></div>
+<?php
+  }
+?>
       <div id="textViewerContent" class="viewerContent">test</div>
     </div>
 <?php

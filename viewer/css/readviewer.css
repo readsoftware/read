@@ -456,13 +456,13 @@ body.showTOC .tocNavPanel {
   color: rgb(60,60,60);
 }
 .epidocDownloadLink.public{
-  display: inline;
+  display: inline-block;
 }
 .epidownloadbtndiv {
-  height: 20px;
-  width: 20px;
+  height: 10px;
+  width: 15px;
   background-image: URL('../images/download.png');
-  background-size: 20px 20px;
+  background-size: 15px 15px;
   background-repeat: no-repeat;
   display: inline-block;
   padding-bottom: 3px;

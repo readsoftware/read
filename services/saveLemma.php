@@ -379,6 +379,8 @@ if (count($errors) == 0) {
         //if token in inf then remove from old before then proceed
         if ($inflection){
           unlinkInflectedToken($tokGID,$inflection,$lemma);
+        } else {
+          unlinkUninflectedToken($tokGID,$lemma);
         }
         //calc lemma's inflection hash lookup
         $lemEntities = $lemma->getComponents(true);
@@ -430,7 +432,9 @@ if (count($errors) == 0) {
           $tokInflection = $hashLU[$hash];
           $entIDs = $tokInflection->getComponentIDs();
           if ($entIDs && is_array($entIDs)) {
-            array_push($entIDs,$tokGID);
+            if (!in_array($tokGID,$entIDs)) {
+              array_push($entIDs,$tokGID);
+            }
           } else {
             $entIDs = array($tokGID);
           }
@@ -632,8 +636,8 @@ if (array_key_exists("callback",$_REQUEST)) {
   print json_encode($retVal);
 }
 
-function unlinkInflectedToken($tokGID) {
-  global $inflection,$lemma;
+function unlinkInflectedToken($tokGID,$inflection,$lemma) {
+//  global $inflection,$lemma;
   $entIDs = $inflection->getComponentIDs();
   $tokCmpIndex = array_search($tokGID,$entIDs);
   if ($tokCmpIndex !== false){
@@ -660,4 +664,20 @@ function unlinkInflectedToken($tokGID) {
     }
   }
 }
+function unlinkUninflectedToken($tokGID,$lemma) {
+//  global $lemma;
+  $entIDs = $lemma->getComponentIDs();
+  $tokCmpIndex = array_search($tokGID,$entIDs);
+  if ($tokCmpIndex !== false){
+    array_splice($entIDs,$tokCmpIndex,1);
+    $lemma->setComponentIDs($entIDs);
+    $lemma->save();
+    if ($lemma->hasError()) {
+      array_push($errors,"error unlinking token $tokGID lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
+    } else {
+      addUpdateEntityReturnData('lem',$lemma->getID(),'entityIDs',$lemma->getComponentIDs());
+    }
+  }
+}
+
 ?>

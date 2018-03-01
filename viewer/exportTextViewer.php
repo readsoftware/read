@@ -34,6 +34,7 @@
   require_once (dirname(__FILE__) . '/../common/php/sessionStartUp.php');//initialize the session
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
+  require_once (dirname(__FILE__) . '/php/viewutils.php');//get utilities for viewing
 
   startLog();
   $verbose = true;
@@ -109,9 +110,9 @@
     logAddMsgExit("Unable to read Viewer support file '$cssSubPathFilename' aborting export.");
   } else if (!$exportGlossaryCss->isFile() || $exportGlossaryCss->getMTime() < $readGlossaryCss->getMTime()){
     if ( !copy(dirname(__FILE__).'/../editors'.$cssSubPathFilename,$exportDir.$cssSubPathFilename)) {
-      logAddMsgExit("Unable to sync Viewer support file 'readviewer.css' aborting export.");
+      logAddMsgExit("Unable to sync Viewer support file 'exGlossary.css' aborting export.");
     } else {
-      logAddMsg("Sync'd Viewer support file 'readviewer.css'.");
+      logAddMsg("Sync'd Viewer support file 'exGlossary.css'.");
     }
   }
   $cssSubPathFilename = "/images/download.png";
@@ -205,10 +206,12 @@
     if ( isset($data['title'])) {
       $title = $data['title'];
     }
+    $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:true;
     $basefilename = null;
-    if ( isset($data['fname'])) {
+    if ( isset($data['fname']) && strlen($data['fname']) > 0)  {
       $basefilename = $data['fname'];
     } else if (isset($data['txtID'])){
+      $txtID = $data['txtID'];
       $text = new Text($txtID);
       if ($text->hasError()) {
         logAddMsg("unable to load text $txtID - ".join(",",$text->getErrors()));
@@ -239,12 +242,27 @@
 
   if ($allowTeiDownload) {
     //generate static TEI files
+    $singleEdition = (count($xednIDs)== 1);
     foreach ($xednIDs as $xednID){
       // todo check if multiEdition text then test if edition is public or research
+      $edition = new Edition($xednID);
+      if ($edition->hasError()){
+        logAddMsg("Unable to access edition id '$xednID'.");
+        continue;
+      }
       //create TEI files and save to static location
       $url = SITE_BASE_PATH."/services/exportEditionToEpiDoc.php?db=".DBNAME."&ednID=$xednID";
       $editionTEI = getServiceContent($url);
-      $teiFilename = "$basefilename.$xednID".".TEI.xml";
+      if ($singleEdition) {
+        $teiFilename = "$basefilename".".TEI.xml";
+      } else {
+        $ednTitle = $edition->getDescription();
+        if ($ednTitle && strlen($ednTitle)) {
+          $teiFilename = $basefilename."_".preg_replace("/[^A-Za-z0-9\_\-\.]/", '_',$ednTitle).".TEI.xml";
+        } else {
+          $teiFilename = "$basefilename.$xednID".".TEI.xml"; //todo consider using edition title/attribution
+        }
+      }
       if ($editionTEI && $hTEI = fopen("$exportDir/$teiFilename","w")) {
         fwrite($hTEI,$editionTEI);
         fclose($hTEI);
@@ -262,22 +280,33 @@
   if ($exportGlossary && $catIDs && count($catIDs)) {
     //generate static Glossary files
     foreach ($catIDs as $xcatID){
-      // todo check if multiEdition text then test if edition is public or research
-      //create TEI files and save to static location
-      $url = SITE_BASE_PATH."/services/exportHTMLGlossary.php?db=".DBNAME."&staticView=1&catID=$xcatID";
-      $glossaryHTML = getServiceContent($url);
-      $glossaryFilename = "glossary$xcatID"."$basefilename".".html";
-      if ($glossaryHTML && $hGloss = fopen("$exportDir/$glossaryFilename","w")) {
+      // todo check catalog is valid
+      $catalog = new Catalog($xcatID);
+      if ($catalog->hasError()){
+        logAddMsg("Unable to access catalog id '$xcatID'.");
+        continue;
+      }
+      $catTitle = $catalog->getTitle();
+      //create static Glossary file and save to static location
+//      $url = SITE_BASE_PATH."/services/exportHTMLGlossary.php?db=".DBNAME."&staticView=1&catID=$xcatID";
+//      $glossaryHTML = getServiceContent($url);
+      list($result,$glossaryHTML) = getCatalogHTML($catID,true,$refreshLookUps);
+      if ($catTitle && strlen($catTitle)) {
+        $glossaryFilename = preg_replace("/[^A-Za-z0-9\_\-\.]/", '_',$catTitle).".html";
+      } else {
+        $glossaryFilename = "glossary$xcatID"."$basefilename".".html";
+      }
+      if ($result == "success" && $glossaryHTML && $hGloss = fopen("$exportDir/$glossaryFilename","w")) {
         fwrite($hGloss,$glossaryHTML);
         fclose($hGloss);
         $url = "$exportBaseURL/$glossaryFilename";
-        logAddLink("Export TEI '$glossaryFilename'","$exportBaseURL/$glossaryFilename");
-        logAddLink("Download link for Export TEI '$glossaryFilename'",$url);
+        logAddLink("Export Glossary '$glossaryFilename'","$exportBaseURL/$glossaryFilename");
+        logAddLink("Download link for Export Glossary '$glossaryFilename'",$url);
       } else {
-        logAddMsg("Unable to add TEI static export '$glossaryFilename'.");
+        logAddMsg("Unable to add glossary static export '$glossaryFilename'. $glossaryHTML");
       }
-      // add url for TEI to url mapping
-      $urlMap["gloss"]["cat$xcatID"] = $url;
+      // add url for Glossary to url mapping
+      $urlMap["gloss"]["cat$xcatID"] = $url."#%lemtag%";
     }
   }
 

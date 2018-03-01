@@ -50,8 +50,11 @@
   define("EXPORTFULLGLOSSARY",false);
   define("ALLOWIMAGEDOWNLOAD",false);
   define("ALLOWTEIDOWNLOAD",true);
+  define("USESCROLLLEMMAPOPUP",false);
   define("FORMATENCODEDETYM",true);
   define("SHOWETYMPARENS",false);
+  define("LEMMALINKTEMPLATE",READ_DIR."/plugins/dictionary/?search=%lemval%");
+
   if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer");
 // to export with separation of project databases use the line below. Also consider
 // symbolic links to READ's viewer support subdirectories css and js in viewer export
