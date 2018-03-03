@@ -15,7 +15,7 @@
     padding-top: 4px;
     background-color: rgb(240,240,230);
     border: 1px solid gray;
-    width: 100px;
+    width: 120px;
     cursor: pointer;
     text-align: center;
     padding-top: 6px;
@@ -94,6 +94,11 @@
 .dlgViewOptionsGroupLabel{
   width: 60px;
   padding-left: 30px;
+  vertical-align: top;
+}
+.dlgOutputGroupLabel{
+  width: 60px;
+  padding-left: 15px;
   vertical-align: top;
 }
 #resourceOptions, #viewOptions, #outputOptions{
