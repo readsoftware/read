@@ -55,6 +55,7 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
   this.id = imgVCfg['id'] ? imgVCfg['id']: null;
   this.dbName = imgVCfg['dbName'] ? imgVCfg['dbName']: dbName;
   this.basepath = imgVCfg['basepath'] ? imgVCfg['basepath']: basepath;
+  this.enableImageDownload = imgVCfg['imageDownload'] ? imgVCfg['imageDownload']:false;
   this.imgCanvas = imgVCfg['imageCanvas'] ? imgVCfg['imageCanvas']:null;
   this.zoomFactor = imgVCfg['zoomFactor'] ? imgVCfg['zoomFactor']:70;
   this.vpOffset = imgVCfg['initViewportOffset'] && !isNaN(imgVCfg['initViewportOffset'].x) && !isNaN(imgVCfg['initViewportOffset'].y) ? imgVCfg['initViewportOffset']:{x:0,y:0};
@@ -203,7 +204,7 @@ VIEWERS.ImageViewer.prototype = {
                       (this.dbName?'db='+this.dbName+'&':'')+
                       (blnInfo.url?'url='+blnInfo.url:'blnID='+blnID);
         $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' +
-                    resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'"><div class="downloadbtndiv"/></a></div>');//&#x2193;</a></div>');
+                    resLabel +(this.enableImageDownload?'<a href="'+downloadURL+'" download title="Download '+resLabel+'"><div class="downloadbtndiv"/></a>':'')+'</div>');//&#x2193;</a></div>');
         $resDiv.prop('lkupID',lkupID);
         $resDiv.unbind('click').bind('click', function(e) {
           var lkupID = $(this).prop('lkupID');
@@ -259,7 +260,7 @@ VIEWERS.ImageViewer.prototype = {
                         (this.dbName?'db='+this.dbName+'&':'')+
                         (imgInfo.url?'url='+imgInfo.url:'imgID='+imgID);
           $resDiv =$('<div id="'+elemID+'" class="imgmenuresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' +
-                      resLabel +'<a href="'+downloadURL+'" download title="Download '+resLabel+'"><div class="downloadbtndiv"/></a></div>');//&#x2193;</a></div>');
+                      resLabel +(this.enableImageDownload?'<a href="'+downloadURL+'" download title="Download '+resLabel+'"><div class="downloadbtndiv"/></a>':'')+'</div>');//&#x2193;</a></div>');
           $resDiv.prop('lkupID',lkupID);
           $resDiv.unbind('click').bind('click', function(e) {
             var lkupID = $(this).prop('lkupID');

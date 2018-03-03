@@ -8,7 +8,7 @@
   border: 1px solid white;
 }
 
-.expStaticButton {
+.expStaticButton, .btnExportDlg {
     text-decoration: none;
     font-size: 10pt;
     padding: 4px;
@@ -69,6 +69,10 @@
   border: 1px solid white;
   overflow: hidden;
 }
+#resultsDialog, #resultsDialogContent {
+  min-height: 300px;
+  overflow: unset!important;
+}
 #settingsDialogContent{
   background-color: rgb(250,250,250);
 }
@@ -92,7 +96,7 @@
   padding-left: 30px;
   vertical-align: top;
 }
-#resourceOptions, #viewOptions{
+#resourceOptions, #viewOptions, #outputOptions{
     margin-bottom: 2px;
     display: inline-block;
 }

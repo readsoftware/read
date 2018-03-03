@@ -189,6 +189,7 @@
     $cfgStatic = null;
     if ( isset($data['cfgStatic'])) {// bitmap config
       $cfgStatic = $data['cfgStatic'];
+      $staticoverwrite = ($cfgStatic&128?true:false);
       $exportGlossary = ($cfgStatic&64?true:false);
       $allowImageDownload = ($cfgStatic&32?true:false);
       $allowTeiDownload = ($cfgStatic&16?true:false);
@@ -197,7 +198,8 @@
       $showTranslationView = ($cfgStatic&2?true:false);
       $showChayaView = ($cfgStatic&1?true:false);
     } else {
-      $cfgStatic = 127;
+      $cfgStatic = 127; //default is no overwrite bit
+      $staticoverwrite = false;
       $exportGlossary = $allowImageDownload = $allowTeiDownload =
                         $showContentOutline = $showImageView =
                         $showTranslationView = $showChayaView = true;
@@ -205,6 +207,24 @@
     $title = null;
     if ( isset($data['title'])) {
       $title = $data['title'];
+    }
+    $cfgEntityTag = null;
+    $cfgEntity = null;
+    if ( isset($data['cfgEntityTag'])) {
+      $cfgEntityTag = $data['cfgEntityTag'];
+      $prefix = substr($cfgEntityTag,0,3);
+      $cfgEntityID = substr($cfgEntityTag,3);
+      if ($prefix == "txt") {
+        $cfgEntity = new Text($cfgEntityID);
+        if ($cfgEntity->hasError()){
+          $cfgEntity = null;
+        }
+      } else if ($prefix == "edn") {
+        $cfgEntity = new Edition($cfgEntityID);
+        if ($cfgEntity->hasError()){
+          $cfgEntity = null;
+        }
+      }
     }
     $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:true;
     $basefilename = null;
@@ -233,13 +253,15 @@
     }
   }
   //update session Static View configuration
-  $_SESSION['cfgStaticView'] = array("fname"=>$basefilename,
-                                    "title"=>($title?$title:"unknown title"),
-                                    "cfgStaticLayout"=>$cfgStatic);
+  if ($cfgEntityTag) {
+    $_SESSION["cfgStaticView$cfgEntityTag"] = array("fname"=>$basefilename,
+                                                    "title"=>($title?$title:"unknown title"),
+                                                    "cfgStaticLayout"=>($cfgStatic&127));
+  }
 
   //setup urlLookup
   $urlMap = array("tei"=>array());
-
+//*************************************TEI Static Export **********************************
   if ($allowTeiDownload) {
     //generate static TEI files
     $singleEdition = (count($xednIDs)== 1);
@@ -263,11 +285,15 @@
           $teiFilename = "$basefilename.$xednID".".TEI.xml"; //todo consider using edition title/attribution
         }
       }
+      if (!$staticoverwrite && file_exists("$exportDir/$teiFilename")) {
+        logAddMsgExit("TEI static export file '$teiFilename' exist and overwrite not enabled, aborting export.\n".
+                      "If you would like to export, enable overwrite option in Export Dialog before starting export.",false,true);
+      }
       if ($editionTEI && $hTEI = fopen("$exportDir/$teiFilename","w")) {
         fwrite($hTEI,$editionTEI);
         fclose($hTEI);
         $url = SITE_BASE_PATH."/services/downloadTextfile.php?url=$exportBaseURL/$teiFilename";
-        logAddLink("Export TEI '$teiFilename'","$exportBaseURL/$teiFilename");
+        logAddLink("Open exported TEI '$teiFilename'","$exportBaseURL/$teiFilename");
         logAddLink("Download link for Export TEI '$teiFilename'",$url);
       } else {
         logAddMsg("Unable to add TEI static export '$teiFilename'.");
@@ -276,6 +302,7 @@
       $urlMap["tei"]["edn$xednID"] = $url;
     }
   }
+//*************************************Glossary Static Export **********************************
   //create glossary and save if required
   if ($exportGlossary && $catIDs && count($catIDs)) {
     //generate static Glossary files
@@ -296,11 +323,15 @@
       } else {
         $glossaryFilename = "glossary$xcatID"."$basefilename".".html";
       }
+      if (!$staticoverwrite && file_exists("$exportDir/$glossaryFilename")) {
+        logAddMsgExit("Glossary static export file '$glossaryFilename' exist and overwrite not enabled, aborting export.\n".
+                      "If you would like to export, enable overwrite option in Export Dialog before starting export.",false,true);
+      }
       if ($result == "success" && $glossaryHTML && $hGloss = fopen("$exportDir/$glossaryFilename","w")) {
         fwrite($hGloss,$glossaryHTML);
         fclose($hGloss);
         $url = "$exportBaseURL/$glossaryFilename";
-        logAddLink("Export Glossary '$glossaryFilename'","$exportBaseURL/$glossaryFilename");
+        logAddLink("Open exported glossary '$glossaryFilename'","$exportBaseURL/$glossaryFilename");
         logAddLink("Download link for Export Glossary '$glossaryFilename'",$url);
       } else {
         logAddMsg("Unable to add glossary static export '$glossaryFilename'. $glossaryHTML");
@@ -310,8 +341,7 @@
     }
   }
 
-  // create href for glossary/dictionary lookup
-
+//*************************************Viewer Static Export **********************************
   //calculate static viewer HTML and export it
   $_REQUEST['staticView'] = 1; // tell getTextViewer code to generate static
   ob_start();
@@ -319,15 +349,22 @@
   $viewerHTML = ob_get_contents();
   ob_end_clean();
   $viewerFilename = "$basefilename.html";
+  if (!$staticoverwrite && file_exists("$exportDir/$viewerFilename")) {
+    logAddMsgExit("Viewer static export file '$viewerFilename' exist and overwrite not enabled, aborting export.\n".
+                  "If you would like to export, enable overwrite option in Export Dialog before starting export.",false,true);
+  }
   if ($viewerHTML && $hViewer = fopen("$exportDir/$viewerFilename","w")) {
     fwrite($hViewer,$viewerHTML);
     fclose($hViewer);
     $url = SITE_BASE_PATH."/services/downloadTextfile.php?url=$exportBaseURL/$viewerFilename";
-    logAddLink("Export viewer '$viewerFilename'","$exportBaseURL/$viewerFilename");
-    logAddLink("Download link for Export TEI '$viewerFilename'",$url);
+    logAddLink("Open exported viewer '$viewerFilename'","$exportBaseURL/$viewerFilename");
+    logAddLink("Download link for exported Viewer '$viewerFilename'",$url);//todo call service to zip all. Images??
+    if ($cfgEntity && array_key_exists("cfgStaticView$cfgEntityTag",$_SESSION)) {
+      $cfgEntity->storeScratchProperty("cfgStaticView",$_SESSION["cfgStaticView$cfgEntityTag"]);
+    }
   } else {
     logAddMsg("Unable to export viewer file '$viewerFilename'.");
   }
 
-  flushLog();
+  flushLog(false,true);
 ?>

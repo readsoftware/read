@@ -2958,9 +2958,9 @@ function getServiceContent($url){
   return $content;
 }
 
-function startLog() {
+function startLog($withHeader = true) {
   global $logHTML;
-  $logHTML = "<html>\n<body>\n";
+  $logHTML = "<div class=\"logmessages\">";
 }
 
 function logAddMsg($msg) {
@@ -2968,21 +2968,32 @@ function logAddMsg($msg) {
   $logHTML .= "<div class=\"logmessage\">$msg</div>\n";
 }
 
-function logAddMsgExit($msg) {
+function logAddMsgExit($msg, $wrapHeader = true, $jsonEncode = false) {
   global $logHTML;
   $logHTML .= "<div class=\"logmessage\">$msg</div>\n";
-  flushLog();
+  flushLog($wrapHeader, $jsonEncode);
   exit();
 }
 
 function logAddLink($msg,$url) {
   global $logHTML;
-  $logHTML .= "<div class=\"loglink\"><a href=\"$url\" target=\"_new\">$msg</a></div>\n";
+  $logHTML .= "<div class=\"loglink\"><a href=\"$url\" target=\"_blank\">$msg</a></div>\n";
 }
 
-function flushLog() {
+function getLogFragment() {
   global $logHTML;
-  $logHTML .= "</body>\n</html>\n";
+  return $logHTML."</div>\n";
+}
+
+function flushLog($wrapHeader = true, $jsonEncode = false) {
+  global $logHTML;
+  $logHTML .= "</div>\n";
+  if ($wrapHeader) {
+   $logHTML = "<html>\n<body>\n".$logHTML."</body>\n</html>\n";
+  }
+  if ($jsonEncode) {
+    $logHTML = json_encode($logHTML);
+  }
   echo $logHTML;
   $logHTML = "";
 }

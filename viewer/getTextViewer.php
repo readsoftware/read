@@ -48,6 +48,7 @@
     $multiEdition = (!isset($data['multiEd']) || !$data['multiEd'])? false:true;//default (parameter missing) not multi edition
     $isStaticView = (!isset($data['staticView'])||$data['staticView']==0)?false:true;
     $txtID = null;
+    $cfgEntityTag = null;
     if(!$isStaticView) {
       $title = (isset($data['title'])?$data['title']:null);
     }
@@ -87,6 +88,7 @@
         }
       }
     }
+    $entityCfgStaticView = null;
     if (!$txtID && !$ednID) {
       returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
     } else if ($txtID) {
@@ -97,6 +99,11 @@
       $editions = $text->getEditions();
       if ($editions->getError() || $editions->getCount() == 0) {
         returnXMLErrorMsgPage("unable to load any text editions - ".$editions->getError());
+      }
+      $cfgEntityTag = "txt$txtID";
+      $entityCfgStaticView = $text->getScratchProperty("cfgStaticView");
+      if ($entityCfgStaticView) {
+        $entityCfgStaticView = json_decode($entityCfgStaticView);
       }
       $edition = $editions->current();
       //get this text's default edition
@@ -118,6 +125,11 @@
       if ($edition->hasError()) {
         returnXMLErrorMsgPage("unable to load edition - ".join(",",$edition->getErrors()));
       }
+      $cfgEntityTag = "edn$ednID";
+      $entityCfgStaticView = $edition->getScratchProperty("cfgStaticView");
+      if ($entityCfgStaticView) {
+        $entityCfgStaticView = json_decode($entityCfgStaticView);
+      }
       $text = $edition->getText(true);
       if (!$text || $text->hasError()) {
         returnXMLErrorMsgPage("invalid viewer request - access denied");
@@ -134,6 +146,7 @@
   }
 
   if (!$isStaticView){
+    $overwrite = (isset($data['overwrite']) && $data['overwrite'] != 0)?true:false;
     $exportGlossary = isset($data['expGlossary'])?(!$data['expGlossary']?false:true):
                           (defined("EXPORTFULLGLOSSARY")?EXPORTFULLGLOSSARY:false);
     $allowImageDownload = isset($data['imgDownload'])?(!$data['imgDownload']?false:true):
@@ -149,6 +162,7 @@
     $showChayaView = isset($data['showChaya'])?(!$data['showChaya']?false:true):
                           (defined("SHOWCHAYAVIEW")?SHOWCHAYAVIEW:true);
   } else {// static view calculation - need to check for variables from being included
+    $overwrite = false;
     $exportGlossary = isset($exportGlossary)?$exportGlossary:
                           (defined("EXPORTFULLGLOSSARY")?EXPORTFULLGLOSSARY:false);
     $allowImageDownload = isset($allowImageDownload)?$allowImageDownload:
@@ -530,12 +544,15 @@
 <?php
   if (!$isStaticView) {
     //calculate static view configuration form initial values
-    //save in session and use defaults is no session variable
+    //save in session and use defaults if no session variable
     //todo  figure out a good place to save config based on live viewer context (text or edition or ??)
-    if (array_key_exists('cfgStaticView',$_SESSION)) {
-      $staticViewSettings = $_SESSION['cfgStaticView'];
+    if ($entityCfgStaticView) {
+      $staticViewSettings = $_SESSION["cfgStaticView$cfgEntityTag"] = $entityCfgStaticView;
+    } else if (array_key_exists("cfgStaticView$cfgEntityTag",$_SESSION)) {
+      $staticViewSettings = $_SESSION["cfgStaticView$cfgEntityTag"];
     } else {
       $staticViewLayout = 0;
+      //leave bit 7 (128) so default to not overwrite.
       if ($exportGlossary){
         $staticViewLayout += 64; //bit 6
       }
@@ -561,12 +578,14 @@
       $staticViewSettings = array("fname"=>($text && $text->getCKN()?str_replace(' ','_',trim($text->getCKN())):"tempfname"),
                               "title"=>($title?$title:"unknown title"),
                               "cfgStaticLayout"=>$staticViewLayout);
-      $_SESSION['cfgStaticView'] = $staticViewSettings;
+      $_SESSION["cfgStaticView$cfgEntityTag"] = $staticViewSettings;
     }
+    $staticViewSettings["cfgStaticLayout"] = ($staticViewSettings["cfgStaticLayout"] & 127);
 ?>
 ,
             $btnExportStatic = $('#btnExportStatic'),
-            $btnSetting = $('#btnSetting'),
+            $btnExportDlg = $('#btnExportDlg'),
+            cfgEntityTag='<?=$cfgEntityTag?>',
             staticViewSettings=<?= json_encode($staticViewSettings) ?>
 <?php
   }
@@ -582,6 +601,7 @@
     $cntPanels++;
 ?>
 ,
+            imageDownload= false,
             $imageViewer= $('#imageViewer'),
             $imageViewerHdr= $('#imageViewerHdr'),
             $imageViewerContent= $('#imageViewerContent')
@@ -627,38 +647,82 @@
 <?php
   if (!$isStaticView) {
 ?>
-          function updateExportStaticLinkURL() {
+          function exportStaticViewer() {
             newURL = exportStaticBaseURL;
             if (staticViewSettings['title']){
-              newURL += "&title="+staticViewSettings['title']
+              newURL += "&title="+staticViewSettings['title'];
             }
             if (staticViewSettings['fname']){
-              newURL += "&fname="+staticViewSettings['fname']
+              newURL += "&fname="+staticViewSettings['fname'];
             }
             if (staticViewSettings['cfgStaticLayout']){
-              newURL += "&cfgStatic="+staticViewSettings['cfgStaticLayout']
+              newURL += "&cfgStatic="+staticViewSettings['cfgStaticLayout'];
             }
-            $btnExportStatic.attr('href',newURL);
+            if (cfgEntityTag && cfgEntityTag.length > 0){
+              newURL += "&cfgEntityTag="+cfgEntityTag;
+            }
+            //make ajax call to export
+            $.ajax({
+                type:"POST",
+                dataType: 'json',
+                url: newURL,
+                asynch: true,
+                success: function (data, status, xhr) {
+                    if (data) {
+                      showResulstDialog(data);
+                    }
+                },
+                error: function (xhr,status,error) {
+                    // add record failed.
+                    errStr = "<div class=\"errmsg\">An error occurred while trying to export viewer. Error: " + error+"</div>";
+                    showResulstDialog(errStr);
+                }
+            });// end ajax
           }
-          updateExportStaticLinkURL();
+//          updateExportStaticLinkURL();
+          function showResulstDialog(content) {
+            $('#resultsDialogContent').html(content);
+            $('#resultsDialog').jqxWindow('open');
+          }
+          function initResulstDialog() {
+            var mainContainer = $('body'),
+                offset = mainContainer.offset();
+                offset.xcenter = mainContainer.innerWidth()/2;
+                offset.ycenter = mainContainer.innerHeight()/2;
+                dlgWidth = 400;
+                dlgHeight = 200;
+            $('#resultsDialog').jqxWindow({  width: dlgWidth,
+               height: 200, resizable: true,
+                cancelButton: $('#btnResultsCancel'),
+                position: { x: offset.left + offset.xcenter - dlgWidth/2, y: offset.top +offset.ycenter - dlgHeight},
+//                position: { x: offset.left, y: offset.top},
+                initContent: function () {
+                }
+            });
+            $('#resultsDialog').jqxWindow('close');
+          }
+          initResulstDialog();
           function initSettingsDialog() {
             var mainContainer = $('body'),
                 offset = mainContainer.offset();
                 offset.xcenter = mainContainer.innerWidth()/2;
                 offset.ycenter = mainContainer.innerHeight()/2;
                 dlgWidth = 400;
-                dlgHeight = 285;
+                dlgHeight = 315;
             $('#settingsDialog').jqxWindow({  width: dlgWidth,
                 height: dlgHeight, resizable: true,
                 cancelButton: $('#btnCancel'),
                 position: { x: offset.left + offset.xcenter - dlgWidth/2, y: offset.top +offset.ycenter - dlgHeight/2},
                 initContent: function () {
                   var cfgLayout = staticViewSettings.cfgStaticLayout;
-                  $('#btnSaveSetting').jqxButton({ width: '80px', disabled: false });
-                  $('#btnSaveSetting').unbind('click').bind('click',function(){
+                  $('#btnStaticExport').jqxButton({ width: '80px', disabled: false });
+                  $('#btnStaticExport').unbind('click').bind('click',function(){
                       staticViewSettings.fname = $('#fname').val();
                       staticViewSettings.title = $('#title').val();
                       cfgLayout = 0;
+                      if ($('#overwritefiles').jqxCheckBox('checked')) {
+                        cfgLayout += 128;
+                      }
                       if ($('#fullGlossaryCheckBox').jqxCheckBox('checked')) {
                         cfgLayout += 64;
                       }
@@ -682,11 +746,12 @@
                       }
                       staticViewSettings.cfgStaticLayout = cfgLayout;
                       $('#settingsDialog').jqxWindow('close');
-                      updateExportStaticLinkURL();
+                      exportStaticViewer();
                   });
                   $('#btnCancel').jqxButton({ width: '80px', disabled: false });
                   $('#fname').val(staticViewSettings.fname);
                   $('#title').val(staticViewSettings.title);
+                  $('#overwritefiles').jqxCheckBox({ width: '150px', checked:(cfgLayout&128?true:false)});
                   $('#fullGlossaryCheckBox').jqxCheckBox({ width: '150px', checked:(cfgLayout&64?true:false)});
                   $('#dlImagesCheckBox').jqxCheckBox({ width: '150px', checked:(cfgLayout&32?true:false)});
                   $('#dlTEI').jqxCheckBox({ width: '150px', checked:(cfgLayout&16?true:false)});
@@ -699,7 +764,7 @@
             $('#settingsDialog').jqxWindow('close');
           }
           initSettingsDialog();
-          $btnSetting.unbind('click').bind('click', function (e) {
+          $btnExportDlg.unbind('click').bind('click', function (e) {
             //open dialog
             $('#settingsDialog').jqxWindow('open');
           });
@@ -830,6 +895,7 @@
                                                    id:'imageViewerContent',
                                                    dbName: dbName,
                                                    basepath: basepath,
+                                                   imageDownload: <?=($allowImageDownload?"true":"false")?>,
                                                    imgViewContainer: $imageViewerContent.get(0),
                                                    imgViewHeader: $imageViewerHdr,
                                                    posLookup: blnPosLookup,
@@ -1111,8 +1177,8 @@
   }
   if (!$isStaticView) {
 ?>
-  <a id="btnExportStatic" class="expStaticButton" target="_new" title="Export Static Viewer">export html</a>
-  <button id="btnSetting" class="settingButton" title="set export preferences" style="font-size: large;">&#x2699;</button></div>
+  <button id="btnExportDlg" class="btnExportDlg" title="Export Static Viewer">export html ...</button>
+  </div>
 <?php
   } else {
 ?>
@@ -1197,11 +1263,29 @@
                   <div id="showChaya"  class="dlgCheckBox bit1">chāyā</div>
                 </div>
               </div>
+              <div class="dlgResourceBox">
+                <span class="dlgOutputGroupLabel">update :</span>
+                <div id="outputOptions" >
+                  <div id="overwritefiles"  class="dlgCheckBox bit128">Overwrite existing files</div>
+                </div>
+              </div>
               <div style="float: right">
-                  <input type="button" class="dlgButton" value="Save" style="margin-bottom: 5px;" id="btnSaveSetting" />
+                  <input type="button" class="dlgButton" value="Export" style="margin-bottom: 5px;" id="btnStaticExport" />
                   <input type="button" class="dlgButton" value="Cancel" id="btnCancel" />
               </div>
             </div>
+        </div>
+    </div>
+    <div id="resultsDialog">
+        <div id="resultsDialogHeader">
+            <span style="float: left">Export Viewer Results</span>
+        </div>
+        <div>
+          <div id="resultsDialogContent" style="overflow: hidden">
+          </div>
+          <div style="float: right">
+              <input type="button" class="dlgButton" value="Cancel" id="btnResultsCancel" />
+          </div>
         </div>
     </div>
 <?php
