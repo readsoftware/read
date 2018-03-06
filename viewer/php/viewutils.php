@@ -2051,6 +2051,7 @@ function formatEtym($lemmaEtymString) {
 
 function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWordMap = false, $linkTemplate = null, $useTranscription = true, $hideHyphens = true) {
   $catalog = new Catalog($catID);
+  global $exportGlossary;
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
     error_log("Warning need valid catalog id $catID.");
     return array();
@@ -2091,8 +2092,10 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
         $glossaryHRefUrl =$linkTemplate;
       } else if (defined("LEMMALINKTEMPLATE")) {
         $glossaryHRefUrl = LEMMALINKTEMPLATE;//READ_DIR."/plugins/dictionary/?search=%lemval%";
-      } else {
+      } else if ($exportGlossary){
         $glossaryHRefUrl = READ_DIR."/services/exportHTMLGlossary.php?db=".DBNAME."&catID=$catID#%lemtag%";
+      } else {
+        $glossaryHRefUrl = "";
       }
       $lemIDs = array();
       foreach($lemmas as $lemma) {
@@ -2105,10 +2108,10 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
         }
         $lemmaValue = preg_replace('/ʔ/','',$lemma->getValue());
         $lemmaLookupURL = $glossaryHRefUrl;
-        if (strpos($lemmaLookupURL,"%lemtag%")) {
+        if ($lemmaLookupURL && strpos($lemmaLookupURL,"%lemtag%")) {
           $lemmaLookupURL = str_replace("%lemtag%",$lemTag,$lemmaLookupURL);
         }
-        if (strpos($lemmaLookupURL,"%lemval%")) {
+        if ($lemmaLookupURL && strpos($lemmaLookupURL,"%lemval%")) {
           $lemmaLookupURL = str_replace("%lemval%",$lemmaValue,$lemmaLookupURL);
         }
         if ($lemmaLookupURL == "") {//no link case
