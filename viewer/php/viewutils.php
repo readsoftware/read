@@ -2104,16 +2104,17 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
           $lemHtml .= "<sup class=\"homographic\">".$lemmaOrder."</sup>";
         }
         $lemmaValue = preg_replace('/ʔ/','',$lemma->getValue());
-        if (strpos($glossaryHRefUrl,"%lemtag%")) {
-          $glossaryHRefUrl = str_replace("%lemtag%",$lemTag,$glossaryHRefUrl);
+        $lemmaLookupURL = $glossaryHRefUrl;
+        if (strpos($lemmaLookupURL,"%lemtag%")) {
+          $lemmaLookupURL = str_replace("%lemtag%",$lemTag,$lemmaLookupURL);
         }
-        if (strpos($glossaryHRefUrl,"%lemval%")) {
-          $glossaryHRefUrl = str_replace("%lemval%",$lemmaValue,$glossaryHRefUrl);
+        if (strpos($lemmaLookupURL,"%lemval%")) {
+          $lemmaLookupURL = str_replace("%lemval%",$lemmaValue,$lemmaLookupURL);
         }
-        if ($glossaryHRefUrl == "") {//no link case
+        if ($lemmaLookupURL == "") {//no link case
           $lemHtml .= "<span class=\"lemmaheadword\">$lemmaValue</span><span class=\"lemmapos\">";
         } else {
-          $lemHtml .= "<span class=\"lemmaheadword\"><a target=\"mygloss\" href=\"$glossaryHRefUrl\">$lemmaValue</a></span><span class=\"lemmapos\">";
+          $lemHtml .= "<span class=\"lemmaheadword\"><a target=\"mygloss\" href=\"$lemmaLookupURL\">$lemmaValue</a></span><span class=\"lemmapos\">";
         }
         $lemmaGenderID = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
@@ -2880,6 +2881,8 @@ function getCatalogHTML($catID, $isStaticView = false, $refreshWordMap = false, 
                   }
                 }
               }
+
+
               $loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?" (".$attestedCommentary.")":"");
               if (! array_key_exists('?',$groupedForms)) {
                 $groupedForms['?'] = array();
