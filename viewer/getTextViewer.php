@@ -298,6 +298,23 @@
           edFootnotes = edFootnotesByEdn[<?=$defaultEdnID?>],//get first edition
           edGlossaryLookup = edGlossaryLookupByEdn[<?=$defaultEdnID?>]//get first edition
 <?php
+  } else if ($ednIDs && count($ednIDs) > 1){
+?>
+          multiEdition = false,
+          edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs,$refreshLookUps)?>,
+          edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
+<?php
+      if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
+        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps,$glossaryUrlLookup);
+      } else {
+        $edGlossaryLookup = '{}';
+      }
+?>
+          edGlossaryLookup = <?=$edGlossaryLookup?>
+<?php
+    if (!$isStaticView) {
+      $urlMap["tei"]["edn$ednID"] = $teiBaseURL.$ednID;
+    }
   } else {
 ?>
           multiEdition = false,

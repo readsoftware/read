@@ -103,7 +103,7 @@
   }
   $cssSubPathFilename = "/css/exGlossary.css";
   $exportGlossaryCss = new SplFileInfo($exportDir.$cssSubPathFilename);
-  $readGlossaryCss = new SplFileInfo(dirname(__FILE__).'/../editors'.$cssSubPathFilename);
+  $readGlossaryCss = new SplFileInfo(dirname(__FILE__).'/../common'.$cssSubPathFilename);
   if ($exportGlossaryCss->isFile() && !$exportGlossaryCss->isWritable()) {
     logAddMsgExit("Unable to sync Viewer support file '$cssSubPathFilename' (not writable) aborting export.");
   } else if (!$readGlossaryCss->isFile() || !$readGlossaryCss->isReadable()) {

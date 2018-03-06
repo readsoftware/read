@@ -622,7 +622,7 @@
     * @return array of string GID of annotation objects or empty array
     */
     public function getLinkedAnnotationsByType() {
-      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(VALUES(ano_linkfrom_ids)) and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified");
+      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkfrom_ids) and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified");
       if ($annotations->getCount()>0){
         $linkedAnoIDsByType = array();
         $curType = null;
