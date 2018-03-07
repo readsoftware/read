@@ -15,13 +15,15 @@
     padding-top: 4px;
     background-color: rgb(240,240,230);
     border: 1px solid gray;
-    width: 120px;
+    width: 110px;
     cursor: pointer;
     text-align: center;
     padding-top: 6px;
-    margin-right: 15px;
+    margin-right: 7px;
     color: rgba(0, 0, 0, 0.80);
+    font-family: serif;
 }
+
 .settingButton {
     font-size: 19pt;
     border: none;
@@ -75,6 +77,8 @@
 }
 #settingsDialogContent{
   background-color: rgb(250,250,250);
+  font-family: serif;
+
 }
 .dlgInputBox{
   vertical-align: top;
@@ -86,20 +90,14 @@
   width: 100%;
   margin-bottom: 5px;
 }
-.dlgOptionsGroupLabel{
-  width: 60px;
-  padding-left: 16px;
-  vertical-align: top;
-}
-.dlgViewOptionsGroupLabel{
-  width: 60px;
-  padding-left: 30px;
-  vertical-align: top;
-}
+.dlgOptionsGroupLabel,
+.dlgViewOptionsGroupLabel,
 .dlgOutputGroupLabel{
-  width: 60px;
-  padding-left: 15px;
   vertical-align: top;
+  float: left;
+  width: 4.7em;
+  margin-right: 0.1em;
+  text-align: right;
 }
 #resourceOptions, #viewOptions, #outputOptions{
     margin-bottom: 2px;
@@ -116,6 +114,10 @@
 .dlgInputLabel{
   width: 30px;
   margin-bottom: 2px;
+  vertical-align: top;
+  float: left;
+  width: 4.9em;
+  margin-right: 0.1em;
   text-align: right;
 }
 #contentDockFrame {

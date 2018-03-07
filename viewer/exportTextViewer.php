@@ -211,9 +211,9 @@
     $cfgEntityTag = null;
     $cfgEntity = null;
     if ( isset($data['cfgEntityTag'])) {
-      $cfgEntityTag = $data['cfgEntityTag'];
-      $prefix = substr($cfgEntityTag,0,3);
-      $cfgEntityID = substr($cfgEntityTag,3);
+      $cfgEntTag = $data['cfgEntityTag'];
+      $prefix = substr($cfgEntTag,0,3);
+      $cfgEntityID = substr($cfgEntTag,3);
       if ($prefix == "txt") {
         $cfgEntity = new Text($cfgEntityID);
         if ($cfgEntity->hasError()){
@@ -224,6 +224,9 @@
         if ($cfgEntity->hasError()){
           $cfgEntity = null;
         }
+      }
+      if ($cfgEntity) {
+        $cfgEntityTag = DBNAME.$cfgEntTag;
       }
     }
     $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:true;

@@ -100,7 +100,7 @@
       if ($editions->getError() || $editions->getCount() == 0) {
         returnXMLErrorMsgPage("unable to load any text editions - ".$editions->getError());
       }
-      $cfgEntityTag = "txt$txtID";
+      $cfgEntityTag = DBNAME."txt$txtID";
       $entityCfgStaticView = $text->getScratchProperty("cfgStaticView");
       if ($entityCfgStaticView) {
         $entityCfgStaticView = json_decode($entityCfgStaticView);
@@ -125,7 +125,7 @@
       if ($edition->hasError()) {
         returnXMLErrorMsgPage("unable to load edition - ".join(",",$edition->getErrors()));
       }
-      $cfgEntityTag = "edn$ednID";
+      $cfgEntityTag = DBNAME."edn$ednID";
       $entityCfgStaticView = $edition->getScratchProperty("cfgStaticView");
       if ($entityCfgStaticView) {
         $entityCfgStaticView = json_decode($entityCfgStaticView);

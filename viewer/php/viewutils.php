@@ -647,7 +647,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
       }
     }
   }
-  foreach ($ednIDs as $ednID) {//accumulate in order all subsequence for text, text physical and analysis
+  foreach ($ednIDs as $ednID) {//accumulate in order all subsequences for text, text physical and analysis
     $edition = new Edition($ednID);
     if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
       array_push($warnings,"Warning need valid accessible edition id $ednID. Skipping.".
@@ -703,14 +703,14 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
   }// end foreach ednID
 
   if (count($analysisSeqIDs) == 0) {
-    array_push($warnings,"Warning no structural analysis found for edition id $ednID. Skipping.");
+    array_push($warnings,"Warning no structural analysis found for edition id ".$ednIDs[0].". Skipping.");
   } else {//process analysis
     //calculate  post grapheme id to physical line label map
     if (count($physicalLineSeqIDs) > 0) {
       foreach ($physicalLineSeqIDs as $physicalLineSeqGID) {
         $physicalLineSeq = new Sequence(substr($physicalLineSeqGID,4));
         if (!$physicalLineSeq || $physicalLineSeq->hasError()) {//no $physicalLineSeqIDsequence or unavailable so warn
-          array_push($warnings,"Warning unable to load edition $ednID's physicalline sequence seq:$physicalLineSeqGID. Skipping.".
+          array_push($warnings,"Warning unable to load edition ".$ednIDs[0]."'s physicalline sequence seq:$physicalLineSeqGID. Skipping.".
             ($physicalLineSeq->hasError()?" Error: ".join(",",$physicalLineSeq->getErrors()):""));
         } else {
           $label = $physicalLineSeq->getLabel();
