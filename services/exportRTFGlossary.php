@@ -55,7 +55,7 @@
   $catID = (array_key_exists('catID',$_REQUEST)? $_REQUEST['catID']:null);
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
-  $refreshWordMap = (array_key_exists('refreshWordMap',$_REQUEST)? true:false);
+  $refreshWordMap = ((array_key_exists('refreshWordMap',$_REQUEST) || array_key_exists('refreshLookUps',$_REQUEST))? true:false);
   $useTranscription = (!array_key_exists('usevalue',$_REQUEST)? true:false);
   $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
   $termInfo = getTermInfoForLangCode('en');

@@ -53,7 +53,7 @@
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $annoTypeID = (array_key_exists('typeID',$_REQUEST)? $_REQUEST['typeID']:null);
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
-  $refreshWordMap = (array_key_exists('refreshWordMap',$_REQUEST)? true:false);
+  $refreshWordMap = ((array_key_exists('refreshWordMap',$_REQUEST) || array_key_exists('refreshLookUps',$_REQUEST))? true:false);
   $termInfo = getTermInfoForLangCode('en');
   $termLookup = $termInfo['labelByID'];
   $term_parentLabelToID = $termInfo['idByTerm_ParentLabel'];
@@ -240,8 +240,9 @@
   }
 
   function getEntityTranslation($entity) {
-    global $space, $typeIDs, $tcmNonRTFSrchStrings, $tcmRtfRplcStrings;
-    $fnRTF = "";
+    global $space, $typeIDs, $tcmNonRTFSrchStrings, $tcmRtfRplcStrings,
+           $footnoteStart, $footnoteEnd, $eol, $space;
+    $transRTF = "";
     if ( $linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
       foreach ($typeIDs as $typeID) {
         if (array_key_exists($typeID,$linkedAnoIDsByType)) {
@@ -249,16 +250,43 @@
             $annotation = new Annotation($anoID);
             $anoText = $annotation->getText();
             if ($anoText) {
-              $anoText = utf8ToRtf($anoText);
-              $anoText = mbPregReplace($tcmNonRTFSrchStrings,$tcmRtfRplcStrings,$anoText);
-              $anoText = htmlToRTF($anoText);
-              $fnRTF .= $anoText;
+              //process embedded footnotes
+              $fnStartIndex = strpos($anoText,"((");
+              $fnStopIndex = strpos($anoText,"))");
+              while ($fnStartIndex !== false && $fnStopIndex !== false) {
+                $transPart = substr($anoText,0,$fnStartIndex);//capture string before embedded footnote
+                $transPart = utf8ToRtf($transPart);
+                $transPart = mbPregReplace($tcmNonRTFSrchStrings,$tcmRtfRplcStrings,$transPart);
+                $transPart = htmlToRTF($transPart);
+                $transRTF .= $transPart;
+                $fnText = substr($anoText,2+$fnStartIndex, $fnStopIndex-$fnStartIndex-2);//extract footnote
+                if ($fnText && strlen($fnText)) {//if we have a footnote
+                  $sepIndex = strpos($fnText,':');
+                  if ($sepIndex !== false) {
+                    $fnText = trim(substr($fnText,$sepIndex+1));
+                  }
+                  $fnText = utf8ToRtf($fnText);
+                  $fnText = mbPregReplace($tcmNonRTFSrchStrings,$tcmRtfRplcStrings,$fnText);
+                  $fnText = htmlToRTF($fnText);
+                  $transRTF .= $footnoteStart.htmlToRTF(utf8ToRtf($fnText)).$footnoteEnd.$space.$eol;
+                }
+                $anoText = substr($anoText,2+$fnStopIndex);//capture everything after the embedded footnote
+                //check for more embedded footnotes.
+                $fnStartIndex = strpos($anoText,"((");
+                $fnStopIndex = strpos($anoText,"))");
+              }
+              if (count($anoText) && $anoText != '') {
+                $anoText = utf8ToRtf($anoText);
+                $anoText = mbPregReplace($tcmNonRTFSrchStrings,$tcmRtfRplcStrings,$anoText);
+                $anoText = htmlToRTF($anoText);
+                $transRTF .= $anoText;
+              }
             }
           }
         }
       }
     }
-    return $fnRTF;
+    return $transRTF;
   }
 
   function renderWordRTF($entity) {

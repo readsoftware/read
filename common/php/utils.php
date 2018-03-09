@@ -2929,6 +2929,26 @@ function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $
   return false;
 }
 
+
+
+function formatEtym($lemmaEtymString) {
+  $formattedEtyms = "";
+  $etyms = explode(",",$lemmaEtymString);
+  $isFirst = true;
+  foreach ($etyms as $etym) {
+    preg_match("/\s*(Skt|Pkt|Vedic|P|BHS|G|S)\.?\:?\s*(.+)/",$etym,$matches);
+    if (!$isFirst) {
+      $formattedEtyms .= ", ";
+    } else {
+      $isFirst = false;
+    }
+    if (count($matches) == 3) {
+      $formattedEtyms .= "<span class=\"etymlangcode\">".$matches[1]."</span><span class=\"etymvalue\">".$matches[2]."</span>";
+    }
+  }
+  return $formattedEtyms;
+}
+
 function getServiceContent($url){
   $content = null;
   if ($url) {

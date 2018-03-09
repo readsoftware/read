@@ -431,6 +431,47 @@ EDITORS.TranslationV.prototype = {
     $(this.editDiv).unbind('synchronize').bind('synchronize', synchronizeHandler);
   },
 
+/**
+* transform embedded footnote code to html html for a string
+*
+* @param string transText translation text with embedded footnode code
+*
+* @returns {String}
+*/
+
+  processTextFootnoteHtml: function(transText) {
+    var fnStartIndex = -1, fnStopIndex = -1, footnote, transWithFnHtml = "";
+    //process embedded footnotes
+    if (!transText) { //simple passthrough case
+      return transText;
+    }
+    fnStartIndex = transText.indexOf("((");
+    if (fnStartIndex > -1) {
+      fnStopIndex =  transText.indexOf("))",fnStartIndex);
+    }
+    while (fnStartIndex !== -1 && fnStopIndex !== -1) {
+      transWithFnHtml += transText.substring(0,fnStartIndex);//capture string before embedded footnote
+      footnote = transText.substring(2+fnStartIndex, fnStopIndex);//extract footnote
+      if (footnote && footnote.length) {//if we have a footnote
+        sepIndex = footnote.indexOf(':');
+        if (sepIndex !== -1) {
+          footnote = footnote.substring(sepIndex+1).trim();
+        }
+        this.cntFootnote++;
+        tfnTag = 'tfn'+this.cntFootnote;
+        transWithFnHtml += '<sup class="footnote '+tfnTag+' embedded" '+
+                            'title="'+footnote+'">'+this.cntFootnote+'</sup>';
+      }
+      transText = transText.substring(2+fnStopIndex);//capture everything after the embedded footnote
+      //check for more embedded footnotes.
+      fnStartIndex = transText.indexOf("((");
+      fnStopIndex =  transText.indexOf("))",fnStartIndex);
+    }
+    if (transWithFnHtml) {
+      return transWithFnHtml + transText;
+    }
+    return transText;
+  },
 
 
 /**
@@ -447,6 +488,7 @@ EDITORS.TranslationV.prototype = {
         textAnalysisSeq, textSubStructSeq, tcms = 'S',
         seqID, ednSeqIDs = this.edition.seqIDs, text = this.dataMgr.getEntity('txt',this.edition.txtID),
         i,cnt;
+    this.cntFootnote = 0;//setup the ordinal for embedded footnotes
     if (ednSeqIDs && ednSeqIDs.length) {
       cnt = ednSeqIDs.length;
       if (!entities['seq']) {
@@ -511,9 +553,8 @@ EDITORS.TranslationV.prototype = {
         translation = transV.dataMgr.getEntity('ano',annoIDsByType[transV.annoTypeID][0]).text;
         translation = translation.trim();
       }
-      return translation;
+      return transV.processTextFootnoteHtml(translation);
     }
-
 
 /**
 * put your comment there...

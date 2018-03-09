@@ -49,7 +49,7 @@
   $retVal = array();
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
-  $refreshWordMap = (array_key_exists('refreshWordMap',$_REQUEST)? true:false);
+  $refreshWordMap = ((array_key_exists('refreshWordMap',$_REQUEST) || array_key_exists('refreshLookUps',$_REQUEST))? true:false);
   $termInfo = getTermInfoForLangCode('en');
   $termLookup = $termInfo['labelByID'];
   $term_parentLabelToID = $termInfo['idByTerm_ParentLabel'];
