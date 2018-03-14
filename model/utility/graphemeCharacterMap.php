@@ -79,6 +79,8 @@ $graphemeCharacterMap = array(
 "◊"=>array("srt"=>"885","ssrt"=>"885","typ"=>"I"),
 "◈"=>array("srt"=>"885","ssrt"=>"885","typ"=>"I"),//bark obstruction =>space
 "○"=>array("srt"=>"820","ssrt"=>"820","typ"=>"P"),
+"⊗"=>array("srt"=>"822","ssrt"=>"822","typ"=>"P"),
+"◎"=>array("srt"=>"823","ssrt"=>"823","typ"=>"P"),
 "◦"=>array("srt"=>"810","ssrt"=>"810","typ"=>"P"),
 "•"=>array("srt"=>"805","ssrt"=>"805","typ"=>"P"),
 "∙"=>array("srt"=>"804","ssrt"=>"804","typ"=>"I"),// 2219
