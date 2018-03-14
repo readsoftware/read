@@ -1994,7 +1994,7 @@ EDITORS.LemmaVE.prototype = {
         });
         //attach event handlers
         $('span.addButton',lemmaVE.linkTypeUI).unbind("click").bind("click",function(e) {
-            var linkTypeID = lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeLinkTypeID;
+            lemmaVE.linkTypeID = lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeLinkTypeID;
             if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.setLinkRelatedMode) {
               lemmaVE.wordlistVE.setLinkRelatedMode(true);
             }
