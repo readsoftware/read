@@ -2687,6 +2687,8 @@ function FixUnicodeForRtf($matches) {
   return "\\u".hexdec(bin2hex(iconv('UTF-8', 'UTF-16BE', $matches[1]))).'?';
 }
 
+mb_internal_encoding('UTF-8');
+mb_regex_encoding('UTF-8');
 /**
 * multibyte safe string replace function
 *

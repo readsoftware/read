@@ -240,8 +240,8 @@
   }
 
   function getEntityTranslation($entity) {
-    global $space, $typeIDs, $tcmNonRTFSrchStrings, $tcmRtfRplcStrings,
-           $footnoteStart, $footnoteEnd, $eol, $space;
+    global $typeIDs, $tcmNonRTFSrchStrings, $tcmRtfRplcStrings,
+           $footnoteStart, $footnoteEnd, $eol;
     $transRTF = "";
     if ( $linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
       foreach ($typeIDs as $typeID) {
@@ -268,7 +268,7 @@
                   $fnText = utf8ToRtf($fnText);
                   $fnText = mbPregReplace($tcmNonRTFSrchStrings,$tcmRtfRplcStrings,$fnText);
                   $fnText = htmlToRTF($fnText);
-                  $transRTF .= $footnoteStart.htmlToRTF(utf8ToRtf($fnText)).$footnoteEnd.$space.$eol;
+                  $transRTF .= $footnoteStart.htmlToRTF(utf8ToRtf($fnText)).$footnoteEnd.$eol;
                 }
                 $anoText = substr($anoText,2+$fnStopIndex);//capture everything after the embedded footnote
                 //check for more embedded footnotes.

@@ -622,7 +622,7 @@
     * @return array of string GID of annotation objects or empty array
     */
     public function getLinkedAnnotationsByType() {
-      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkfrom_ids) and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified");
+      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkfrom_ids) and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified",null,null,null);
       if ($annotations->getCount()>0){
         $linkedAnoIDsByType = array();
         $curType = null;
@@ -649,7 +649,7 @@
     * @return array of array of int $ID of annotation objects or empty array
     */
     public function getLinkedByAnnotationsByType() {
-      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkto_ids) and ano_linkfrom_ids is null and not ano_owner_id = 1","ano_type_id,modified");
+      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkto_ids) and ano_linkfrom_ids is null and not ano_owner_id = 1","ano_type_id,modified",null,null,null);
       if ($annotations->getCount()>0){
         $linkedByAnoIDsByType = array();
         $curType = null;
@@ -673,7 +673,7 @@
     */
     public function getRelatedEntitiesByLinkType() {
       $fromEntTag = $this->getGlobalPrefix().$this->getID();
-      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkfrom_ids) and ano_linkto_ids is not null and not ano_owner_id = 1 ","ano_type_id,modified");
+      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkfrom_ids) and ano_linkto_ids is not null and not ano_owner_id = 1 ","ano_type_id,modified",null,null,null);
       if ($annotations->getCount()>0){
         $relatedEntGIDsByLinkType = array();
         $curType = null;

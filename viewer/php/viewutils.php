@@ -2448,11 +2448,13 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
                       foreach ($sortedLocs as $formLoc) {
                         $cntLoc = $locInfo['loc'][$formLoc];
                         //remove internal ordinal
-                        list($tref,$ord,$label) = explode(":",$formLoc);
-                        if (strpos($tref,"sort") === 0) {
-                          $formLoc = $label;
-                        } else {
-                          $formLoc = $tref.$label;
+                        $locParts = explode(":",$formLoc);
+                        if (count($locParts) == 3) {
+                          if (strpos($locParts[0],"sort") === 0) {
+                            $formLoc = $locParts[2];
+                          } else {
+                            $formLoc = $locParts[0].$locParts[2];
+                          }
                         }
                         if ($isFirstLoc) {
                           $isFirstLoc = false;

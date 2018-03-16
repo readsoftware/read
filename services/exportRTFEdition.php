@@ -413,7 +413,7 @@
   }
 
   function getEntityFootnotesRTF($entity) {
-    global $footnoteStart, $footnoteEnd, $eol, $tab, $space, $style, $typeIDs;
+    global $footnoteStart, $footnoteEnd, $eol, $tab, $style, $typeIDs;
     $fnRTF = "";
     if ( $linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
       foreach ($typeIDs as $typeID) {
@@ -422,7 +422,7 @@
             $annotation = new Annotation($anoID);
             $anoText = $annotation->getText();
             if ($anoText) {
-              $fnRTF .= $footnoteStart.htmlToRTF(utf8ToRtf($anoText)).$footnoteEnd.$space.$eol;
+              $fnRTF .= $footnoteStart.htmlToRTF(utf8ToRtf($anoText)).$footnoteEnd.$eol;
             }
           }
         }

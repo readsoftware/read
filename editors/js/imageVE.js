@@ -1840,7 +1840,9 @@ EDITORS.ImageVE.prototype = {
             imgVE.drawImagePolygons();
             $('.editContainer').trigger('updateselection',[imgVE.id,imgVE.getSelectedPolygonLabels()]);
           }
-          return;
+      e.preventDefault();
+        e.stopImmediatePropagation();
+        return false;
       }else if (e.altKey) { //user wants set start point for path
         imgVE.path = [[x,y]];
         imgVE.segMode = "path";
@@ -1870,8 +1872,9 @@ EDITORS.ImageVE.prototype = {
         imgVE.dragnav = 'down';
         //store drag start
         imgVE.drgStart = imgVE.eventToCanvas(e, imgVE.imgCanvas);
-        e.preventDefault();
-        return;
+      e.preventDefault();
+        e.stopImmediatePropagation();
+        return false;
       }
       if (imgVE.segMode == "path"){//likely that the user is clicking a new vertice
         return;
@@ -1885,8 +1888,10 @@ EDITORS.ImageVE.prototype = {
       }
       imgVE.drgStart = imgVE.eventToCanvas(e, imgVE.imgCanvas);
       imgVE.rbRect = [imgVE.drgStart];
-      e.preventDefault();
       imgVE.segMode = "rect";
+      e.preventDefault();
+        e.stopImmediatePropagation();
+        return false;
     });
 
     $(imgVE.imgCanvas).unbind("mousemove touchmove").bind("mousemove touchmove", function (e){
@@ -1901,7 +1906,9 @@ EDITORS.ImageVE.prototype = {
                                     (imgVE.drgStart[1] - newPos[1])*imgVE.vpSize.height/imgVE.imgCanvas.height);
         imgVE.drgStart = newPos;
         imgVE.draw()
-        return;
+      e.preventDefault();
+        e.stopImmediatePropagation();
+        return false;
       }else{
         imgVE.imgCanvas.style.cursor = 'crosshair';
         delete imgVE.dragnav;
