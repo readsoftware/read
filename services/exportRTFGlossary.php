@@ -452,6 +452,10 @@
                     } else if (!$lemmaGender){//handle noun supress infection gender output
                       $rtf .= $key1." ";
                     }
+                  } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {
+                    if ($lemmaPos != 'adv.' && $lemmaPos != 'ind.'){ //term dependency
+                      $rtf .= "unclear: ";
+                    }
                   }
                   if ($key1 != '?' || $key1 == '?' && ($key2 != '?' || $key3 != '?')) {
                     $rtf .= $key3." ".$key2." ";
@@ -486,11 +490,13 @@
                           $rtf .= ", ";
                         }
                         //remove internal ordinal
-                        list($tref,$ord,$label) = explode(":",$formLoc);
-                        if (strpos($tref,"sort") === 0) {
-                          $formLoc = $label;
-                        } else {
-                          $formLoc = $tref.$label;
+                        $locParts = explode(":",$formLoc);
+                        if (count($locParts) == 3) {
+                          if (strpos($locParts[0],"sort") === 0) {
+                            $formLoc = $locParts[2];
+                          } else {
+                            $formLoc = $locParts[0].$locParts[2];
+                          }
                         }
                         $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
                       }
