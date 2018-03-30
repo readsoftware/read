@@ -93,7 +93,7 @@
           '{\stylesheet'.
             '{\ql \li0\ri0\nowidctlpar\wrapdefault\hyphpar0\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1031\langfe1031\cgrid\langnp1031\langfenp1031 \snext0 \sqformat \spriority0 Normal;}'.
             '{\s2\ql \li0\ri0\sa200\nowidctlpar\wrapdefault\hyphpar0\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \rtlch\fcs1 \ab\ai\af0\afs24\alang2057 \ltrch\fcs0 \fs24\lang2057\langfe1031\cgrid\langnp2057\langfenp1031 \sbasedon0 \snext1 \sqformat \spriority0 Structural;}'.
-            '{\*\cs03 \additive \sunhideused \spriority1 Default Paragraph Font;}'.
+            '{\*\cs02 \additive \sunhideused \spriority1 Default Paragraph Font;}'.
             '{\*\s04 \b\fs36\f38\sa200 \sqformat \spriority1 doctitle;}'.
             '{\*\cs05 \f38\fs24 \sqformat \spriority1 prose;}'.
             '{\*\cs06 \additive \b\f38\fs36 \sqformat \spriority1 line header;}'.
@@ -102,7 +102,7 @@
             '{\*\cs22 \additive \f38\fs20 \sbasedon3 \slink21 \slocked \ssemihidden Footnote Text Char;}'.
             '{\*\cs23 \additive \f38\fs20 \sqformat \spriority1 footnote number;}'.
             '{\*\cs24 \additive \f38\fs24\super \sbasedon3 \sqformat \spriority1 footnote reference;}'.
-          '{\*\cs26 \additive \i \sqformat \spriority1 italic;}'.
+            '{\*\cs26 \additive \i \sqformat \spriority1 italic;}'.
           '}'.
           '{\colortbl;\red0\green255\blue255;\red255\green0\blue0;\red0\green175\blue0;\red109\green109\blue109;\red132\green221\blue253;\red0\green121\blue165;\red132\green221\blue253;\red0\green0\blue0;}'.
           '\pard\plain \ftnbj \s2\ql'.
@@ -123,7 +123,8 @@
     $prequote = '{\f38 \u8220\\\'d2}';
     $postquote = '{\f38 \u8221\\\'d3}';
     $homStyle = '{\cs11\b0\f38\super ';
-    $footnoteStart = '{\cs24\f38\fs24\super \chftn {\footnote \pard\plain \s21\ql \li0\ri0\widctlpar\wrapdefault\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\dbch\cgrid {\cs23\f38\fs20 \chftn }{ ';
+    $footnoteStart = '{\cs24\f38\fs24\super \chftn {\footnote \pard\plain \s21\ql \li0\ri0\widctlpar\wrapdefault\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\dbch\cgrid '.
+                    '{\cs23\f38\fs20 \chftn }{ ';
     $footnoteEnd = '}}}';
     $linkStyle = '{\cs12\f38\cf3\lang1031\langfe0\langnp1031 ';
     $endParaStyle = '\par}';
@@ -413,7 +414,7 @@
   }
 
   function getEntityFootnotesRTF($entity) {
-    global $footnoteStart, $footnoteEnd, $eol, $tab, $style, $typeIDs;
+    global $footnoteStart, $footnoteEnd, $space, $eol, $tab, $style, $typeIDs;
     $fnRTF = "";
     if ( $linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
       foreach ($typeIDs as $typeID) {
@@ -422,7 +423,7 @@
             $annotation = new Annotation($anoID);
             $anoText = $annotation->getText();
             if ($anoText) {
-              $fnRTF .= $footnoteStart.htmlToRTF(utf8ToRtf($anoText)).$footnoteEnd.$eol;
+              $fnRTF .= $footnoteStart.$space.htmlToRTF(utf8ToRtf($anoText)).$footnoteEnd.$eol;
             }
           }
         }

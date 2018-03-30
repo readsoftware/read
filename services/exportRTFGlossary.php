@@ -81,7 +81,7 @@
           '{\stylesheet{\ql \li0\ri0\nowidctlpar\wrapdefault\hyphpar0\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1031\langfe1031\cgrid\langnp1031\langfenp1031 \snext0 \sqformat \spriority0 Normal;}'."\n".
           '{\s1\ql \fi-425\li425\ri0\sa200\nowidctlpar\wrapdefault\hyphpar0\aspalpha\aspnum\faauto\adjustright\rin0\lin425\itap0 \rtlch\fcs1 \ab\ai\af0\afs24\alang2057 \ltrch\fcs0 \fs24\lang2057\langfe1031\cgrid\langnp2057\langfenp1031 \sbasedon0 \snext1 \sqformat \spriority0 Glossary;}'."\n".
           '{\*\cs55 \additive \sunhideused \spriority1 Default Paragraph Font;}'."\n".
-          '{\*\cs02 \additive \i\f38 \sqformat \spriority1 etym;}'."\n".
+          '{\*\cs02 \additive \f38 \sqformat \spriority1 etym;}'."\n".
           '{\*\cs51 \additive \b\i\fs24\f38 \sqformat \spriority1 lemma;}'."\n".
           '{\*\cs03 \additive \i \sqformat \spriority1 pali;}'."\n".
           '{\*\cs04 \additive \i\f38 \sqformat \spriority1 attestation;}'."\n".
@@ -107,7 +107,7 @@
           $lemStyle = '{\cs51\b\i\fs24\f38 ';
           $posStyle = '{\cs05\f38 ';
           $glossStyle = '{\cs06\f38 ';
-          $etymStyle = '{\cs02\i\f38 ';
+          $etymStyle = '{\cs02\f38 ';
           $lemAnoStyle = '{\cs08\f38 ';
           $attestedAnoStyle = '{\cs09\f38 ';
           $attestedStyle = '{\cs04\i\f38 ';

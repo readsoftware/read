@@ -710,7 +710,7 @@ EDITORS.SequenceVE.prototype = {
 */
 
     function updateSelectionHandler(e,senderID, selectionIDs, entTag) {
-      if (senderID == seqVE.id || !seqVE.linkTargetTag) {
+      if (senderID == seqVE.id || !seqVE.linkTargetTag || !entTag) {
         return;
       }
       DEBUG.log("event","selection changed recieved by sequenceVE in "+seqVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
@@ -729,6 +729,41 @@ EDITORS.SequenceVE.prototype = {
     };
 
     $(this.editDiv).unbind('updateselection').bind('updateselection', updateSelectionHandler);
+
+/**
+* put your comment there...
+*
+* @param object e System event object
+* @param senderID
+* @param selectionIDs
+* @param string entTag Entity tag
+*/
+
+    function structureLinkResponseHandler(e,senderID, senderEdnID, linkTargetTag, selectionIDs) {
+      if (senderID == seqVE.id || senderEdnID != seqVE.edition.id || !seqVE.linkTargetTag || !selectionIDs) {
+        return;
+      }
+      DEBUG.log("event","selection changed recieved by sequenceVE in "+seqVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
+      var parentEntTag = seqVE.linkTargetTag,
+          $linkElement = $('.linktarget',seqVE.$structTree);
+          $linkElement.removeClass('linktarget');
+      if (seqVE.entPropVE && seqVE.entPropVE.saveSequence) {
+        seqVE.entPropVE.saveSequence(parentEntTag.substring(3), null, null, null, selectionIDs, null, null, null, function(newSeqID) {
+          var elem = $linkElement[0], newItem, i,
+              newItems = seqVE.getSubItems(selectionIDs,0);
+          if (newItems && newItems.length){
+            for (i in newItems) {
+              newItem = newItems[i];
+              seqVE.$structTree.jqxTree('addTo',newItem,elem);
+              seqVE.attachMenuEventHandler($(elem));
+              seqVE.$structTree.jqxTree('expandItem', elem);
+            }
+          }
+        },null);
+      }
+    };
+
+    $(this.editDiv).unbind('structurelinkresponse').bind('structurelinkresponse', structureLinkResponseHandler);
 
 
 /**
@@ -1024,6 +1059,10 @@ EDITORS.SequenceVE.prototype = {
                   //callback needs to add item to parent, attach MenuEventHandler and expanded parent node
                   seqVE.linkTargetTag = selectedItem.id;
                   $(selectedItem.element).addClass('linktarget');
+                  if (seqVE.edition) {
+                    ednTag = "edn"+ seqVE.edition.id;
+                    $('.editContainer').trigger('linkStructRequest',[seqVE.id,ednTag,seqVE.linkTargetTag]);
+                  }
                 }
               }
               break;

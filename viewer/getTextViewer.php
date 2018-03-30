@@ -665,7 +665,7 @@
   if (!$isStaticView) {
 ?>
           function exportStaticViewer() {
-            newURL = exportStaticBaseURL;
+            var newURL = exportStaticBaseURL;
             if (staticViewSettings['title']){
               newURL += "&title="+staticViewSettings['title'];
             }
@@ -674,6 +674,9 @@
             }
             if (staticViewSettings['cfgStaticLayout']){
               newURL += "&cfgStatic="+staticViewSettings['cfgStaticLayout'];
+            }
+            if (staticViewSettings['refresh']){
+              newURL += "&refreshLookUps=1";
             }
             if (cfgEntityTag && cfgEntityTag.length > 0){
               newURL += "&cfgEntityTag="+cfgEntityTag;
@@ -734,14 +737,20 @@
                   var cfgLayout = staticViewSettings.cfgStaticLayout;
                   $('#btnStaticExport').jqxButton({ width: '80px', disabled: false });
                   $('#btnStaticExport').unbind('click').bind('click',function(){
+                      var cfgLayoutOrig = staticViewSettings.cfgStaticLayout;
                       staticViewSettings.fname = $('#fname').val();
                       staticViewSettings.title = $('#title').val();
-                      cfgLayout = 0;
+                      var cfgLayout = 0;
                       if ($('#overwritefiles').jqxCheckBox('checked')) {
                         cfgLayout += 128;
                       }
                       if ($('#fullGlossaryCheckBox').jqxCheckBox('checked')) {
                         cfgLayout += 64;
+                        if ((cfgLayoutOrig & 64) == 0) { //change from no glossary to full so refresh lookups
+                          staticViewSettings['refresh'] = true;
+                        }
+                      } else if ((cfgLayoutOrig & 64) == 64) { //change to no glossary from full so refresh lookups
+                          staticViewSettings['refresh'] = true;
                       }
                       if ($('#dlImagesCheckBox').jqxCheckBox('checked')) {
                         cfgLayout += 32;

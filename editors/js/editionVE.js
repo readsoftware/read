@@ -324,9 +324,20 @@ EDITORS.EditionVE.prototype = {
 
   getUsedSeqsList: function () {
     var usedSeqIDs = Object.keys(this.seqGIDsByType),//get the cur seqIDs
-        colorChoices = ['cyan','yellowgreen','coral','yellow','cadetblue','aqua',
+        colorChoices = {"Analysis":"#C2CBCE",//warning!!! term dependency
+                        "Chapter":"#61A3D9",//warning!!! term dependency
+                        "Section":"#9BC2E6",//warning!!! term dependency
+                        "Paragraph":"#BDD7EE",//warning!!! term dependency
+                        "Sentence":"#70ad47",//warning!!! term dependency
+                        "Clause":"#a9d08e",//warning!!! term dependency
+                        "Phrase":"#c4dfb2",//warning!!! term dependency
+                        "List":"#FE642E",//warning!!! term dependency
+                        "Item":"#fe9d7a",//warning!!! term dependency
+                        "Stanza":"#FFC03C",//warning!!! term dependency
+                        "Pāda":"#FFE699",//warning!!! term dependency
+                        "other":['cyan','yellowgreen','coral','yellow','cadetblue','aqua',
                         'gold','khaki','lavender','lightcyan','lightgrey','lightsteelblue','palegreen',
-                        'plum','pink','skyblue','sandbrown','silver','springgreen','violet','tan'],
+                        'plum','pink','skyblue','sandbrown','silver','springgreen','violet','tan']},
         items = [], i, item, tagID, label, color;
 
     //if empty nothing tagged create single item "off" using off for all item values
@@ -338,7 +349,11 @@ EDITORS.EditionVE.prototype = {
         tagID = usedSeqIDs[i];
         label = this.dataMgr.getTermFromID(tagID.substring(3));
         //set background color from a list reserving primary color tag color to match tag name.
-        color = colorChoices[i];
+        if (colorChoices[label]){
+          color = colorChoices[label];
+        } else {
+          color = colorChoices["other"][i%colorChoices["other"].length];
+        }
         item = {id:tagID,
                 label:label,
                 value:color
@@ -2972,6 +2987,28 @@ mergeLine: function (direction,cbError) {
 
 
     /**
+    * handle 'linkRequest' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string linkSource Identifies the source element to link
+    * @param boolean autoAdvance Indicates set mode to fire autoadvance linking code
+    */
+
+    function linkStructRequestHandler(e,senderID, structEdnTag, linkTargetTag) {
+      if (senderID == ednVE.id) {
+        return;
+      }
+      DEBUG.log("event","struct link request recieved by editionVE in "+ednVE.id+" from "+senderID+" with edntion tag "+ structEdnTag +
+                "linking to " + linkTargetTag);
+      ednVE.structLinkMode = linkTargetTag;
+      ednVE.layoutMgr.curLayout.trigger('focusin',ednVE.id);
+    };
+
+    $(this.editDiv).unbind('linkStructRequest').bind('linkStructRequest', linkStructRequestHandler);
+
+
+    /**
     * handle 'autoLinkOrdRequest' event
     *
     * @param object e System event object
@@ -4808,6 +4845,12 @@ mergeLine: function (direction,cbError) {
         mdTarget = null;
         mmTarget = null;
         return false;
+      } else if (ednVE.structLinkMode) {
+        selectIDs = ednVE.getSelectionEntityGIDs();
+        if (selectIDs && selectIDs.length){
+          $('.editContainer').trigger('structurelinkresponse',[this.id,ednVE.edition.id,ednVE.structLinkMode,selectIDs]);
+        }
+        ednVE.structLinkMode = null;
       } else if (!e.ctrlKey && !(eTarget.id && eTarget.id.match(/textContent/) && sRange.commonAncestorContainer == sRange.startContainer)) {
         $(".selected",ednVE.contentDiv).removeClass("selected");
         $('.editContainer').trigger('updateselection',[ednVE.id,[""]]);

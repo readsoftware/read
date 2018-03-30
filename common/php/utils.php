@@ -835,7 +835,7 @@ $linkTypeTagToList = array();
 function getLinkTypeInfo() {
   global $linkTypeTagToLabel,$linkTypeTagToList;
   $linkTypeInfo = null;
-  $linkTypeTerms = new Terms("trm_labels::hstore->'en' = 'LinkageType'",null,null);
+  $linkTypeTerms = new Terms("trm_labels::hstore->'en' = 'LemmaLinkage'",null,null);
   if ($linkTypeTerms && $linkTypeTerms->getCount() > 0 ){
     $linkTypeID = $linkTypeTerms->current()->getID();
     $linkTypesStruct = getLinkSubTypeStructure($linkTypeID);
@@ -978,8 +978,11 @@ function getSeqSubTypeStructure($trmID) {
   if ($seqSubTypeTerms && $seqSubTypeTerms->getCount() > 0 ){
     $subSeqTypeInfo = array();
     foreach($seqSubTypeTerms as $seqTypeTerm) {
-      $typeID = $seqTypeTerm->getID();
       $typeLabel = $seqTypeTerm->getLabel();
+      if ($typeLabel == "Text" || $typeLabel == "TextPhysical") {// warning!!! term dependecny
+        continue;
+      }
+      $typeID = $seqTypeTerm->getID();
       $seqTypeTagToLabel["trm".$typeID] = $typeLabel;
       $termList = $seqTypeTerm->getListIDs();
       if ($termList) {

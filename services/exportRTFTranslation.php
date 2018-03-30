@@ -150,8 +150,8 @@
     $prequote = '{\f38 \u8220\\\'d2}';
     $postquote = '{\f38 \u8221\\\'d3}';
     $homStyle = '{\s11\b0\f38\super ';
-    $footnoteStart = '{\cs24\super\chftn {\footnote \pard\plain \s22\ql \li0\ri0\widctlpar\wrapdefault\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\cf0\cgrid'.
-                   '{\cs24\super\chftn }{';
+    $footnoteStart = '{\cs24\super\chftn {\footnote \pard\plain \s22\ql \li0\ri0\widctlpar\wrapdefault\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\cf0\cgrid '.
+                   '{\cs23\f38\fs20 \chftn }{';
     $footnoteEnd = '}}}';
     $linkStyle = '{\cs12\f38\cf3\lang1031\langfe0\langnp1031 ';
     $endParaStyle = '\par}';
@@ -241,7 +241,7 @@
 
   function getEntityTranslation($entity) {
     global $typeIDs, $tcmNonRTFSrchStrings, $tcmRtfRplcStrings,
-           $footnoteStart, $footnoteEnd, $eol;
+           $footnoteStart, $footnoteEnd, $eol, $space;
     $transRTF = "";
     if ( $linkedAnoIDsByType = $entity->getLinkedAnnotationsByType()) {
       foreach ($typeIDs as $typeID) {
@@ -268,7 +268,7 @@
                   $fnText = utf8ToRtf($fnText);
                   $fnText = mbPregReplace($tcmNonRTFSrchStrings,$tcmRtfRplcStrings,$fnText);
                   $fnText = htmlToRTF($fnText);
-                  $transRTF .= $footnoteStart.htmlToRTF(utf8ToRtf($fnText)).$footnoteEnd.$eol;
+                  $transRTF .= $footnoteStart.$space.htmlToRTF(utf8ToRtf($fnText)).$footnoteEnd.$eol;
                 }
                 $anoText = substr($anoText,2+$fnStopIndex);//capture everything after the embedded footnote
                 //check for more embedded footnotes.

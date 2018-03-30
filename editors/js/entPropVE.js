@@ -810,8 +810,10 @@ EDITORS.EntityPropVE.prototype = {
 
   createSeqTypeUI: function() {//type ui for sequence entities
     var entPropVE = this,
-        valueEditable = (this.prefix == "seq" && this.entity && !this.entity.readonly),
         value = this.dataMgr.getTermFromID(this.entity.typeID),
+        valueEditable = (this.prefix == "seq" && this.entity && !this.entity.readonly &&
+                          value && !(value == "Text" || value == "TextDivision" || // warning!!! term dependency
+                                     value == "TextPhysical" || value == "LinePhysical" )),// warning!!! term dependency
         treeSeqTypeName = this.id+'seqtypetree';
     DEBUG.traceEntry("createSeqTypeUI");
     //create UI container
@@ -821,71 +823,71 @@ EDITORS.EntityPropVE.prototype = {
     this.typeUI.append($('<div class="propDisplayUI">'+
                           '<div class="valueLabelDiv propDisplayElement'+(valueEditable?"":" readonly")+'">'+value+'</div>'+
                           '</div>'));
-    //create input with save button
-    this.typeUI.append($('<div class="propEditUI">'+
-                    '<div class="propEditElement"><div id="'+ treeSeqTypeName+'"></div></div>'+
-                    '</div>'));
-    this.seqTypeTree = $('#'+treeSeqTypeName,this.typeUI);
-    this.seqTypeTree.jqxTree({
-           source: this.dataMgr.seqTypes,
-           hasThreeStates: false, checkboxes: false,
-           theme:'energyblue'
-    });
-    $('.propEditElement',this.typeUI).addClass('seqTypeUI');
-    //attach event handlers
-      if (valueEditable) {
+    if (valueEditable) {
+      //create input with save button
+      this.typeUI.append($('<div class="propEditUI">'+
+                      '<div class="propEditElement"><div id="'+ treeSeqTypeName+'"></div></div>'+
+                      '</div>'));
+      this.seqTypeTree = $('#'+treeSeqTypeName,this.typeUI);
+      this.seqTypeTree.jqxTree({
+             source: this.dataMgr.seqTypes,
+             hasThreeStates: false, checkboxes: false,
+             theme:'energyblue'
+      });
+      $('.propEditElement',this.typeUI).addClass('seqTypeUI');
+      //attach event handlers
       //click to edit
-        $('div.valueLabelDiv',this.typeUI).unbind("click").bind("click",function(e) {
-          entPropVE.typeUI.addClass("edit");
-          //init tree to current type
-          var curItem = $('#trm'+entPropVE.entity.typeID, entPropVE.seqTypeTree),
-              offset = 0;
-          if (curItem && curItem.length) {
-            curItem = curItem.get(0);
-            entPropVE.suppressSelect = true;
-            entPropVE.seqTypeTree.jqxTree('selectItem',curItem);
-            //expand selected item sub tree if needed
-            curItem = entPropVE.seqTypeTree.jqxTree('getSelectedItem');
-            while (curItem && curItem.parentElement) {
-              entPropVE.seqTypeTree.jqxTree('expandItem',curItem.parentElement);
-              curItem = entPropVE.seqTypeTree.jqxTree('getItem',curItem.parentElement);
-            }
-            curItem = entPropVE.seqTypeTree.jqxTree('getItem',$('li:first',entPropVE.seqTypeTree).get(0));
-            while (curItem && !curItem.selected) {
-              offset += 25;
-              if (curItem.isExpanded) {
-                offset += 2;
-              }
-              curItem = entPropVE.seqTypeTree.jqxTree('getNextItem',curItem.element);
-            }
-            delete entPropVE.suppressSelect;
+      $('div.valueLabelDiv',this.typeUI).unbind("click").bind("click",function(e) {
+        entPropVE.typeUI.addClass("edit");
+        //init tree to current type
+        var curItem = $('#trm'+entPropVE.entity.typeID, entPropVE.seqTypeTree),
+            offset = 0;
+        if (curItem && curItem.length) {
+          curItem = curItem.get(0);
+          entPropVE.suppressSelect = true;
+          entPropVE.seqTypeTree.jqxTree('selectItem',curItem);
+          //expand selected item sub tree if needed
+          curItem = entPropVE.seqTypeTree.jqxTree('getSelectedItem');
+          while (curItem && curItem.parentElement) {
+            entPropVE.seqTypeTree.jqxTree('expandItem',curItem.parentElement);
+            curItem = entPropVE.seqTypeTree.jqxTree('getItem',curItem.parentElement);
           }
-          setTimeout(function(){
-              $('.seqTypeUI',entPropVE.typeUI).scrollTop(offset);
-            },50);
-          e.stopImmediatePropagation();
-          return false;
-        });
-        //blur to cancel
-        this.seqTypeTree.unbind("blur").bind("blur",function(e) {
-          $('div.valueLabelDiv',entPropVE.typeUI).html(entPropVE.dataMgr.getTermFromID(entPropVE.entity.typeID));
+          curItem = entPropVE.seqTypeTree.jqxTree('getItem',$('li:first',entPropVE.seqTypeTree).get(0));
+          while (curItem && !curItem.selected) {
+            offset += 25;
+            if (curItem.isExpanded) {
+              offset += 2;
+            }
+            curItem = entPropVE.seqTypeTree.jqxTree('getNextItem',curItem.element);
+          }
+          delete entPropVE.suppressSelect;
+        }
+        setTimeout(function(){
+            $('.seqTypeUI',entPropVE.typeUI).scrollTop(offset);
+          },50);
+        e.stopImmediatePropagation();
+        return false;
+      });
+      //blur to cancel
+      this.seqTypeTree.unbind("blur").bind("blur",function(e) {
+        $('div.valueLabelDiv',entPropVE.typeUI).html(entPropVE.dataMgr.getTermFromID(entPropVE.entity.typeID));
+        entPropVE.typeUI.removeClass("edit");
+      });
+      //change sequence type
+      this.seqTypeTree.on('select', function (event) {
+          if (entPropVE.suppressSelect) {
+            return;
+          }
+          var args = event.args, dropDownContent = '',
+              item =  entPropVE.seqTypeTree.jqxTree('getItem', args.element);
+          if (item.value && item.value != entPropVE.entity.typeID) {//user selected to change sequence type
+            //save new type to entity
+            entPropVE.changeSequenceType(item.value);
+            $('div.valueLabelDiv',entPropVE.typeUI).html(entPropVE.dataMgr.getTermFromID(item.value));
+          }
           entPropVE.typeUI.removeClass("edit");
-        });
-        //change sequence type
-        this.seqTypeTree.on('select', function (event) {
-            if (entPropVE.suppressSelect) {
-              return;
-            }
-            var args = event.args, dropDownContent = '',
-                item =  entPropVE.seqTypeTree.jqxTree('getItem', args.element);
-            if (item.value && item.value != entPropVE.entity.typeID) {//user selected to change sequence type
-              //save new type to entity
-              entPropVE.changeSequenceType(item.value);
-              $('div.valueLabelDiv',entPropVE.typeUI).html(entPropVE.dataMgr.getTermFromID(item.value));
-            }
-            entPropVE.typeUI.removeClass("edit");
-        });
-      }
+      });
+    }
     DEBUG.traceExit("createSeqTypeUI");
   },
 
@@ -895,12 +897,16 @@ EDITORS.EntityPropVE.prototype = {
 */
 
   createSubTypeUI: function() {//subtype ui for sequence entities
-    var entPropVE = this,
-        valueEditable = (this.prefix == "seq" && this.entity && !this.entity.readonly),
-        value, subTypeID = (this.entity.subtypeID?this.entity.subtypeID:this.entity.typeID),
+    var entPropVE = this, subTypeID = (this.entity.subtypeID?this.entity.subtypeID:this.entity.typeID),
+        value = this.dataMgr.getTermFromID(subTypeID),
+        valueEditable = (this.prefix == "seq" && this.entity && !this.entity.readonly &&
+                          value && !(value == "Text" || value == "TextDivision" || // warning!!! term dependency
+                                     value == "TextPhysical" || value == "LinePhysical" )),// warning!!! term dependency
         treeSubSeqTypeName = this.id+'subseqtypetree';
+    if (!valueEditable){
+      return;
+    }
     DEBUG.traceEntry("createSubTypeUI");
-    value = this.dataMgr.getTermFromID(subTypeID);
     //create UI container
     this.subTypeUI = $('<div class="subTypeUI"></div>');
     this.contentDiv.append(this.subTypeUI);
@@ -909,21 +915,21 @@ EDITORS.EntityPropVE.prototype = {
                           '<div class="valueLabelDiv propDisplayElement'+(valueEditable?"":" readonly")+'">Current Subtype '+value+'</div>'+
                           ((this.entity.readonly)?'':('<span class="addButton"><u>Add New '+value+'</u></span></div>'))+
                           '</div>'));
-    //create input with selection tree
-    this.subTypeUI.append($('<div class="propEditUI">'+
-                    '<div class="propEditElement"><div id="'+ treeSubSeqTypeName+'"></div></div>'+
-                    '</div>'));
-    this.subSeqTypeTree = $('#'+treeSubSeqTypeName,this.subTypeUI);
-    this.subSeqTypeTree.jqxTree({
-           source: this.dataMgr.seqTypes,
-           hasThreeStates: false, checkboxes: false,
-           theme:'energyblue'
-    });
-    $('.propEditElement',this.subTypeUI).addClass('seqSubTypeUI');
-    //attach event handlers
-      if (valueEditable) {
+    if (valueEditable) {
+      //create input with selection tree
+      this.subTypeUI.append($('<div class="propEditUI">'+
+                      '<div class="propEditElement"><div id="'+ treeSubSeqTypeName+'"></div></div>'+
+                      '</div>'));
+      this.subSeqTypeTree = $('#'+treeSubSeqTypeName,this.subTypeUI);
+      this.subSeqTypeTree.jqxTree({
+             source: this.dataMgr.seqTypes,
+             hasThreeStates: false, checkboxes: false,
+             theme:'energyblue'
+      });
+      $('.propEditElement',this.subTypeUI).addClass('seqSubTypeUI');
+      //attach event handlers
       //click to edit
-        $('div.valueLabelDiv',this.subTypeUI).unbind("click").bind("click",function(e) {
+      $('div.valueLabelDiv',this.subTypeUI).unbind("click").bind("click",function(e) {
           $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.subTypeUI.addClass("edit");
           //init tree to current type
@@ -954,36 +960,36 @@ EDITORS.EntityPropVE.prototype = {
             },50);
           e.stopImmediatePropagation();
           return false;
-        });
-        //blur to cancel
-        this.subSeqTypeTree.unbind("blur").bind("blur",function(e) {
+      });
+      //blur to cancel
+      this.subSeqTypeTree.unbind("blur").bind("blur",function(e) {
           $('div.valueLabelDiv',entPropVE.subTypeUI).html("Current Subtype "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID));
           $('span.addButton',entPropVE.subTypeUI).html("<u>Add New "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID)+"</u>");
           entPropVE.subTypeUI.removeClass("edit");
-        });
-        //change sequence type
-        this.subSeqTypeTree.on('select', function (event) {
-            if (entPropVE.suppressSubSelect) {
-              return;
-            }
-            var args = event.args, dropDownContent = '',
-                item =  entPropVE.subSeqTypeTree.jqxTree('getItem', args.element);
-            if (item.value && item.value != entPropVE.entity.subtypeID) {//user selected to change sequence type
-              //save new subtype to entity
-              entPropVE.entity.subtypeID = item.value;
-              $('div.valueLabelDiv',entPropVE.subTypeUI).html("Current Subtype "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID));
-              $('span.addButton',entPropVE.subTypeUI).html("<u>Add New "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID)+"</u>");
-            }
-            entPropVE.subTypeUI.removeClass("edit");
-        });
-        //attach event handlers
-        $('span.addButton',entPropVE.subTypeUI).unbind("click").bind("click",function(e) {
-            var subTypeID = entPropVE.entity.subtypeID?entPropVE.entity.subtypeID:entPropVE.entity.typeID;
-            entPropVE.addNewSubSequenceType(subTypeID);
-            e.stopImmediatePropagation();
-            return false;
-        });
-      }
+      });
+      //change sequence type
+      this.subSeqTypeTree.on('select', function (event) {
+          if (entPropVE.suppressSubSelect) {
+            return;
+          }
+          var args = event.args, dropDownContent = '',
+              item =  entPropVE.subSeqTypeTree.jqxTree('getItem', args.element);
+          if (item.value && item.value != entPropVE.entity.subtypeID) {//user selected to change sequence type
+            //save new subtype to entity
+            entPropVE.entity.subtypeID = item.value;
+            $('div.valueLabelDiv',entPropVE.subTypeUI).html("Current Subtype "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID));
+            $('span.addButton',entPropVE.subTypeUI).html("<u>Add New "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID)+"</u>");
+          }
+          entPropVE.subTypeUI.removeClass("edit");
+      });
+      //attach event handlers
+      $('span.addButton',entPropVE.subTypeUI).unbind("click").bind("click",function(e) {
+          var subTypeID = entPropVE.entity.subtypeID?entPropVE.entity.subtypeID:entPropVE.entity.typeID;
+          entPropVE.addNewSubSequenceType(subTypeID);
+          e.stopImmediatePropagation();
+          return false;
+      });
+    }
     DEBUG.traceExit("createSubTypeUI");
   },
 
