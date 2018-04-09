@@ -1713,7 +1713,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
                   //$title = substr($url,strrpos($url,'/')+1);//filename
                   $image = $segBaseline->getImage(true);
                   //if ($image && $image->getTitle()) {
-                  $title = $image->getTitle();
+                  $title = $image?$image->getTitle():'';
                   //}
                   $imgURLsbyBlnImgTag['bln'][$sort]['title'] = $title?$title:"";
                   if ($url) {

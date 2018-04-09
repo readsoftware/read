@@ -130,7 +130,11 @@ if (!$data) {
     }
     $entityIDs = null;
     if ( isset($data['entityIDs'])) {//get entityIDs for sequence
-      $entityIDs = $data['entityIDs'];
+      if ($data['entityIDs'] && $data['entityIDs'] != '') {
+        $entityIDs = $data['entityIDs'];
+      } else {
+        $entityIDs = array();
+      }
     }
     $removeEntityGID = null;
     if ( isset($data['removeEntityGID'])) {//get removeEntityGID for sequence
@@ -170,7 +174,7 @@ if (count($errors) == 0) {
         addUpdateEntityReturnData("seq",$seqID,'typeID', $sequence->getTypeID());
       }
     }
-    if ($entityIDs) {
+    if (isset($entityIDs)) {
       $sequence->setEntityIDs($entityIDs);
       if ($seqID) {
         addUpdateEntityReturnData("seq",$seqID,'entityIDs', $sequence->getEntityIDs());

@@ -94,6 +94,12 @@ MANAGERS.PropertyManager.prototype = {
                       editor: this.controlEditor,
                       contentDiv:this.propVEDiv.get(0)
                     };
+        if (this.config.hideSubType) {
+          entPropVECfg['hideSubType'] = true;
+        }
+        if (this.config.hideComponents) {
+          entPropVECfg['hideComponents'] = true;
+        }
         this.entPropVE = new EDITORS.EntityPropVE(entPropVECfg);
         this.currentVE = this.entPropVE;
       } else if (this.propVEType == "annoVE") {

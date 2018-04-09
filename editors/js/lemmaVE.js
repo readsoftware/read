@@ -1473,7 +1473,7 @@ EDITORS.LemmaVE.prototype = {
               entities.push(entity);
               infMap[entity.tag] = infID;
             } else {
-              DEBUG.log('err',"inflection inf:"+infID+" lemma lem:"+entity.id+" has component that doesn't load "+prefix+id);
+              DEBUG.log('err',"inflection inf:"+infID+" lemma lem:"+lemmaVE.entity.id+" has component that doesn't load "+prefix+id);
             }
           }
         } else {// add to set with no inflection mapping
@@ -1484,7 +1484,7 @@ EDITORS.LemmaVE.prototype = {
             entities.push(entity);
             infMap[entity.tag] = 0;
           } else {
-              DEBUG.log('err',"lemma lem:"+entity.id+" has component that doesn't load "+prefix+id);
+              DEBUG.log('err',"lemma lem:"+lemmaVE.entity.id+" has component that doesn't load "+prefix+id);
             }
         }
       }

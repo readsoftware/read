@@ -51,6 +51,8 @@ EDITORS.EntityPropVE = function(entPropVECfg) {
   this.entGID = entPropVECfg['entGID'] ? entPropVECfg['entGID']:null;
   this.controlVE = entPropVECfg['editor'] ? entPropVECfg['editor']:null;
   this.ednID = entPropVECfg['ednID'] ? entPropVECfg['ednID']:null;
+  this.hideSubType = entPropVECfg['hideSubType'] ? entPropVECfg['hideSubType']:false;
+  this.hideComponents = entPropVECfg['hideComponents'] ? entPropVECfg['hideComponents']:false;
   this.dataMgr = entPropVECfg['dataMgr'] ? entPropVECfg['dataMgr']:null;
   this.propMgr = entPropVECfg['propMgr'] ? entPropVECfg['propMgr']:null;
   this.contentDiv = entPropVECfg['contentDiv'] ? $(entPropVECfg['contentDiv']):null;
@@ -216,11 +218,11 @@ EDITORS.EntityPropVE.prototype = {
       this.createAnnotationUI();
       this.createAttributionUI();
 
-      if (this.prefix == "seq" && this.entity ) {
+      if (this.prefix == "seq" && this.entity && !this.hideSubType) {
         this.createSubTypeUI();
       }
       if ((this.prefix == "seq" || this.prefix == "edn" || this.prefix == "cmp" ||
-           this.prefix == "tok" || this.prefix == "scl" || this.prefix == "cat" ) && this.entity ) {
+           this.prefix == "tok" || this.prefix == "scl" || this.prefix == "cat" ) && this.entity && !this.hideComponents) {
         this.createComponentsUI();
       }
       this.contentDiv.append('<hr class="viewEndRule">');
@@ -2182,7 +2184,7 @@ EDITORS.EntityPropVE.prototype = {
     if (typeID) {
       savedata["typeID"] = typeID;
     }
-    if (entityIDs) {
+    if (entityIDs !== null) {
       savedata["entityIDs"] = entityIDs;
     }
     if (removeEntityGID) {

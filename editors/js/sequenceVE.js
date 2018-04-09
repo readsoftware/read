@@ -93,6 +93,8 @@ EDITORS.SequenceVE.prototype = {
                                                  propertyMgrDiv: this.$propertyMgrDiv,
                                                  editor: seqVE,
                                                  ednID: this.edition.id,
+                                                 hideSubType: true,
+                                                 hideComponents: true,
                                                  propVEType: "entPropVE",
                                                  dataMgr: this.dataMgr,
                                                  splitterDiv: this.$splitterDiv });
@@ -961,7 +963,7 @@ EDITORS.SequenceVE.prototype = {
 */
 
   createContextMenu: function(e,item) {
-    var seqVE = this,
+    var seqVE = this,i,subItem,subType,
         scrollTop = $(window).scrollTop(),
         scrollLeft = $(window).scrollLeft(),
         $ctxMenu, menuItems, tag = item.id,
@@ -984,6 +986,25 @@ EDITORS.SequenceVE.prototype = {
         menuItems.push({ label: "Remove",
                             id: "Remove",
                          value: "Remove" });
+      } else {
+        wordsOnly = true;
+        for (i in item.items) {
+          subItem = item.items[i];
+          if (subItem) {
+            subType = subItem.id.substring(0,3);
+            if (subType !== "scl" && subType !== "tok" && subType !== "cmp") {
+              wordsOnly = false;
+            }
+          }
+        }
+        if (wordsOnly){
+          if (!menuItems) {
+            menuItems = [];
+          }
+          menuItems.push({ label: "RemoveAll",
+                              id: "RemoveAll",
+                           value: "RemoveAll" });
+        }
       }
     }
     if (menuItems && menuItems.length) {
@@ -1036,6 +1057,18 @@ EDITORS.SequenceVE.prototype = {
                       seqVE.$structTree.jqxTree('removeItem', selectedItem.element);
                     }
                   },null);
+                }
+              }
+              break;
+            case "RemoveAll":
+              if (selectedItem != null) {
+                entTag = selectedItem.id;
+                if (entTag.match(/seq/)) {
+                  entID = entTag.substring(3);
+                  entGID = entTag.substring(0,3)+":"+entID;
+                  if (seqVE.entPropVE && seqVE.entPropVE.saveSequence) {
+                    seqVE.entPropVE.saveSequence(entID, null, null, null, "",null, null, null, null,null);
+                  }
                 }
               }
               break;
