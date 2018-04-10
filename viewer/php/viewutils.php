@@ -2474,8 +2474,8 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refreshWor
           $entTag2GlossaryHtml[$lemTag]['attestedHtml'] = $attestedHtml;
         }
         $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
-        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LinkageType');
-        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LinkageType');
+        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LemmaLinkage');
+        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LemmaLinkage');
         $relatedHtml = "";
         if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;
@@ -3009,8 +3009,8 @@ function getCatalogHTML($catID, $isStaticView = false, $refreshWordMap = false, 
         }
         //calculate related links
         $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
-        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LinkageType');
-        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LinkageType');
+        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LemmaLinkage');
+        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LemmaLinkage');
         $relatedHtml = "";
         if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;

@@ -2369,8 +2369,8 @@ function checkGlossaryHealth($catID, $verbose = true) {
           array_push($lemIDs,$lemID);
         }
         $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
-        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LinkageType');
-        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LinkageType');
+        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LemmaLinkage');
+        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LemmaLinkage');
         $relatedNode = null;
         if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           foreach ($relatedGIDsByLinkType[$seeLinkTypeID] as $linkGID) {

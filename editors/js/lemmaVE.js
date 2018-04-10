@@ -1910,7 +1910,7 @@ EDITORS.LemmaVE.prototype = {
     var lemmaVE = this,
         value, linkTypeID = (this.linkTypeID),
         valueEditable = (this.prefix == "lem" && this.entity && !this.entity.readonly),
-        seeLinkTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["see-linkagetype"],//warning! term dependency
+        seeLinkTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["see-lemmalinkage"],//warning! term dependency
         treeLinkTypeName = this.id+'linktypetree';
     DEBUG.traceEntry("createLinkTypeUI");
     if (!linkTypeID) {

@@ -223,9 +223,9 @@ if (count($errors) == 0) {
       }
       //iterate through nodes
       //if subkeys then create links checking subnodes isHead
-      $headConstituentLinkTypeID = Entity::getIDofTermParentLabel('CompoundConstituentHead-LinkageType');
-      $constituentLinkTypeID = Entity::getIDofTermParentLabel('CompoundConstituent-LinkageType');
-      $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LinkageType');
+      $headConstituentLinkTypeID = Entity::getIDofTermParentLabel('CompoundConstituentHead-LemmaLinkage');
+      $constituentLinkTypeID = Entity::getIDofTermParentLabel('CompoundConstituent-LemmaLinkage');
+      $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LemmaLinkage');
       foreach( $analysis as $nodeID => $node) {
         $lemma = $lemmaByNodeID[$nodeID];
         //create see links from node to rootnode if not rootnode and not already linked with rootnode
