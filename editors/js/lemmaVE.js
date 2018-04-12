@@ -1973,8 +1973,9 @@ EDITORS.LemmaVE.prototype = {
         });
         //blur to cancel
         this.linkTypeTree.unbind("blur").bind("blur",function(e) {
-          $('div.valueLabelDiv',lemmaVE.linkTypeUI).html("Current Linktype "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID));
-          $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID)+" link</u>");
+          var linkType = lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID);
+          $('div.valueLabelDiv',lemmaVE.linkTypeUI).html("Current Linktype "+linkType);
+          $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+linkType+" link</u>");
           lemmaVE.linkTypeUI.removeClass("edit");
         });
         //change sequence type
@@ -1983,20 +1984,24 @@ EDITORS.LemmaVE.prototype = {
               return;
             }
             var args = event.args, dropDownContent = '',
+                linkType = lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID),
                 item =  lemmaVE.linkTypeTree.jqxTree('getItem', args.element);
             if (item.value && item.value != lemmaVE.linkTypeID) {//user selected to change sequence type
               //save new subtype to entity
               lemmaVE.linkTypeID = item.value;
-              $('div.valueLabelDiv',lemmaVE.linkTypeUI).html("Current Linktype "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID));
-              $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID)+" link</u>");
+              $('div.valueLabelDiv',lemmaVE.linkTypeUI).html("Current Linktype "+linkType);
+              $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+linkType+" link</u>");
             }
             lemmaVE.linkTypeUI.removeClass("edit");
         });
         //attach event handlers
         $('span.addButton',lemmaVE.linkTypeUI).unbind("click").bind("click",function(e) {
+            var linkType;
             lemmaVE.linkTypeID = lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeLinkTypeID;
+            linkType = lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID);
             if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.setLinkRelatedMode) {
               lemmaVE.wordlistVE.setLinkRelatedMode(true);
+              $('span.addButton',lemmaVE.linkTypeUI).html("Click Lemma for New "+linkType);
             }
           e.stopImmediatePropagation();
           return false;
@@ -2242,9 +2247,11 @@ EDITORS.LemmaVE.prototype = {
 */
 
   linkRelatedEntity: function(toGID) {
-    var fromGID = 'lem:' + this.entID,
-        linkTypeID = this.linkTypeID;
+    var lemmaVE = this,
+        fromGID = 'lem:' + lemmaVE.entID,
+        linkTypeID = lemmaVE.linkTypeID;
     this.linkRelated(fromGID, linkTypeID, toGID);
+    $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID)+" link</u>");
   },
 
 /**

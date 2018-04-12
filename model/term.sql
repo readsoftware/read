@@ -723,7 +723,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (742,'en=>"Stanza"',741,778,'{743}',NULL,'Stanza',NULL,NULL,NULL,1,'{2}'),
 (743,'en=>"Pāda"',742,778,'{972,1345}',NULL,'Pāda',NULL,NULL,NULL,1,'{2}'),
 (744,'en=>"Paragraph"',1437,778,'{745,742,972,1345}',NULL,'Paragraph',NULL,NULL,NULL,1,'{2}'),
-(745,'en=>"Sentence"',744,778,'{746,747}',NULL,'Sentence',NULL,NULL,NULL,1,'{2}'),
+(745,'en=>"Sentence"',744,778,'{746,747,972,1345}',NULL,'Sentence',NULL,NULL,NULL,1,'{2}'),
 (746,'en=>"Clause"',745,778,'{747}',NULL,'Clause',NULL,NULL,NULL,1,'{2}'),
 (747,'en=>"Phrase"',746,778,'{972,1345}',NULL,'Phrase',NULL,NULL,NULL,1,'{2}'),
 (748,'en=>"NounPhrase"',747,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),

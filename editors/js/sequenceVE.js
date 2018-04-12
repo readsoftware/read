@@ -988,12 +988,18 @@ EDITORS.SequenceVE.prototype = {
                          value: "Remove" });
       } else {
         wordsOnly = true;
-        for (i in item.items) {
-          subItem = item.items[i];
+        for (i = 0; i< item.subtreeElement.children.length; i++) {
+          subItem = seqVE.$structTree.jqxTree('getItem', item.subtreeElement.children[i]);
           if (subItem) {
-            subType = subItem.id.substring(0,3);
-            if (subType !== "scl" && subType !== "tok" && subType !== "cmp") {
+            if (subItem.hasItems) {
               wordsOnly = false;
+              break;
+            } else {
+              subType = subItem.id.substring(0,3);
+              if (subType !== "scl" && subType !== "tok" && subType !== "cmp") {
+                wordsOnly = false;
+                break;
+              }
             }
           }
         }

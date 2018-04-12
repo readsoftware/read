@@ -1794,7 +1794,7 @@ function getRelationshipLink($fromEntGID,$toEntGID,$linkTypeID) {
 }
 
 /**
-* create a semantic (trmID) link (annotation entity) between entities.
+*  return existing semantic link or create a semantic (trmID) link (annotation entity) between entities.
 *
 * @param string $fromEntGID global id of primary entity or subject being related
 * @param string $toEntGID global id of secondary entity or related entity
