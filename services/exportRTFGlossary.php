@@ -148,6 +148,7 @@
         $lemmaGender = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
         $lemmaPos = $lemmaPosID && array_key_exists($lemmaPosID,$termLookup) ? $termLookup[$lemmaPosID] : '';
+        $isVerb = false;
         if ($lemmaPos) {
           $isVerb = ($lemmaPos == 'v.');
         }
@@ -296,6 +297,10 @@
               }
               $inflectionComponents = $inflection->getComponents(true);
               foreach ($inflectionComponents as $inflectionComponent) {
+                //guard code
+                if (!$inflectionComponent->getID()){ //skip unreadable links
+                  continue;
+                }
                 if ($useTranscription) {
                   $value = $inflectionComponent->getTranscription();
                 } else {

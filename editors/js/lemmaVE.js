@@ -1984,11 +1984,12 @@ EDITORS.LemmaVE.prototype = {
               return;
             }
             var args = event.args, dropDownContent = '',
-                linkType = lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID),
+                linkType,
                 item =  lemmaVE.linkTypeTree.jqxTree('getItem', args.element);
             if (item.value && item.value != lemmaVE.linkTypeID) {//user selected to change sequence type
               //save new subtype to entity
               lemmaVE.linkTypeID = item.value;
+              linkType = lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID)
               $('div.valueLabelDiv',lemmaVE.linkTypeUI).html("Current Linktype "+linkType);
               $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+linkType+" link</u>");
             }
