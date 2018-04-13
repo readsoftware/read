@@ -6537,7 +6537,7 @@ mergeLine: function (direction,cbError) {
             grpHTML = '';
           }
           wordHTML = wordHTML.replace(/\/\/\//g,""); // remove edge indicator
-          wordHTML = wordHTML.replace(/_+/g,"_").replace(/(_)([^\.])*/g,".$2");//.replace(/\.\./g,".");
+          wordHTML = wordHTML.replace(/_+/g,"_").replace(/(_)([^\.])/g,".$2");//.replace(/\.\./g,".");
           parentDiv.append(wordHTML);
           wordHTML = "";
         }//end for token IDs
