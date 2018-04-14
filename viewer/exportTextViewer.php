@@ -100,6 +100,8 @@
     } else {
       logAddMsg("Sync'd Viewer support file 'readviewer.css'.");
     }
+  } else {
+    logAddMsg("Checked support file 'readviewer.css' up to date.");
   }
   $cssSubPathFilename = "/css/exGlossary.css";
   $exportGlossaryCss = new SplFileInfo($exportDir.$cssSubPathFilename);
@@ -114,6 +116,8 @@
     } else {
       logAddMsg("Sync'd Viewer support file 'exGlossary.css'.");
     }
+  } else {
+    logAddMsg("Checked support file 'exGlossary.css' up to date.");
   }
   $cssSubPathFilename = "/images/download.png";
   $exportViewerImage = new SplFileInfo($exportDir.$cssSubPathFilename);
@@ -142,6 +146,8 @@
     } else {
       logAddMsg("Sync'd Viewer support file 'imageViewer.js'.");
     }
+  } else {
+    logAddMsg("Checked support file 'imageViewer.js' up to date.");
   }
   $jsSubPathFilename = "/js/debug.js";
   $exportViewerJs = new SplFileInfo($exportDir.$jsSubPathFilename);
@@ -156,6 +162,8 @@
     } else {
       logAddMsg("Sync'd Viewer support file 'debug.js'.");
     }
+  } else {
+    logAddMsg("Checked support file 'debug.js' up to date.");
   }
   $jsSubPathFilename = "/js/utility.js";
   $exportViewerJs = new SplFileInfo($exportDir.$jsSubPathFilename);
@@ -170,6 +178,8 @@
     } else {
       logAddMsg("Sync'd Viewer support file 'utility.js'.");
     }
+  } else {
+    logAddMsg("Checked support file 'utility.js' up to date.");
   }
 
   $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):$_REQUEST);
@@ -309,7 +319,7 @@
   //create glossary and save if required
   if ($exportGlossary && $catIDs && count($catIDs)) {
     //generate static Glossary files
-    foreach ($catIDs as $xcatID){
+    foreach ($catIDs as $xcatID){//todo check whethter need to output multiple gloary files
       // todo check catalog is valid
       $catalog = new Catalog($xcatID);
       if ($catalog->hasError()){

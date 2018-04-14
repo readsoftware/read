@@ -2782,8 +2782,14 @@ function getUserGroupIDforName($name) {
 }
 
 function compareWordLocations($locW1,$locW2) {
-  list($tref1,$ord1,$label1) = explode(":",$locW1);
-  list($tref2,$ord2,$label2) = explode(":",$locW2);
+  if (strpos($locW1,':') == strrpos($locW1,":")) { //single colon so no tref
+    list($ord1,$label1) = explode(":",$locW1);
+    list($ord2,$label2) = explode(":",$locW2);
+    $tref1 = $tref2 = 0;
+  } else {
+    list($tref1,$ord1,$label1) = explode(":",$locW1);
+    list($tref2,$ord2,$label2) = explode(":",$locW2);
+  }
   if (preg_match("/^sort\d+/",$tref1) && preg_match("/^sort\d+/",$tref2)) {
     $tref1 = intval(substr($tref1,4));
     $tref2 = intval(substr($tref2,4));

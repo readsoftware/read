@@ -223,7 +223,7 @@
           }
         }else{
           $entity = EntityFactory::createEntityFromGlobalID($globalID);
-          if (!$entity){
+          if (!$entity || !$entity->getID()){
             $this->_error = "Error creating GID $globalID - ".EntityFactory::$error;
             return false;
           }
