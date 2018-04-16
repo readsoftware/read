@@ -497,11 +497,13 @@
                         //remove internal ordinal
                         $locParts = explode(":",$formLoc);
                         if (count($locParts) == 3) {
-                          if (strpos($locParts[0],"sort") === 0) {
+                          if (strpos(trim($locParts[0]),"sort") === 0) {
                             $formLoc = $locParts[2];
                           } else {
                             $formLoc = $locParts[0].$locParts[2];
                           }
+                        } else if (count($locParts) == 2) {
+                          $formLoc = $locParts[1];
                         }
                         $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
                       }
@@ -640,7 +642,7 @@
         if ($text && !$text->hasError()) {
           $ednLabel = $text->getRef();
           if (!$ednLabel) {
-            $ednLabel='sort'.$text->getID();
+//            $ednLabel='sort'.$text->getID();
           }
         }
         $ednSequences = $edition->getSequences(true);
@@ -777,7 +779,8 @@
                   $label2 = null;
                 }
                 if($label2 && $label2 != $label) {
-                  $label .= "-" . $label2;
+                  $posColon = strpos($label2,':');
+                  $label .= "&ndash;" . ($posColon !== false?substr($label2, $posColon+1):$label2);
                 }
                 $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
               } else {
