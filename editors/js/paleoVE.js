@@ -531,7 +531,7 @@ EDITORS.PaleoVE.prototype = {
   displaySclCell: function (sclCell, gSort) {
     //sort the syllables into typeGrpsuntyped, and the Base types.
     //getbasetypes
-    var curRow, curGrpCell, sortCat,
+    var curRow, curGrpCell, sortCat, index, catType, keys,
     i, syllable, sylGrpByType, untypedSyls,
     baseType, vowelType, footmarkType, untypedLinkedSyls = [];
     if (sclCell) {
@@ -559,7 +559,9 @@ EDITORS.PaleoVE.prototype = {
     //for each bt group create a row with header and a large cell for segments
     sortCat = this.sortMode;
     if (sylGrpByType[sortCat] && Object.keys(sylGrpByType[sortCat]).length) {
-      for (catType in sylGrpByType[sortCat]) {
+      keys = Object.keys(sylGrpByType[sortCat]).sort();
+      for (index in keys) {
+        catType = keys[index];
         //create row
         //add header cell
         curRow = $('<div class="taggingGroupRow">' +
