@@ -2662,18 +2662,26 @@ function getCatalogHTML($catID, $isStaticView = false, $refreshWordMap = false, 
           $dDoc = new DOMDocument();
           $dDoc->loadXML("<span>$lemmaEtym</span>",LIBXML_NOXMLDECL);
           $etym = $dDoc->getElementsByTagName("span")->item(0);
-          $etym->setAttribute("class", "etym");
-          $etymNode = $htmlDomDoc->importNode($etym,true);
-          $lemmaDefNode->appendChild($etymNode);
+          if ($etym) {
+            $etym->setAttribute("class", "etym");
+            $etymNode = $htmlDomDoc->importNode($etym,true);
+            $lemmaDefNode->appendChild($etymNode);
+          } else {
+            error_log("unable to encode etymology for lemma id ".$lemma->getGlobalID());
+          }
         }
         if ($lemmaGloss = $lemma->getTranslation()) {
           $lemmaGloss = html_entity_decode($lemmaGloss);
           $dDoc = new DOMDocument();
           $dDoc->loadXML("<span>$lemmaGloss</span>",LIBXML_NOXMLDECL);
           $gloss = $dDoc->getElementsByTagName("span")->item(0);
-          $gloss->setAttribute("class", "gloss");
-          $glossNode = $htmlDomDoc->importNode($gloss,true);
-          $lemmaDefNode->appendChild($glossNode);
+          if ($gloss) {
+            $gloss->setAttribute("class", "gloss");
+            $glossNode = $htmlDomDoc->importNode($gloss,true);
+            $lemmaDefNode->appendChild($glossNode);
+          } else {
+            error_log("unable to encode gloss for lemma id ".$lemma->getGlobalID());
+          }
         }
         if ( $linkedAnoIDsByType = $lemma->getLinkedAnnotationsByType()) {
           if (array_key_exists($glossaryCommentTypeID,$linkedAnoIDsByType)) {
