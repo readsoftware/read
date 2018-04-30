@@ -111,7 +111,7 @@
   } else if (!$readGlossaryCss->isFile() || !$readGlossaryCss->isReadable()) {
     logAddMsgExit("Unable to read Viewer support file '$cssSubPathFilename' aborting export.");
   } else if (!$exportGlossaryCss->isFile() || $exportGlossaryCss->getMTime() < $readGlossaryCss->getMTime()){
-    if ( !copy(dirname(__FILE__).'/../editors'.$cssSubPathFilename,$exportDir.$cssSubPathFilename)) {
+    if ( !copy(dirname(__FILE__).'/../common'.$cssSubPathFilename,$exportDir.$cssSubPathFilename)) {
       logAddMsgExit("Unable to sync Viewer support file 'exGlossary.css' aborting export.");
     } else {
       logAddMsg("Sync'd Viewer support file 'exGlossary.css'.");

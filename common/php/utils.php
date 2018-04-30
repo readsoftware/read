@@ -2781,6 +2781,14 @@ function getUserGroupIDforName($name) {
   return $row?$row['ugr_id']:null;
 }
 
+function clearSessionCatCache() {
+  foreach(array_keys($_SESSION) as $key) {
+    if (preg_match('/^cache-cat\d+'.DBNAME.'/',$key)) {
+      unset($_SESSION[$key]);
+    }
+  }
+}
+
 function compareWordLocations($locW1,$locW2) {
   if (strpos($locW1,':') == strrpos($locW1,":")) { //single colon so no tref
     list($ord1,$label1) = explode(":",$locW1);

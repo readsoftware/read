@@ -51,7 +51,12 @@ setcookie ('ka_code', '', time() - 42000);
 
 // Finally, destroy the session.
 session_unset();
-session_destroy();
+try {
+ session_destroy();
+}
+catch (Exception $e) {
+
+}
 $retVal = array("success" => 1);
 
 if (array_key_exists("callback",$_REQUEST)) {

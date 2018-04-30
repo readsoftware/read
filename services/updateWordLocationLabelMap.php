@@ -78,9 +78,9 @@
   function getWordTagToLocationLabelMap($catalog, $refreshWordMap) {
     global $term_parentLabelToID;
     $catID = $catalog->getID();
-    if (!$refreshWordMap && array_key_exists("cache-cat$catID",$_SESSION) &&
-          array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID"])) {
-      return $_SESSION["cache-cat$catID"]['wrdTag2LocLabel'];
+    if (!$refreshWordMap && array_key_exists("cache-cat$catID".DBNAME,$_SESSION) &&
+          array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID".DBNAME])) {
+      return $_SESSION["cache-cat$catID".DBNAME]['wrdTag2LocLabel'];
     }
     $editionIDs = $catalog->getEditionIDs();
     $wrdTag2LocLabel = array();

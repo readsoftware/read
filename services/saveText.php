@@ -138,6 +138,7 @@ if (count($errors) == 0) {
     }
     if ($ref !== null) {
       $text->setRef($ref);
+      clearSessionCatCache();
       if ($txtID) {
         addUpdateEntityReturnData("txt",$txtID,'ref', $text->getRef());
       }

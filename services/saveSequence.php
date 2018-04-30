@@ -161,6 +161,9 @@ if (count($errors) == 0) {
         addUpdateEntityReturnData("seq",$seqID,'value', $sequence->getLabel());
         addUpdateEntityReturnData("seq",$seqID,'label', $sequence->getLabel());
       }
+      if ($sequence->getType()=='LinePhysical') {
+        clearSessionCatCache();
+      }
     }
     if ($superscript !== null) {
       $sequence->setSuperScript($superscript);
