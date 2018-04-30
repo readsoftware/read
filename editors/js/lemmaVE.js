@@ -1022,6 +1022,12 @@ EDITORS.LemmaVE.prototype = {
           lemProps["gender"] = genID?genID:null;
           lemProps["certainty"] = [posCF,sposCF,genCF,classCF,declCF];
           lemmaVE.saveLemma(lemProps);
+        } else {
+          lemProps["pos"] = null;
+          lemProps["spos"] = null;
+          lemProps["gender"] = null;
+          lemProps["certainty"] = [3,3,3,3,3];
+          lemmaVE.saveLemma(lemProps);
         }
         $('div.valueLabelDiv',lemmaVE.posUI).html(value);
         $('.posEditUI',lemmaVE.posUI).removeClass('dirty');
