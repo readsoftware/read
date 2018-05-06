@@ -613,6 +613,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
   $analysisSeqIDs = array();
   $sourceNameLookup = array();
   $isFirstEdn = true;
+  $jsonCache = null;
   if (count($ednIDs) == 1) {
     if(USEVIEWERCACHING) {
       if (!$annoTypeID || !Entity::getTermFromID($annoTypeID)) {
@@ -622,7 +623,6 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
         $transType = Entity::getTermFromID($annoTypeID);
       }
       $cacheKey = "edn".$ednIDs[0].$transType."HTML";
-      $jsonCache = null;
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty() && !$forceRecalc) {
         $cachedEditionData = json_decode($jsonCache->getJsonString(),true);
@@ -1522,10 +1522,10 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   $sclTagLineStart = array();
   $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
   $isFirstEdn = true;
+  $jsonCache = null;
   if (count($ednIDs) == 1) {
     if(USEVIEWERCACHING) {
       $cacheKey = "edn".$ednIDs[0]."structviewHTML";
-      $jsonCache = null;
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty() && !$forceRecalc) {
         $cachedEditionData = json_decode($jsonCache->getJsonString(),true);

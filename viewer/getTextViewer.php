@@ -122,7 +122,7 @@
       }
     } else {
       $edition = new Edition($ednID);
-      if ($edition->hasError()) {
+      if ($edition->hasError() || !$edition->getID()) {
         returnXMLErrorMsgPage("unable to load edition - ".join(",",$edition->getErrors()));
       }
       $cfgEntityTag = DBNAME."edn$ednID";
