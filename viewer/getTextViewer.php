@@ -153,6 +153,8 @@
                           (defined("ALLOWIMAGEDOWNLOAD")?ALLOWIMAGEDOWNLOAD:false);
     $allowTeiDownload = isset($data['teiDownload'])?(!$data['teiDownload']?false:true):
                           (defined("ALLOWTEIDOWNLOAD")?ALLOWTEIDOWNLOAD:true);
+    $showExportButton = isset($data['showExport'])?(!$data['showExport']?false:true):
+                          (defined("SHOWEXPORTBUTTON")?SHOWEXPORTBUTTON:true);
     $showContentOutline = isset($data['showTOC'])?(!$data['showTOC']?false:true):
                           (defined("SHOWVIEWERCONTENTOUTLINE")?SHOWVIEWERCONTENTOUTLINE:true);
     $showImageView = isset($data['showImage'])?(!$data['showImage']?false:true):
@@ -559,7 +561,7 @@
             $epidocDownloadLink = $('.epidocDownloadLink',$textViewerHdr),
             $textViewerContent = $('#textViewerContent')
 <?php
-  if (!$isStaticView) {
+  if (!$isStaticView && $showExportButton) {
     //calculate static view configuration form initial values
     //save in session and use defaults if no session variable
     //todo  figure out a good place to save config based on live viewer context (text or edition or ??)
@@ -662,7 +664,7 @@
             }
           }
 <?php
-  if (!$isStaticView) {
+  if (!$isStaticView && $showExportButton) {
 ?>
           function exportStaticViewer() {
             var newURL = exportStaticBaseURL;
@@ -689,22 +691,22 @@
                 asynch: true,
                 success: function (data, status, xhr) {
                     if (data) {
-                      showResulstDialog(data);
+                      showResultsDialog(data);
                     }
                 },
                 error: function (xhr,status,error) {
                     // add record failed.
                     errStr = "<div class=\"errmsg\">An error occurred while trying to export viewer. Error: " + error+"</div>";
-                    showResulstDialog(errStr);
+                    showResultsDialog(errStr);
                 }
             });// end ajax
           }
 //          updateExportStaticLinkURL();
-          function showResulstDialog(content) {
+          function showResultsDialog(content) {
             $('#resultsDialogContent').html(content);
             $('#resultsDialog').jqxWindow('open');
           }
-          function initResulstDialog() {
+          function initResultsDialog() {
             var mainContainer = $('body'),
                 offset = mainContainer.offset();
                 offset.xcenter = mainContainer.innerWidth()/2;
@@ -721,7 +723,7 @@
             });
             $('#resultsDialog').jqxWindow('close');
           }
-          initResulstDialog();
+          initResultsDialog();
           function initSettingsDialog() {
             var mainContainer = $('body'),
                 offset = mainContainer.offset();
@@ -1201,7 +1203,7 @@
   <div class="headline"><div class="titleDiv"><?=$title?></div>
 <?php
   }
-  if (!$isStaticView) {
+  if (!$isStaticView && $showExportButton) {
 ?>
   <button id="btnExportDlg" class="btnExportDlg" title="Export Static Viewer">export html ...</button>
   </div>
@@ -1256,7 +1258,7 @@
   }
 ?>
 <?php
-  if (!$isStaticView) {
+  if (!$isStaticView && $showExportButton) {
 ?>
     <div id="settingsDialog">
         <div id="settingsDialogHeader">

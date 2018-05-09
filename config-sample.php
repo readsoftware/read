@@ -47,6 +47,7 @@
   define("DECLENSIONLIST",'OIADeclension');
 
   //configure viewer defaults for site
+  define("SHOWEXPORTBUTTON",false); // defaults to true so this is required to turn export off
   define("SHOWVIEWERCONTENTOUTLINE",false);
   define("SHOWIMAGEVIEW",true);
   define("USEPHYSICALVIEW",false);
