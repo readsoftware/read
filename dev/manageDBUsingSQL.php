@@ -46,6 +46,7 @@ require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user ac
 $cmd = (array_key_exists('cmd',$_REQUEST)? $_REQUEST['cmd']:null);
 $dbname = (array_key_exists('dbname',$_REQUEST)? $_REQUEST['dbname']:null);
 $sqlfilename = (array_key_exists('sqlfilename',$_REQUEST)? $_REQUEST['sqlfilename']:null);
+$sqlfilepath = (array_key_exists('sqlfilepath',$_REQUEST)? $_REQUEST['sqlfilepath']:null);
 
 if (!$cmd && !$dbname && !$sqlfilename) {
   echo "A command, database name and SQl filename are required.";
@@ -53,7 +54,7 @@ if (!$cmd && !$dbname && !$sqlfilename) {
   return;
 } else {
   $psqlPath = defined("PSQL_PATH")? PSQL_PATH."\\" :"";//configured tool dir or assume in PATH windows
-  $sqlFilePath = defined("READ_FILE_STORE")?READ_FILE_STORE."\\":"";//set dir for sql file windows
+  $sqlFilePath = $sqlfilepath?$sqlfilepath:(defined("READ_FILE_STORE")?READ_FILE_STORE."\\":"");//set dir for sql file windows
 //  $psqlPath = defined("PSQL_PATH")? PSQL_PATH."/" :"";//configured tool dir or assume in PATH
 //  $sqlFilePath = defined("READ_FILE_STORE")?READ_FILE_STORE."/":"";//set dir for sql file
   switch ($cmd) {

@@ -55,7 +55,7 @@ try {
  session_destroy();
 }
 catch (Exception $e) {
-
+ error_log(print_r($e,true));
 }
 $retVal = array("success" => 1);
 
