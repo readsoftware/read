@@ -41,6 +41,11 @@
   }
   define("CROP_IMAGE_SERVICE_PATH",SITE_BASE_PATH."/common/php/cropImagePoly.php");
 
+  //configure viewer/editors for site
+  define("SHOWLEMMAPHONETIC",0);
+  define("SHOWLEMMADECLENSION",0);
+  define("DECLENSIONLIST",'OIADeclension');
+
   //configure viewer defaults for site
   define("SHOWVIEWERCONTENTOUTLINE",false);
   define("SHOWIMAGEVIEW",true);

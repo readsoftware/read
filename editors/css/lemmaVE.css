@@ -35,9 +35,34 @@
   height: auto;
   cursor: pointer;
 }
-.valueUI,.compUI,.descrUI, .posUI, .supUI, .refUI, .invUI, .transUI {
+.valueUI,.phonUI,.compUI,.descrUI,
+.declUI, .posUI, .supUI, .refUI,
+.invUI, .transUI {
   color : black;
   background-color: inherit;
+}
+.declUI div.propEditUI {
+  width:auto;
+}
+.valueLabelDivHeader{
+  color : black!important;
+  background-color: inherit!important;
+}
+.valueLabelDivEditor{
+  color : blue!important;
+  background-color: inherit!important;
+}
+div.phonUI .propDisplayUI {
+  display:block;
+}
+div.phonUI.edit .propDisplayUI {
+  display:none;
+}
+div.phonUI .propEditUI {
+  display:none;
+}
+div.phonUI.edit .propEditUI {
+  display:table;
 }
 div.compUI .propDisplayUI {
   display:block;
@@ -109,6 +134,18 @@ div.descrUI .propEditUI {
   display:none;
 }
 div.descrUI.edit .propEditUI {
+  display:table;
+}
+div.declUI .propDisplayUI {
+  display:block;
+}
+div.declUI.edit .propDisplayUI {
+  display:none;
+}
+div.declUI .propEditUI {
+  display:none;
+}
+div.declUI.edit .propEditUI {
   display:table;
 }
 div.posUI .propDisplayUI {
@@ -262,7 +299,8 @@ div.custTagUI.edit .propEditUI {
 }
 div.descrUI .valueLabelDiv, div.posUI .valueLabelDiv, div.custTagUI .valueLabelDiv,
 div.transUI .valueLabelDiv, div.visUI .valueLabelDiv, div.typeUI .valueLabelDiv,
-div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv, div.linkTypeUI .valueLabelDiv{
+div.phonUI .valueLabelDiv, div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv,
+div.declUI .valueLabelDiv, div.linkTypeUI .valueLabelDiv{
   color: blue;
 }
 .propFlipNavDiv{

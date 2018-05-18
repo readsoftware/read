@@ -167,7 +167,13 @@ EDITORS.LemmaVE.prototype = {
       this.isLemma = (this.prefix == "lem");
       this.editDiv.html('');
       this.createValueUI();
+      if (EDITORS.config.showLemmaVEPhoneticUI) {
+        this.createPhoneticUI();
+      }
       this.createDescriptionUI();
+      if (EDITORS.config.showLemmaDeclensionUI) {
+        this.createDeclensionUI();
+      }
       this.createPOSUI();
       this.createTransUI();
       if (this.isLemma) {
@@ -292,6 +298,85 @@ EDITORS.LemmaVE.prototype = {
     DEBUG.traceExit("createValueUI");
   },
 
+
+
+/*************  Phonetic Interface ****************/
+
+/**
+* put your comment there...
+*
+*/
+
+  createPhoneticUI: function() {
+    var lemmaVE = this,
+        value = (this.entity.phonetics?this.entity.phonetics:"Phonetic Analysis"),
+        editValue = (this.entity.phonetics?this.entity.phonetics:'');
+    DEBUG.traceEntry("createPhoneticUI");
+    //create UI container
+    this.phonUI = $('<div class="phonUI"></div>');
+    this.editDiv.append(this.phonUI);
+    //create label
+    this.phonUI.append($('<div class="propDisplayUI">'+
+                     '<div class="valueLabelDiv propDisplayElement">'+value+'</div>'+
+                    '</div>'));
+    //create input with save button
+    this.phonUI.append($('<div class="propEditUI">'+
+                    '<div class="valueInputDiv propEditElement"><input class="valueInput" value="'+editValue+'"/></div>'+
+                    '<button class="saveDiv propEditElement">Save</button>'+
+                    '</div>'));
+    //attach event handlers
+      //click to edit
+      $('div.valueLabelDiv',this.phonUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
+        lemmaVE.phonUI.addClass("edit");
+        $('div.valueInputDiv input',this.phonUI).focus();
+        e.stopImmediatePropagation();
+        return false;
+      });
+      $('div.valueInputDiv input',this.phonUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
+      });
+      //blur to cancel
+      $('div.valueInputDiv input',this.phonUI).unbind("blur").bind("blur",function(e) {
+        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+//          lemmaVE.phonUI.removeClass("edit");
+        }
+      });
+      //mark dirty on input
+      $('div.valueInputDiv input',this.phonUI).unbind("input").bind("input",function(e) {
+        var curInput = $(this).val(), btnText = $('.saveDiv',lemmaVE.phonUI).html();
+        if ($('div.valueLabelDiv',lemmaVE.phonUI).html() != $(this).val()) {
+          if (!$(this).parent().parent().hasClass("dirty")) {
+            $(this).parent().parent().addClass("dirty");
+          }
+        } else if ($(this).parent().parent().hasClass("dirty")) {
+          $(this).parent().parent().removeClass("dirty");
+        }
+        if (!curInput && btnText == "Save") {
+          $('.saveDiv',lemmaVE.phonUI).html("Delete").css('color','red');
+        } else if (curInput && btnText != "Save") {
+          $('.saveDiv',lemmaVE.phonUI).html("Save").css('color','white');
+        }
+      });
+      //save data
+      $('.saveDiv',this.phonUI).unbind("click").bind("click",function(e) {
+        var lemProp = {};
+        if ($('.propEditUI',lemmaVE.phonUI).hasClass('dirty')) {
+          val = $('div.valueInputDiv input',lemmaVE.phonUI).val();
+          lemProp["phonetics"] = val;
+          $('div.valueLabelDiv',lemmaVE.phonUI).html(val);
+          $('.propEditUI',lemmaVE.phonUI).removeClass('dirty');
+          lemmaVE.saveLemma(lemProp);
+        }
+        lemmaVE.phonUI.removeClass("edit");
+        e.stopImmediatePropagation();
+        return false;
+      });
+    DEBUG.traceExit("createPhoneticUI");
+  },
+
+
   /*************  Compound Analysis Interface ****************/
 
 /**
@@ -321,7 +406,6 @@ EDITORS.LemmaVE.prototype = {
         $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.compUI.addClass("edit");
         $('div.valueInputDiv input',this.compUI).focus();
-//        $('div.valueInputDiv input',this.valueUI).select();
         e.stopImmediatePropagation();
         return false;
       });
@@ -731,6 +815,107 @@ EDITORS.LemmaVE.prototype = {
         return false;
       });
     DEBUG.traceExit("createDescriptionUI");
+  },
+
+/**
+* put your comment there...
+*
+*/
+
+  getDeclensionList: function() {
+    var lemmaVE = this,
+        listName = EDITORS.config.declensionListName,
+        trmID, trmIDs, term, declUIListID, declList = [];
+    declUIListID = this.dataMgr.getIDFromTermParentTerm(listName,'Declension'); // warning!!! term dependency
+    trmIDs = this.dataMgr.getTermListFromID(declUIListID);
+    for (i=0; i < trmIDs.length; i++) {
+      trmID = trmIDs[i];
+      term = this.dataMgr.getTermFromID(trmID);
+      declList.push({'name':term,'tag':'trm'+trmID,'id':trmID});
+    }
+    return declList;
+  },
+
+/**
+* put your comment there...
+*
+*/
+
+  createDeclensionUI: function() {
+    var lemmaVE = this,
+        trmID = this.entity.decl ? this.entity.decl:null;
+    this.declensionList = this.getDeclensionList();
+    var source =
+            {
+                localdata: this.declensionList,
+                datatype: "array"
+            };
+    var dataAdapter = new $.jqx.dataAdapter(source);
+    DEBUG.traceEntry("lemmaVE.createDeclensionUI");
+    //create UI container
+    this.declUI = $('<div class="declUI"></div>');
+    this.editDiv.append(this.declUI);
+    //create label
+    this.declUI.append($('<div class="propDisplayUI">'+
+                          '<div class="valueLabelDiv propDisplayElement">'+
+                          '<span class="valueLabelDivHeader">Declension: </span>'+
+                          '<span class="valueLabelDivEditor"></span>'+
+                          '</div>'+
+                          '</div>'));
+    //create input with save button
+    this.declUI.append($('<div class="propEditUI">'+
+                    '<div class="declListDiv propEditElement"></div>'+
+                    '</div>'));
+    //attach event handlers
+      //click to edit
+      this.declUI.unbind("click").bind("click",function(e) {
+        if (lemmaVE.declUI.hasClass("edit")) {
+          lemmaVE.declUI.removeClass("edit");
+        } else {
+          lemmaVE.declUI.addClass("edit");
+        }
+        e.stopImmediatePropagation();
+        return false;
+      });
+      //blur to cancel
+      this.declUI.unbind("blur").bind("blur",function(e) {
+          lemmaVE.declUI.removeClass("edit");
+      });
+      this.declList = $('div.declListDiv',this.declUI);
+      // Create jqxListBox
+      this.declList.jqxListBox({  source: dataAdapter,
+                                  displayMember: "name",
+                                  valueMember: "id",
+                                  height: 300,
+                                  width: 200,
+          renderer: function (index, label, value) {
+              var datarecord = lemmaVE.declensionList[index];
+              return'<span title="'+datarecord.name + '" tag="'+datarecord.tag+'" >' + datarecord.name + '</span>';
+          }
+      });
+      //select cur Declention in list and make it visible
+      var curDecl;
+      if (trmID) {
+        curDecl = this.declList.jqxListBox('getItemByValue', trmID);
+        if (curDecl) {
+          this.declList.jqxListBox('selectItem', curDecl);
+          this.declList.jqxListBox('ensureVisible', curDecl);
+          $('.valueLabelDivEditor',lemmaVE.declUI).html(curDecl.label);
+        }
+      }
+
+      //handle editor select
+      this.declList.unbind("select").bind("select",function(e) {
+        var args = e.args, item = args.item,
+            declName = item.label, declTrmID = item.value,
+            lemProp = {};
+        lemProp["decl"] = declTrmID;
+        $('.valueLabelDivEditor',lemmaVE.declUI).html(declName);
+        lemmaVE.declUI.removeClass("edit");
+        lemmaVE.saveLemma(lemProp);
+        //if editor has changed then save tempory session preferences
+      });
+    DEBUG.traceExit("lemmaVE.createDeclensionUI");
   },
 
 /*************  radio button helper ****************/

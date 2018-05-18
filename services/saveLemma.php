@@ -168,7 +168,7 @@ if (!$data) {
     }
   }
   $lemProps = null;
-  if ( isset($data['lemProps'])) {//get inflection
+  if ( isset($data['lemProps'])) {//get lemma props
     $lemProps = $data['lemProps'];
   }
   $infProps = null;
@@ -330,6 +330,9 @@ if (count($errors) == 0) {
             $lemma->setCertainty((!$propval || $propval == "")?array(3,3,3,3,3):$propval);
             addUpdateEntityReturnData('lem',$lemma->getID(),'certainty',$lemma->getCertainty());
             break;
+          default:
+            $lemma->storeScratchProperty($propname,$propval);
+            addUpdateEntityReturnData('lem',$lemma->getID(),$propname,$lemma->getScratchProperty($propname));
         }
       }
       $lemma->save();

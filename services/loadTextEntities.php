@@ -832,6 +832,9 @@
                 if ($lemma->getCompoundAnalysis()) {
                   $entities['lem'][$lemID]['compAnalysis'] = $lemma->getCompoundAnalysis();
                 }
+                if ($lemma->getScratchProperty('phonetics')) {
+                  $entities["update"]['lem'][$lemID]['phonetics'] = $lemma->getScratchProperty('phonetics');
+                }
                 $lemCompIDs = $lemma->getComponentIDs();
                 if (count($lemCompIDs) > 0) {
                   foreach ($lemCompIDs as $gid) {
