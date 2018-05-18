@@ -160,7 +160,7 @@ font-weight: bold;
   -ms-user-select: none;
   -webkit-user-select: none;
 }
-.footnote {
+.footnote,.reconstruction {
   color:darkcyan;
   background: lightgrey;
   cursor: pointer;

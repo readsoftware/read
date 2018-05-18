@@ -74,8 +74,7 @@
     $cmpTokTag2LocLabel = getWordTagToLocationLabelMap($catalog,$refreshWordMap);
     $tcmSrchStrings = array("⟨","⟩","⟪","⟫","\{","\}");
     $tcmRtfRplcStrings = array("\\u10216\\'3f","\\u10217\\'3f","\\u10218\\'3f","\\u10219\\'3f","\\'7b","\\'7d");
-    $rtf =
-          '{\rtf1\adeflang1025\ansi\ansicpg10000\uc1\adeff0\deff0'."\n".
+    $rtf ='{\rtf1\adeflang1025\ansi\ansicpg10000\uc1\adeff0\deff0'."\n".
           '{\fonttbl{\f0\fbidi \fnil\fcharset0\fprq2{\*\panose 02020603050405020304}Times New Roman;}'."\n".
           '{\f38\fbidi \fnil\fcharset0\fprq2{\*\panose 02000503060000020004}Gandhari Unicode;}}'."\n".
           '{\stylesheet{\ql \li0\ri0\nowidctlpar\wrapdefault\hyphpar0\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1031\langfe1031\cgrid\langnp1031\langfenp1031 \snext0 \sqformat \spriority0 Normal;}'."\n".
@@ -329,7 +328,8 @@
                     }
                   }
                 }
-                $loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
+                //$loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
+                $loc = $inflectionComponent->getLocation($refresh).($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
                 //accumulate locations
                 if (!array_key_exists($sc,$node)) {
                   $node[$sc] = array('value'=>
@@ -378,7 +378,8 @@
                   }
                 }
               }
-              $loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
+              //$loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
+              $loc = $lemmaComponent->getLocation($refresh).($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
               if (! array_key_exists('?',$groupedForms)) {
                 $groupedForms['?'] = array();
               }

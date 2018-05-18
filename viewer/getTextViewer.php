@@ -296,8 +296,8 @@
           edStructHtmlByEdn = {<?=$edStructHtmlByEdn?>},
           edFootnotesByEdn = {<?=$edFootnotesByEdn?>},//reset and calc'd in getEditionsStructuralViewHtml
           edGlossaryLookupByEdn = {<?=$edGlossaryLookupByEdn?>},//calc'd for first edition assuming all editions are inclusive
-          edStructHtml = edStructHtmlByEdn[<?=$defaultEdnID?>],//get first edition
           edFootnotes = edFootnotesByEdn[<?=$defaultEdnID?>],//get first edition
+          edStructHtml = edStructHtmlByEdn[<?=$defaultEdnID?>],//get first edition
           edGlossaryLookup = edGlossaryLookupByEdn[<?=$defaultEdnID?>]//get first edition
 <?php
   } else if ($ednIDs && count($ednIDs) > 1){
@@ -320,8 +320,14 @@
   } else {
 ?>
           multiEdition = false,
+<?php
+/*
+          $edStructHtml = json_encode(getEditionsStructuralViewHtml(array($ednID),$refreshLookUps));
+          echo "edStructHtml = $edStructHtml,\n";
+*/
+?>
           edStructHtml = <?=getEditionsStructuralViewHtml(array($ednID),$refreshLookUps)?>,
-          edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
+          edFootnotes = <?=getEditionFootnoteTextLookup()?>,
 <?php
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
         $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps,$glossaryUrlLookup);
@@ -949,7 +955,7 @@
             $textViewerContent.html(edStructHtml);
             closeAllPopups();
             if (edFootnotes && typeof edFootnotes == 'object' && Object.keys(edFootnotes).length > 0) {
-              $('.footnote',$textViewerContent).unbind('click').bind('click', function(e) {
+              $('.footnote,.reconstruction',$textViewerContent).unbind('click').bind('click', function(e) {
                 var id = this.id, footnoteHtml, $showing;
                   footnoteHtml = (edFootnotes[id]?edFootnotes[id]:"unable to find footnote text or empty footnote");
                   $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
@@ -1121,7 +1127,7 @@
               $transViewerContent.html(transStructHtml);
               $transViewerContent.unbind('click').bind('click', closeAllPopups);
               if (transFootnotes && typeof transFootnotes == 'object' && Object.keys(transFootnotes).length > 0) {
-                $('.footnote',$transViewerContent).unbind('click').bind('click', function(e) {
+                $('.footnote,.reconstruction',$transViewerContent).unbind('click').bind('click', function(e) {
                   var id = this.id, footnoteHtml;
                     footnoteHtml = (transFootnotes[id]?transFootnotes[id]:"unable to find footnote text or empty footnote");
                     $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",
@@ -1161,7 +1167,7 @@
               $chayaViewerContent.html(chayaStructHtml);
               $chayaViewerContent.unbind('click').bind('click',closeAllPopups);
               if (chayaFootnotes && typeof chayaFootnotes == 'object' && Object.keys(chayaFootnotes).length > 0) {
-                $('.footnote',$chayaViewerContent).unbind('click').bind('click', function(e) {
+                $('.footnote,.reconstruction',$chayaViewerContent).unbind('click').bind('click', function(e) {
                   var id = this.id, footnoteHtml;
                     footnoteHtml = (chayaFootnotes[id]?chayaFootnotes[id]:"unable to find footnote text or empty footnote");
                     $(this).jqxTooltip({content: '<div class="popupwrapperdiv">'+footnoteHtml+"</div>",

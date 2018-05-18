@@ -27,6 +27,7 @@
   * @subpackage  Entity Classes
   */
   require_once (dirname(__FILE__) . '/../../common/php/DBManager.php');//get database interface
+  require_once (dirname(__FILE__) . '/../../common/php/utils.php');//get utility functions
   require_once (dirname(__FILE__) . '/Entity.php');
   require_once (dirname(__FILE__) . '/Lemma.php');
   require_once (dirname(__FILE__) . '/Token.php');
@@ -198,6 +199,37 @@
     //****************************PUBLIC FUNCTIONS************************************
 
     /**
+    * Calculate location label for this compound and update cached value
+    *
+    * @return string representing this compound's location in the text
+    */
+    public function updateLocationLabel($autosave = true){
+      $locLabel = getWordLocation($this->getEntityTag());
+      $this->storeScratchProperty("locLabel",$locLabel);
+      if ($autosave){
+        $this->save();
+      }
+      return $locLabel;
+    }
+
+    /**
+    * Calculate baseline image boundaries and scrolltop for this compound and update cached value
+    *
+    * @param boolean $autosave that indicates whether to autosave
+    * @return boolean indicating success
+    */
+    public function updateBaselineInfo($autosave = true){
+      if (!$this->_id) return false;
+      list($polygons,$blnScrollTop) = getWordsBaselineInfo($this->getTokenIDs());
+      $this->storeScratchProperty("blnPolygons",$polygons);
+      $this->storeScratchProperty("blnScrollTopInfo",$blnScrollTop);
+      if ($autosave){
+        $this->save();
+      }
+      return !$this->hasError();
+    }
+
+    /**
     * Calculate value for this compound
     *
     * @return boolean true if successful, false otherwise
@@ -328,6 +360,45 @@
     */
     public function getCompound($reCalculate = false) {
       return $this->getValue($reCalculate);
+    }
+
+    /**
+    * Get Compound's location label
+    *
+    * @param boolean $reCalculate that indicates whether to recalculate location label
+    * @return string location label of this compound
+    */
+    public function getLocation($reCalculate = false, $autosave = true) {
+      if ($reCalculate || !$this->getScratchProperty("locLabel")){
+        return $this->updateLocationLabel($autosave);
+      }
+      return $this->getScratchProperty("locLabel");
+    }
+
+    /**
+    * Get Compound's boundary polygons
+    *
+    * @param boolean $reCalculate that indicates whether to recalculate Baseline info
+    * @return array of polygons indexed by baseline id
+    */
+    public function getBaselinePolygons($reCalculate = false, $autosave = true) {
+      if ($reCalculate || !$this->getScratchProperty("blnPolygons")){
+        $this->updateBaselineInfo($autosave);
+      }
+      return $this->getScratchProperty("blnPolygons");
+    }
+
+    /**
+    * Get Compound's scrolltop info
+    *
+    * @param boolean $reCalculate that indicates whether to recalculate Baseline info
+    * @return array of scrolltop information objects indexed by baseline id
+    */
+    public function getScrollTopInfo($reCalculate = false, $autosave = true) {
+      if ($reCalculate || !$this->getScratchProperty("blnScrollTopInfo")){
+        $this->updateBaselineInfo($autosave);
+      }
+      return $this->getScratchProperty("blnScrollTopInfo");
     }
 
     /**

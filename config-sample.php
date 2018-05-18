@@ -61,6 +61,12 @@
   define("SHOWETYMPARENS",false);
   define("LEMMALINKTEMPLATE",READ_DIR."/plugins/dictionary/?search=%lemval%");
 
+//location label formatting
+  define("CKNMATCHREGEXP","'([a-z]+)0*(\\d+)'");//grp1 match starting non numeric characters followed by zero or more 0 grp2 match following numbers
+  define("CKNREPLACEMENTEXP","'\\1\\2'");//replace is grp1 followed by grp2
+  define("CKNREPLACEFLAGS","'i'");//ignore case during match
+  define("CKNLINENUMSEPARATOR",":");//separate txt label from line label using a space
+
   if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer");
 // to export with separation of project databases use the line below. Also consider
 // symbolic links to READ's viewer support subdirectories css and js in viewer export

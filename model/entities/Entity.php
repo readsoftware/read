@@ -104,6 +104,47 @@
       return self::$_termInfo['labelByID'][$termID];
     }
 
+    /**
+    * Convert multi polygon string to array of polygons
+    *
+    * @param string $polysString database polygon array string
+    * @return NULL|array of polygon
+    */
+    public static function polyStringToArray($polysString){
+      if (is_string($polysString)) {
+        $polygons = null;
+        preg_match_all("/(\((?:\(\d+\,\d+\)\,?)+\))+/",$polysString,$matches);
+        $cnt = count($matches);
+        if ($cnt > 1) {
+          $cnt = count($matches[1]);
+          $polygons = array();
+          for($i=0; $i < $cnt; $i++){
+            $polygon = new Polygon($matches[1][$i]);
+            array_push($polygons, $polygon);
+          }
+        }
+        $polysString = $polygons;
+      }
+      if (is_array($polysString) && array_key_exists(0,$polysString)
+          && is_a($polysString[0],'Polygon')) {
+        return $polysString;
+      } else {
+        return null;
+      }
+    }
+
+    /**
+    * Convert ids string to array
+    *
+    * @param string $idsString database id array string
+    * @return NULL|array of int ids
+    */
+    public static function idsStringToArray($idsString){
+      if (is_array($idsString)) return $idsString;
+      preg_match_all("/([^\"\'\{\},]+)/",$idsString,$matches);
+      return @$matches[1]? $matches[1]:null;
+    }
+
     //****************************CONSTRUCTOR FUNCTION***************************************
 
     //*******************************PROTECTED FUNCTIONS************************************
@@ -297,18 +338,6 @@
     }
 
     /**
-    * Convert ids string to array
-    *
-    * @param string $idsString database id array string
-    * @return NULL|array of int ids
-    */
-    protected function idsStringToArray($idsString){
-      if (is_array($idsString)) return $idsString;
-      preg_match_all("/([^\"\'\{\},]+)/",$idsString,$matches);
-      return @$matches[1]? $matches[1]:null;
-    }
-
-    /**
     * Convert id array to string
     *
     * @param array $ids integers
@@ -474,35 +503,6 @@
       }
       if (is_string($arrayOfArrayOfIds)) return $arrayOfArrayOfIds;
       return null;
-    }
-
-    /**
-    * Convert multi polygon string to array of polygons
-    *
-    * @param string $polysString database polygon array string
-    * @return NULL|array of polygon
-    */
-    protected function polyStringToArray($polysString){
-      if (is_string($polysString)) {
-        $polygons = null;
-        preg_match_all("/(\((?:\(\d+\,\d+\)\,?)+\))+/",$polysString,$matches);
-        $cnt = count($matches);
-        if ($cnt > 1) {
-          $cnt = count($matches[1]);
-          $polygons = array();
-          for($i=0; $i < $cnt; $i++){
-            $polygon = new Polygon($matches[1][$i]);
-            array_push($polygons, $polygon);
-          }
-        }
-        $polysString = $polygons;
-      }
-      if (is_array($polysString) && array_key_exists(0,$polysString)
-          && is_a($polysString[0],'Polygon')) {
-        return $polysString;
-      } else {
-        return null;
-      }
     }
 
     /**
