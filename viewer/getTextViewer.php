@@ -44,7 +44,7 @@
     returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
   } else {
     //get parameters
-    $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:true;//default (parameter missing) not multi edition
+    $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:$data['refreshLookUps'];//default (parameter missing) not multi edition
     $multiEdition = (!isset($data['multiEd']) || !$data['multiEd'])? false:true;//default (parameter missing) not multi edition
     $isStaticView = (!isset($data['staticView'])||$data['staticView']==0)?false:true;
     $txtID = null;
@@ -302,8 +302,8 @@
 <?php
   } else if ($ednIDs && count($ednIDs) > 1){
 ?>
-          multiEdition = false,
           edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs,$refreshLookUps)?>,
+          multiEdition = false,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
 <?php
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
@@ -318,15 +318,12 @@
       $urlMap["tei"]["edn$ednID"] = $teiBaseURL.$ednID;
     }
   } else {
+    ob_flush();//hack for ob injected number during EditionStructural calc
+    $structHtml =getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
+    ob_clean();//hack for ob injected number during EditionStructural calc
 ?>
           multiEdition = false,
-<?php
-/*
-          $edStructHtml = json_encode(getEditionsStructuralViewHtml(array($ednID),$refreshLookUps));
-          echo "edStructHtml = $edStructHtml,\n";
-*/
-?>
-          edStructHtml = <?=getEditionsStructuralViewHtml(array($ednID),$refreshLookUps)?>,
+          edStructHtml = <?=$structHtml?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,
 <?php
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only

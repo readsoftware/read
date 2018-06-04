@@ -131,6 +131,8 @@
       $condition .= "txt_title ilike '%$strSearch%'";
     }
   }
+  $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
+                  (defined('DEFAULTSEARCHREFRESH')?DEFAULTSEARCHREFRESH:0));
   $refresh = false;
   if ( isset($data['refresh'])) {
     $refresh = $data['refresh'];

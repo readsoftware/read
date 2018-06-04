@@ -25,10 +25,16 @@
   if(!defined("USERNAME")) define("USERNAME","postgres");
   if(!defined("PASSWORD")) define("PASSWORD","password");
   if(!defined("DEFAULTVISIBILITY")) define("DEFAULTVISIBILITY","Users");
+  //caching
   if(!defined("USECACHE")) define("USECACHE",false);
   if(!defined("USEVIEWERCACHING")) define("USEVIEWERCACHING",true);
-  if(!defined("DEFAULTCACHEOWNERID")) define("DEFAULTCACHEOWNERID",6);
+  if(!defined("DEFAULTANNOTATIONSREFRESH")) define("DEFAULTANNOTATIONSREFRESH",0);//set >= 1 always refresh
+  if(!defined("DEFAULTSEARCHREFRESH")) define("DEFAULTSEARCHREFRESH",0);
+  if(!defined("DEFAULTCATALOGREFRESH")) define("DEFAULTCATALOGREFRESH",0);
+  if(!defined("DEFAULTEDITIONREFRESH")) define("DEFAULTEDITIONREFRESH",0);
+  if(!defined("DEFAULTCACHEOWNERID")) define("DEFAULTCACHEOWNERID",4);
   if(!defined("DEFAULTCACHEVISID")) define("DEFAULTCACHEVISID",6);
+
   if(!defined("ENABLECATALOGRESOURCE")) define("ENABLECATALOGRESOURCE",'0');//0 = not enable else enabled
 //  if(!defined("LINKSYLPATTERN")) define("LINKSYLPATTERN","L1:S1,L5+5:S1");
 //  if(!defined("USESKTSORT")) define("USESKTSORT",'1');

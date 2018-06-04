@@ -285,11 +285,11 @@
     $columnGroupInfo[$prefix] = $colGroup;
   }
 
-  print  "var mainMenuSource = ".json_encode($mainMenuSource,true)." ;\n";
+  print  "var mainMenuSource = ".json_encode($mainMenuSource,true)." ;\n";//to be deprecated used for entity UI tool
 
   print  "var entityInfo = ".json_encode($entityInfo,true)." ;\n";
   print  "var seqTypeInfo = ".json_encode(getSeqTypeInfo(),true)." ;\n";
   print  "var linkTypeInfo = ".json_encode(getLinkTypeInfo(),true)." ;\n";
   print  "var termInfo = ".json_encode($termInfo,true)." ;\n";
-  print  "var columnGroupInfo =".json_encode($columnGroupInfo,true)." ;";
+  print  "var columnGroupInfo =".json_encode($columnGroupInfo,true)." ;";//to be deprecated used for entity UI tool
 ?>

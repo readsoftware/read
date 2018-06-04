@@ -330,8 +330,8 @@
     * @param boolean $reCalculate that indicates whether to recalculate location label
     * @return string location label of this token
     */
-    public function getLocation($reCalculate = false, $autosave = true) {
-      if ( $reCalculate || !$this->getScratchProperty("locLabel")){
+    public function getLocation($autosave = true) {
+      if ( !$this->getScratchProperty("locLabel")){
         return $this->updateLocationLabel($autosave);
       }
       return $this->getScratchProperty("locLabel");
@@ -343,8 +343,8 @@
     * @param boolean $reCalculate that indicates whether to recalculate Baseline info
     * @return array of polygons indexed by baseline id
     */
-    public function getBaselinePolygons($reCalculate = false, $autosave = true) {
-      if ($reCalculate || !$this->getScratchProperty("blnPolygons")){
+    public function getBaselinePolygons($autosave = true) {
+      if (!$this->getScratchProperty("blnPolygons")){
         $this->updateBaselineInfo($autosave);
       }
       return $this->getScratchProperty("blnPolygons");
@@ -356,8 +356,8 @@
     * @param boolean $reCalculate that indicates whether to recalculate Baseline info
     * @return array of scrolltop information objects indexed by baseline id
     */
-    public function getScrollTopInfo($reCalculate = false, $autosave = true) {
-      if ($reCalculate || !$this->getScratchProperty("blnScrollTopInfo")){
+    public function getScrollTopInfo($autosave = true) {
+      if (!$this->getScratchProperty("blnScrollTopInfo")){
         $this->updateBaselineInfo($autosave);
       }
       return $this->getScratchProperty("blnScrollTopInfo");
@@ -397,45 +397,50 @@
     * @param boolean $asString determines where to return as a string (default = false)
     * @return int array|string that contains syllablecluster IDs of the graphemes of this token
     */
-    public function getSyllableClusterIDs($asString = false) {
-      $sclIDs = array();
-      $sclGraIDs = array();
-      $graIDs = $this->getGraphemeIDs();
-      while ($graIDs && $graID = array_shift($graIDs)) {//for each token grapheme
-        if (count($sclGraIDs)==0){//get syllable for the current grapheme
-          $syls = new SyllableClusters("$graID = ANY(scl_grapheme_ids)",null,null,null);
-          if (!$syls || $syls->getCount() == 0) {
-              array_push($this->_errors,"invalid token state tok:".$this->_id."has grapheme gra:$graID not associated with a visible syllableCluster");
-              return null;
+    public function getSyllableClusterIDs($asString = false, $refresh = false) {
+      $sclIDs = $this->getScratchProperty('sclIDs');
+      if (!$sclIDs || $refresh) {
+        $sclIDs = array();
+        $sclGraIDs = array();
+        $graIDs = $this->getGraphemeIDs();
+        while ($graIDs && $graID = array_shift($graIDs)) {//for each token grapheme
+          if (count($sclGraIDs)==0){//get syllable for the current grapheme
+            $syls = new SyllableClusters("$graID = ANY(scl_grapheme_ids)",null,null,null);
+            if (!$syls || $syls->getCount() == 0) {
+                array_push($this->_errors,"invalid token state tok:".$this->_id."has grapheme gra:$graID not associated with a visible syllableCluster");
+                return null;
+            }
+            //for each of the sylables find the one which matches the order of graphemes
+            $sclGraIDs = $syls->current()->getGraphemeIDs();
+            array_push($sclIDs,$syls->current()->getID());
+            $graIndex = array_search($graID,$sclGraIDs);
+            if ($graIndex > 0) {
+              if (count($sclIDs) == 1) {//first syllable of token and token 1st grapheme not at beginning of syllable, likely split syllable so trim
+                $sclGraIDs = array_slice($sclGraIDs,$graIndex);
+              } else {
+                array_push($this->_errors,"token graphemes are out of synch with syllableCluster id = ".$syls->current()->getID());
+                return null;
+              }
+            }
           }
-          //for each of the sylables find the one which matches the order of graphemes
-          $sclGraIDs = $syls->current()->getGraphemeIDs();
-          array_push($sclIDs,$syls->current()->getID());
-          $graIndex = array_search($graID,$sclGraIDs);
-          if ($graIndex > 0) {
-            if (count($sclIDs) == 1) {//first syllable of token and token 1st grapheme not at beginning of syllable, likely split syllable so trim
-              $sclGraIDs = array_slice($sclGraIDs,$graIndex);
-            } else {
+          while ($sclGraIDs && $sclGraID = array_shift($sclGraIDs)) {//match syllable graphemes to token graphemes until end of either
+            if ($graID == $sclGraID) {
+              if (count($sclGraIDs)==0) { // need another syllable so loop outer
+                break;
+              }
+              $graID = array_shift($graIDs);
+              if (!$graID) { //end of token so done
+                break;
+              }
+            }else{
+              //error case token and syllable are out of synch
               array_push($this->_errors,"token graphemes are out of synch with syllableCluster id = ".$syls->current()->getID());
               return null;
             }
           }
         }
-        while ($sclGraIDs && $sclGraID = array_shift($sclGraIDs)) {//match syllable graphemes to token graphemes until end of either
-          if ($graID == $sclGraID) {
-            if (count($sclGraIDs)==0) { // need another syllable so loop outer
-              break;
-            }
-            $graID = array_shift($graIDs);
-            if (!$graID) { //end of token so done
-              break;
-            }
-          }else{
-            //error case token and syllable are out of synch
-            array_push($this->_errors,"token graphemes are out of synch with syllableCluster id = ".$syls->current()->getID());
-            return null;
-          }
-        }
+        $this->storeScratchProperty('sclIDs',$sclIDs);
+        $this->save();
       }
       if ($asString){
         return $this->idsToString($sclIDs);

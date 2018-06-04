@@ -37,18 +37,22 @@ header('Content-type: text/javascript');
 header('Cache-Control: no-transform,private,max-age=300,s-maxage=900');
 
 $jsonRetVal = null;
-// check for cache
-$dbMgr = new DBManager();
-if ($dbMgr->getError()) {
-  exit("Error: ".$dbMgr->getError());
-}
-$dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Annotations'");
 $jsonCache = null;
-if ($dbMgr->getRowCount() > 0 && USECACHE) {
-  $row = $dbMgr->fetchResultRow();
-  $jsonCache = new JsonCache($row);
-  if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
-    $jsonRetVal = $jsonCache->getJsonString();
+$refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
+                (defined('DEFAULTANNOTATIONSREFRESH')?DEFAULTANNOTATIONSREFRESH:0));
+// check for cache
+if (USECACHE && $refresh < 1) {
+  $dbMgr = new DBManager();
+  if ($dbMgr->getError()) {
+    exit("Error: ".$dbMgr->getError());
+  }
+  $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Annotations'");
+  if ($dbMgr->getRowCount() > 0 && USECACHE) {
+    $row = $dbMgr->fetchResultRow();
+    $jsonCache = new JsonCache($row);
+    if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
+      $jsonRetVal = $jsonCache->getJsonString();
+    }
   }
 }
 

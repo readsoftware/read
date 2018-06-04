@@ -81,7 +81,7 @@
         $dbMgr = new DBManager();
         $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = '$arg'".
                       (isSysAdmin()?"":
-                        " AND (".getUserID()."= jsc_owner_id or ".getUserID()." = ANY (\"jsc_visibility_ids\"))")." LIMIT 1");
+                        " AND NOT jsc_owner_id = 1 AND (".getUserID()."= jsc_owner_id or 6 = ANY (\"jsc_visibility_ids\") or ".getUserID()." = ANY (\"jsc_visibility_ids\"))")." LIMIT 1");
         $row = $dbMgr->fetchResultRow(0);
         if(!$row || !array_key_exists('jsc_id',$row)) {
           error_log("unable to query for jsoncache label = $arg ");

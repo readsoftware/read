@@ -16,9 +16,11 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
   /**
-  * exportHTMLGlossary
+  * loadCatalogEntities
   *
-  *  A service that returns HTML encoding of the catalog (unrestricted type)
+  *  A service that returns a json structure of the catalog (unrestricted type) requested along with its
+  *  lemma and the lemma's inflections, compounds, and tokens.
+  *  There is NO CACHING of this information.
   *
   * @author      Stephen White  <stephenawhite57@gmail.com>
   * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
@@ -26,14 +28,16 @@
   * @version     1.0
   * @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
   * @package     READ Research Environment for Ancient Documents
-  * @subpackage  Services Classes
+  * @subpackage  Utility Classes
   */
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
   ob_start('ob_gzhandler');
 
-  header("Content-type: text/html;  charset=utf-8");
+  header("Content-type: text/plain");
+  header('Cache-Control: no-cache');
   header('Pragma: no-cache');
+
 //  if(!defined("DBNAME")) define("DBNAME","kanishkatest");
   require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
@@ -45,32 +49,65 @@
   require_once dirname(__FILE__) . '/../model/entities/Text.php';
   require_once dirname(__FILE__) . '/../model/entities/Sequences.php';
   require_once dirname(__FILE__) . '/../model/entities/Catalogs.php';
+  require_once dirname(__FILE__) . '/../model/entities/JsonCache.php';
   require_once dirname(__FILE__) . '/../model/entities/Compounds.php';
   require_once dirname(__FILE__) . '/../model/entities/Images.php';
+  require_once dirname(__FILE__) . '/../model/entities/Baselines.php';
   require_once (dirname(__FILE__) . '/../viewer/php/viewutils.php');//get utilities for viewing
 //  $userID = array_key_exists('userID',$_REQUEST) ? $_REQUEST['userID']:12;
+//  echo "mem limit = ".ini_get('memory_limit');
+  ob_flush();
+  $dbMgr = new DBManager();
+  $retVal = array();
   $catID = (array_key_exists('catID',$_REQUEST)? $_REQUEST['catID']:null);
-  $exportFilename = (array_key_exists('filename',$_REQUEST)? $_REQUEST['filename']:null);
-  $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
-  $isStaticView = (array_key_exists('staticView',$_REQUEST)? ($_REQUEST['staticView']==0?false:true):false);
-  $useTranscription = (!array_key_exists('usevalue',$_REQUEST)? true:false);
-  $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
-  $refresh = ((array_key_exists('refreshWordMap',$_REQUEST) ? $_REQUEST['refreshWordMap']:
-                      (array_key_exists('refreshLookUps',$_REQUEST))? $_REQUEST['refreshLookUps']:
-                       (defined('DEFAULTHTMLGLOSSARTREFRESH')?DEFAULTHTMLGLOSSARTREFRESH:0)));
-
-
-  list($result,$text) = getCatalogHTML($catID,$isStaticView,$refresh,$useTranscription,$hideHyphens);
-  if ($result == "success") {
-    if ($isDownload) {
-      header("Content-Disposition: attachment; filename=readGlossary.html");
-      header("Expires: 0");
-    }
-    echo $text;
-  } else {
-    startLog();
-    logAddMsgExit($text);
+  $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
+  $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:0);//default is set to include recalc word location
+  $termInfo = getTermInfoForLangCode('en');
+  $termLookup = $termInfo['labelByID'];
+  $term_parentLabelToID = $termInfo['idByTerm_ParentLabel'];
+  $getWrdTag2GlossaryPopupHtmlLookup = array();
+  $errors = array();
+  $warnings = array();
+  //find catalogs
+  if ($catID) {
+    $catalog = new Catalog($catID);
+  }else{
+    $catalog = null;
   }
-  exit;
+  if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
+    echo "Usage: updateWordLocationLabelMap.php?db=yourDBName&catID=###[&ednID=###]";
+  } else {
+    if(USEVIEWERCACHING) {
+      $cacheKey = "glosscat$catID"."edn".($ednID?$ednID:"all");
+      $dbMgr = new DBManager();
+      if (!$dbMgr || $dbMgr->getError()) {
+        exit("error loading dataManager");
+
+      }
+      $dbMgr->query("select * from jsoncache where jsc_label = '$cacheKey' and not jsc_owner_id = 1;");
+      $cnt = $dbMgr->getRowCount();
+      if ($cnt == 0) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel($cacheKey);
+        $jsonCache->setVisibilityIDs($catalog->getVisibilityIDs());
+        $jsonCache->setOwnerID($catalog->getOwnerID());
+      } else {
+        if ($cnt > 1) {
+          for ($i = 1; $i < $cnt; $i++) {
+            $temp = new JsonCache($dbMgr->fetchResultRow());
+            $temp->markForDelete();
+          }
+        }
+        $jsonCache = new JsonCache($cacheKey);
+      }
+    }
+    $getWrdTag2GlossaryPopupHtmlLookup = getWrdTag2GlossaryPopupHtmlLookup($catID,$ednID, $refresh);
+    echo print_r($getWrdTag2GlossaryPopupHtmlLookup,true);
+    if(USEVIEWERCACHING) {
+      $jsonCache->setJsonString(json_encode($getWrdTag2GlossaryPopupHtmlLookup));
+      $jsonCache->save();
+      unset($jsonCache);
+    }
+  }
 
 ?>

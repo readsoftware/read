@@ -368,8 +368,8 @@
     * @param boolean $reCalculate that indicates whether to recalculate location label
     * @return string location label of this compound
     */
-    public function getLocation($reCalculate = false, $autosave = true) {
-      if ($reCalculate || !$this->getScratchProperty("locLabel")){
+    public function getLocation($autosave = true) {
+      if (!$this->getScratchProperty("locLabel")){
         return $this->updateLocationLabel($autosave);
       }
       return $this->getScratchProperty("locLabel");
@@ -381,8 +381,8 @@
     * @param boolean $reCalculate that indicates whether to recalculate Baseline info
     * @return array of polygons indexed by baseline id
     */
-    public function getBaselinePolygons($reCalculate = false, $autosave = true) {
-      if ($reCalculate || !$this->getScratchProperty("blnPolygons")){
+    public function getBaselinePolygons($autosave = true) {
+      if (!$this->getScratchProperty("blnPolygons")){
         $this->updateBaselineInfo($autosave);
       }
       return $this->getScratchProperty("blnPolygons");
@@ -394,8 +394,8 @@
     * @param boolean $reCalculate that indicates whether to recalculate Baseline info
     * @return array of scrolltop information objects indexed by baseline id
     */
-    public function getScrollTopInfo($reCalculate = false, $autosave = true) {
-      if ($reCalculate || !$this->getScratchProperty("blnScrollTopInfo")){
+    public function getScrollTopInfo($autosave = true) {
+      if (!$this->getScratchProperty("blnScrollTopInfo")){
         $this->updateBaselineInfo($autosave);
       }
       return $this->getScratchProperty("blnScrollTopInfo");

@@ -16,9 +16,9 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
   /**
-  * exportHTMLGlossary
+  * recalcCatalogLocationMap.php
   *
-  *  A service that returns HTML encoding of the catalog (unrestricted type)
+  *  A service that returns recalculates a text:line location map for each token and caches it.
   *
   * @author      Stephen White  <stephenawhite57@gmail.com>
   * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
@@ -26,14 +26,16 @@
   * @version     1.0
   * @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
   * @package     READ Research Environment for Ancient Documents
-  * @subpackage  Services Classes
+  * @subpackage  Utility Classes
   */
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
   ob_start('ob_gzhandler');
 
-  header("Content-type: text/html;  charset=utf-8");
+  header("Content-type: text/javascript");
+  header('Cache-Control: no-cache');
   header('Pragma: no-cache');
+
 //  if(!defined("DBNAME")) define("DBNAME","kanishkatest");
   require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
@@ -41,36 +43,45 @@
   require_once dirname(__FILE__) . '/../model/entities/Tokens.php';
   require_once dirname(__FILE__) . '/../model/entities/Lemmas.php';
   require_once dirname(__FILE__) . '/../model/entities/Inflections.php';
-  require_once dirname(__FILE__) . '/../model/entities/Edition.php';
-  require_once dirname(__FILE__) . '/../model/entities/Text.php';
-  require_once dirname(__FILE__) . '/../model/entities/Sequences.php';
   require_once dirname(__FILE__) . '/../model/entities/Catalogs.php';
   require_once dirname(__FILE__) . '/../model/entities/Compounds.php';
   require_once dirname(__FILE__) . '/../model/entities/Images.php';
   require_once (dirname(__FILE__) . '/../viewer/php/viewutils.php');//get utilities for viewing
 //  $userID = array_key_exists('userID',$_REQUEST) ? $_REQUEST['userID']:12;
-  $catID = (array_key_exists('catID',$_REQUEST)? $_REQUEST['catID']:null);
-  $exportFilename = (array_key_exists('filename',$_REQUEST)? $_REQUEST['filename']:null);
-  $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
-  $isStaticView = (array_key_exists('staticView',$_REQUEST)? ($_REQUEST['staticView']==0?false:true):false);
-  $useTranscription = (!array_key_exists('usevalue',$_REQUEST)? true:false);
-  $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
-  $refresh = ((array_key_exists('refreshWordMap',$_REQUEST) ? $_REQUEST['refreshWordMap']:
-                      (array_key_exists('refreshLookUps',$_REQUEST))? $_REQUEST['refreshLookUps']:
-                       (defined('DEFAULTHTMLGLOSSARTREFRESH')?DEFAULTHTMLGLOSSARTREFRESH:0)));
 
+  $dbMgr = new DBManager();
+  $retVal = array();
+  $gra2SclMap = array();
+  $edn2CatMap = array();
+  $segID2sclIDs = array();
+  $cknLookup = array();
+  $catID = (array_key_exists('catID',$_REQUEST)? $_REQUEST['catID']:(array_key_exists('cat',$_REQUEST)? $_REQUEST['cat']:null));
+  $termInfo = getTermInfoForLangCode('en');
 
-  list($result,$text) = getCatalogHTML($catID,$isStaticView,$refresh,$useTranscription,$hideHyphens);
-  if ($result == "success") {
-    if ($isDownload) {
-      header("Content-Disposition: attachment; filename=readGlossary.html");
-      header("Expires: 0");
-    }
-    echo $text;
-  } else {
-    startLog();
-    logAddMsgExit($text);
+  $anoIDs = array();
+  $atbIDs = array();
+  $ednIDs = array();
+  $errors = array();
+  $warnings = array();
+  $entityIDs = array();
+  //find catalogs
+  $catalog = new Catalog($catID);
+  if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
+    array_push($warnings,"Warning no catalog available for id $catID .");
+  } else if (!$catalog->isMarkedDelete()){
+    $startt = time() + microtime();
+    $retVal['map'] = getWordTagToLocationLabelMap($catalog, true);
+    $endt = time() + microtime();
+    $retVal['duration'] = substr ($endt - $startt, 0, 4);
   }
-  exit;
 
-?>
+  if (array_key_exists("callback",$_REQUEST)) {
+    $cb = $_REQUEST['callback'];
+    if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap
+      print $cb."(".json_encode($retVal).");";
+    }
+  } else {
+    print json_encode($retVal);
+  }
+
+ ?>

@@ -71,18 +71,31 @@
                                'atb' => array());
   $termInfo = getTermInfoForLangCode('en');
 
+  $retString = "";
   $anoIDs = array();
   $atbIDs = array();
   $ednIDs = array();
   $errors = array();
   $warnings = array();
   $entityIDs = array();
+  $saveCatalogToCache = false;
   //find catalogs
   $catalog = new Catalog($catID);
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
     array_push($warnings,"Warning no catalog available for id $catID .");
   } else if (!$catalog->isMarkedDelete()){
     $catID = $catalog->getID();
+    $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
+                 ($catalog->getScratchProperty('refresh')?$catalog->getScratchProperty('refresh'):
+                   (defined('DEFAULTCATALOGREFRESH')?DEFAULTCATALOGREFRESH:0)));
+    if (USECACHE  && !$refresh) {
+      $retString = getCachedCatalog($catID);//get user or public cached edition if there is one.
+    }
+  } else {
+    array_push($errors,"Error no catalog available for id $catID .");
+  }
+  if (count($warnings) == 0 && !$retString) {// catalog found and no cache so process/load it
+    $saveCatalogToCache = true;
     $entities['update']['cat'][$catID] = array('description'=> $catalog->getDescription(),
                                                'id' => $catID,
                                                'value'=> $catalog->getTitle(),
@@ -155,34 +168,35 @@
         $entities["update"]['cat'][$catID]['lemIDs'] = $lemIDs;
       }
     }
-  } else {
-    array_push($errors,"Error no catalog available for id $catID .");
-  }
-  if (count( $atbIDs) > 0) {
-    $entityIDs['atb'] = $atbIDs;
-  }
-  if (count( $anoIDs) > 0) {
-    $entityIDs['ano'] = $anoIDs;
-  }
-  if (count( $entityIDs) > 0) {
-    getRelatedEntities($entityIDs);
-  }
-  // strip away empty entityType arrays
-  foreach ($entities['update'] as $prefix => $entityArray) {
-    if ( count($entityArray) == 0) {
-      unset($entities['update'][$prefix]);
+    if (count( $atbIDs) > 0) {
+      $entityIDs['atb'] = $atbIDs;
     }
+    if (count( $anoIDs) > 0) {
+      $entityIDs['ano'] = $anoIDs;
+    }
+    if (count( $entityIDs) > 0) {
+      getRelatedEntities($entityIDs);
+    }
+    // strip away empty entityType arrays
+    foreach ($entities['update'] as $prefix => $entityArray) {
+      if ( count($entityArray) == 0) {
+        unset($entities['update'][$prefix]);
+      }
+    }
+    $retVal = array("entities" => $entities,
+                    "termInfo" => $termInfo);
+    $retString = json_encode($retVal);
   }
-
-  $retVal = array("entities" => $entities,
-                  "termInfo" => $termInfo);
+  if ($saveCatalogToCache) {
+    saveCachedCatalog($catID,$retString);
+  }
   if (array_key_exists("callback",$_REQUEST)) {
     $cb = $_REQUEST['callback'];
     if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap
-      print $cb."(".json_encode($retVal).");";
+      print $cb."(".$retString.");";
     }
   } else {
-    print json_encode($retVal);
+    print $retString;
   }
 
   function getRelatedEntities($entityIDs) {
@@ -556,4 +570,41 @@
       getRelatedEntities($entityIDs);
     }
   }
+
+  function saveCachedCatalog($catID, $jsonString) {  // save json string to cache
+    global $catalog;
+    if(USECACHE) {
+      $cacheKey = "cat".$catID."cachedEntities";
+      $jsonCache = new JsonCache($cacheKey);
+      if ($jsonCache->hasError() || !$jsonCache->getID()) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel($cacheKey);
+        $jsonCache->setVisibilityIDs(array(6));// warning!!!  6 is reserved system userID for public access
+        $jsonCache->setOwnerID($catalog->getOwnerID());
+      }
+      $jsonCache->setJsonString($jsonString);
+      $jsonCache->clearDirtyBit();
+      $jsonCache->save();
+    } else {
+      error_log("warning!!! edition $ednID cached info not saved because caching is off");
+    }
+  }
+
+  function getCachedCatalog($catID) {  // check for cached edition for user or public
+    global $catalog;
+    if(USECACHE) {
+      $cacheKey = "cat".$catID."cachedEntities";
+      $jsonCache = new JsonCache($cacheKey);
+      if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty()) {
+        return $jsonCache->getJsonString();
+      } else {
+        return "";
+      }
+    } else {
+      error_log("warning!!! edition $ednID cached info not used because caching is off");
+      return "";
+    }
+  }
+
+
 ?>

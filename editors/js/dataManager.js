@@ -72,6 +72,7 @@ MANAGERS.DataManager =  function(dataMgrCfg) {
   this.basepath = dataMgrCfg['basepath'] ? dataMgrCfg['basepath']:"";
   this.dbName = dataMgrCfg['dbname'] ? dataMgrCfg['dbname']:null;
   this.entityInfo = dataMgrCfg['entityInfo'] ? dataMgrCfg['entityInfo']:entityInfo;
+  this.termInfo = dataMgrCfg['termInfo'] ? dataMgrCfg['termInfo']:termInfo;
   this.username = dataMgrCfg['username'] && dataMgrCfg['username'] != "unknown" ? dataMgrCfg['username']:null;
   this.init();
   return this;
@@ -98,7 +99,9 @@ MANAGERS.DataManager.prototype = {
     this.switchInfoByTextID = {};
     this.switchLookup = {};
     this.cknToTxtID = {};
-    this.termInfo = {};
+    if (!this.termInfo) {
+      this.termInfo = {};
+    }
     this.loadedText = {};
     this.loadedBaseline = {};
     this.loadedEdition = {};
@@ -127,7 +130,7 @@ MANAGERS.DataManager.prototype = {
     this.entities = {};
     this.switchInfoByTextID = {};
     this.cknToTxtID = {};
-    this.termInfo = {};
+//    this.termInfo = {};
     this.loadedText = {};
     this.loadedBaseline = {};
     this.loadedEdition = {};
