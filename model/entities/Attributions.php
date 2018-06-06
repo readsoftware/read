@@ -60,16 +60,14 @@
     * @param int $offset sets the start point for query results (default 0)
     * @todo write a store procedure to test for intersection of 2 integer arrays for security checking access IDs with VisibilityIDs
     */
-    public function __construct( $condition = "", $sort = "atb_id", $offset = 0, $pageSize = 20) {
-      parent::__construct("attribution","atb_id");
-      $this->_autoAdvancePage = true;
+    public function __construct( $condition = "", $sort = "atb_id", $offset = 0, $pageSize = 20, $autoAdvance = true) {
+      parent::__construct("attribution","atb_id",$autoAdvance);
       $this->_pageSize = $pageSize;
       $this->_offset = $offset;
       if ($condition) $this->_condition = $condition;
 //      $this->_security = isSysAdmin()?null:" (".getUserID()."= atb_owner_id or ".getUserID()." = ANY (\"atb_visibility_ids\"))";
       $this->_security = parent::getEntityAccessCondition("atb");
       $this->_sort = $sort;
-      $this->_dbMgr = new DBManager();
       $this->loadEntities();
     }
 

@@ -1377,16 +1377,90 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
 }
 
 /**
-* invalidate cache edition id
+* invalidate lemma for this word
+*
+* @param string $wordGID global id of word
+*/
+
+function invalidateWordLemma($wordGID = null) { // setDirty flag
+  // find lemma of this word and invalidate
+  $query = "select lem_id as lemID from lemma ".
+           "where '$wordGID' = ANY(lem_component_ids) and lem_owner_id != 1 union all ".
+           "select lem_id as lemID ".
+           "from lemma left join inflection on concat('inf:',inf_id) = ANY(lem_component_ids) ".
+           "where 'tok:10' = ANY(inf_component_ids) and lem_owner_id != 1;";
+  $dbMgr = new DBManager();
+  $dbMgr->query($query);
+  if ($dbMgr->getRowCount()>0){
+    while ($row = $dbMgr->fetchResultRow()) {
+      $lemma = new Lemma($row['lemID']);
+      if (!$lemma->hasError() && $lemma->getID()) {
+        if ($lemma->getScratchProperty("entry")) { //clear cached entry html
+          $lemma->storeScratchProperty("entry",null);
+          $lemma->save();
+        }
+      }
+    }
+  }
+}
+
+/**
+* invalidate lemma
+*
+* @param Lemma $lemma entity
+*/
+
+function invalidateLemma($lemma = null) { // setDirty flag
+  if ($lemma && !$lemma->hasError() && $lemma->getID()) {
+    if ($lemma->getScratchProperty("entry")) { //clear cached entry html
+      $lemma->storeScratchProperty("entry",null);
+      $lemma->save();
+    }
+    $catID = $lemma->getCatalogID();
+    if ($catID) {
+      invalidateCachedViewerLemmaHtmlLookup($catID,null); //todo use lemma attested forms to find editions scope
+    }
+  }
+}
+
+/**
+* invalidate cache edition entities
 *
 * @param int $ednID Sequence id
 * @param int $catID Catalog id
 */
 
-function invalidateCachedEdn($ednID = null, $catID = null) { // setDirty flag
-  $cacheKey = "edn".($ednID?$ednID:'').'%';
+function invalidateCachedEditionEntities($ednID = null) { // setDirty flag
+  $cacheKey = "edn$ednID"."cachedEntities";
   invalidateCache($cacheKey);
-  invalidateCachedCat($catID,$ednID);
+}
+
+/**
+* invalidate cache edition lookup
+*
+* @param Edition object $edition
+*/
+
+function invalidateCachedEditionViewerInfo($edition = null) { // setDirty flag
+  if (!$edition) {
+    return;
+  } else {
+    $edition->storeScratchProperty('lookupInfo',null);
+    $edition->save();
+  }
+}
+
+/**
+* invalidate cache edition viewer html
+*
+* @param int $ednID edition id
+*/
+
+function invalidateCachedEditionViewerHtml($ednID = null) { // setDirty flag
+  if ($ednID ) {
+    $cacheKey = "edn$ednID".'structviewHTML';
+    invalidateCache($cacheKey);
+  }
 }
 
 /**
@@ -1396,8 +1470,8 @@ function invalidateCachedEdn($ednID = null, $catID = null) { // setDirty flag
 * @param int $ednID Edition id
 */
 
-function invalidateCachedCat($catID = null,$ednID = null) { // setDirty flag
-  $cacheKey = "glosscat".($catID?$catID:'%')."edn".($ednID?$ednID:'').'%';
+function invalidateCachedViewerLemmaHtmlLookup($catID = null,$ednID = null) { // setDirty flag
+  $cacheKey = "glosscat".($catID?$catID:'%')."edn".($ednID?$ednID:'%');
   invalidateCache($cacheKey);
 }
 
@@ -1408,9 +1482,52 @@ function invalidateCachedCat($catID = null,$ednID = null) { // setDirty flag
 * @param int $usrID UserGroup id
 */
 
-function invalidateCachedSeq($seqID = null,$usrID = null) { // setDirty flag
-  $cacheKey = "seq".($seqID?$seqID:'%')."ednOwnerID".($usrID?$usrID:'%');
+function invalidateCachedSeqEntities($seqID = null,$ednID = null) { // setDirty flag
+  $cacheKey = "seq".($seqID?$seqID:'%')."edn".($ednID?$ednID:'%');
   invalidateCache($cacheKey);
+}
+
+
+/**
+* invalidate all parent sequence caching to top of heirarchy
+*
+* @param mixed $seqGID
+* @param mixed $ednSeqIDs
+* @param mixed $ednID
+*/
+function invalidateParentCache($seqGID,$ednSeqIDs,$ednID) {
+  if ($ednSeqIDs && count($ednSeqIDs) > 0 && in_array(substr($seqGID,4),$ednSeqIDs)) {
+    return;//top level sequence nothing to do
+  }
+  $containers = new Sequences("'$seqGID' = ANY(seq_entity_ids)",null,null,null);
+  if ($containers && count($containers) > 0){
+    foreach($containers as $seqContainer){
+      invalidateParentCache($seqContainer->getGlobalID(),$ednSeqIDs,$ednID);
+      invalidateSequenceCache($seqContainer,$ednID);
+    }
+  }
+}
+
+/**
+* invalidate all sequence caching
+*
+* @param Sequence entity $sequence
+* @param int $usrID UserGroup id
+*/
+
+function invalidateSequenceCache($sequence,$ednID) { // setDirty flag
+  $seqID = $sequence->getID();
+  if ($sequence->getScratchProperty("edn".$ednID."physLineHtml")) { //clear cached viewer html
+    $sequence->storeScratchProperty("edn".$ednID."physLineHtml",null);
+  }
+  if ($sequence->getScratchProperty("edn".$ednID."structHtml")) { //clear cached viewer html
+    $sequence->storeScratchProperty("edn".$ednID."structHtml",null);
+  }
+  $sequence->save();
+  if ($seqID){
+    $cacheKey = "seq".$seqID."edn".($ednID?$ednID:'%');
+    invalidateCache($cacheKey);
+  }
 }
 
 /**
@@ -1421,7 +1538,7 @@ function invalidateCachedSeq($seqID = null,$usrID = null) { // setDirty flag
 
 function invalidateCache($cacheKey = null) { // setDirty flag of matching entries or entire cache
   $dbMgr = new DBManager();
-  $dbMgr->query("SELECT * FROM jsoncache".($cacheKey?" WHERE jsc_label like '$cacheKey'":""));
+  $dbMgr->query("SELECT * FROM jsoncache".($cacheKey?" WHERE jsc_label like '$cacheKey' and jsc_owner_id != 1":""));
 //  error_log("invalidate entire cache entry");
   while ($row = $dbMgr->fetchResultRow()) {
     $jsonCache = new JsonCache($row);
@@ -2515,7 +2632,9 @@ function reorderSegments($blnIDs = null, $deleteAfterMerge = true) {
   $warnings = array();
   $log = "Start reorder morphying process.\n";
   // get an ordered list of segment IDs for the base lines supplied or for the entire database.
-  $query = "select seg_id, seg_baseline_ids[1] as blnID, substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int as ord from segment where seg_scratch like '%blnOrdinal%' and seg_image_pos is not null";
+  $query = "select seg_id, seg_baseline_ids[1] as blnID, ".
+                  "substring(seg_scratch from '(?:\"blnOrdinal\":\")(\\d+)\"')::int as ord ".
+           "from segment where seg_scratch like '%blnOrdinal%' and seg_image_pos is not null";
   if (isset($data['blnIDs'])) {
     $query .= " and seg_baseline_ids[1] = ANY(".$data['blnIDs'].") order by blnID,ord";//todo needs to be changed for cross baseline segmentation
   } else {
@@ -2942,13 +3061,14 @@ function getEntityFootnoteInfo($entity, $fnTypeIDs, $refresh = false) {
 }
 
 function getEdnLpInfoQueryString($ednID){
+  $textPhysicalTypeID = Entity::getIDofTermParentLabel('textphysical-sequencetype');// warning!!! term dependency
   return "select lp.seq_id, seg_baseline_ids[1] as bln_id, ".
                "substring(lp.seq_entity_ids[1]::text from 5)::int as firstscl_id, lp.seq_label, ".
                "case when gra_sort_code::text = '195' then scl_grapheme_ids[2] else scl_grapheme_ids[1] end as nl_gra_id, ".
                "seg_image_pos, array_position(c.tpentids::text[],concat('seq:',lp.seq_id)::text) as lineOrd ".
         "from (select tp.seq_id as tpid, tp.seq_entity_ids as tpentids ".
                 "from sequence tp left join edition on tp.seq_id = ANY(edn_sequence_ids) ".
-                "where tp.seq_type_id = 736 and edn_id = $ednID) c ".
+                "where tp.seq_type_id = $textPhysicalTypeID and edn_id = $ednID) c ".
               "left join sequence lp on concat('seq:',seq_id)::text = ANY(c.tpentids) ".
               "left join syllablecluster on scl_id = substring(lp.seq_entity_ids[1]::text from 5)::int ".
               "left join segment on scl_segment_id = seg_id ".
@@ -2958,13 +3078,14 @@ function getEdnLpInfoQueryString($ednID){
 }
 
 function getEdnLpNoSegInfoQueryString($ednID){
+  $textPhysicalTypeID = Entity::getIDofTermParentLabel('textphysical-sequencetype');// warning!!! term dependency
   return "select lp.seq_id, ".
                "substring(lp.seq_entity_ids[1]::text from 5)::int as firstscl_id, lp.seq_label, ".
                "case when gra_sort_code::text = '195' then scl_grapheme_ids[2] else scl_grapheme_ids[1] end as nl_gra_id, ".
                "array_position(c.tpentids::text[],concat('seq:',lp.seq_id)::text) as lineOrd ".
         "from (select tp.seq_id as tpid, tp.seq_entity_ids as tpentids ".
                 "from sequence tp left join edition on tp.seq_id = ANY(edn_sequence_ids) ".
-                "where tp.seq_type_id = 736 and edn_id = $ednID) c ".
+                "where tp.seq_type_id = $textPhysicalTypeID and edn_id = $ednID) c ".
               "left join sequence lp on concat('seq:',seq_id)::text = ANY(c.tpentids) ".
               "left join syllablecluster on scl_id = substring(lp.seq_entity_ids[1]::text from 5)::int ".
               "left join grapheme on gra_id = scl_grapheme_ids[1] ".
@@ -3111,12 +3232,13 @@ function getTokLocQueryString($tokID){
   $strMatch = defined('CKNMATCHREGEXP')?CKNMATCHREGEXP:"'([a-z]+)0*(\d+)'";
   $strReplace = defined('CKNREPLACEMENTEXP')?CKNREPLACEMENTEXP:"'\\1\\2'";
   $strFlags = defined('CKNREPLACEFLAGS')?CKNREPLACEFLAGS:"'i'";
+  $linePhysicalTypeID = Entity::getIDofTermParentLabel('linephysical-textphysical');// warning!!! term dependency
 
   return "select distinct  array_position( b.seq_entity_ids::text[],concat('seq:',c.cid)) as lineord, c.label as linelabel, ".
          "case when txt_ref is not null and txt_ref != '' then txt_ref else regexp_replace(txt_ckn,$strMatch,$strReplace".($strFlags?",$strFlags":"").") end as txtlabel ".
          "from sequence b left join (select a.seq_id::text as cid, a.seq_label as label, a.seq_scratch::json->>'edOrd' as edord ".
                                     "from sequence a ".
-                                    "where a.seq_type_id = 737 and ".
+                                    "where a.seq_type_id = $linePhysicalTypeID and ".
                                           "a.seq_entity_ids::text[] && (select array_agg(concat('scl:',scl_id)) ".
                                                                        "from token,syllablecluster ".
                                                                        "where scl_grapheme_ids && tok_grapheme_ids and tok_id = $tokID) ".

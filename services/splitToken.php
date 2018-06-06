@@ -198,6 +198,8 @@ if (count($errors) == 0 && isset($compounds) && count($compounds) > 0) {//update
     }
   }
 }
+invalidateWordLemma($oldTokCmpGID);//top level original word gid can be an attested form
+
 
 // update Text Division Sequence if needed
 $oldTxtDivSeqGID = null;
@@ -215,6 +217,7 @@ if (count($errors) == 0 && count($tokCmpReplaceGIDs)) {//token or compound chang
     $retVal['alteredTextDivComponentGIDs'] = $tokCmpReplaceGIDs;
     $textDivSeq->setEntityIDs($textDivSeqEntityIDs);
     $removeTokCmpGID = $oldTokCmpGID;
+    invalidateSequenceCache($textDivSeq,$edition->getID());
     //save text division sequence
     $textDivSeq->save();
     $newTxtDivSeqGID = $textDivSeq->getGlobalID();
@@ -225,7 +228,7 @@ if (count($errors) == 0 && count($tokCmpReplaceGIDs)) {//token or compound chang
       $retVal['alteredTextDivSeqID'] = $textDivSeq->getID();
     }else { // only updated
       //changed components on a cached sequence so invalidate cache to recalc on next refresh
-      invalidateCachedSeq($textDivSeq->getID(),$ednOwnerID);
+      invalidateCachedSeqEntities($textDivSeq->getID(),$edition->getID());
       addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
     }
   } else {
@@ -270,7 +273,9 @@ if (count($errors) == 0 ) {
   //update edition seqIDs
   $edition->setSequenceIDs($edSeqIds);
   $edition->save();
-  invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+  invalidateCachedEditionEntities($edition->getID());
+  invalidateCachedEditionViewerHtml($edition->getID());
+  invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
   if ($edition->hasError()) {
     array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
   }else{

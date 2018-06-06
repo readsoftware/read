@@ -466,6 +466,8 @@ if (count($errors) == 0) {
             $oldPhysLineSeqGID = $physLineSeq->getGlobalID();
             if ($physLineSeq->isReadonly()) {
               $physLineSeq = $physLineSeq->cloneEntity($defAttrIDs,$defVisIDs);
+            } else {
+              invalidateSequenceCache($physLineSeq,$edition->getID());
             }
             // update physical line components ids by replacing $oldSclID with $newSclID
             $oldSclGID = "scl:$oldSclID";
@@ -538,7 +540,7 @@ if (count($errors) == 0) {
         }
 
         if (@$physLineSeq && $physLineSeq->getID()) {
-          invalidateCachedSeq($physLineSeq->getID(), $ednOwnerID);
+          invalidateCachedSeqEntities($physLineSeq->getID(), $edition->getID());
         }
 
         //find syllable's location within the token(s) for split syllable case
@@ -637,6 +639,8 @@ if (count($errors) == 0) {
             if ($token->isReadonly()){//clone token
               $oldTokCmpGID = $token->getGlobalID();
               $token = $token->cloneEntity($defAttrIDs,$defVisIDs);
+            } else {
+              invalidateWordLemma($token->getGlobalID());
             }
             $token->setGraphemeIDs($newTokGraIDs);
             $token->getValue(true);//cause recalc
@@ -694,6 +698,7 @@ if (count($errors) == 0) {
               }
             }
           }
+          invalidateWordLemma($oldTokCmpGID);//should we remove the token/compound from the lemma?
           //check for compounds beyond propagated changes
           if (count($errors) == 0 && (!$oldTokCmpGID || $oldTokCmpGID == $newTokCmpGID)
               && isset($compounds) && count($compounds) > 0) {//get here when token update for compounds stops before text physical so we need to recalc other compounds
@@ -760,6 +765,7 @@ if (count($errors) == 0) {
               }
             }
           }
+          invalidateWordLemma($oldTokCmp2GID);//should we remove the token/compound from the lemma?
         } else {
           // split token case for mid token special symbol or punctuation
           $oldTokCmpGID = $token->getGlobalID();
@@ -887,7 +893,7 @@ if (count($errors) == 0) {
             }
           }
         }
-        invalidateCachedSeq($textDivSeq->getID(), $ednOwnerID);
+        invalidateCachedSeqEntities($textDivSeq->getID(), $edition->getID());
         // update Text (Text Division Container) Sequence if needed
         if (count($errors) == 0 && $oldTxtDivSeqGID && $oldTxtDivSeqGID != $newTxtDivSeqGID){//cloned so update container
           //clone text sequence if not owned
@@ -935,7 +941,9 @@ if (count($errors) == 0) {
             $edition->setSequenceIDs($edSeqIds);
           }
           $edition->save();
-          invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+          invalidateCachedEditionEntities($edition->getID());
+          invalidateCachedEditionViewerHtml($edition->getID());
+          invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
           if ($edition->hasError()) {
             array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
           }else{

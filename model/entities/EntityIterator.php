@@ -188,6 +188,9 @@
       //rebuild query
       $this->_buildQuery();
       $this->_error = NULL;
+      if (!isset($this->_dbMgr)) {
+        $this->_dbMgr = new DBManager();
+      }
       $this->_dbMgr->query($this->_query);// query always selects *
       if ($this->_dbMgr->getError()) {
         $this->_error = $this->_dbMgr->getError();
@@ -199,6 +202,9 @@
           $this->_keyIndexMap[$key] = count($this->_entities)-1;
           array_push($this->_keys,$key);
         }
+      }
+      if (!$this->_autoAdvancePage) {
+        unset($this->_dbMgr); //todo check if this should be delete
       }
       // don't change position for progressive retrieval getNextPage when next fails
       return isset($this->_entities[$this->_position]);

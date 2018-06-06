@@ -55,6 +55,7 @@ $errors = array();
 $warnings = array();
 $tokenSplitRequired = false;
 $ednOwnerID = null;
+$ednID = null;
 $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):$_REQUEST);
 if (!$data) {
   array_push($errors,"invalid json data - decode failed");
@@ -63,7 +64,8 @@ if (!$data) {
   $defVisIDs = getUserDefVisibilityIDs();
   $defOwnerID = getUserDefEditorID();
   if ( isset($data['ednID'])) {//required
-    $edition = new Edition($data['ednID']);
+    $ednID = $data['ednID'];
+    $edition = new Edition($ednID);
     if ($edition->hasError()) {
       array_push($errors,"creating edition - ".join(",",$edition->getErrors()));
     } else if ($edition->isReadonly()) {
@@ -262,6 +264,7 @@ if (count($errors) == 0 && $graID && $cmd && $cmd != "NOP" ) {
     if (!$token1 || !$token2) {
       array_push($errors,"error missing token information for graID $graID with command $cmd");
     }
+    $origTok1GID = $token1->getGlobalID();
   } else {
     array_push($errors,"error missing token information for graID $graID");
   }
@@ -370,6 +373,7 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
         } else { // only updated
           addUpdateEntityReturnData('seq',$physLineSeq->getID(),'entityIDs',$physLineSeq->getEntityIDs());
         }
+        invalidateCachedSeqEntities($physLineSeq->getID(),$ednID);
       }
     } else {
       array_push($errors,"error unable to find syllable for readonly grapheme ID $graID - cannot save sandhi information");
@@ -523,6 +527,7 @@ if ( count($errors) == 0 && $cmd == "remove" && $token1 && $token2) {
       }
     }
   }
+  invalidateWordLemma($origTok1GID);
   //check textDiv and update as needed
   if (count($errors)==0 && ($replaceTokCmpGID && $newTokCmpGID || $removeTokGID)) {
     $textDivSeq = null;
@@ -567,7 +572,7 @@ if ( count($errors) == 0 && $cmd == "remove" && $token1 && $token2) {
         addNewEntityReturnData('seq',$textDivSeq); //??altered physline parameter??
         $retVal['alteredTextDivSeqID'] = $textDivSeq->getID();
       } else { // only updated
-        invalidateCachedSeq($textDivSeq->getID(),$ednOwnerID);
+        invalidateCachedSeqEntities($textDivSeq->getID(),$edition->getID());
         addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
       }
     }
@@ -766,9 +771,9 @@ if ( count($errors) == 0 && $cmd == "add" && $token1) {
           addNewEntityReturnData('seq',$textDivSeq); //??altered physline parameter??
           $retVal['alteredTextDivSeqID'] = $textDivSeq->getID();
         } else { // only updated
-          invalidateCachedSeq($textDivSeq->getID(),$ednOwnerID);
           addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
         }
+        invalidateSequenceCache($textDivSeq,$edition->getID());
       }
     }
   }
@@ -804,7 +809,9 @@ if (count($errors) == 0 && $edition) {
   //touch edition for synch code
   $edition->storeScratchProperty("lastModified",$edition->getModified());
   $edition->save();
-  invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+  invalidateCachedEditionEntities($edition->getID());
+  invalidateCachedEditionViewerHtml($edition->getID());
+  invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
 }
 
 

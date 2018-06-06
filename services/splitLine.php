@@ -161,6 +161,7 @@
         }
         $physLine->setEntityIDs($physLineSclGIDs);
         $physLine->save();
+        invalidateSequenceCache($physLine,$edition->getID());//need to invalidate cache of textDivision sequences?
         $physLineSeqGID = $physLine->getGlobalID();
         if ($physLine->hasError()) {
           array_push($errors,"error updating physical line sequence '".$physLine->getValue()."' - ".$physLine->getErrors(true));
@@ -225,6 +226,9 @@
         $edition->setSequenceIDs($edSeqIds);
       }
       $edition->save();
+      invalidateCachedEditionEntities($edition->getID());
+      invalidateCachedEditionViewerHtml($edition->getID());
+      invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
       if ($edition->hasError()) {
         array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
       }else{

@@ -60,7 +60,7 @@
       $ednOwnerID = $edition->getOwnerID();
       if ( isset($data['lineSeqID'])) {//get line sequence
         $physLineSeqID = $data['lineSeqID'];
-        invalidateCachedSeq($physLineSeqID,$ednOwnerID);
+        invalidateCachedSeqEntities($physLineSeqID,$edition->getID());
       }
     }
   }

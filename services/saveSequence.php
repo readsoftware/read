@@ -56,8 +56,10 @@ if (!$data) {
   $defVisIDs = getUserDefVisibilityIDs();
   $defOwnerID = getUserDefEditorID();
   $edition = null;
+  $ednID = null;
   if ( isset($data['ednID'])) {//get ednID for sequence attach or detach
-    $edition = new Edition($data['ednID']);
+    $ednID = $data['ednID'];
+    $edition = new Edition($ednID);
     if ($edition->hasError()) {
       array_push($errors,"error loading edition id $seqID - ".join(",",$edition->getErrors()));
     } else if ($edition->isReadonly()) {
@@ -163,6 +165,7 @@ if (count($errors) == 0) {
       }
       if ($sequence->getType()=='LinePhysical') {
         clearSessionCatCache();
+        //token locLabel update here for all tokens overlapping syllables
       }
     }
     if ($superscript !== null) {
@@ -287,15 +290,20 @@ if (count($errors) == 0) {
         }
       }
     }
-    invalidateCachedSeq($sequence->getID());
-    invalidateParentCache($sequence->getGlobalID(),$edition->getSequenceIDs());
+    invalidateCachedSeqEntities($sequence->getID(),$edition->getID());
+    //if linephysical tyep sequence then find the
+    invalidateSequenceCache($sequence,$edition->getID());
+    invalidateParentCache($sequence->getGlobalID(),$edition->getSequenceIDs(),$edition->getID());
   }
 }
 if (count($errors) == 0 && $edition) {
   //touch edition for synch code
   $edition->storeScratchProperty("lastModified",$edition->getModified());
   $edition->save();
-  invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+  invalidateCachedEditionEntities($edition->getID());
+  invalidateCachedEditionViewerInfo($edition);
+  invalidateCachedEditionViewerHtml($edition->getID());
+  invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
 }
 
 $retVal["success"] = false;
@@ -320,18 +328,6 @@ if (array_key_exists("callback",$_REQUEST)) {
   }
 } else {
   print json_encode($retVal);
-}
-
-function invalidateParentCache($seqGID,$ednSeqIDs) {
-  if ($ednSeqIDs && count($ednSeqIDs) > 0 && in_array(substr($seqGID,4),$ednSeqIDs)) {
-    return;//top level sequence nothing to do
-  }
-  $containers = new Sequences("'$seqGID' = ANY(seq_entity_ids)",null,null,null);
-  if ($containers && count($containers) > 0){
-    foreach($containers as $seqContainer){
-      ($seqContainer->getID());
-    }
-  }
 }
 
 function checkInContainment($searchGID,$containGID,$ednSeqIDs,$level=4) {

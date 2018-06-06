@@ -144,7 +144,7 @@
           array_push($errors,"error merging physical line sequence '".$physLine->getValue()."' - ".$physLine->getErrors(true));
         } else  if ($oldPhysLineSeqGID == $physLineSeqGID) {//we owned this so update
           //changed components on a cached sequence so invalidate cache to recalc on next refresh
-          invalidateCachedSeq($physLine->getID(),$ednOwnerID);
+          invalidateCachedSeqEntities($physLine->getID(),$edition->getID());
           addUpdateEntityReturnData('seq',$physLine->getID(),'entityIDs',$physLine->getEntityIDs());
         } else { //cloned physical so add it
           addNewEntityReturnData('seq',$physLine);
@@ -197,11 +197,14 @@
      //update edition seqIDs
       $edition->setSequenceIDs($edSeqIds);
       $edition->save();
+      invalidateCachedEditionEntities($edition->getID());
+      invalidateCachedEditionViewerHtml($edition->getID());
+      invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
       if ($edition->hasError()) {
         array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
       }else{
         addUpdateEntityReturnData('edn',$edition->getID(),'seqIDs',$edition->getSequenceIDs());
-        invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+        invalidateCachedEditionViewerHtml($edition->getID());
       }
     }
   }

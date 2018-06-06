@@ -116,6 +116,7 @@
   $prevTxtDivSeq = null;
   $prevCtxGIDs = null;
   $nextCtxGIDs = null;
+  $freetextLine = null;
   if (count($errors) == 0 && $seqPhys && count($seqPhys->getEntityIDs())){ // need minimal 'TextPhysical' with entities
     if ( isset($data['seqID'])) {//get reference freetext Line sequence ID
       $freetextLine = new Sequence($data['seqID']);
@@ -510,6 +511,9 @@
     //touch edition for synch code
     $edition->storeScratchProperty("lastModified",$edition->getModified());
     $edition->save();
+    invalidateCachedEditionEntities($edition->getID());
+    invalidateCachedEditionViewerHtml($edition->getID());
+    invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
   }
 
   $retVal["success"] = false;

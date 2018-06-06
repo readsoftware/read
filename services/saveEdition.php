@@ -95,6 +95,9 @@ if (!$data) {
         }
         $edition->setDescription($description);
         $edition->save();
+        invalidateCachedEditionEntities($edition->getID());
+        invalidateCachedEditionViewerHtml($edition->getID());
+        invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
         if ($edition->hasError()) {
           array_push($errors,"error updating edition '".$edition->getDescription()."' - ".$edition->getErrors(true));
         }else {

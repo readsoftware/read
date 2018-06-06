@@ -417,7 +417,7 @@
             addUpdateEntityReturnData('seq',$seqText->getID(),'entityIDs',$seqText->getEntityIDs());
           }
         } else { // only updated
-          invalidateCachedSeq($textDivSeq->getID(),$ednOwnerID);
+          invalidateCachedSeqEntities($textDivSeq->getID(),$edition->getID());
           addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
         }
       }
@@ -444,7 +444,9 @@
         $edition->setSequenceIDs($edSeqIds);
       }
       $edition->save();
-      invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+      invalidateCachedEditionEntities($edition->getID());
+      invalidateCachedEditionViewerHtml($edition->getID());
+      invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
       if ($edition->hasError()) {
         array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
       }else{

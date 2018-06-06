@@ -192,7 +192,7 @@
             $sequences = new Sequences("'$gid' = Any(seq_entity_ids)",'seq_id',null,null);
             if ($sequences && $sequences->getCount()>0) {
               foreach ($sequences as $sequence) {
-                invalidateCachedSeq($sequence->getID());
+                invalidateCachedSeqEntities($sequence->getID());
               }
             }
           }

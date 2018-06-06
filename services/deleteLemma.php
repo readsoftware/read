@@ -252,6 +252,8 @@ if (count($errors) == 0) {
   $lemma->markForDelete();
   // and remove from local cache
   addRemoveEntityReturnData('lem',$lemma->getID());
+  invalidateCachedViewerLemmaHtmlLookup($lemCatID,null);
+
   //update catalog info
   $lemmas = new Lemmas("lem_catalog_id = $lemCatID and not lem_owner_id = 1","lem_id",null,null);
   if ($lemmas && !$lemmas->getError()){

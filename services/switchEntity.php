@@ -355,7 +355,7 @@ if (count($errors) == 0 && $textDivSeq && $oldTokCmpGID && $oldTokCmpGID != $new
     addNewEntityReturnData('seq',$textDivSeq);
     $retVal['newTextDivSeqGID'] = $newTxtDivSeqGID;
   }else { // only updated
-    invalidateCachedSeq($textDivSeq->getID(),$ednOwnerID);
+    invalidateCachedSeqEntities($textDivSeq->getID(),$edition->getID());
     addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
   }
 }
@@ -408,7 +408,9 @@ if (count($errors) == 0 ) {
   //update edition seqIDs
   $edition->setSequenceIDs($edSeqIds);
   $edition->save();
-  invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+  invalidateCachedEditionEntities($edition->getID());
+  invalidateCachedEditionViewerHtml($edition->getID());
+  invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
   if ($edition->hasError()) {
     array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
   }else{

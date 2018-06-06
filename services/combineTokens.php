@@ -308,7 +308,7 @@
       }
     } else { // only updated
       //changed components on a cached sequence so invalidate cache to recalc on next refresh
-      invalidateCachedSeq($textDivSeq2->getID(),$ednOwnerID);
+      invalidateCachedSeqEntities($textDivSeq2->getID(),$edition->getID());
       if ($txtDiv2IsEmpty) {//last entity removed (can't be same text div)
         addRemoveEntityReturnData('seq',$oldTxtDivSeqID2);
         if ($separateTextDivisions) {
@@ -356,6 +356,8 @@
     $tokGraIDs = array_merge($tokGraIDs, $tok2GraIDs);
     $token1->setGraphemeIDs($tokGraIDs);
     $token1->getValue(true);//cause recalc
+    $token1->updateLocationLabel();
+    $token1->updateBaselineInfo();
     $token1->save();
     $newTokCmpGID1 = $token1->getGlobalID();
     $retVal["displayEntGID"] = $newTokCmpGID1;
@@ -389,6 +391,8 @@
         // update compound container
         $compound->setComponentIDs($componentIDs);
         $compound->getValue(true);//cause recalc
+        $compound->updateLocationLabel();
+        $compound->updateBaselineInfo();
         $compound->save();
         $newTokCmpGID1 = $compound->getGlobalID();
         if ($compound->hasError()) {
@@ -445,7 +449,7 @@
       addNewEntityReturnData('seq',$textDivSeq1);
     }else { // only updated
        //changed components on a cached sequence so invalidate cache to recalc on next refresh
-      invalidateCachedSeq($textDivSeq1->getID(),$ednOwnerID);
+      invalidateCachedSeqEntities($textDivSeq1->getID(),$edition->getID());
       addUpdateEntityReturnData('seq',$textDivSeq1->getID(),'entityIDs',$textDivSeq1->getEntityIDs());
     }
     if (array_key_exists('alteredTextDivSeqIDs',$retVal)) {
@@ -472,7 +476,9 @@
       $edition->setSequenceIDs($edSeqIds);
     }
     $edition->save();
-    invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+    invalidateCachedEditionEntities($edition->getID());
+    invalidateCachedEditionViewerHtml($edition->getID());
+    invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
     if ($edition->hasError()) {
       array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
     }else{

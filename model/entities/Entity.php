@@ -996,8 +996,7 @@
     */
     public function getAnnotations($autoExpand = false) {
       if (!$this->_annotations && $autoExpand && count($this->getAnnotationIDs())>0) {
-        $this->_annotations = new Annotations("ano_id in (".join(",",$this->getAnnotationIDs()).")");
-        $this->_annotations->setAutoAdvance(false);
+        $this->_annotations = new Annotations("ano_id in (".join(",",$this->getAnnotationIDs()).")",null,null,false);
       }
       return $this->_annotations;
     }
@@ -1023,8 +1022,7 @@
     */
     public function getAttributions($autoExpand = false) {
       if (!$this->_attributions && $autoExpand && count($this->getAttributionIDs())>0) {
-        $this->_attributions = new Attributions("atb_id in (".join(",",$this->getAttributionIDs()).")");
-        $this->_attributions->setAutoAdvance(false);
+        $this->_attributions = new Attributions("atb_id in (".join(",",$this->getAttributionIDs()).")",'atb_id',null,null,false);
       }
       return $this->_attributions;
     }

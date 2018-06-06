@@ -336,7 +336,7 @@
     }
   }
   if (count($errors) == 0 && count($alteredTagIDs) > 0) {//review why altereTags signals Cache refresh of physical line
-    invalidateCachedSeq($physLineSeq->getID(),$ednOwnerID);
+    invalidateCachedSeqEntities($physLineSeq->getID(),$edition->getID());
   }
 
   //update tokens as needed and propagate changes up containment hierarchy
@@ -445,6 +445,7 @@
             if (!array_key_exists($entID, $textSeqRecalcUpdates)) {
               $textSeqRecalcUpdates[$entID] = 1;
             }
+            invalidateWordLemma($token->getGlobalID());//top level token can be an attested form
           } else { //error
             array_push($errors,"error processing token ($tokID) context found invalid prefix '$prefix' ");
           }
@@ -520,6 +521,7 @@
             addUpdateEntityReturnData('cmp',$compound->getID(),'transcr',$compound->getTranscription());
           }
         }
+        invalidateWordLemma($compound->getGlobalID());//top level compound can be an attested form
       }
     }
   }
@@ -561,6 +563,7 @@
         $textDivSeq = $textDivSeq->cloneEntity($defAttrIDs,$defVisIDs);
       }
       $textDivSeq->setEntityIDs($textDivSeqEntityIDs);
+      invalidateSequenceCache($textDivSeq,$edition->getID());
       //save text division sequence
       $textDivSeq->save();
       $newTxtDivSeqGID = $textDivSeq->getGlobalID();
@@ -587,7 +590,7 @@
     return;
   } else if (count($errors) == 0 && count($textSeqRecalcUpdates) > 0) {//cache updates
     foreach ( array_keys($textSeqRecalcUpdates) as $seqID) {
-      invalidateCachedSeq($seqID,$ednOwnerID);
+      invalidateCachedSeqEntities($seqID,$edition->getID());
     }
   }
 
@@ -639,7 +642,9 @@
     //update edition seqIDs
     $edition->setSequenceIDs($edSeqIds);
     $edition->save();
-    invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+    invalidateCachedEditionEntities($edition->getID());
+    invalidateCachedEditionViewerHtml($edition->getID());
+    invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
     if ($edition->hasError()) {
       array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
     }else{

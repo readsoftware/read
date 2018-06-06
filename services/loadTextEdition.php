@@ -960,7 +960,7 @@
   function getSeqData($sequence, $refresh = 0) {  // check for cache
     global $publicOnly,$edition,$userOnly;
     if(USECACHE & !$edition->isReadonly()) {
-      $cacheKey = "seq".$sequence->getID()."ednOwnerID".$edition->getOwnerID();
+      $cacheKey = "seq".$sequence->getID()."edn".$edition->getID();
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->hasError() || !$jsonCache->getID()) {
         $jsonCache = new JsonCache();

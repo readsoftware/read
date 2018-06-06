@@ -178,7 +178,7 @@ function getEditionGlossaryLookup($entTag, $scopeEdnID = null, $refresh = false,
         $jsonCache->save();
 //      } else if (($refresh || $jsonCache->isDirty()) && !$jsonCache->isReadonly()) {
       } else if (($refresh || $jsonCache->isDirty()) ) {
-        $jsonCache->setJsonString(json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, $refresh?$refresh:($jsonCache->isDirty()?true:false), $urlTemp)));
+        $jsonCache->setJsonString(json_encode(getWrdTag2GlossaryPopupHtmlLookup($catID, $scopeEdnID, isset($refresh)?$refresh:false, $urlTemp)));
         $jsonCache->clearDirtyBit();
         $jsonCache->save();
       } else {
@@ -1250,7 +1250,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $refresh = false, $addBoundaryHtml
                       $nextToken = null;
                       break;
                     }
-                  }
+                  }//fall through with GID pointing to first token of compound
                 case 'tok':
                   $nextToken = new Token(substr($nextEntGID,4));
                   if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
@@ -1712,15 +1712,15 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
 
 
 function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 0, $linkTemplate = null, $useTranscription = true, $hideHyphens = true) {
-  $catalog = new Catalog($catID);
   global $exportGlossary;
-  $sepLabel = defined('CKNLINENUMSEPARATOR')?CKNLINENUMSEPARATOR:null;
+  $catalog = new Catalog($catID);
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
     error_log("Warning need valid catalog id $catID.");
     return array();
   } else {
+    $sepLabel = defined('CKNLINENUMSEPARATOR')?CKNLINENUMSEPARATOR:null;
     if ($scopeEdnID){
-      $textTypeID = Entity::getIDofTermParentLabel('text-sequencetype');
+      $textTypeID = Entity::getIDofTermParentLabel('text-sequencetype');// warning!!! term dependency
       //find the text division sequence ids for the scoped edition as a comma separated list
       $query = "select regexp_replace(array_to_string(seq_entity_ids,','),'seq:','','g') from edition left join sequence on seq_id = ANY(edn_sequence_ids) where edn_id = $scopeEdnID and seq_type_id = $textTypeID;";
       $dbMgr = new DBManager();

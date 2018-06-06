@@ -237,7 +237,7 @@
               array_splice($textSeqEntityIDs,$txtDivSeqIndex,1,$newTxtDivSeqGID);
             }else { // only updated
               //changed components on a cached sequence so invalidate cache to recalc on next refresh
-              invalidateCachedSeq($textDivSeq->getID(),$ednOwnerID);
+              invalidateCachedSeqEntities($textDivSeq->getID(),$edition->getID());
               addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
             }
           } else {//else empty textDiv need to remove old ID
@@ -283,7 +283,9 @@
               $edition->setSequenceIDs($edSeqIds);
             }
             $edition->save();
-            invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+            invalidateCachedEditionEntities($edition->getID());
+            invalidateCachedEditionViewerHtml($edition->getID());
+            invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
             if ($edition->hasError()) {
               array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
             }else{

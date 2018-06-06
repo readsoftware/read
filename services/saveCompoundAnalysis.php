@@ -128,8 +128,10 @@ if (!$data) {
     if ($rootLemma->hasError()) {
       array_push($errors,"creating lemma with id $lemID - ".join(",",$rootLemma->getErrors()));
       $rootLemma = null;
+    } else {
+      $rootLemID = $lemID;
+      invalidateLemma($$rootLemma);
     }
-    $rootLemID = $lemID;
   }
   $catID = null;
   $catalog = null;

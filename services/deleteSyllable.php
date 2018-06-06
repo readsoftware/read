@@ -226,7 +226,9 @@
             $oldPhysLineSeqID = $physLineSeq->getID();
             $oldPhysLineSeqGID = $physLineSeq->getGlobalID();
             $physLineSeq = $physLineSeq->cloneEntity($defAttrIDs,$defVisIDs);
-          }
+          } else {
+              invalidateCachedSeqEntities($physLineSeq->getID(),$edition->getID());
+            }
           //find index of refScl in physical line sequence
           array_splice($physLineSclGIDs,$sclIndex,1);//remove syllable from physical line
           $physLineSeq->setEntityIDs($physLineSclGIDs);
@@ -239,7 +241,7 @@
             //addRemoveEntityReturnData('seq',$oldPhysLineSeqID);
           } else {
             //changed components on a cached sequence so invalidate cache to recalc on next refresh
-            invalidateCachedSeq($physLineSeq->getID(),$ednOwnerID);
+            invalidateCachedSeqEntities($physLineSeq->getID(),$edition->getID());
             addUpdateEntityReturnData('seq',$physLineSeq->getID(),'entityIDs',$physLineSeq->getEntityIDs());
           }
         }
@@ -306,6 +308,8 @@
             }
             $token->setGraphemeIDs($newTokGraIDs);
             $token->getValue(true);//cause recalc
+            $token->updateLocationLabel();
+            $token->updateBaselineInfo();
             $token->save();
             $newTokCmpGID = $token->getGlobalID();
             if ($token->hasError()) {
@@ -352,6 +356,8 @@
               // update compound container
               $compound->setComponentIDs($componentIDs);
               $compound->getValue(true);//cause recalc
+              $compound->updateLocationLabel();
+              $compound->updateBaselineInfo();
               $compound->save();
               $newTokCmpGID = $compound->getGlobalID();
               if ($compound->hasError()) {
@@ -394,6 +400,8 @@
             $oldTxtDivSeqID = $textDivSeq->getID();
             if ($textDivSeq->isReadonly()) {
               $textDivSeq = $textDivSeq->cloneEntity($defAttrIDs,$defVisIDs);
+            } else {
+              invalidateCachedSeqEntities($textDivSeq->getID(),$edition->getID());
             }
             $textDivSeq->setEntityIDs($textDivSeqEntityIDs);
             //save text division sequence
@@ -407,7 +415,6 @@
               //addRemoveEntityReturnData('seq',$oldTxtDivSeqID);
             }else { // only updated
               //changed components on a cached sequence so invalidate cache to recalc on next refresh
-              invalidateCachedSeq($textDivSeq->getID(),$ednOwnerID);
               addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
             }
           }
@@ -463,7 +470,9 @@
           $edition->setSequenceIDs($edSeqIds);
         }
         $edition->save();
-        invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+        invalidateCachedEditionEntities($edition->getID());
+        invalidateCachedEditionViewerHtml($edition->getID());
+        invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
         if ($edition->hasError()) {
           array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
         }else{

@@ -396,7 +396,7 @@
             }
           }else {//update return data
             //changed components on a cached sequence so invalidate cache to recalc on next refresh
-            invalidateCachedSeq($physLineSeq->getID(),$ednOwnerID);
+            invalidateCachedSeqEntities($physLineSeq->getID(),$edition->getID());
             addUpdateEntityReturnData('seq',$physLineSeq->getID(),'entityIDs',$physLineSeq->getEntityIDs());
           }
           $needsSeparateToken = false;
@@ -432,6 +432,8 @@
               }
               $token->setGraphemeIDs($tokGraIDs);
               $token->getValue(true);//cause recalc
+              $token->updateLocationLabel();
+              $token->updateBaselineInfo();
               $token->save();
               $newTokCmpGID = $token->getGlobalID();
               //**********new tok
@@ -463,6 +465,8 @@
                   // update compound container
                   $compound->setComponentIDs($componentIDs);
                   $compound->getValue(true);//cause recalc
+                  $compound->updateLocationLabel();
+                  $compound->updateBaselineInfo();
                   $compound->save();
                   $newTokCmpGID = $compound->getGlobalID();
                   if ($compound->hasError()) {
@@ -531,7 +535,7 @@
               $retVal['newTextDivSeqGID'] = $newTxtDivSeqGID;
             }else { // only updated
               //changed components on a cached sequence so invalidate cache to recalc on next refresh
-              invalidateCachedSeq($textDivSeq->getID(), $ednOwnerID);
+              invalidateCachedSeqEntities($textDivSeq->getID(), $edition->getID());
               addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
             }
           }
@@ -581,7 +585,9 @@
             $edition->setSequenceIDs($edSeqIds);
           }
           $edition->save();
-          invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
+          invalidateCachedEditionEntities($edition->getID());
+          invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
+          invalidateCachedEditionViewerHtml($edition->getID());
           if ($edition->hasError()) {
             array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
           }else{
