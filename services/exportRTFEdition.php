@@ -336,7 +336,7 @@
               }else if ($typ != "VowelModifier"){
                 $sclRTF .= "+";
               }
-            } else if ($j==1 && $prevGraIsVowelCarrier && $previousA &&
+            } else if ($j==1 && $prevGraIsVowelCarrier && $prevGraIsA &&
                         ($prevTCMS == $tcms || (!$prevTCMS|| $prevTCMS == "S") && (!$tcms|| $tcms == "S"))) {
               $graVal = $grapheme->getValue();
               if ($graVal == 'i') {
@@ -351,9 +351,9 @@
             }
             $prevTCMS = $tcms;
             if ($graVal == "a") {
-              $previousA = true;
+              $prevGraIsA = true;
             } else {
-              $previousA = false;
+              $prevGraIsA = false;
             }
             $prevGraIsVowelCarrier = false;
             $previousGraFootnotes .= getEntityFootnotesRTF($grapheme);

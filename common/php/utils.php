@@ -3073,7 +3073,7 @@ function getEdnLpInfoQueryString($ednID){
               "left join syllablecluster on scl_id = substring(lp.seq_entity_ids[1]::text from 5)::int ".
               "left join segment on scl_segment_id = seg_id ".
               "left join grapheme on gra_id = scl_grapheme_ids[1] ".
-        "where seg_image_pos is not null ".
+//        "where seg_image_pos is not null ".
         "order by lineOrd";
 }
 
@@ -3141,7 +3141,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
                   ($physicalLineSeq->hasError()?" Error: ".join(",",$physicalLineSeq->getErrors()):""));
         continue;
       } else {
-        if (array_key_exists("bln_id",$row)&& $row["bln_id"] != $blnID) {// found another baseline need to capture the id
+        if (array_key_exists("bln_id",$row)&& $row["bln_id"] != $blnID && array_key_exists("seg_image_pos",$row) && $row["seg_image_pos"]) {// found another baseline need to capture the id
           $blnID = $row["bln_id"];
           $blnTag = 'bln'.$blnID;
           // collect unique blnIDs for url lookup
@@ -3220,6 +3220,53 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
           }
         }
         $ednLookupInfo['blnInfoBySort'] = $blnInfoBySort;
+      }
+    }
+  $textSeqTypeID = Entity::getIDofTermParentLabel('text-sequencetype');// warning!!! term dependency
+/*    $allTokCmpGIDsQuery = "select array_agg(c.comp) ".
+                          "from (select unnest(td.seq_entity_ids::text[]) as comp ".
+                                "from sequence td ".
+                                     "left join sequence txt on concat('seq:',td.seq_id) = ANY(txt.seq_entity_ids) ".
+                                     "left join edition on txt.seq_id = ANY(edn_sequence_ids) ".
+                                "where txt.seq_type_id = $textSeqTypeID and edn_id = $ednID) c;";
+*/    $allTokCmpGIDsQuery = "select td.seq_id as txtdiv_seqid, td.seq_entity_ids::text[] as ent_ids ".
+                                "from sequence td ".
+                                     "left join sequence txt on concat('seq:',td.seq_id) = ANY(txt.seq_entity_ids) ".
+                                     "left join edition on txt.seq_id = ANY(edn_sequence_ids) ".
+                                "where txt.seq_type_id = $textSeqTypeID and edn_id = $ednID;";
+    $dbMgr->query($allTokCmpGIDsQuery);
+    if ($dbMgr->getError()) {
+      error_log("error for querying words GIDs ".$dbMgr->getError());
+    } else if ($dbMgr->getRowCount() < 1) {
+      error_log("error for querying for wordGIDs row count is 0");
+    } else {
+      $graID2WordGID = array();
+      while ($row = $dbMgr->fetchResultRow()) {
+        $txtDivSegID = trim($row[0]);
+        $tdSeqTokCmpGIDs = explode(",",trim($row[1],"{}"));
+        foreach ($tdSeqTokCmpGIDs as $wordGID) {
+          list($prefix,$entID) = explode(':',$wordGID);
+          $wordTag = $prefix.$entID;
+          if ($prefix == 'cmp') {
+            $compound = new Compound($entID);
+            $tokenIDs = $compound->getTokenIDs();
+            if (count($tokenIDs) == 0) {
+              error_log("warn, Warning irregular word $wordGID in sequence $seqGID skipped.");
+              continue;
+            }
+            $entID = $tokenIDs[0]; //first token of compound
+          }
+          $token = new Token($entID);
+          $graIDs = $token->getGraphemeIDs();
+          if (count($graIDs) == 0) {
+            error_log("warn, Warning irregular token tok$entID with no graphemes in $seqGID skipped.");
+            continue;
+          }
+          $graID2WordGID[$graIDs[0]] = array('seq'.$txtDivSegID, $wordTag);
+        }
+        if (count($graID2WordGID) > 0){
+          $ednLookupInfo['gra2WordGID'] = $graID2WordGID;
+        }
       }
     }
     $edition->storeScratchProperty('lookupInfo',$ednLookupInfo);

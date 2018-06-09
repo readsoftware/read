@@ -1178,6 +1178,196 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
 * @param int array of text division $sequence ids containing global ids ordered words of the text
 * @param boolean $addBoundaryHtml determine whether to add boundary info for each edition in a multi edition calculation
 */
+function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false, $addBoundaryHtml = false) {
+  global $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
+
+  $wordCnt = 0;
+  //start to calculate HTML using each text division container
+  $cntLinePhysGID = count($linePhysSeqIDs);
+  $wordTag = null;
+  $tdSeqTag = null;
+  $physicalLinesHtml = '';
+  //**************process each physical line
+  for ($i = 0; $i < $cntLinePhysGID; $i++) {
+    $linePhysSeqGID = $linePhysSeqIDs[$i];
+    $nextLineSeqGID = $i+1<$cntLinePhysGID?$linePhysSeqIDs[$i+1]:null;
+    if (strpos($linePhysSeqGID,'seq') === 0) {
+      if ($nextLineSequence && $linePhysSeqGID == $nextLineSequence->getGlobalID()) {
+        $linePhysSequence = $nextLineSequence;
+      } else {
+        $linePhysSequence = new Sequence(substr($linePhysSeqGID,4));
+      }
+      if (!$linePhysSequence || $linePhysSequence->hasError()) {//no sequence or unavailable so warn
+        error_log("warn, Warning inaccessible line physical sequence $linePhysSeqGID skipped.");
+        continue;
+      } else {//physical line sequence
+        //check for cached value
+        $physicalLineHtml = $linePhysSequence->getScratchProperty("edn".$edition->getID()."physLineHtml");
+        if ($physicalLineHtml && !$refresh) {
+          $physicalLinesHtml .= $physicalLineHtml;
+          $nextLineSequence = null;
+          $wordTag = $linePhysSequence->getScratchProperty("wrappedWordTag");
+          continue;
+        } else { // calculate physical line HTML
+          $physicalLineHtml = '';
+          $lineSclGIDs = $linePhysSequence->getEntityIDs();
+          $seqType = $linePhysSequence->getType();
+          $seqTag = $linePhysSequence->getEntityTag();
+          $nextLineSclGID = null;
+          $nextLineSequence = null;
+          $hasWrappingWord = false;
+          $prevTCMS = "S";
+          $nextTCMS = "";
+          $tcms = "";
+          $prevGraIsVowelCarrier = false;
+          $previousA = null;
+          //check for boundary entry for this seqTag
+          if ($addBoundaryHtml && array_key_exists($seqTag,$seqBoundaryMarkerHtmlLookup)) {
+            $physicalLineHtml .= $seqBoundaryMarkerHtmlLookup[$seqTag];
+          }
+          if (!$lineSclGIDs || count($lineSclGIDs) == 0) {
+            error_log("warn, Found empty line physical sequence element $seqTag for edition ".$edition->getDescription()." id=".$edition->getID());
+            continue;
+          }
+          if ($nextLineSeqGID && strpos($nextLineSeqGID,'seq') === 0) {
+            $nextLineSequence = new Sequence(substr($nextLineSeqGID,4));
+            if (!$nextLineSequence || $nextLineSequence->hasError()) {//no sequence or unavailable so warn
+              error_log("warn, Warning inaccessible line physical sequence $nextLineSeqGID skipped.");
+              $nextLineSequence = null;
+            } else {//determine if this line has a wrapping word at the end
+              $nextSclGIDs = $nextLineSequence->getEntityIDs();
+              if (count($nextSclGIDs) > 0) {
+                $nextLineSclGID = $nextSclGIDs[0];
+                $nextLineSyllable = new SyllableCluster(substr($nextLineSclGID,4));
+                if (!$nextLineSyllable || $nextLineSyllable->hasError()) {//no syllable or unavailable so warn
+                  error_log("Warning inaccessible next syllable $nextLineSclGID skipped.");
+                } else {
+                  $nextLineGraIDs = $nextLineSyllable->getGraphemeIDs();
+                  $hasWrappingWord = !(array_key_exists($nextLineGraIDs[0],$graID2WordGID));
+                }
+              }
+            }
+          }
+          $cntGID = count($lineSclGIDs);
+          for ($j = 0; $j < $cntGID; $j++) {//process the syllables of this line
+            $sclGID = $lineSclGIDs[$j];
+            $sclID = substr($sclGID,4);
+            $syllable = new SyllableCluster($sclID);
+            if (!$syllable || $syllable->hasError()) {//no word or unavailable so warn
+              error_log("Warning inaccessible syllable $sclGID skipped.");
+            } else {
+              $graIDs = $syllable->getGraphemeIDs();
+              $graCnt = count($graIDs);
+              //check for start of line header
+              if ($j == 0 && $graCnt) {//start of physical line
+                $physicalLineHtml .= "<div class=\"physicalLineDiv\">";
+                if (array_key_exists($graIDs[0],$graID2LineHtmlMarkerlMap)) {
+                  $physicalLineHtml .= $graID2LineHtmlMarkerlMap[$graIDs[0]];
+                } elseif (array_key_exists($graIDs[1],$graID2LineHtmlMarkerlMap)) { // case where glottal starts line
+                  $physicalLineHtml .= $graID2LineHtmlMarkerlMap[$graIDs[1]];
+                }
+              }
+              //for each grapheme in syllable
+              for($l=0; $l<$graCnt; $l++) {
+                $graID = $graIDs[$l];
+                $grapheme = new Grapheme($graID);
+                if (!$grapheme) {
+                  error_log("err,calculating word html and grapheme not available for graID $graID");
+                  $prevGraIsVowelCarrier = false;
+                  continue;
+                } else {
+                  //check for TCM transition brackets
+                  $tcms = $grapheme->getTextCriticalMark();
+                  $postTCMBrackets = "";
+                  $preTCMBrackets = "";
+                  if ($prevTCMS != $tcms) {
+                    list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
+                  }
+                  if ($postTCMBrackets && !($j==0 && $l == 0)) {//ignore post brackets at beginning of line, should not exist
+                    $physicalLineHtml .= $postTCMBrackets;
+                  }
+                  //check for new word start
+                  if (array_key_exists($graID,$graID2WordGID)){
+                    if ($j > 0 || $l > 0) {//not start of line so must be existing word to close
+                      $word = EntityFactory::createEntityFromGlobalID($wordTag);
+                      $footnoteHtml = getEntityFootnotesHtml($word, $refresh);
+                      if ($footnoteHtml) {
+                        $physicalLineHtml .= $footnoteHtml;
+                        $footnoteHtml = "";
+                      }
+                      $physicalLineHtml .= '</span>';
+                    }
+                    list($tdSeqTag,$wordTag) = $graID2WordGID[$graID];
+                    $physicalLineHtml .= '<span class="grpTok '.($tdSeqTag?$tdSeqTag.' ':'').$wordTag.'">';
+                  } else if ($j==0 && $l == 0) {//first grapheme of physical line need to start wordhtml with prevous infor
+                    $physicalLineHtml .= '<span class="grpTok '.($tdSeqTag?$tdSeqTag.' ':'').$wordTag.'">';
+                  }
+                  if ($preTCMBrackets) {
+                    $physicalLineHtml .= $preTCMBrackets;
+                  }
+                  if ($grapheme->getValue() == "ʔ") {
+                    $prevGraIsVowelCarrier = true;
+                    continue;
+                  }
+                  //add grapheme
+                  $graTemp = $grapheme->getValue();
+                  if ($prevGraIsVowelCarrier && $previousA && ($prevTCMS == $tcms || (!$prevTCMS|| $prevTCMS == "S") && (!$tcms|| $tcms == "S"))) {
+                    if ($graTemp == 'i') {
+                      $graTemp = "ï";
+                    }else if ($graTemp == 'u') {
+                      $graTemp = "ü";
+                    }
+                  }
+                  $prevTCMS = $tcms;
+                  $physicalLineHtml .= $graTemp;
+                  $prevGraID = $graID;
+                  if ($graTemp == "a") {
+                    $previousA = true;
+                  } else {
+                    $previousA = false;
+                  }
+                  $prevGraIsVowelCarrier = false;
+                }
+              }//end for graphIDs
+            }
+          }//end for syllable IDs
+          if ($prevTCMS && $prevTCMS != "S") {//close off any TCM
+            $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
+            $prevTCMS = "";//reset since we closed off TCMs for the edition.
+            //This will ensure next structures output will have opening TCMs
+            if ($tcmBrackets) {
+              $physicalLineHtml .= $tcmBrackets;
+            }
+          }
+          if ($hasWrappingWord){
+            $physicalLineHtml .= "-";
+          }
+          $physicalLineHtml .= "</span></div>";
+          $physicalLineHtml = preg_replace('/_+/',"_",$physicalLineHtml); // multple missing consonants
+          $physicalLineHtml = preg_replace('/_/',".",$physicalLineHtml); // multple missing consonants
+          //store html to sequence for cache
+          $linePhysSequence->storeScratchProperty("edn".$edition->getID()."physLineHtml",$physicalLineHtml);
+          if ($hasWrappingWord && $wordTag) {
+            $linePhysSequence->storeScratchProperty("wrappedWordTag",$wordTag);
+          }
+          $linePhysSequence->save();
+        }// end calculate physical line HTML
+        $physicalLinesHtml .= $physicalLineHtml;
+      }// end else physical line sequence
+    } else {
+      error_log("warn, Found unknown tokenisation element $seqGID for edition $ednID");
+      continue;
+    }
+  }// end for physLineSeqIDs
+  return $physicalLinesHtml;
+}
+
+/**
+* returns the html for tokenisation in physical line layout
+*
+* @param int array of text division $sequence ids containing global ids ordered words of the text
+* @param boolean $addBoundaryHtml determine whether to add boundary info for each edition in a multi edition calculation
+*/
 function getPhysicalLinesHTML($textDivSeqIDs, $refresh = false, $addBoundaryHtml = false) {
   global $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
 
@@ -1609,6 +1799,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
           }
         }
       }
+      $graID2WordGID = array();
       $ednLookupInfo = getEdnLookupInfo($edition, $typeIDs,(count($analysisSeqIDs) > 0 && !USEPHYSICALVIEW),$forceRecalc);
       if ($ednLookupInfo){
         if (array_key_exists("lineScrollTops",$ednLookupInfo) && count($ednLookupInfo['lineScrollTops'])) {
@@ -1625,6 +1816,9 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
           foreach ($ednLookupInfo['blnInfoBySort'] as $sort => $blnInfo) {
             $imgURLsbyBlnImgTag['bln'][$sort] = $blnInfo;
           }
+        }
+        if (array_key_exists("gra2WordGID",$ednLookupInfo) && count($ednLookupInfo['gra2WordGID'])) {
+          $graID2WordGID = $ednLookupInfo['gra2WordGID'];
         }
       }
     }//end else valid edition
@@ -1687,7 +1881,8 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
         }
       }
     } else {// process textdivisions in physical line layout
-      $html .= getPhysicalLinesHtml($textDivSeqIDs,$forceRecalc,true);
+//      $html .= getPhysicalLinesHtml($textDivSeqIDs,$forceRecalc,true);
+      $html .= getPhysicalLinesHtml2($physicalLineSeqIDs, $graID2WordGID,$forceRecalc,true);
     }
   }// end else
   $html .= $sourceHtml;

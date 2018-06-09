@@ -291,7 +291,7 @@ if (count($errors) == 0) {
       }
     }
     invalidateCachedSeqEntities($sequence->getID(),$edition->getID());
-    //if linephysical tyep sequence then find the
+    //if linephysical sequence type then find the corresponding textDivision that cache
     invalidateSequenceCache($sequence,$edition->getID());
     invalidateParentCache($sequence->getGlobalID(),$edition->getSequenceIDs(),$edition->getID());
   }
