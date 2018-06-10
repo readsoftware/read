@@ -3151,7 +3151,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
         $seqLabel = $row['seq_label'];
         $lineGraID = $row['nl_gra_id'];
         $lineOrd = $row['lineord'];
-        if (array_key_exists("seg_image_pos",$row)) {
+        if (array_key_exists("seg_image_pos",$row) && $row["seg_image_pos"]) {
           $bRectPts = (new Polygon($row['seg_image_pos']))->getBoundingRect();
           // calculate baseline position by physical line seqID
           $lineBlnScrollTop = array('blnTag'=>$blnTag,'x'=>$bRectPts[0],'y'=>$bRectPts[1],'h'=>($bRectPts[5]-$bRectPts[1]));

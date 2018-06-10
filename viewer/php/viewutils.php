@@ -1186,6 +1186,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
   $cntLinePhysGID = count($linePhysSeqIDs);
   $wordTag = null;
   $tdSeqTag = null;
+  $nextLineSequence = null;
   $physicalLinesHtml = '';
   //**************process each physical line
   for ($i = 0; $i < $cntLinePhysGID; $i++) {
@@ -1307,6 +1308,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   }
                   if ($grapheme->getValue() == "ʔ") {
                     $prevGraIsVowelCarrier = true;
+                    $prevTCMS = $tcms;
                     continue;
                   }
                   //add grapheme
