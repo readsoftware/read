@@ -2,22 +2,11 @@
 .entry {
   padding-bottom: 15px;
 }
-span.homograph1:before {
-  content: "¹";
-}
-
-span.homograph2:before {
-  content: "²";
-}
-
-span.homograph3:before {
-  content: "³";
-}
 
 .lemmadef{
   font-size: 12pt;
-  text-indent: -10px;
-  margin-left: 10px;
+  text-indent: -30px;
+  margin-left: 30px;
   padding-bottom: 3px;
 }
 
@@ -25,67 +14,58 @@ span.homograph3:before {
   font-size: 12pt;
   font-weight: bold;
   font-style: italic;
+  padding-right: 5px;
 }
 
 .etym {
   font-size: 12pt;
-  font-style: italic;
 }
 .pos {
   font-size: 12pt;
 }
 
-div.related{
+.lemmaCommentary{
+  padding-left: 5px;
+}
+.lemmaLinks {
   margin-left: 30px;
 }
-div.links.also span.link.first:before{
-  content: "See also ";
-  color: green;
+.attestedforms {
+  margin-left: 30px;
 }
-div.links span.link.first:before{
-  content: "See ";
-  color: green;
+.seeLink, .cfLink {
+  margin-left: 2px;
+  font-weight: bold;
+  font-style: italic;
 }
-div.links span.link:not(.first):before{
-  content: ", ";
-  color: red;
+.seeLink a, .cfLink a{
+  margin-left: 2px;
+  color: rgb(96,96,96);
+  text-decoration: none;
 }
-span.pos:before{
-  content: ", ";
-  color: red;
+.lemmaLinksHeader {
+  color: black;
 }
 span.etym:before{
   content: ", ";
-  color: red;
 }
 span.gloss:before{
-  content: ", \"";
-  color: red;
+  content: ", \“";
 }
 span.gloss:after{
-  content: ".\"";
-  color: red;
+  content: ".\”";
 }
-span.inflection:before{
-  content: ", ";
-  color: red;
+.inflectdescript{
+  padding-right: 5px;
 }
-span.lineref:before{
-  content: ", ";
-  color: red;
+.inflectsep{
+  padding-right: 5px;
 }
-.attestation {
-  padding-left: 30px;
-}
-.attestation span:last-child:after{
-  content: ".";
-  color: red;
+.attestedformloc{
+  padding-left: 5px;
 }
 .attestedform {
+  padding-left: 5px;
   font-size: 12pt;
-  font-style: italic;
-}
-.link{
-  font-weight: bold;
   font-style: italic;
 }

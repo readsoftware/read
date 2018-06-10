@@ -832,6 +832,9 @@
                 if ($lemma->getCompoundAnalysis()) {
                   $entities['lem'][$lemID]['compAnalysis'] = $lemma->getCompoundAnalysis();
                 }
+                if ($lemma->getScratchProperty('phonetics')) {
+                  $entities["update"]['lem'][$lemID]['phonetics'] = $lemma->getScratchProperty('phonetics');
+                }
                 $lemCompIDs = $lemma->getComponentIDs();
                 if (count($lemCompIDs) > 0) {
                   foreach ($lemCompIDs as $gid) {
@@ -969,7 +972,8 @@
           $jsonCache->setLabel($ckn);
         }
         $jsonCache->setJsonString($jsonRetVal);
-        $jsonCache->setVisibilityIDs(array(2));
+        $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+        $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
         $jsonCache->save();
         if (!$jsonCache->hasError()) {
           $text->setJsonCacheID($jsonCache->getID());
@@ -1509,7 +1513,7 @@
                                       'url' => $annotation->getURL(),
                                       'typeID' => $annotation->getTypeID());
               $vis = $annotation->getVisibilityIDs();
-              if (in_array(2,$vis)) {
+              if (in_array(6,$vis)) {
                 $vis = "Public";
               } else if (in_array(3,$vis)) {
                 $vis = "User";

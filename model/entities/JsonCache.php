@@ -99,6 +99,8 @@
           //ensure everything is encoded for save
           $this->_data = $this->prepBaseEntityData($arg);
           $this->_dirty = true;
+        } else {
+          $this->_dirty = $this->getScratchProperty("dirtyBit") == 1;
         }
       }
     }
@@ -209,7 +211,7 @@
     * Set scratch dirty flag
     *
     */
-    public function setDirty() {
+    public function setDirtyBit() {
       $this->storeScratchProperty('dirtyBit',1);
     }
 
@@ -217,7 +219,7 @@
     * Clear scratch dirty flag
     *
     */
-    public function clearDirty() {
+    public function clearDirtyBit() {
       $this->storeScratchProperty('dirtyBit',0);
     }
 
@@ -321,7 +323,7 @@
     public function setJsonString($json) {
       if($this->_json_string != $json) {
         $this->_dirty = true;
-        $this->clearDirty();
+        $this->clearDirtyBit();
         $this->setDataKeyValuePair("jsc_json_string",$json);
       }
       $this->_json_string = $json;

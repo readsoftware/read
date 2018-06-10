@@ -29,6 +29,7 @@
   require_once (dirname(__FILE__) . '/../../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/Entity.php');
   require_once (dirname(__FILE__) . '/Sequences.php');
+  require_once (dirname(__FILE__) . '/Catalogs.php');
   require_once (dirname(__FILE__) . '/Text.php');
 
 //*******************************************************************
@@ -135,6 +136,16 @@
 
     //*******************************PUBLIC FUNCTIONS************************************
 
+    /**
+    * Check type is Research
+    *
+    * @return boolean indentifying the term from typology of terms is research
+    */
+    public function isResearchEdition() {
+      $type = Entity::getTermFromID($this->_type_id);
+      return (($type && strtolower($type) == "research") || !$type);
+    }
+
     //********GETTERS*********
     /**
     * Gets the Description for this Edition
@@ -200,8 +211,32 @@
       return $this->_text;
     }
 
+    /**
+    * Gets the Catalog ID for this Edition
+    * @return int ID of the default catalog or null
+    */
+    public function getCatalogID() {
+      $catID = $this->getScratchProperty("defCatID");
+      if (!$catID){//search for the first catalog for this edition
+        $condition = "".$this->getID()." = ANY(cat_edition_ids)";
+        $catalogs = new Catalogs($condition,"cat_id",null,1);
+        if (!$catalogs->getError() && $catalogs->getCount() == 1) {
+          $catID = $catalogs->current()->getID();
+        }
+      }
+      return ($catID?$catID:null);
+    }
+
 
     //********SETTERS*********
+
+    /**
+    * Sets the Default Catalog ID for this Edition
+    * @param int $catID for the Edition
+    */
+    public function setDefaultCatalogID($catID) {
+      $this->storeScratchProperty("defCatID",$catID);
+    }
 
     /**
     * Sets the Description for this Edition

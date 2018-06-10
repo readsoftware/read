@@ -35,6 +35,8 @@ require_once dirname(__FILE__) . '/../../model/entities/Terms.php';
 require_once dirname(__FILE__) . '/../../model/entities/SyllableClusters.php';
 require_once dirname(__FILE__) . '/../../model/entities/Tokens.php';
 require_once dirname(__FILE__) . '/../../model/entities/Compounds.php';
+require_once dirname(__FILE__) . '/../../model/entities/Inflections.php';
+require_once dirname(__FILE__) . '/../../model/entities/Lemmas.php';
 require_once dirname(__FILE__) . '/../../model/entities/Editions.php';
 require_once dirname(__FILE__) . '/../../model/entities/Texts.php';
 require_once dirname(__FILE__) . '/../../model/entities/Sequences.php';
@@ -438,6 +440,31 @@ function getTranslatedPoly($points,$newOrigX, $newOrigY, $forceSerial = false) {
 }
 
 /**
+* calculate center of a polygon set of points and return array of int x y
+*
+* @param int array $points of the form [x1,y1,x2,y2,...,xn,yn] or [[x1,y1],[x2,y2],...,[xn,yn]]
+* @return NULL|array of int x y
+*/
+function getPolygonCenter($points) {
+  $cnt = count($points); // find number of points
+  if(!$cnt || $cnt < 3 || !is_array($points)) return null;
+  $center_x = $center_y = 0;
+  if ( is_array($points[0]) && count($points[0]) === 2) {//tuples
+    for($i=0;$i<$cnt;$i++){
+      $center_x += $points[$i][0];
+      $center_y += $points[$i][1];
+    }
+  }else{
+    for($i=0;$i<$cnt;){
+      $center_x += $points[$i];
+      $center_y += $points[$i+1];
+      $i +=2;
+    }
+  }
+  return array(round($center_x/$cnt),round($center_y/$cnt));
+}
+
+/**
 * calculate bound rect for array of points
 *
 * @param int array $points of the form [x1,y1,x2,y2,...,xn,yn] or [[x1,y1],[x2,y2],...,[xn,yn]]
@@ -465,6 +492,30 @@ function getBoundingRect($points) {
     }
   }
   return array($x1,$y1,$x2,$y1,$x2,$y2,$x1,$y2);
+}
+
+/**
+* converts an array of $points of the form [x1,y1,x2,y2,...,xn,yn] to [[x1,y1],[x2,y2],...,[xn,yn]]
+*
+* @param int array $points of the form [x1,y1,x2,y2,...,xn,yn]
+* @return NULL|array of int tuples (points) of the form [[x1,y1],[x2,y2],...,[xn,yn]]
+*/
+function pointsArray2ArrayOfTuples($points) {
+  $cnt = count($points); // find number of points
+  if(!$cnt) return null;
+  if ( is_array($points) ) {
+    if ( is_array($points[0]) && count($points[0]) === 2) {//tuples
+      return $points;
+    }else if ((count($points)%2)===0){//even number
+      $tuples = array();
+      for($i=0;$i<$cnt;){
+        array_push($tuples,array($points[$i],$points[$i+1]));
+        $i +=2;
+      }
+      return $tuples;
+    }
+  }
+  return null;
 }
 
 
@@ -497,13 +548,14 @@ function loadURLContent($url,$raw = false) {
   $data = curl_exec($ch);
 
   $error = curl_error($ch);
-  curl_close($ch);
   if ($error) {
     $code = intval(curl_getinfo($ch, CURLINFO_HTTP_CODE));
     error_log("$error ($code)" . " url = ". $url);
+    curl_close($ch);
     return false;
   } else if (!$data || preg_match("/401 Unauthorized/",$data)) {
-    if (preg_match("/37\.252\.124\.228/",$data) || !$data) {
+    curl_close($ch);
+    if (preg_match("/130\.223\.29\.184/",$data) || !$data) {
       $path = preg_replace("/^.*images/",DOCUMENT_ROOT."/images",$url);
       $data = file_get_contents($path);
       if($data){
@@ -516,6 +568,7 @@ function loadURLContent($url,$raw = false) {
       }
     }
   } else {
+    curl_close($ch);
     if($data){
       if ($raw) {
         return $data;
@@ -782,7 +835,7 @@ $linkTypeTagToList = array();
 function getLinkTypeInfo() {
   global $linkTypeTagToLabel,$linkTypeTagToList;
   $linkTypeInfo = null;
-  $linkTypeTerms = new Terms("trm_labels::hstore->'en' = 'LinkageType'",null,null);
+  $linkTypeTerms = new Terms("trm_labels::hstore->'en' = 'LemmaLinkage'",null,null);
   if ($linkTypeTerms && $linkTypeTerms->getCount() > 0 ){
     $linkTypeID = $linkTypeTerms->current()->getID();
     $linkTypesStruct = getLinkSubTypeStructure($linkTypeID);
@@ -925,8 +978,11 @@ function getSeqSubTypeStructure($trmID) {
   if ($seqSubTypeTerms && $seqSubTypeTerms->getCount() > 0 ){
     $subSeqTypeInfo = array();
     foreach($seqSubTypeTerms as $seqTypeTerm) {
-      $typeID = $seqTypeTerm->getID();
       $typeLabel = $seqTypeTerm->getLabel();
+      if ($typeLabel == "Text" || $typeLabel == "TextPhysical") {// warning!!! term dependecny
+        continue;
+      }
+      $typeID = $seqTypeTerm->getID();
       $seqTypeTagToLabel["trm".$typeID] = $typeLabel;
       $termList = $seqTypeTerm->getListIDs();
       if ($termList) {
@@ -992,7 +1048,7 @@ function getCustomTags($trmID,$ctxPos = "") {
 */
 
 function getTagGIDValue($trmID) {
-  $annoRepresentations = new Annotations("ano_type_id = $trmID and not ano_owner_id in (2,3)".
+  $annoRepresentations = new Annotations("ano_type_id = $trmID and not ano_owner_id in (2,3,6)".
                                               " and ano_owner_id in (".join(",",getUserMembership()).")",
                                           "ano_text",null,null);
   if ($annoRepresentations && $annoRepresentations->getCount() > 0 ) {
@@ -1182,6 +1238,41 @@ function getSwitchInfoByTextFromEntities(&$entities,&$gra2SclMap,&$errors,&$warn
 }
 
 /**
+* checkForSplit - determine is syllable is split
+*
+* @param Token $token to be checked
+* @param Syllable $syllable located at beginning or end of token to be checked
+* @param boolean $end determine whether to check end or start(defalut) of token
+*
+* @returns int position of split or zero if not split
+*/
+
+function checkForSplit($token, $syllable, $end) {
+  $strTok = $token.value;
+  $strScl = $syllable.value;
+  $cntScl = strlen($strScl);
+  $split = 0;
+  if (!end) { //check start of token
+    $strTokCompare = substr($strTok,0,$cntScl);
+    $split = 0;
+    while ( $strScl != $strTokCompare) {
+      $split++;
+      $strScl = substr($strScl,1);//remove lead char
+      $strTokCompare = substr($strTokCompar,0, (strlen($strTokCompare) - 1));
+    }
+  } else {
+    $strTokCompare = $strTok.substring($strTok.length - $cntScl);
+    $split = $cntScl;
+    while ( $strScl != $strTokCompare) {
+      $split--;
+      $strTokCompare = substr($strTokCompare,1);//remove lead char
+      $strScl = substr($strScl,0, (strlen($strScl) - 1));
+    }
+  }
+  return $split;
+}
+
+/**
 * update existing switch information given a new entities global identifier
 *
 * @param int $entGID
@@ -1201,7 +1292,7 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
   if (array_key_exists($prefix,$entities) && array_key_exists($id, $entities[$prefix])) {
     $entObj = $entities[$prefix][$id];
     switch ($prefix) {
-      case "scl":
+      case "xxxscl"://xxx deprecate switch for syllables
         if (array_key_exists('segID',$entObj)) {
           $startID = $endID = $entObj['segID'];
         }
@@ -1214,6 +1305,10 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
           if ($entities['scl'][$startSclID]) {
             if (array_key_exists('segID',$entities['scl'][$startSclID]) && $entities['scl'][$startSclID]['segID']) {
               $startID = $entities['scl'][$startSclID]['segID'];
+              $split = checkForSplit($entObj,$startSclID,false);
+              if ($split){
+                $startID = "scl".$startSclID."S".$split;
+              }
             } else {
               array_push($warnings,"warning no segID for syllable ID $startSclID of $entGID skipping switch calculation");
             }
@@ -1223,6 +1318,10 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
           if ($entities['scl'][$endSclID]) {
             if (array_key_exists('segID',$entities['scl'][$endSclID]) && $entities['scl'][$endSclID]['segID']) {
               $endID = $entities['scl'][$endSclID]['segID'];
+              $split = checkForSplit($entObj,$endSclID,false);
+              if ($split){
+                $endID = "scl".$endSclID."S".$split;
+              }
             } else {
               array_push($warnings,"warning no segID for syllable ID $endSclID of $entGID skipping switch calculation");
             }
@@ -1277,6 +1376,31 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
 }
 
 /**
+* invalidate cache edition id
+*
+* @param int $ednID Sequence id
+* @param int $catID Catalog id
+*/
+
+function invalidateCachedEdn($ednID = null, $catID = null) { // setDirty flag
+  $cacheKey = "edn".($ednID?$ednID:'').'%';
+  invalidateCache($cacheKey);
+  invalidateCachedCat($catID,$ednID);
+}
+
+/**
+* invalidate cache by catalog id and edition id
+*
+* @param int $catID Catalog id
+* @param int $ednID Edition id
+*/
+
+function invalidateCachedCat($catID = null,$ednID = null) { // setDirty flag
+  $cacheKey = "glosscat".($catID?$catID:'%')."edn".($ednID?$ednID:'').'%';
+  invalidateCache($cacheKey);
+}
+
+/**
 * invalidate cache by user id and sequence id
 *
 * @param int $seqID Sequence id
@@ -1284,14 +1408,24 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
 */
 
 function invalidateCachedSeq($seqID = null,$usrID = null) { // setDirty flag
-  $cacheKey = "seq".($seqID?$seqID:'%')."userID".($usrID?$usrID:'%');
+  $cacheKey = "seq".($seqID?$seqID:'%')."ednOwnerID".($usrID?$usrID:'%');
+  invalidateCache($cacheKey);
+}
+
+/**
+* invalidate matching entries or entire cache
+*
+* @param string $cacheKey string to match cache entries
+*/
+
+function invalidateCache($cacheKey = null) { // setDirty flag of matching entries or entire cache
   $dbMgr = new DBManager();
-  $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label like '$cacheKey'");
-//  error_log("invalidate $cacheKey cache entry");
+  $dbMgr->query("SELECT * FROM jsoncache".($cacheKey?" WHERE jsc_label like '$cacheKey'":""));
+//  error_log("invalidate entire cache entry");
   while ($row = $dbMgr->fetchResultRow()) {
     $jsonCache = new JsonCache($row);
     if (!$jsonCache->hasError() && $jsonCache->getID()) {
-      $jsonCache->setDirty();
+      $jsonCache->setDirtyBit();
       $jsonCache->save();
     }
   }
@@ -1446,7 +1580,7 @@ function getSwitchInfo($txtIDs) {
 function getUserPersistedPreferences(){
   //check user scratch for preferences array
   $user = new UserGroup(getUserID());
-  if (!$user || $user->hasError()) {
+  if (!$user || !$user->getID() || $user->hasError()) {
     return null;
   }
   return $user->getPreferences();
@@ -1481,7 +1615,7 @@ function setUserDefEditorID($ugrID){
     $_SESSION['userPrefs']['defaultEditUserID'] = $ugrID;
   } else {
     $user = new UserGroup(getUserID());
-    if (!$user || $user->hasError()) {
+    if (!$user || !$user->getID() || $user->hasError()) {
       return;
     } else {
       $prefs = getUserPreferences();
@@ -1593,7 +1727,7 @@ function getUserDefaultAttributionID(){
   $user = new UserGroup(getUserID());
   if (!$user || $user->hasError()) {
     return null;
-  } else if (! $user->getDefaultAttributionID() && getUserID() != 2) {
+  } else if (! $user->getDefaultAttributionID() && getUserID() != 2 && getUserID() != 6) {
     //create attribution group
     $atg = new AttributionGroup();//todo  lookup ATG for user ??
     $atg->setRealname($user->getRealname());
@@ -1660,7 +1794,7 @@ function getRelationshipLink($fromEntGID,$toEntGID,$linkTypeID) {
 }
 
 /**
-* create a semantic (trmID) link (annotation entity) between entities.
+*  return existing semantic link or create a semantic (trmID) link (annotation entity) between entities.
 *
 * @param string $fromEntGID global id of primary entity or subject being related
 * @param string $toEntGID global id of secondary entity or related entity
@@ -1929,8 +2063,10 @@ function checkEditionHealth($ednID, $verbose = true) {
                     }
                     $blnSrfID = $baseline->getSurfaceID();
                     if (!$blnSrfID) {
-                      array_push($hlthwarnings,"Warning Baseline ($blnGID) is not linked to any surfaces.");
-                    } else {
+                      if ( "Transcription"!= $baseline->getTermFromID($baseline->getType())) {
+                        array_push($hlthwarnings,"Warning Baseline ($blnGID) is not linked to any surfaces.");
+                      }
+                      } else {
                       array_push($srfIDs,$blnSrfID);
                       $srfIDs = array_unique($srfIDs);
                       if ( array_key_exists($blnSrfID,$srfID2BlnIDsMap)) {
@@ -1985,16 +2121,20 @@ function checkEditionHealth($ednID, $verbose = true) {
                 //ToDo:  add code to add <a> for a service to correct the issue.
               }
               $txtDivGIDs = $sequence->getEntityIDs();
-              $stripTokCmpGIDs = preg_replace("/(tok|cmp)\:/","",$txtDivGIDs);
-              if (strpos(join(' ',$stripTokCmpGIDs),":") !== false) {
-                array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) not all entity GIDs are token or compound type. (".join(',',$txtDivGIDs).").");
+              if (!$txtDivGIDs) {
+                array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) is Empty");
               } else {
-                if (count($dups = array_intersect($tokCmpGIDs,$txtDivGIDs))) {
-                    array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) has duplicate Tok/Cmp GIDs (".join(',',$dups).").");
-                }
-                $tokCmpGIDs = array_unique(array_merge($tokCmpGIDs,$txtDivGIDs));
-                foreach ($txtDivGIDs as $txtDivGID) {
-                  $gid2SeqMap[$txtDivGID] = "seq:$seqID";
+                $stripTokCmpGIDs = preg_replace("/(tok|cmp)\:/","",$txtDivGIDs);
+                if (strpos(join(' ',$stripTokCmpGIDs),":") !== false) {
+                  array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) not all entity GIDs are token or compound type. (".join(',',$txtDivGIDs).").");
+                } else {
+                  if (count($dups = array_intersect($tokCmpGIDs,$txtDivGIDs))) {
+                      array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) has duplicate Tok/Cmp GIDs (".join(',',$dups).").");
+                  }
+                  $tokCmpGIDs = array_unique(array_merge($tokCmpGIDs,$txtDivGIDs));
+                  foreach ($txtDivGIDs as $txtDivGID) {
+                    $gid2SeqMap[$txtDivGID] = "seq:$seqID";
+                  }
                 }
               }
             }
@@ -2043,6 +2183,101 @@ function checkEditionHealth($ednID, $verbose = true) {
             array_push($hltherrors,"Error $ctxLabel has token ($tokGID) that has a grapheme (gra:$graID) that is not in a syllable.");
           }
         }
+        //process structure sequences
+        if ($verbose) {
+          array_push($hltherrors,"**************** Processing Structural Analysis Sequences ***************************");
+        }
+        if ($structuralSeqIDs && count($structuralSeqIDs) > 0) {
+          $processedSeqIDs = array();
+          while ($seqID = array_shift($structuralSeqIDs)) {
+            $sequence = new Sequence($seqID);
+            if ($sequence->hasError()) {
+              array_push($hltherrors,"Error Strucutral Sequence (seq:$seqID) cannot be loaded. Error:".$sequence->getErrors(true));
+              continue;
+            }
+            $seqGID = $sequence->getGlobalID();
+            $seqLabel = $sequence->getLabel()?$sequence->getLabel():$sequence->getSuperScript();
+            $seqGID2Label[$seqGID] = $seqLabel;
+            if ($sequence->isMarkedDelete()) {
+              array_push($hltherrors,"Error Structural Sequence ($seqLabel/seq:$seqID) is marked for delete.");
+              //ToDo:  add code to add <a> for a service to correct the issue.
+            }
+            $seqEntityGIDs = $sequence->getEntityIDs();
+            if (!$seqEntityGIDs || count($seqEntityGIDs) == 0) {
+              array_push($hltherrors,"Error Strucutral Sequence (seq:$seqID) has no entity ids.");
+              continue;
+            }
+            foreach ($seqEntityGIDs as $seqEntityGID) {
+              $prefix =substr($seqEntityGID,0,3);
+              switch ($prefix) {
+                case 'seq':
+                  $subSeqID = substr($seqEntityGID,4);
+                  $subsequence = new Sequence($subSeqID);
+                  if ($subsequence->hasError()) {
+                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has subsequence $seqEntityGID with loading error. Error:".$subsequence->getErrors(true));
+                    continue;
+                  }
+                  $subSeqLabel = $subsequence->getLabel()?$subsequence->getLabel():$subsequence->getSuperScript();
+                  $seqGID2Label[$seqEntityGID] = $subSeqLabel;
+                  if ($sequence->isMarkedDelete()) {
+                    array_push($hltherrors,"Error Structural Sequence ($subSeqLabel/$seqEntityGID) is marked for delete.");
+                    continue;
+                    //ToDo:  add code to add <a> for a service to correct the issue.
+                  }
+                  if ( $seqGID == $seqEntityGID ) {//recursion
+                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has $seqEntityGID as contained entity (recursion)");
+                  } else {
+                    if (array_key_exists($seqEntityGID,$processedSeqIDs)) {
+                      array_push($hlthwarnings,"Warning Strucutral Sequence ($seqLabel/$seqGID) has child $subSeqLabel/$seqEntityGID already processed as child of ".join(",",$processedSeqIDs[$seqEntityGID]));
+                      array_push($processedSeqIDs[$seqEntityGID],$seqGID);
+                    } else {
+                      if (!in_array($subSeqID,$structuralSeqIDs)) {
+                        array_push($structuralSeqIDs,$subSeqID); //walk tree
+                      }
+                      $processedSeqIDs[$seqEntityGID] = array($seqGID);
+                    }
+                  }
+                  break;
+                case 'tok':
+                  if (!in_array($seqEntityGID,$tokCmpGIDs)) {// structure with non edition tok/cmp
+                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) contains token $seqEntityGID which is not part of the edition.");
+                    $token = new Token(substr($seqEntityGID,4));
+                    if ($token->hasError()) {
+                      array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has token $seqEntityGID with loading error. Error:".$token->getErrors(true));
+                      continue;
+                    }
+                    if ($token->isMarkedDelete()) {
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has token $seqEntityGID which is marked for delete.");
+                      continue;
+                      //ToDo:  add code to add <a> for a service to correct the issue.
+                    }
+                    if (count($token->getGraphemeIDs())==0) {
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has token $seqEntityGID which has no graphemes.");
+                    }
+                  }
+                  break;
+                case 'cmp':
+                  if (!in_array($seqEntityGID,$tokCmpGIDs)) {// structure with non edition tok/cmp
+                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) contains compound $seqEntityGID which is not part of the edition.");
+                    $compound = new Compound(substr($seqEntityGID,4));
+                    if ($compound->hasError()) {
+                      array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has compound $seqEntityGID with loading error. Error:".$compound->getErrors(true));
+                      continue;
+                    }
+                    if ($compound->isMarkedDelete()) {
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has compound $seqEntityGID which is marked for delete.");
+                      continue;
+                      //ToDo:  add code to add <a> for a service to correct the issue.
+                    }
+                    if (count($compound->getComponentIDs())==0) {
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has compound $seqEntityGID which has no components.");
+                    }
+                  }
+                  break;
+              }//end switch
+            }//end for each seqGIDs
+          }//end while seqID
+        }
       }
     }
   }
@@ -2071,6 +2306,191 @@ function checkEditionHealth($ednID, $verbose = true) {
   }
   if ($verbose) {
     $retStr .= "\t\t\t End of Health Report for (edn$ednID) - ".$edition->getDescription()."\n\n";
+  }
+
+  return $retStr;
+}
+
+/**
+* check the health of the catalog
+*
+* walk through all entities of this catalog and validate linked entities
+*
+* @param int $catID catalog ID
+* @param boolean $verbose indicate the level of output information.
+*/
+
+
+function checkGlossaryHealth($catID, $verbose = true) {
+  global $hltherrors, $hlthwarnings, $hlthgra2TokGID, $hlthtokGID2CtxLabel, $hlthtokGraphemeIDs;
+
+  $retStr = "";
+  $hltherrors = array();
+  $hlthwarnings = array();
+  $lemTag2Value = array();
+  $hlthgra2TokGID = array();
+  $hlthtokGID2CtxLabel = array();
+  $tokCmp2LemGID = array();
+  $tokCmp2InfGID = array();
+  $lemIDs = array();
+  $infIDs = array();
+  $tokCmpGIDs = array();
+  $processedTokIDs = array();
+  $catalog = null;
+  if ($catID) {
+    $catalog = new Catalog($catID);
+  }
+  if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
+    array_push($hlthwarnings,"Usage = testGlossaryLinks.php?db=dbnameGoesHere&catID=idOfCatalogGlossaryGoesHere.");
+ } else {
+    $termInfo = getTermInfoForLangCode('en');
+    $glossaryCatalogTypeID = $termInfo['idByTerm_ParentLabel']['glossary-catalogtype'];//term dependency
+    $textSeqTypeID = $termInfo['idByTerm_ParentLabel']['text-sequencetype'];//term dependency
+    $textDivSeqTypeID = $termInfo['idByTerm_ParentLabel']['textdivision-text'];//term dependency
+    $textPhysSeqTypeID = $termInfo['idByTerm_ParentLabel']['textphysical-sequencetype'];//term dependency
+    $linePhysSeqTypeID = $termInfo['idByTerm_ParentLabel']['linephysical-textphysical'];//term dependency
+    $imageBaselineTypeID = $termInfo['idByTerm_ParentLabel']['image-baselinetype'];//term dependency
+    $transBaselineTypeID = $termInfo['idByTerm_ParentLabel']['transcription-baselinetype'];//term dependency
+    $catID = $catalog->getID();
+    $lemmas = new Lemmas("lem_catalog_id = $catID",'lem_id',null,null);
+    if ($lemmas && $lemmas->getCount()>0) {
+      if ($verbose) {
+        array_push($hltherrors,"**************** Processing Glossary Lemmas ***************************");
+      }
+      foreach ($lemmas as $lemma) {
+        $lemID = $lemma->getID();
+        $lemValue = $lemma->getValue();
+        $lemTag2Value["lem$lemID"] = $catID;
+        if ($lemma->isMarkedDelete()) {
+          array_push($hltherrors,"Error glossary (cat:$catID) has lemma ($lemValue/lem$lemID) that is marked for delete.");
+          //ToDo  add code to add <a> for a service to correct the issue.
+          continue;
+        } else {//save to check components
+          array_push($lemIDs,$lemID);
+        }
+        $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
+        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LemmaLinkage');
+        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LemmaLinkage');
+        $relatedNode = null;
+        if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
+          foreach ($relatedGIDsByLinkType[$seeLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            if (!$entity || $entity->hasError() || $entity->isMarkedDelete()) {
+              array_push($hltherrors,"Lemma ($lemValue/lem$lemID) has link to invalid entity $linkGID.");
+            }
+          }
+        }
+        if ($relatedGIDsByLinkType && array_key_exists($cfLinkTypeID,$relatedGIDsByLinkType)) {
+          foreach ($relatedGIDsByLinkType[$cfLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            if (!$entity || $entity->hasError() || $entity->isMarkedDelete()) {
+              array_push($hltherrors,"Lemma ($lemValue/lem$lemID) has link to invalid entity $linkGID.");
+            }
+          }
+        }
+      }
+      //process lemma components
+      if ($verbose) {
+        array_push($hltherrors,"**************** Processing Lemma Components ***************************");
+      }
+      if ($lemIDs && count($lemIDs) > 0) {
+        $lemmas->rewind();
+        foreach ($lemmas as $lemma) {
+          $entGIDs = $lemma->getComponentIDs();
+          $lemValue = $lemma->getValue();
+          $lemTag = $lemma->getEntityTag();
+          if (count($entGIDs) == 0) {
+            array_push($hlthwarnings,"Warning lemma ($lemValue/$lemTag) that is has no attested forms.");
+            continue;
+          }
+          foreach ($entGIDs as $entGID) {
+            $entTypeID = substr($entGID,0,3);
+            if ($entTypeID == "inf") {
+              if (!@$infIDs[$entGID]) {
+                $infIDs[$entGID] = $lemTag;
+              } else {
+                array_push($hltherrors,"Inflection $entGID already a component of ".$infIDs[$entGID]);
+              }
+            } else {
+              if (!@$tokCmpGIDs[$entGID]) {
+                $tokCmpGIDs[$entGID] = $lemTag;
+              } else {
+                array_push($hltherrors,"Processing Token/Compound $entGID for $lemTag already a component of ".$tokCmpGIDs[$entGID]);
+              }
+            }
+          }
+        }
+        if ($verbose) {
+          array_push($hltherrors,"**************** Processing Inflections ***************************");
+        }
+        if ($infIDs && count($infIDs) > 0) {
+          foreach ($infIDs as $infGID => $lemTag) {
+            $inflection = new Inflection(substr($infGID,4));
+            if (!$inflection || $inflection->hasError()) {
+              array_push($hltherrors,"Error Unable to create inflection ($infGID) for lemma $lemTag.".
+                          (($inflection && $inflection->hasError())?"Errors: ".$inflection->getErrors(true):""));
+              continue;
+            }
+            if ($inflection->isMarkedDelete()) {
+              array_push($hltherrors,"Lemma ($lemValue/$lemTag) has inflection $entGID that is marked for delete.");
+              continue;
+            }
+            $infTag = $inflection->getEntityTag();
+            $entGIDs = $inflection->getComponentIDs();
+            if (!$entGIDs || count($entGIDs) == 0) {
+              array_push($hltherrors,"Lemma ($lemTag) has inflection $infTag that has no attested forms.");
+              continue;
+            }
+            foreach ($entGIDs as $entGID) {
+              if (!@$tokCmpGIDs[$entGID]) {
+                $tokCmpGIDs[$entGID] = $infTag;
+              } else {
+                array_push($hltherrors,"Processing Token/Compound $entGID for $infTag (of $lemTag) which is already a component of ".$tokCmpGIDs[$entGID]);
+              }
+            }
+          }
+        }
+        if ($verbose) {
+          array_push($hltherrors,"**************** Processing Tokens and Compounds ***************************");
+        }
+        if ($tokCmpGIDs && count($tokCmpGIDs) > 0) {
+          foreach ($tokCmpGIDs as $tokCmpGID => $cntTag) {
+            if (strlen($tokCmpGID)< 4) {
+              array_push($hltherrors,"TokGIDs has invalid tag for Container $cntTag.");
+              continue;
+            }
+            $ctxMessage = "Containing Entity ($cntTag)";
+            validateTokCmp($tokCmpGID,$ctxMessage,$tokCmpGID);
+          }
+        }
+      }
+    }
+  }
+  if ($verbose) {
+    $retStr .= "\t\t\t Health Report for (cat$catID) - ".$catalog->getTitle()."\n\n";
+  }
+
+  if (count($hlthwarnings) > 0) {
+    if ($verbose) {
+      $retStr .= "WARNING:\n";
+    }
+    foreach ($hlthwarnings as $warning) {
+      $retStr .= $warning."\n";
+    }
+  }
+  if (count($hltherrors) > 0) {
+    if ($verbose) {
+      $retStr .= "ERRORS:\n";
+    }
+    foreach ($hltherrors as $error) {
+      $retStr .= $error."\n";
+    }
+  }
+  if (count($hlthwarnings) == 0 && count($hltherrors) == 0) {
+    $retStr .= " Catalog links check ok for catalog (cat$catID).";
+  }
+  if ($verbose) {
+    $retStr .= "\t\t\t End of Health Report for (cat$catID) - ".$catalog->getTitle()."\n\n";
   }
 
   return $retStr;
@@ -2196,13 +2616,16 @@ function validateTokCmp ($tokCmpGID, $ctxMessage, $topTokCmpGID) {
   $entity = EntityFactory::createEntityFromGlobalID($tokCmpGID);
   if (!$entity || $entity->hasError()) {
     array_push($hltherrors,"Error Unable to create tok/cmp ($tokCmpGID) located in $ctxMessage.".
-                ($entity->hasError()?"Errors: ".$entity->getErrors(true):""));
+                (($entity && $entity->hasError())?"Errors: ".$entity->getErrors(true):EntityFactory::$error));
   } else {
     if ($entity->isMarkedDelete()) {
       array_push($hltherrors,"Error $ctxMessage has token/compound link ($tokCmpGID) that is marked for delete.");
       //ToDo:  add code to add <a> for a service to correct the issue.
     } else {// process each token or compound depth first
       $label = $entity->getValue();
+      if(!$label || strlen($label) == 0) {
+        array_push($hltherrors,"Error tok/cmp ($tokCmpGID) located in $ctxMessage has no value.");
+      }
       $newCtxMessage = "$ctxMessage, token/compound ($label/$tokCmpGID)";
       $prefix = $entity->getEntityTypeCode();
       if ($prefix == "cmp") {//process components
@@ -2267,6 +2690,8 @@ function FixUnicodeForRtf($matches) {
   return "\\u".hexdec(bin2hex(iconv('UTF-8', 'UTF-16BE', $matches[1]))).'?';
 }
 
+mb_internal_encoding('UTF-8');
+mb_regex_encoding('UTF-8');
 /**
 * multibyte safe string replace function
 *
@@ -2347,5 +2772,268 @@ function findSclGIDsFromPattern($pattern,$sclGIDsByLinePostion) {
     }
   }
   return $sclGIDs;
+}
+
+function getUserGroupIDforName($name) {
+  $dbMgr = new DBManager();
+  $dbMgr->query("select ugr_id from usergroup where ugr_name = '$name';");
+  $row = $dbMgr->fetchResultRow();
+  return $row?$row['ugr_id']:null;
+}
+
+function clearSessionCatCache() {
+  foreach(array_keys($_SESSION) as $key) {
+    if (preg_match('/^cache-cat\d+'.DBNAME.'/',$key)) {
+      unset($_SESSION[$key]);
+    }
+  }
+}
+
+function compareWordLocations($locW1,$locW2) {
+  if (strpos($locW1,':') == strrpos($locW1,":")) { //single colon so no tref
+    list($ord1,$label1) = explode(":",$locW1);
+    list($ord2,$label2) = explode(":",$locW2);
+    $tref1 = $tref2 = 0;
+  } else {
+    list($tref1,$ord1,$label1) = explode(":",$locW1);
+    list($tref2,$ord2,$label2) = explode(":",$locW2);
+  }
+  if (preg_match("/^sort\d+/",$tref1) && preg_match("/^sort\d+/",$tref2)) {
+    $tref1 = intval(substr($tref1,4));
+    $tref2 = intval(substr($tref2,4));
+  } else if (is_numeric($tref1)&& is_numeric($tref2)) {
+    $tref1 = intval($tref1);
+    $tref2 = intval($tref2);
+  }
+  if ($tref1 > $tref2) {
+    return 1;
+  } else if ($tref1 < $tref2) {
+    return -1;
+  } else {
+    $ord1 = intval($ord1);
+    $ord2 = intval($ord2);
+    if ($ord1 > $ord2) {
+      return 1;
+    } else if ($ord1 < $ord2) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
+}
+
+function changeVisibility($prefix,$table,$ids,$vis,$owner) {
+  $dbMgr = new DBManager();
+  if ($table == 'usergroup') {
+    return null;
+  }
+  $query = "update $table set $prefix"."_visibility_ids='$vis'";
+  if($ids && count($ids) >0 || $owner) {
+    if ($ids && $owner) {
+      $query .= " where $prefix"."_id in (".join(",",$ids).") and $prefix"."_owner_id=$owner";
+    }else if ($ids) {
+      $query .= " where $prefix"."_id in (".join(",",$ids).")";
+    } else if ($ids && $owner) {
+      $query .= " where $prefix"."_owner_id=$owner";
+    }
+  }
+  $query .= ";";
+  $dbMgr->query($query);
+  $cnt = $dbMgr->getAffectedRowCount();
+  return $cnt?$cnt:null;
+}
+
+
+function changeOwner($prefix,$table,$ids,$newOwner,$oldOwner) {
+  $dbMgr = new DBManager();
+  if ($table == 'usergroup') {
+    return null;
+  }
+  $query = "update $table set $prefix"."_owner_id='$newOwner'";
+  if($oldOwner) {
+    $query .= " where $prefix"."_owner_id=$oldOwner";
+  }
+  $query .= ";";
+  $dbMgr->query($query);
+  $cnt = $dbMgr->getAffectedRowCount();
+  return $cnt?$cnt:null;
+}
+
+$prefixToTableName = array(
+          "col" => "collection",
+          "itm" => "item",
+          "prt" => "part",
+          "frg" => "fragment",
+          "img" => "image",
+          "spn" => "span",
+          "srf" => "surface",
+          "txt" => "text",
+          "tmd" => "textmetadata",
+          "mcx" => "materialcontext",
+          "bln" => "baseline",
+          "seg" => "segment",
+          "run" => "run",
+          "lin" => "line",
+          "scl" => "syllablecluster",
+          "gra" => "grapheme",
+          "tok" => "token",
+          "cmp" => "compound",
+          "lem" => "lemma",
+          "inf" => "inflection",
+          "trm" => "term",
+          "prn" => "propernoun",
+          "cat" => "catalog",
+          "seq" => "sequence",
+          "lnk" => "link",
+          "edn" => "edition",
+          "bib" => "bibliography",
+          "ano" => "annotation",
+          "atb" => "attribution",
+          "atg" => "attributiongroup",
+          "ugr" => "usergroup",
+          "dat" => "date",
+          "era" => "era"
+);
+
+function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $maxSizeX = 150, $maxSizeY = 150) {
+  $sourcefile = $srcPath.$srcFilename;
+  $thumbfile = $targetPath.getThumbFromFilename($srcFilename);
+  list($imageW,$imageH) = getimagesize($sourcefile);
+  //shrink and preserve aspect
+  $percent = $maxSizeX/$imageW;
+  if ($percent>1) {
+    $percent = 1;
+  }
+  if ($percent*$imageH > $maxSizeY) {
+    $percent = $maxSizeY/$imageH;
+  }
+  $thumbW = round($percent*$imageW);
+  $thumbH = round($percent*$imageH);
+
+  $thumbImage = imagecreatetruecolor($thumbW,$thumbH);
+
+  switch($ext){
+    case 'png':
+      $sourceImage = imagecreatefrompng($sourcefile);
+      break;
+    case 'gif':
+      $sourceImage = imagecreatefromgif($sourcefile);
+      break;
+    case 'jpg':
+    case 'jpeg':
+    default:
+      $sourceImage = imagecreatefromjpeg($sourcefile);
+  }
+
+  if ($sourceImage) {
+    imagecopyresampled($thumbImage,$sourceImage,0,0,0,0,$thumbW,$thumbH,$imageW,$imageH);
+    switch($ext){
+      case 'png':
+        $ret = imagepng($thumbImage,$thumbfile,9);
+        break;
+      case 'gif':
+        $ret = imagegif($thumbImage,$thumbfile,100);
+        break;
+      case 'jpg':
+      case 'jpeg':
+      default:
+        $ret = imagejpeg($thumbImage,$thumbfile,100);
+    }
+    imagedestroy($thumbImage);
+    imagedestroy($sourceImage);
+    if ($ret) {
+      return $thumbBaseURL.getThumbFromFilename($srcFilename);
+    }
+  }
+  return false;
+}
+
+
+
+function formatEtym($lemmaEtymString) {
+  $formattedEtyms = "";
+  $etyms = explode(",",$lemmaEtymString);
+  $isFirst = true;
+  foreach ($etyms as $etym) {
+    preg_match("/\s*(Skt|Pkt|Vedic|P|BHS|G|S)\.?\:?\s*(.+)/",$etym,$matches);
+    if (!$isFirst) {
+      $formattedEtyms .= ", ";
+    } else {
+      $isFirst = false;
+    }
+    if (count($matches) == 3) {
+      $formattedEtyms .= "<span class=\"etymlangcode\">".$matches[1]."</span><span class=\"etymvalue\">".$matches[2]."</span>";
+    }
+  }
+  return $formattedEtyms;
+}
+
+function getServiceContent($url){
+  $content = null;
+  if ($url) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, '/dev/null');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);  //return the output as a string from curl_exec
+    curl_setopt($ch, CURLOPT_BINARYTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_NOBODY, 0);
+    curl_setopt($ch, CURLOPT_HEADER, 0);  //don't include header in output
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);  // follow server header redirects
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);  // don't verify peer cert
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);  // timeout after 30 seconds
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 5);  // no more than 5 redirections
+
+    $content = curl_exec($ch);
+    //error_log(" data = ". $data);
+
+    $error = curl_error($ch);
+    if ($error) {
+      $code = intval(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+      error_log("get Service content error: $error ($code) url = $url");
+      curl_close($ch);
+      return null;
+    }
+    curl_close($ch);
+  }
+  return $content;
+}
+
+function startLog($withHeader = true) {
+  global $logHTML;
+  $logHTML = "<div class=\"logmessages\">";
+}
+
+function logAddMsg($msg) {
+  global $logHTML;
+  $logHTML .= "<div class=\"logmessage\">$msg</div>\n";
+}
+
+function logAddMsgExit($msg, $wrapHeader = true, $jsonEncode = false) {
+  global $logHTML;
+  $logHTML .= "<div class=\"logmessage\">$msg</div>\n";
+  flushLog($wrapHeader, $jsonEncode);
+  exit();
+}
+
+function logAddLink($msg,$url) {
+  global $logHTML;
+  $logHTML .= "<div class=\"loglink\"><a href=\"$url\" target=\"_blank\">$msg</a></div>\n";
+}
+
+function getLogFragment() {
+  global $logHTML;
+  return $logHTML."</div>\n";
+}
+
+function flushLog($wrapHeader = true, $jsonEncode = false) {
+  global $logHTML;
+  $logHTML .= "</div>\n";
+  if ($wrapHeader) {
+   $logHTML = "<html>\n<body>\n".$logHTML."</body>\n</html>\n";
+  }
+  if ($jsonEncode) {
+    $logHTML = json_encode($logHTML);
+  }
+  echo $logHTML;
+  $logHTML = "";
 }
 ?>

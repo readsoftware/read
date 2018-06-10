@@ -79,7 +79,7 @@ CREATE TABLE annotation
   "ano_attribution_ids" int[] NULL,
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "ano_owner_id" int NULL DEFAULT 2,
-  "ano_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "ano_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "ano_scratch" text NULL
 )
 WITH (
@@ -131,7 +131,7 @@ CREATE TABLE attribution
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "atb_owner_id" int NULL DEFAULT 2,
   "atb_annotation_ids" int[] NULL,
-  "atb_visibility_ids" int[] NULL DEFAULT '{2}',
+  "atb_visibility_ids" int[] NULL DEFAULT '{6}',
   "atb_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -171,7 +171,7 @@ CREATE TABLE attributiongroup
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "atg_owner_id" int NULL DEFAULT 2,
   "atg_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "atg_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "atg_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "atg_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -217,7 +217,7 @@ CREATE TABLE bibliography
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "bib_owner_id" int NULL DEFAULT 2,
   "bib_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "bib_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "bib_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "bib_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -257,7 +257,7 @@ CREATE TABLE jsoncache
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "jsc_owner_id" int NULL DEFAULT 2,
   "jsc_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "jsc_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "jsc_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "jsc_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -301,7 +301,7 @@ CREATE TABLE image
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "img_owner_id" int NULL DEFAULT 2,
   "img_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "img_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "img_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "img_scratch" text NULL
 )
 WITH (
@@ -351,7 +351,7 @@ CREATE TABLE propernoun
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "prn_owner_id" int NULL DEFAULT 2,
   "prn_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "prn_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "prn_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "prn_scratch" text NULL
 )
 WITH (
@@ -406,7 +406,7 @@ CREATE TABLE term
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "trm_owner_id" int NULL DEFAULT 2,
   "trm_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "trm_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "trm_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "trm_scratch" text NULL
 )
 WITH (
@@ -500,7 +500,7 @@ CREATE TABLE collection
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "col_owner_id" int NULL DEFAULT 2,
   "col_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "col_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "col_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "col_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -553,7 +553,7 @@ CREATE TABLE fragment
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "frg_owner_id" int NULL DEFAULT 2,
   "frg_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "frg_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "frg_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "frg_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -605,7 +605,7 @@ CREATE TABLE item
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "itm_owner_id" int NULL DEFAULT 2,
   "itm_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "itm_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "itm_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "itm_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -651,7 +651,7 @@ CREATE TABLE materialcontext
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "mcx_owner_id" int NULL DEFAULT 2,
   "mcx_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax upmaterialcontext foo set a = a || newInt
-  "mcx_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax upmaterialcontext foo set a = a || newInt
+  "mcx_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax upmaterialcontext foo set a = a || newInt
   "mcx_scratch" text NULL
 )
 WITH (
@@ -703,7 +703,7 @@ CREATE TABLE part
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "prt_owner_id" int NULL DEFAULT 2,
   "prt_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "prt_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "prt_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "prt_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -759,7 +759,7 @@ CREATE TABLE surface
   "srf_image_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "srf_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "srf_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "srf_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "srf_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -816,7 +816,7 @@ CREATE TABLE baseline
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "bln_owner_id" int NULL DEFAULT 2,
   "bln_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "bln_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "bln_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "bln_scratch" text NULL
 )
 WITH (
@@ -874,7 +874,7 @@ CREATE TABLE compound
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "cmp_owner_id" int NULL DEFAULT 2,
   "cmp_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "cmp_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "cmp_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "cmp_scratch" text NULL
 )
 WITH (
@@ -930,7 +930,7 @@ CREATE TABLE grapheme
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "gra_owner_id" int NULL DEFAULT 2,
   "gra_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "gra_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "gra_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "gra_scratch" text NULL
 )
 WITH (
@@ -1000,7 +1000,7 @@ CREATE TABLE lemma
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "lem_owner_id" int NULL DEFAULT 2,
   "lem_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "lem_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "lem_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "lem_scratch" text NULL
 )
 WITH (
@@ -1063,7 +1063,7 @@ CREATE TABLE line
   "lin_attribution_ids" int[] NULL,
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "lin_owner_id" int NULL DEFAULT 2,
-  "lin_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "lin_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "lin_scratch" text NULL
 )
 WITH (
@@ -1113,7 +1113,7 @@ CREATE TABLE run
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "run_owner_id" int NULL DEFAULT 2,
   "run_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "run_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "run_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "run_scratch" text NULL
 )
 WITH (
@@ -1168,7 +1168,7 @@ CREATE TABLE segment
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "seg_owner_id" int NULL DEFAULT 2,
   "seg_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "seg_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "seg_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "seg_scratch" text NULL
 )
 WITH (
@@ -1221,7 +1221,7 @@ CREATE TABLE span
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "spn_owner_id" int NULL DEFAULT 2,
   "spn_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "spn_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "spn_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "spn_scratch" text NULL
 )
 WITH (
@@ -1269,7 +1269,7 @@ CREATE TABLE syllablecluster
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "scl_owner_id" int NULL DEFAULT 2,
   "scl_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "scl_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "scl_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "scl_scratch" text NULL
 )
 WITH (
@@ -1320,7 +1320,7 @@ CREATE TABLE token
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "tok_owner_id" int NULL DEFAULT 2,
   "tok_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "tok_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "tok_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "tok_scratch" text NULL
 )
 WITH (
@@ -1377,7 +1377,7 @@ CREATE TABLE inflection
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "inf_owner_id" int NULL DEFAULT 2,
   "inf_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "inf_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "inf_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "inf_scratch" text NULL
 )
 WITH (
@@ -1438,7 +1438,7 @@ CREATE TABLE catalog
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "cat_owner_id" int NULL DEFAULT 2,
   "cat_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "cat_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "cat_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "cat_scratch" text NULL
 )
 WITH (
@@ -1490,7 +1490,7 @@ CREATE TABLE date
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "dat_owner_id" int NULL DEFAULT 2,
   "dat_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "dat_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "dat_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "dat_scratch" text NULL
 )
 WITH (
@@ -1539,7 +1539,7 @@ CREATE TABLE edition
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "edn_owner_id" int NULL DEFAULT 2,
   "edn_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "edn_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "edn_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "edn_scratch" text NULL
 )
 WITH (
@@ -1587,7 +1587,7 @@ CREATE TABLE era
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "era_owner_id" int NULL DEFAULT 2,
   "era_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "era_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "era_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "era_scratch" text NULL
 )
 WITH (
@@ -1639,7 +1639,7 @@ CREATE TABLE sequence
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "seq_owner_id" int NULL DEFAULT 2,
   "seq_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "seq_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "seq_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "seq_scratch" text NULL
 )
 WITH (
@@ -1693,7 +1693,7 @@ CREATE TABLE text
   "txt_jsoncache_id" int NULL,
   "txt_owner_id" int NULL DEFAULT 2,
   "txt_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "txt_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "txt_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "txt_scratch" text NULL
 ) WITH (
   OIDS=FALSE
@@ -1744,7 +1744,7 @@ CREATE TABLE textmetadata
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "tmd_owner_id" int NULL DEFAULT 2,
   "tmd_annotation_ids" int[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
-  "tmd_visibility_ids" int[] NULL DEFAULT '{2}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
+  "tmd_visibility_ids" int[] NULL DEFAULT '{6}',-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
   "tmd_scratch" text NULL
 )
 WITH (

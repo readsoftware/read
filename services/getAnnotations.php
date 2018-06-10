@@ -36,11 +36,53 @@ require_once dirname(__FILE__) . '/../model/entities/Terms.php';
 header('Content-type: text/javascript');
 header('Cache-Control: no-transform,private,max-age=300,s-maxage=900');
 
-$entities = array('update'=>array(),'insert'=>array());
-calcAnnotationsByEntityByType();
-calcTagsByEntityType();
-calcRelatedEntityByLinkType();
-print json_encode(array('entities'=>$entities) );
+$jsonRetVal = null;
+// check for cache
+$dbMgr = new DBManager();
+if ($dbMgr->getError()) {
+  exit("Error: ".$dbMgr->getError());
+}
+$dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Annotations'");
+$jsonCache = null;
+if ($dbMgr->getRowCount() > 0 && USECACHE) {
+  $row = $dbMgr->fetchResultRow();
+  $jsonCache = new JsonCache($row);
+  if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
+    $jsonRetVal = $jsonCache->getJsonString();
+  }
+}
+
+if (!$jsonRetVal) {
+  $entities = array('update'=>array(),'insert'=>array());
+  calcAnnotationsByEntityByType();
+  calcTagsByEntityType();
+  calcRelatedEntityByLinkType();
+  $jsonRetVal = json_encode(array("entities" => $entities));
+
+  if (USECACHE) {
+    if (!$jsonCache) {
+      $jsonCache = new JsonCache();
+      $jsonCache->setLabel('Annotations');
+      $jsonCache->setJsonString($jsonRetVal);
+      $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+      $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
+    } else {
+      $jsonCache->clearDirtyBit();
+      $jsonCache->setJsonString($jsonRetVal);
+    }
+    $jsonCache->save();
+  }
+}
+
+if (array_key_exists("callback",$_REQUEST)) {
+  $cb = $_REQUEST['callback'];
+  if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap
+    print $cb."(".$jsonRetVal.");";
+  }
+} else {
+  print $jsonRetVal;
+}
+
 
   function calcAnnotationsByEntityByType() {
     global $entities;

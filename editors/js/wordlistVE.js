@@ -249,7 +249,7 @@ EDITORS.WordlistVE.prototype = {
                              '</div>');
       this.viewToolbar.append(this.downloadHTMLBtnDiv);
       this.downloadHTMLBtn = $('#'+btnDownloadHTMLName,this.downloadHTMLBtnDiv);
-      this.downloadHTMLBtn.attr('disabled','disabled');
+//      this.downloadHTMLBtn.attr('disabled','disabled');
 
       this.downloadRTFurl = basepath+"/services/exportRTFGlossary.php?db="+dbName+"&catID="+wordlistVE.catID+"&download=1";
       this.downloadRTFBtnDiv = $('<div class="toolbuttondiv">' +
@@ -390,8 +390,45 @@ EDITORS.WordlistVE.prototype = {
 * @returns true|false
 */
 
-  prevWord: function () {
+  prevWord: function (curEntTag) {
     var curEntry = $('.selected',this.contentDiv).parent(),prevNode;
+    if (curEntry.length == 0 && curEntTag){
+      curEntry = $('div.wordlistentry:has(span.'+curEntTag+')');
+    }
+    if (curEntry.length && curEntry.prev().hasClass('wordlistentry')) {
+      switch (this.levelSelected) {
+        case 'lemma':
+          prevNode = curEntry.prevAll('div:has(span.lemma)').first();
+          break;
+        case 'unlinked':
+          prevNode = curEntry.prevAll('div:has(span.word)').first();
+          break;
+        case 'all':
+        default:
+          prevNode = curEntry.prev('.wordlistentry');
+          break;
+      }
+      if (prevNode.length == 1) {
+        prevNode.children().first().trigger('dblclick');
+        prevNode[0].scrollIntoView();
+        return true;
+      }
+    }
+    UTILITY.beep();
+    return false;
+  },
+
+/**
+* trigger dblclick on previous word based for filtered display
+*
+* @returns true|false
+*/
+
+  prevWord: function (curEntTag) {
+    var curEntry = $('.selected',this.contentDiv).parent(),prevNode;
+    if (curEntry.length == 0 && curEntTag){
+      curEntry = $('div.wordlistentry:has(span.'+curEntTag+')');
+    }
     if (curEntry.length && curEntry.prev().hasClass('wordlistentry')) {
       switch (this.levelSelected) {
         case 'lemma':
@@ -422,8 +459,11 @@ EDITORS.WordlistVE.prototype = {
 * @returns true|false
 */
 
-  nextWord: function () {
+  nextWord: function (curEntTag) {
     var curEntry = $('.selected',this.contentDiv).parent(),nextNode;
+    if (curEntry.length == 0 && curEntTag){
+      curEntry = $('div.wordlistentry:has(span.'+curEntTag+')');
+    }
     if (curEntry.length && curEntry.next().hasClass('wordlistentry')) {
       switch (this.levelSelected) {
         case 'lemma':
@@ -445,6 +485,30 @@ EDITORS.WordlistVE.prototype = {
     }
     UTILITY.beep();
     return false;
+  },
+
+  lookupLemma: function (val) {
+    return this.lemLookup[val];
+  },
+
+
+/**
+* scroll wordlist entry into view
+*
+* @param string entTag identifies the entity to scroll into view
+*/
+
+  scrollEntIntoView: function (entTag) {
+    var $scrollEntry;
+    if (entTag){
+      $scrollEntry = $('div.wordlistentry:has(span.'+entTag+')');
+    }
+    if ($scrollEntry.length == 0) {
+     $scrollEntry = $('.selected',this.contentDiv).parent();
+    }
+    if ($scrollEntry.length > 0) {
+     $scrollEntry[0].scrollIntoView();
+    }
   },
 
   lookupLemma: function (val) {
@@ -482,6 +546,13 @@ EDITORS.WordlistVE.prototype = {
         if (this.dataMgr.entities.lem[lemIDs[i]]) {
           lemma = this.dataMgr.getEntity('lem',lemIDs[i]);
           lemma.tag = 'lem'+lemIDs[i];
+          if (lemma.compAnalysis) {
+            if (this.lemLookup[lemma.compAnalysis]) {//error should only be one
+              DEBUG.log('warn',"Lemma "+lemma.id+" has same companalysis as lemma "+this.lemLookup[lemma.compAnalysis]+", skipping");
+            } else {
+              this.lemLookup[lemma.compAnalysis] = [lemma.id];
+            }
+          }
           if (lemma.value) {
             val = lemma.value.replace(/ʔ/g,'');
             if (this.lemLookup[val]) {
@@ -584,10 +655,10 @@ EDITORS.WordlistVE.prototype = {
       //for each token sequence
       for (tag in ednLblByEntTag) {
         ednLabel = ednLblByEntTag[tag];
-        ednTag = seqTag2EdnTag[tag];
-        if (ednLabel) {
-          ednLabel += ": ";
+        if (ednLabel.match(/^sort\d+/)) {
+          ednLabel = "";
         }
+        ednTag = seqTag2EdnTag[tag];
         sequence = this.dataMgr.getEntity(tag.substr(0,3),tag.substr(3));
         defLabel = ednLabel + (sequence.sup?sequence.sup:sequence.label);
         wordGIDs = sequence.entityIDs;
@@ -659,7 +730,7 @@ EDITORS.WordlistVE.prototype = {
         }
       }//end for entities in lemmas + wordlist
     }
-    this.contentDiv.html(html);
+    this.contentDiv.html(html+"<hr class=\"viewEndRule\">");
     this.addEventHandlers(this.contentDiv);
   },
 
@@ -673,7 +744,8 @@ EDITORS.WordlistVE.prototype = {
   calcWordEntryHtml: function (wordTag) {
     var word = this.dataMgr.getEntityFromGID(wordTag), wordHTML = "";
     if (word && word.value) {
-      wordHTML = '<div class="wordlistentry"><span class="word '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value.replace(/ʔ/g,'')+'">' +
+      wordHTML = '<div class="wordlistentry"><span class="word '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+
+                      word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                       (!word.transcr?'MISSING':word.transcr.replace(/ʔ/g,'').replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨')) +
                       ' ' + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) + '</span></div>';
     }
@@ -692,7 +764,7 @@ EDITORS.WordlistVE.prototype = {
   calcLemmaHtml: function (lemID) {
     var wordlistVE = this,i,j,k,cnt,html = "",tag, wtag, word, wordGIDs, inflection, infGIDs, val,
         isNoun, isPronoun, isAdjective, isNumeral, isVerb, isInflectable, cf, tempLabel, pos,
-        displayValue = '', wordAnnoTag, wordAnno;
+        displayValue = '', wordAnnoTag, wordAnno, lemma, lemmaAnnoTag, lemmaAnno;
     if (this.dataMgr.entities && this.dataMgr.entities.lem && this.dataMgr.entities.lem[lemID]) {
       lemma = this.dataMgr.entities.lem[lemID];
       if (!lemma.tag) {
@@ -716,7 +788,18 @@ EDITORS.WordlistVE.prototype = {
       }
       //output lemma header with gloss and POS
       if (lemma && lemma.value) {
+        lemmaAnno = '';
         displayValue = lemma.value.replace(/ʔ/g,'');//.replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨');
+        if (lemma.linkedAnoIDsByType && lemma.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
+          lemmaAnnoTag = "ano"+lemma.linkedAnoIDsByType[this.glossAnnoType][0];
+          temp = this.dataMgr.getEntityFromGID(lemmaAnnoTag);
+          if (temp && temp.text && temp.text.length) {
+            lemmaAnno = temp.text;
+            if (lemmaAnno.length > 250) {
+              lemmaAnno = lemmaAnno.substring(0,249) + "…";
+            }
+          }
+        }
       } else {
         displayValue = '';
       }
@@ -724,7 +807,8 @@ EDITORS.WordlistVE.prototype = {
               ' srch="'+displayValue.replace(/ʔ/g,'')+'">' + displayValue + ' </span>' +
               (lemma.gloss?'<span class="lemmagloss">'+lemma.gloss + ' </span>':"")+
               '<span class="POS">'+ tempLabel + ' </span>' +
-              (lemma.trans? '<span class="lemmatrans">'+lemma.trans+'</span>':"");
+              (lemma.trans? '<span class="lemmatrans">'+lemma.trans+'</span>':"") +
+              (lemmaAnno?' ('+lemmaAnno+')':"");
       if (lemma.entityIDs && lemma.entityIDs.length ) {
         html += '&nbsp;&nbsp;&nbsp;';
         // output all attestations with location info (edition/line no. in sequence order if same line
@@ -819,7 +903,7 @@ EDITORS.WordlistVE.prototype = {
               html += '<span class="attestedforms">';
               for (j=0; j<wordGIDs.length; j++) {
                 word = this.dataMgr.getEntityFromGID(wordGIDs[j]);
-//                tag = wordGIDs[j].replace(":","");
+                tag = wordGIDs[j].replace(":","");
 //                word = linkedWords[tag];
                 if (!word || !word.value) {
                   DEBUG.log('err',"word not found in linkWords for tag "+tag);
@@ -829,7 +913,7 @@ EDITORS.WordlistVE.prototype = {
                   continue;
                 }
                 curForm = word.value;
-                html += (j>0?', ':' ') + word.value.replace(/ʔ/g,'');
+                html += (j>0?', ':' ') + word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'');
               }
               html += '</span>';
             }
@@ -853,9 +937,11 @@ EDITORS.WordlistVE.prototype = {
                       }
                     }
                   }
-                  html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value+'">' +
-                          (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                          ' ' + word.transcr.replace(/ʔ/g,'') + (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                  html += '<span class="linkedword'+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +
+                          '" srch="'+word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                          ((k>0 || j>0)?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
+                          ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                          (wordAnno?' ('+wordAnno+')':"") + '</span>';
                 }
               }
             } else {
@@ -872,9 +958,11 @@ EDITORS.WordlistVE.prototype = {
                     }
                   }
                 }
-                html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value+'">' +
+                html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
+                        word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                         (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                        ' ' + word.transcr.replace(/ʔ/g,'') + (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                        ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                        (wordAnno?' ('+wordAnno+')':"") + '</span>';
               }
             }
           }
@@ -894,9 +982,11 @@ EDITORS.WordlistVE.prototype = {
                   }
                 }
               }
-              html += '<span class="linkedword '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+word.value+'">' +
+              html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
+                      word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                       (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                      ' ' + word.transcr.replace(/ʔ/g,'') + (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                      ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                      (wordAnno?' ('+wordAnno+')':"") + '</span>';
             }
           }
         }
@@ -907,13 +997,41 @@ EDITORS.WordlistVE.prototype = {
 
 
 /**
+* update lemma lookup
+*
+* @param int lemID Lemma entity id
+*/
+
+  updateLemmaLookup: function (lemTag,oldCompAnalysis) {
+    var lemma = this.dataMgr.getEntityFromGID(lemTag), val;
+    if (lemma.compAnalysis) {
+      if (oldCompAnalysis && oldCompAnalysis != lemma.compAnalysis
+          && this.lemLookup[oldCompAnalysis]) {//remove old
+        delete this.lemLookup[oldCompAnalysis];
+      }
+      this.lemLookup[lemma.compAnalysis] = [lemma.id];
+    }
+    if (lemma.value) {
+      val = lemma.value.replace(/ʔ/g,'');
+      if (this.lemLookup[val]) {
+        if (this.lemLookup[val].indexOf(lemma.id) == -1) {
+          this.lemLookup[val].push(lemma.id);
+        }
+      } else {
+        this.lemLookup[val] = [lemma.id];
+      }
+    }
+  },
+
+
+/**
 * update lemma entry
 *
 * @param int lemID Lemma entity id
 */
 
   updateLemmaEntry: function (lemID) {
-    var lemTag = 'lem'+lemID, $lemmaEntry,
+    var lemTag = 'lem'+lemID, $lemmaEntry, lemmaHTML;
     //calc lemma new HTML
     lemmaHTML = this.calcLemmaHtml(lemID);
     //find entry and replace html
@@ -971,16 +1089,26 @@ EDITORS.WordlistVE.prototype = {
         srchDir = 'before';
       }
     } else {
+      force = false;
       while ($node = $srchNode.prev()) {
-        match = $node.find('.lemma,.word').attr('class').match(/(lem|cmp|tok)\d+/);
-        srchWord = this.dataMgr.getEntityFromGID(match[0]);
-        if (srchWord.sort < lemma.sort) {
+        if ($node.hasClass('wordlistentry')) {
+          $word = $node.find('.lemma,.word');
+          wGID = $word.attr('class').match(/(lem|cmp|tok)\d+/);
+          if (wGID && wGID.length) {
+            srchWord = this.dataMgr.getEntityFromGID(wGID[0]);
+            if (srchWord.sort < lemma.sort) {
+              break;
+            }
+          }
+          $srchNode = $node;
+        } else {//at beginning
+          $node = $srchNode;
+          force = true;
           break;
         }
-        $srchNode = $node;
       }
       srchDir = 'before';
-      if ($node) {
+      if ($node && !force) {
         $srchNode = $node;
         srchDir = 'after';
       }
@@ -1034,7 +1162,7 @@ EDITORS.WordlistVE.prototype = {
         $node, $srchNode, srchWord, srchDir, $insertNode, position, match,
         wordHTML = this.calcWordEntryHtml(wordTag);
     if (!wordHTML) {//nothing to insert
-      retrun;
+      return;
     }
     //find hint entity
     if (hintWord && hintWord.sort && word.sort) {
@@ -1066,16 +1194,26 @@ EDITORS.WordlistVE.prototype = {
         srchDir = 'before';
       }
     } else {
+      force = false;
       while ($node = $srchNode.prev()) {
-        match = $node.find('.lemma,.word').attr('class').match(/(lem|cmp|tok)\d+/);
-        srchWord = this.dataMgr.getEntityFromGID(match[0]);
-        if (srchWord.sort < word.sort) {
+        if ($node.hasClass('wordlistentry')) {
+          $word = $node.find('.lemma,.word');
+          wGID = $word.attr('class').match(/(lem|cmp|tok)\d+/);
+          if (wGID && wGID.length) {
+            srchWord = this.dataMgr.getEntityFromGID(wGID[0]);
+            if (srchWord.sort < word.sort) {
+              break;
+            }
+          }
+          $srchNode = $node;
+        } else {//at beginning
+          $node = $srchNode;
+          force = true;
           break;
         }
-        $srchNode = $node;
       }
       srchDir = 'before';
-      if ($node) {
+      if ($node && !force) {
         $srchNode = $node;
         srchDir = 'after';
       }
@@ -1191,12 +1329,16 @@ EDITORS.WordlistVE.prototype = {
 */
 
   removeWordlistEntry: function (entTag) {
-    var wordlistVE = this, wordLemIDs, index,
+    var wordlistVE = this, wordLemIDs, index, lemma,
         prefix = entTag.substring(0,3),
         entID = entTag.substring(3), value,
         wlEntry = $('div.wordlistentry:has(span.'+entTag+')');
     if (wlEntry.length) {
       if (prefix == 'lem') {
+        lemma = this.dataMgr.getEntityFromGID(entTag);
+        if (lemma && lemma.compAnalysis && wordlistVE.lemLookup[lemma.compAnalysis]) {
+          delete wordlistVE.lemLookup[lemma.compAnalysis];
+        }
         value = wlEntry.children('.lemma').html().trim();
         wordlemIDs = wordlistVE.lemLookup[value];
         if (wordlemIDs && wordlemIDs.length) {
@@ -1348,7 +1490,10 @@ EDITORS.WordlistVE.prototype = {
     for (i=0; i<entities.length; i++) {
       word = entities[i];
       if (word && word.tag && word.value && word.transcr && word.locLabel) {
-        html += '<div class="wordlistentry"><span class="word '+word.tag+'" srch="'+word.value+'">' + word.transcr.replace(/ʔ/g,'') + ' ' + word.locLabel + '</span></div>';
+        html += '<div class="wordlistentry"><span class="word '+word.tag+'" srch="'+
+                word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                ' ' + word.locLabel + '</span></div>';
       } else {
         DEBUG.log('err',"Genreating html for wordlist found incomplete word data "+word.tag+
                   (!word.value ? " missing word value":"")+
@@ -1356,7 +1501,7 @@ EDITORS.WordlistVE.prototype = {
                   (!word.locLabel ? " missing word location label":""));
       }
     }
-    this.contentDiv.html(html);
+    this.contentDiv.html(html+"<hr class=\"viewEndRule\">");
     this.addEventHandlers(this.contentDiv);
   },
 

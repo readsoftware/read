@@ -66,14 +66,14 @@ if (!$data) {
   if ( isset($data['toGID'])) {
     $toGID = $data['toGID'];
   }
-  if ( isset($data['linkType'])) {
+  if ( isset($data['linkTypeID'])) {
+    $linkTypeID = $data['linkTypeID'];
+  }
+  if ( isset($data['linkType'])) {//todo: this assumes direct decendent of linkagetype need a way to specify terms under linkage
     $linkType = $data['linkType'];
     if ($linkType || count($linkType)) {
       $linkTypeID = Entity::getIDofTermParentLabel(strtolower($linktype)."-linkagetype");
     }
-  }
-  if ( isset($data['linkTypeID'])) {
-    $linkTypeID = $data['linkTypeID'];
   }
   if (!$fromGID || count($fromGID) == 0) {
     array_push($errors,"saveLink must have a 'from' entity GID");
@@ -116,7 +116,7 @@ if (count($errors) == 0) {
   }
   $toLinkGIDs = $link->getLinkToIDs();
   if (count($toLinkGIDs) > 0) {
-    if (!in_array($toGID,$toLinkGIDs)) {
+    if (!in_array($toGID,$toLinkGIDs)) {// no duplicates
       array_push($toLinkGIDs,$toGID);
     }
   } else {

@@ -60,10 +60,11 @@
     exit("Error: ".$dbMgr->getError());
   }
   $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Attributions'");
+  $jsonCache = null;
   if ($dbMgr->getRowCount() > 0 && USECACHE) {
     $row = $dbMgr->fetchResultRow();
     $jsonCache = new JsonCache($row);
-    if (!$jsonCache->hasError()) {
+    if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
       $jsonRetVal = $jsonCache->getJsonString();
       if (array_key_exists("callback",$_REQUEST)) {
         $cb = $_REQUEST['callback'];
@@ -85,7 +86,7 @@
     if ($atbID && !array_key_exists($atbID, $entities['atb'])) {
       $entities['atb'][$atbID] = array( 'title'=> $attribution->getTitle(),
                              'id' => $atbID,
-                              'value'=> $attribution->getTitle().($attribution->getDetail()?$attribution->getDetail():''),
+                              'value'=> $attribution->getTitle().($attribution->getDetail()?": ".$attribution->getDetail():''),
                               'readonly' => $attribution->isReadonly(),
                               'grpID' => $attribution->getGroupID(),
                               'bibID' => $attribution->getBibliographyID(),
@@ -98,7 +99,7 @@
         $anoIDs = array_merge($anoIDs,$AnoIDs);
       }
       array_push($attrs,array(
-        'label' => $attribution->getTitle().($attribution->getDetail()?$attribution->getDetail():''),
+        'label' => $attribution->getTitle().($attribution->getDetail()?": ".$attribution->getDetail():''),
         'id' => 'atb'.$atbID,
         'value' => 'atb:'.$atbID,
       ));
@@ -127,10 +128,16 @@
     $retVal["errors"] = $errors;
   }
   if (count($errors) == 0 && USECACHE) {
-    $jsonCache = new JsonCache();
-    $jsonCache->setLabel('Attributions');
-    $jsonCache->setJsonString($jsonRetVal);
-    $jsonCache->setVisibilityIDs(array(2));
+    if (!$jsonCache) {
+      $jsonCache = new JsonCache();
+      $jsonCache->setLabel('Attributions');
+      $jsonCache->setJsonString($jsonRetVal);
+      $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+      $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
+    } else {
+      $jsonCache->clearDirtyBit();
+      $jsonCache->setJsonString($jsonRetVal);
+    }
     $jsonCache->save();
   }
   if (array_key_exists("callback",$_REQUEST)) {
@@ -236,7 +243,7 @@
                                       'url' => $annotation->getURL(),
                                       'typeID' => $annotation->getTypeID());
               $vis = $annotation->getVisibilityIDs();
-              if (in_array(2,$vis)) {
+              if (in_array(6,$vis)) {
                 $vis = "Public";
               } else if (in_array(3,$vis)) {
                 $vis = "User";

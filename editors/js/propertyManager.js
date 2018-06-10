@@ -94,6 +94,12 @@ MANAGERS.PropertyManager.prototype = {
                       editor: this.controlEditor,
                       contentDiv:this.propVEDiv.get(0)
                     };
+        if (this.config.hideSubType) {
+          entPropVECfg['hideSubType'] = true;
+        }
+        if (this.config.hideComponents) {
+          entPropVECfg['hideComponents'] = true;
+        }
         this.entPropVE = new EDITORS.EntityPropVE(entPropVECfg);
         this.currentVE = this.entPropVE;
       } else if (this.propVEType == "annoVE") {
@@ -148,6 +154,30 @@ MANAGERS.PropertyManager.prototype = {
       this.splitterDiv.jqxSplitter({ showSplitBar: false });
     }
   },
+
+/**
+* call current property editors setEntity method
+*
+*/
+
+  setEntity: function (gid) {
+    if (gid && this.currentVE && this.currentVE.setEntity) {
+      this.currentVE.setEntity(gid);
+    }
+  },
+
+
+/**
+* call current property editors clear method
+*
+*/
+
+  clearVE: function () {
+    if (this.currentVE && this.currentVE.clear) {
+      this.currentVE.clear();
+    }
+  },
+
 
 /**
 * put your comment there...

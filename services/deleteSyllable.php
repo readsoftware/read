@@ -463,6 +463,7 @@
           $edition->setSequenceIDs($edSeqIds);
         }
         $edition->save();
+        invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
         if ($edition->hasError()) {
           array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
         }else{

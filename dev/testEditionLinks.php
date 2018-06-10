@@ -36,7 +36,7 @@
   */
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
-  ob_start('ob_gzhandler');
+//  ob_start('ob_gzhandler');
 
   header("Content-type: text/javascript");
   header('Cache-Control: no-cache');

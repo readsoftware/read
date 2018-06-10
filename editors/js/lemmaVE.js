@@ -81,6 +81,12 @@ EDITORS.LemmaVE.prototype = {
     } else {
       this.editDiv.html('Lemma Editor');
     }
+    this.editDiv.unbind("click").bind("click", function(e) {
+      var $editElems = $('.edit',this);
+      if ($editElems.length > 0) {
+        $editElems.removeClass('edit');
+      }
+    });
     DEBUG.traceExit("init","init lemma editor");
   },
 
@@ -161,7 +167,13 @@ EDITORS.LemmaVE.prototype = {
       this.isLemma = (this.prefix == "lem");
       this.editDiv.html('');
       this.createValueUI();
+      if (EDITORS.config.showLemmaVEPhoneticUI) {
+        this.createPhoneticUI();
+      }
       this.createDescriptionUI();
+      if (EDITORS.config.showLemmaDeclensionUI) {
+        this.createDeclensionUI();
+      }
       this.createPOSUI();
       this.createTransUI();
       if (this.isLemma) {
@@ -172,6 +184,7 @@ EDITORS.LemmaVE.prototype = {
         this.createTaggingUI();
         this.createAnnotationUI();
       }
+      this.editDiv.append('<hr class="viewEndRule">');
     } else {
       this.editDiv.html('Lemma Editor - no lemma information found.');
     }
@@ -187,7 +200,7 @@ EDITORS.LemmaVE.prototype = {
 
   createValueUI: function() {
     var lemmaVE = this,
-        value = this.isLemma ? this.entity.value.replace(/ʔ/g,''):this.entity.transcr.replace(/ʔ/g,'');
+        value = this.isLemma ? this.entity.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,''):this.entity.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'');
     DEBUG.traceEntry("createValueUI");
     //create UI container
     this.valueUI = $('<div class="valueUI"></div>');
@@ -206,14 +219,21 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.valueUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.valueUI.addClass("edit");
         $('div.valueInputDiv input',this.valueUI).focus();
 //        $('div.valueInputDiv input',this.valueUI).select();
+        e.stopImmediatePropagation();
+        return false;
+      });
+      $('div.valueInputDiv input',this.valueUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
       });
       //blur to cancel
       $('div.valueInputDiv input',this.valueUI).unbind("blur").bind("blur",function(e) {
         if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-          lemmaVE.valueUI.removeClass("edit");
+//          lemmaVE.valueUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -237,18 +257,24 @@ EDITORS.LemmaVE.prototype = {
         if (lemmaVE.propMgr && lemmaVE.propMgr.showVE) {
           lemmaVE.propMgr.showVE("tabPropVE",lemmaVE.propMgr.currentVE.tag);
         }
+        e.stopImmediatePropagation();
+        return false;
       });
       //previous lemma
       $('.med-prevword',this.valueUI).unbind("click").bind("click",function(e) {
         if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.prevWord) {
           lemmaVE.wordlistVE.prevWord();
         }
+        e.stopImmediatePropagation();
+        return false;
       });
       //next lemma
       $('.med-nextword',this.valueUI).unbind("click").bind("click",function(e) {
         if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.nextWord) {
           lemmaVE.wordlistVE.nextWord();
         }
+        e.stopImmediatePropagation();
+        return false;
       });
       //save data
       $('.saveDiv',this.valueUI).unbind("click").bind("click",function(e) {
@@ -266,9 +292,90 @@ EDITORS.LemmaVE.prototype = {
         } else if (confirm('Are you sure you want to delete lemma "' + origText + '"?')) { // is delete
           lemmaVE.deleteLemma();
         }
+        e.stopImmediatePropagation();
+        return false;
       });
     DEBUG.traceExit("createValueUI");
   },
+
+
+
+/*************  Phonetic Interface ****************/
+
+/**
+* put your comment there...
+*
+*/
+
+  createPhoneticUI: function() {
+    var lemmaVE = this,
+        value = (this.entity.phonetics?this.entity.phonetics:"Phonetic Analysis"),
+        editValue = (this.entity.phonetics?this.entity.phonetics:'');
+    DEBUG.traceEntry("createPhoneticUI");
+    //create UI container
+    this.phonUI = $('<div class="phonUI"></div>');
+    this.editDiv.append(this.phonUI);
+    //create label
+    this.phonUI.append($('<div class="propDisplayUI">'+
+                     '<div class="valueLabelDiv propDisplayElement">'+value+'</div>'+
+                    '</div>'));
+    //create input with save button
+    this.phonUI.append($('<div class="propEditUI">'+
+                    '<div class="valueInputDiv propEditElement"><input class="valueInput" value="'+editValue+'"/></div>'+
+                    '<button class="saveDiv propEditElement">Save</button>'+
+                    '</div>'));
+    //attach event handlers
+      //click to edit
+      $('div.valueLabelDiv',this.phonUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
+        lemmaVE.phonUI.addClass("edit");
+        $('div.valueInputDiv input',this.phonUI).focus();
+        e.stopImmediatePropagation();
+        return false;
+      });
+      $('div.valueInputDiv input',this.phonUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
+      });
+      //blur to cancel
+      $('div.valueInputDiv input',this.phonUI).unbind("blur").bind("blur",function(e) {
+        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+//          lemmaVE.phonUI.removeClass("edit");
+        }
+      });
+      //mark dirty on input
+      $('div.valueInputDiv input',this.phonUI).unbind("input").bind("input",function(e) {
+        var curInput = $(this).val(), btnText = $('.saveDiv',lemmaVE.phonUI).html();
+        if ($('div.valueLabelDiv',lemmaVE.phonUI).html() != $(this).val()) {
+          if (!$(this).parent().parent().hasClass("dirty")) {
+            $(this).parent().parent().addClass("dirty");
+          }
+        } else if ($(this).parent().parent().hasClass("dirty")) {
+          $(this).parent().parent().removeClass("dirty");
+        }
+        if (!curInput && btnText == "Save") {
+          $('.saveDiv',lemmaVE.phonUI).html("Delete").css('color','red');
+        } else if (curInput && btnText != "Save") {
+          $('.saveDiv',lemmaVE.phonUI).html("Save").css('color','white');
+        }
+      });
+      //save data
+      $('.saveDiv',this.phonUI).unbind("click").bind("click",function(e) {
+        var lemProp = {};
+        if ($('.propEditUI',lemmaVE.phonUI).hasClass('dirty')) {
+          val = $('div.valueInputDiv input',lemmaVE.phonUI).val();
+          lemProp["phonetics"] = val;
+          $('div.valueLabelDiv',lemmaVE.phonUI).html(val);
+          $('.propEditUI',lemmaVE.phonUI).removeClass('dirty');
+          lemmaVE.saveLemma(lemProp);
+        }
+        lemmaVE.phonUI.removeClass("edit");
+        e.stopImmediatePropagation();
+        return false;
+      });
+    DEBUG.traceExit("createPhoneticUI");
+  },
+
 
   /*************  Compound Analysis Interface ****************/
 
@@ -279,7 +386,7 @@ EDITORS.LemmaVE.prototype = {
   createCompoundAnalysisUI: function() {
     var lemmaVE = this,
         value = (this.entity.compAnalysis?this.entity.compAnalysis:"Compound Analysis"),
-        editValue = (this.entity.compAnalysis?this.entity.compAnalysis:this.entity.value.replace(/ʔ/g,''));
+        editValue = (this.entity.compAnalysis?this.entity.compAnalysis:this.entity.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,''));
     DEBUG.traceEntry("createCompoundAnalysisUI");
     //create UI container
     this.compUI = $('<div class="compUI"></div>');
@@ -296,14 +403,20 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.compUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.compUI.addClass("edit");
         $('div.valueInputDiv input',this.compUI).focus();
-//        $('div.valueInputDiv input',this.valueUI).select();
+        e.stopImmediatePropagation();
+        return false;
+      });
+      $('div.valueInputDiv input',this.compUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
       });
       //blur to cancel
       $('div.valueInputDiv input',this.compUI).unbind("blur").bind("blur",function(e) {
         if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-          lemmaVE.compUI.removeClass("edit");
+//          lemmaVE.compUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -319,7 +432,6 @@ EDITORS.LemmaVE.prototype = {
       //save data
       $('.saveDiv',this.compUI).unbind("click").bind("click",function(e) {
         var lemProp = {}, compAnalysis, nodeKey, rootKey = null, rootNode, compKeys;
-
 
 /**
 * put your comment there...
@@ -388,7 +500,7 @@ EDITORS.LemmaVE.prototype = {
         if ($('.propEditUI',lemmaVE.compUI).hasClass('dirty')) {
           val = $('div.valueInputDiv input',lemmaVE.compUI).val();
           compAnalysis = lemmaVE.validateCompAnalysis(val);
-          if (compAnalysis) {
+          if (compAnalysis) {//validates
             compKeys = Object.keys(compAnalysis);
             for (i in compKeys) {
               nodeKey = compKeys[i];
@@ -408,7 +520,9 @@ EDITORS.LemmaVE.prototype = {
           }
           lemmaVE.compUI.removeClass("edit");
         }
-      });
+        e.stopImmediatePropagation();
+        return false;
+     });
     DEBUG.traceExit("createCompoundAnalysisUI");
   },
 
@@ -451,14 +565,28 @@ EDITORS.LemmaVE.prototype = {
         value = markup.replace(reCompMarkup,"");
         nodeLookup[key] = { 'markup':markup,
                             'value':value};
-        lemmaIDs = this.wordlistVE.lookupLemma(value);
-        if (lemmaIDs && lemmaIDs.length) {
-          for (k=0; k<lemmaIDs.length; k++) {
-            lemID = lemmaIDs[k];
-            lemma = this.dataMgr.getEntity('lem',lemID);
-            if (lemma && !lemma.compAnalysis) {
-              nodeLookup[key]['lemID'] = lemID;
-              break;
+        //detect if existing lemma match for linking
+        lemID = this.wordlistVE.lookupLemma(markup);
+        if (lemID) {//search by companalysis
+          lemID = lemID[0];
+          lemma = this.dataMgr.getEntity('lem',lemID);
+          if (lemma && ((lemma.compAnalysis &&
+              (markup == lemma.compAnalysis)) || markup == compAnal)) {
+            nodeLookup[key]['lemID'] = lemID;
+            if (lemID == this.entID) {
+              nodeLookup[key]['root'] = 1;
+            }
+          }
+        } else {//search by lemma value, we might find a lemma that matches and we want to attach compound analysis
+          lemmaIDs = this.wordlistVE.lookupLemma(value);
+          if (lemmaIDs && lemmaIDs.length) {
+            for (k=0; k<lemmaIDs.length; k++) {
+              lemID = lemmaIDs[k];
+              lemma = this.dataMgr.getEntity('lem',lemID);
+              if (lemma && !lemma.compAnalysis) {
+                nodeLookup[key]['lemID'] = lemID;
+                break;
+              }
             }
           }
         }
@@ -476,7 +604,7 @@ EDITORS.LemmaVE.prototype = {
           l++;
           key = "n"+l;
           markup = compNodes[i];
-          value = markup.replace(reCompMarkup,"");
+          value = markup.replace(reCompMarkup,"");//recompute value from markup
           subNodes = value.match(/(n\d+)/g);//find all node keys
           hasHead = false;
           for (j in subNodes) {
@@ -507,18 +635,32 @@ EDITORS.LemmaVE.prototype = {
           if (isHead) {
             nodeLookup[key]['head'] = 1;
           }
-          lemmaIDs = this.wordlistVE.lookupLemma(value);
-          if (lemmaIDs && lemmaIDs.length) {
-            for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
-              lemID = lemmaIDs[k];
-              lemma = this.dataMgr.getEntity('lem',lemID);
-              if (lemma && ((lemma.compAnalysis &&
-                  (markup == lemma.compAnalysis)) || markup == compAnal)) {
-                nodeLookup[key]['lemID'] = lemID;
-                if (lemID == this.entID) {
-                  nodeLookup[key]['root'] = 1;
+          //detect if existing lemma match for linking
+          lemID = this.wordlistVE.lookupLemma(markup);
+          if (lemID) {//search by companalysis
+            lemID = lemID[0];
+            lemma = this.dataMgr.getEntity('lem',lemID);
+            if (lemma && ((lemma.compAnalysis &&
+                (markup == lemma.compAnalysis)) || markup == compAnal)) {
+              nodeLookup[key]['lemID'] = lemID;
+              if (lemID == this.entID) {
+                nodeLookup[key]['root'] = 1;
+              }
+            }
+          } else {//search by lemma value, we might find a lemma that matches and we want to attach compound analysis
+            lemmaIDs = this.wordlistVE.lookupLemma(value);
+            if (lemmaIDs && lemmaIDs.length) {
+              for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
+                lemID = lemmaIDs[k];
+                lemma = this.dataMgr.getEntity('lem',lemID);
+                if (lemma && ((lemma.compAnalysis &&
+                    (markup == lemma.compAnalysis)) || markup == compAnal)) {
+                  nodeLookup[key]['lemID'] = lemID;
+                  if (lemID == this.entID) {
+                    nodeLookup[key]['root'] = 1;
+                  }
+                  break;
                 }
-                break;
               }
             }
           }
@@ -527,8 +669,8 @@ EDITORS.LemmaVE.prototype = {
             return false;
           }
           strAnalysis = strAnalysis.replace(compNodes[i],key);
-        }
-      }
+        }// end for compent nodes
+      }// end while constituent nodes exist
     } else {
       alert("Compound Analysis must have more than 1 subnode, please correct before saving.");
       return false;
@@ -568,22 +710,39 @@ EDITORS.LemmaVE.prototype = {
                           'subKeys': subNodes,
                           'root': 1,
                           'value':value};
-      lemmaIDs = this.wordlistVE.lookupLemma(value);
-      if (lemmaIDs && lemmaIDs.length) {
-        for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
-          lemID = lemmaIDs[k];
-          lemma = this.dataMgr.getEntity('lem',lemID);
-          if (lemma && ((lemma.compAnalysis &&
-              (markup == lemma.compAnalysis)) || markup == compAnal)) {
-            nodeLookup[key]['lemID'] = lemID;
-            break;
+      lemID = this.wordlistVE.lookupLemma(markup);
+      if (lemID) {//search by companalysis
+        lemID = lemID[0];
+        lemma = this.dataMgr.getEntity('lem',lemID);
+        if (lemma && ((lemma.compAnalysis &&
+            (markup == lemma.compAnalysis)) || markup == compAnal)) {
+          nodeLookup[key]['lemID'] = lemID;
+        }
+      } else {//search by lemma value, we might find a lemma that matches and we want to attach compound analysis
+        lemmaIDs = this.wordlistVE.lookupLemma(value);
+        if (lemmaIDs && lemmaIDs.length) {
+          for (k=0; k<lemmaIDs.length; k++) {// search the lemma for a match to the markup
+            lemID = lemmaIDs[k];
+            lemma = this.dataMgr.getEntity('lem',lemID);
+            if (lemma && lemma.compAnalysis &&
+                (markup == lemma.compAnalysis)) {
+              nodeLookup[key]['lemID'] = lemID;
+              break;
+            }
           }
         }
       }
     }
-    if (nodeLookup[key].value  != lemmaVE.entity.value.replace(/ʔ/g,'')) {
-      alert("Compound Analysis compound does not match constituents, please correct before saving.");
+    if (nodeLookup[key]['lemID'] && nodeLookup[key]['lemID'] != lemmaVE.entity.id) {
+      alert('Lemma id='+nodeLookup[key]['lemID']+' has matching compound analysis where duplicates are not allowed. Please change analysis and try again.');
       return false;
+    } else if (nodeLookup[key].value  != lemmaVE.entity.value.replace(/ʔ/g,'')) {
+      if(!confirm("Compound Analysis does not match lemma. Press OK to continue saving or cancel to review spelling.")) {
+        return false;
+      } else {
+        nodeLookup[key].value = lemmaVE.entity.value.replace(/ʔ/g,'')
+        nodeLookup[key]['lemID'] = lemmaVE.entity.id;
+      }
     }
     return nodeLookup;
   },
@@ -614,14 +773,21 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.descrUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.descrUI.addClass("edit");
         $('div.valueInputDiv input',this.descrUI).focus();
         //$('div.valueInputDiv input',this.descrUI).select();
+        e.stopImmediatePropagation();
+        return false;
+      });
+      $('div.valueInputDiv input',this.descrUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
       });
       //blur to cancel
       $('div.valueInputDiv input',this.descrUI).unbind("blur").bind("blur",function(e) {
         if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-          lemmaVE.descrUI.removeClass("edit");
+//          lemmaVE.descrUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -645,8 +811,111 @@ EDITORS.LemmaVE.prototype = {
           lemmaVE.saveLemma(lemProp);
         }
         lemmaVE.descrUI.removeClass("edit");
+        e.stopImmediatePropagation();
+        return false;
       });
     DEBUG.traceExit("createDescriptionUI");
+  },
+
+/**
+* put your comment there...
+*
+*/
+
+  getDeclensionList: function() {
+    var lemmaVE = this,
+        listName = EDITORS.config.declensionListName,
+        trmID, trmIDs, term, declUIListID, declList = [];
+    declUIListID = this.dataMgr.getIDFromTermParentTerm(listName,'Declension'); // warning!!! term dependency
+    trmIDs = this.dataMgr.getTermListFromID(declUIListID);
+    for (i=0; i < trmIDs.length; i++) {
+      trmID = trmIDs[i];
+      term = this.dataMgr.getTermFromID(trmID);
+      declList.push({'name':term,'tag':'trm'+trmID,'id':trmID});
+    }
+    return declList;
+  },
+
+/**
+* put your comment there...
+*
+*/
+
+  createDeclensionUI: function() {
+    var lemmaVE = this,
+        trmID = this.entity.decl ? this.entity.decl:null;
+    this.declensionList = this.getDeclensionList();
+    var source =
+            {
+                localdata: this.declensionList,
+                datatype: "array"
+            };
+    var dataAdapter = new $.jqx.dataAdapter(source);
+    DEBUG.traceEntry("lemmaVE.createDeclensionUI");
+    //create UI container
+    this.declUI = $('<div class="declUI"></div>');
+    this.editDiv.append(this.declUI);
+    //create label
+    this.declUI.append($('<div class="propDisplayUI">'+
+                          '<div class="valueLabelDiv propDisplayElement">'+
+                          '<span class="valueLabelDivHeader">Declension: </span>'+
+                          '<span class="valueLabelDivEditor"></span>'+
+                          '</div>'+
+                          '</div>'));
+    //create input with save button
+    this.declUI.append($('<div class="propEditUI">'+
+                    '<div class="declListDiv propEditElement"></div>'+
+                    '</div>'));
+    //attach event handlers
+      //click to edit
+      this.declUI.unbind("click").bind("click",function(e) {
+        if (lemmaVE.declUI.hasClass("edit")) {
+          lemmaVE.declUI.removeClass("edit");
+        } else {
+          lemmaVE.declUI.addClass("edit");
+        }
+        e.stopImmediatePropagation();
+        return false;
+      });
+      //blur to cancel
+      this.declUI.unbind("blur").bind("blur",function(e) {
+          lemmaVE.declUI.removeClass("edit");
+      });
+      this.declList = $('div.declListDiv',this.declUI);
+      // Create jqxListBox
+      this.declList.jqxListBox({  source: dataAdapter,
+                                  displayMember: "name",
+                                  valueMember: "id",
+                                  height: 300,
+                                  width: 200,
+          renderer: function (index, label, value) {
+              var datarecord = lemmaVE.declensionList[index];
+              return'<span title="'+datarecord.name + '" tag="'+datarecord.tag+'" >' + datarecord.name + '</span>';
+          }
+      });
+      //select cur Declention in list and make it visible
+      var curDecl;
+      if (trmID) {
+        curDecl = this.declList.jqxListBox('getItemByValue', trmID);
+        if (curDecl) {
+          this.declList.jqxListBox('selectItem', curDecl);
+          this.declList.jqxListBox('ensureVisible', curDecl);
+          $('.valueLabelDivEditor',lemmaVE.declUI).html(curDecl.label);
+        }
+      }
+
+      //handle editor select
+      this.declList.unbind("select").bind("select",function(e) {
+        var args = e.args, item = args.item,
+            declName = item.label, declTrmID = item.value,
+            lemProp = {};
+        lemProp["decl"] = declTrmID;
+        $('.valueLabelDivEditor',lemmaVE.declUI).html(declName);
+        lemmaVE.declUI.removeClass("edit");
+        lemmaVE.saveLemma(lemProp);
+        //if editor has changed then save tempory session preferences
+      });
+    DEBUG.traceExit("lemmaVE.createDeclensionUI");
   },
 
 /*************  radio button helper ****************/
@@ -770,6 +1039,8 @@ EDITORS.LemmaVE.prototype = {
           ctxDiv.removeClass("dirty");
         }
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     return radioGroup;
   },
@@ -871,6 +1142,8 @@ EDITORS.LemmaVE.prototype = {
           ctxDiv.removeClass("dirty");
         }
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //save data
     $('.saveBtnDiv',posEdit).unbind("click").bind("click",function(e) {
@@ -934,11 +1207,19 @@ EDITORS.LemmaVE.prototype = {
           lemProps["gender"] = genID?genID:null;
           lemProps["certainty"] = [posCF,sposCF,genCF,classCF,declCF];
           lemmaVE.saveLemma(lemProps);
+        } else {
+          lemProps["pos"] = null;
+          lemProps["spos"] = null;
+          lemProps["gender"] = null;
+          lemProps["certainty"] = [3,3,3,3,3];
+          lemmaVE.saveLemma(lemProps);
         }
         $('div.valueLabelDiv',lemmaVE.posUI).html(value);
         $('.posEditUI',lemmaVE.posUI).removeClass('dirty');
       }
       lemmaVE.posUI.removeClass("edit");
+      e.stopImmediatePropagation();
+      return false;
     });
     posEdit.append($('<input style="visibility:hidden;" />'));
     return posEdit;
@@ -974,12 +1255,15 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.posUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.posUI.addClass("edit");
         $('div.posEditUI input',this.posUI).focus();
+        e.stopImmediatePropagation();
+        return false;
       });
       //click to cancel
       $('div.posEditUI input',this.posUI).unbind("blur").bind("blur",function(e) {
-        lemmaVE.posUI.removeClass("edit");
+//        lemmaVE.posUI.removeClass("edit");
       });
       //mark dirty on input
       $('div.posEditUI',this.posUI).unbind("input").bind("input",function(e) {
@@ -1020,14 +1304,21 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.transUI).unbind("click").bind("click",function(e) {
+        $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.transUI.addClass("edit");
         $('div.valueInputDiv input',lemmaVE.transUI).focus();
         //$('div.valueInputDiv input',lemmaVE.transUI).select();
+        e.stopImmediatePropagation();
+        return false;
+      });
+      $('div.valueInputDiv input',this.transUI).unbind("click").bind("click",function(e) {
+        e.stopImmediatePropagation();
+        return false;
       });
       //blur to cancel
       $('div.valueInputDiv input',this.transUI).unbind("blur").bind("blur",function(e) {
         if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-          lemmaVE.transUI.removeClass("edit");
+//          lemmaVE.transUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -1051,6 +1342,8 @@ EDITORS.LemmaVE.prototype = {
           lemmaVE.saveLemma(lemProp);
         }
         lemmaVE.transUI.removeClass("edit");
+        e.stopImmediatePropagation();
+        return false;
       });
     DEBUG.traceExit("createTransUI");
   },
@@ -1133,7 +1426,7 @@ EDITORS.LemmaVE.prototype = {
                    {label: "acc.",trmID:363},
                    {label: "instr.",trmID:364},
                    {label: "dat.",trmID:365},
-                   {label: "dat/gen.",trmID:366},
+//                   {label: "dat/gen.",trmID:366},
                    {label: "abl.",trmID:367},
                    {label: "gen.",trmID:368},
                    {label: "loc.",trmID:369},
@@ -1261,6 +1554,8 @@ EDITORS.LemmaVE.prototype = {
         lemmaVE.wordlistVE.setLinkMode(false);
         $('span.linkAttestedFormButton',this.infEdit).html('<u>Link Attested Form</u>');
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //save inflection data
     $('.cancelBtnDiv',infEdit).unbind("click").bind("click",function(e) {
@@ -1269,6 +1564,8 @@ EDITORS.LemmaVE.prototype = {
         delete lemmaVE.linkToInfID;
         lemmaVE.wordlistVE.setLinkMode(false);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //save inflection data
     $('.saveBtnDiv',infEdit).unbind("click").bind("click",function(e) {
@@ -1301,11 +1598,13 @@ EDITORS.LemmaVE.prototype = {
         delete lemmaVE.linkToInfID;
         lemmaVE.wordlistVE.setLinkMode(false);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     if (infID) {
       $('span.linkAttestedFormButton',this.infEdit).unbind("click").bind("click",function(e) {
         if ($(this).text() == 'Link Attested Form') {//switch to linking mode for directly linking attested forms with the same inflection
-          $(this).html('<u>Cancel link attested mode</u>');
+          $(this).html('<u>Leave link attested mode</u>');
           lemmaVE.linkToInfID = infID;
           lemmaVE.wordlistVE.setLinkMode(true);
         } else {//cancel linking mode
@@ -1314,6 +1613,8 @@ EDITORS.LemmaVE.prototype = {
           lemmaVE.wordlistVE.setLinkMode(false);
           lemmaVE.showLemma();
         }
+        e.stopImmediatePropagation();
+        return false;
       });
     }
   },
@@ -1343,7 +1644,7 @@ EDITORS.LemmaVE.prototype = {
     displayUI = $('<div class="propDisplayUI"/>');
     //create Header
     displayUI.append($('<div class="attestedUIHeader"><span>Attestations:</span>'+
-                       '<span class="addButton"><u>'+(this.wordlistVE.attestedLinkMode?'Cancel link mode':'Add new')+'</u></span></div>'));
+                       '<span class="addButton"><u>'+(this.wordlistVE.attestedLinkMode?'Leave link mode':'Add new')+'</u></span></div>'));
     //create a list of tokens and map them to inflections
     if (entIDs && entIDs.length) {
       for (i in entIDs) {
@@ -1357,17 +1658,25 @@ EDITORS.LemmaVE.prototype = {
             prefix = infEntIDs[j].substring(0,3);
             id = infEntIDs[j].substring(4);
             entity = this.dataMgr.getEntity(prefix,id);
-            entity.tag = infEntIDs[j].replace(':','');
-            entity.gid = infEntIDs[j];
-            entities.push(entity);
-            infMap[entity.tag] = infID;
+            if (entity) {
+              entity.tag = infEntIDs[j].replace(':','');
+              entity.gid = infEntIDs[j];
+              entities.push(entity);
+              infMap[entity.tag] = infID;
+            } else {
+              DEBUG.log('err',"inflection inf:"+infID+" lemma lem:"+lemmaVE.entity.id+" has component that doesn't load "+prefix+id);
+            }
           }
         } else {// add to set with no inflection mapping
           entity = this.dataMgr.getEntity(prefix,id);
-          entity.tag = entIDs[i].replace(':','');
-          entity.gid = entIDs[i];
-          entities.push(entity);
-          infMap[entity.tag] = 0;
+          if (entity) {
+            entity.tag = entIDs[i].replace(':','');
+            entity.gid = entIDs[i];
+            entities.push(entity);
+            infMap[entity.tag] = 0;
+          } else {
+              DEBUG.log('err',"lemma lem:"+lemmaVE.entity.id+" has component that doesn't load "+prefix+id);
+            }
         }
       }
       entities.sort(UTILITY.compareEntities);
@@ -1449,7 +1758,8 @@ EDITORS.LemmaVE.prototype = {
         }
         attestedEntry = $('<div class="attestedentry">' +
                             '<span class="attestedformloc '+attested.tag+'">' + (attested.locLabel?attested.locLabel:"$nbsp;") + '</span>'+
-                            '<span class="attestedform '+attested.tag+'">' + attested.transcr.replace(/ʔ/g,'') + '</span>'+
+                            '<span class="attestedform '+attested.tag+'">' +
+                            attested.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') + '</span>'+
                             (infVal?'<span class="inflection '+attested.tag+'">' + infVal + '</span>':'') +
                             '<span class="attestedui '+attested.tag+'">' +
                             '<span class="attestedannoui"><span class="attestedannobtn '+attested.tag+'"' + ' title="'+attestedAnno+'"' + '>' +
@@ -1481,6 +1791,8 @@ EDITORS.LemmaVE.prototype = {
     $('span.attestedannobtn',this.attestedUI).unbind("click").bind("click",function(e) {
       //show anno editor with glossary annotation if exist
       lemmaVE.propMgr.showVE("annoVE",$(this).prop('anoTag'),$(this).prop('gid'));
+      e.stopImmediatePropagation();
+      return false;
     });
     //remove anno
     $('span.removeanno',this.attestedUI).unbind("click").bind("click",function(e) {
@@ -1490,13 +1802,20 @@ EDITORS.LemmaVE.prototype = {
           anoTag = anoTag[0];
           lemmaVE.removeAnno(anoTag,$(this).prop('gid'));
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     $('span.inflection',this.attestedUI).unbind("click").bind("click",function(e) {
+      $('div.edit',lemmaVE.editDiv).removeClass("edit");
       lemmaVE.attestedUI.addClass("edit");
       lemmaVE.initShowInflectionEditUI( $(this).prop('infID'), $(this).prop('gid'),$(this));
+      e.stopImmediatePropagation();
+      return false;
     });
     $('span.unlink',this.attestedUI).unbind("click").bind("click",function(e) {
       lemmaVE.unlinkAttested( $(this).prop('infID'), $(this).prop('gid'));
+      e.stopImmediatePropagation();
+      return false;
     });
     //create inflectionUI container
     this.inflectionEditUI = $('<div class="infEditUI"/>');
@@ -1504,12 +1823,14 @@ EDITORS.LemmaVE.prototype = {
     //attach event handlers
     $('span.addButton',this.attestedUI).unbind("click").bind("click",function(e) {
       if ($(this).text() == 'Add new') {//switch to linking mode
-        $(this).html('<u>Cancel link mode</u>');
+        $(this).html('<u>Leave link mode</u>');
         lemmaVE.wordlistVE.setLinkMode(true);
       } else {//cancel linking mode
         $(this).html('<u>Add new</u>');
         lemmaVE.wordlistVE.setLinkMode(false);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     DEBUG.traceExit("createAttestedUI");
   },
@@ -1562,12 +1883,16 @@ EDITORS.LemmaVE.prototype = {
       if (lemmaVE.propMgr && lemmaVE.propMgr.showVE) {
         lemmaVE.propMgr.showVE("tagVE", lemmaVE.tag);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //remove tag
     $('span.removetag',this.tagUI).unbind("click").bind("click",function(e) {
       var classes = $(this).attr('class'),
           anoTag = classes.match(/ano\d+/)[0];
       entPropVE.removeTag(anoTag);
+      e.stopImmediatePropagation();
+      return false;
     });
     //create input with save button
     DEBUG.traceExit("createTaggingUI");
@@ -1688,6 +2013,8 @@ EDITORS.LemmaVE.prototype = {
       if (lemmaVE.propMgr && lemmaVE.propMgr.showVE) {
         lemmaVE.propMgr.showVE("annoVE");
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //remove anno
     $('span.removeanno',this.annoUI).unbind("click").bind("click",function(e) {
@@ -1697,6 +2024,8 @@ EDITORS.LemmaVE.prototype = {
           anoTag = anoTag[0];
           lemmaVE.removeAnno(anoTag);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     //create input with save button
     DEBUG.traceExit("createAnnotationUI");
@@ -1772,7 +2101,7 @@ EDITORS.LemmaVE.prototype = {
     var lemmaVE = this,
         value, linkTypeID = (this.linkTypeID),
         valueEditable = (this.prefix == "lem" && this.entity && !this.entity.readonly),
-        seeLinkTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["see-linkagetype"],//warning! term dependency
+        seeLinkTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["see-lemmalinkage"],//warning! term dependency
         treeLinkTypeName = this.id+'linktypetree';
     DEBUG.traceEntry("createLinkTypeUI");
     if (!linkTypeID) {
@@ -1802,6 +2131,7 @@ EDITORS.LemmaVE.prototype = {
       if (valueEditable) {
       //click to edit
         $('div.valueLabelDiv',this.linkTypeUI).unbind("click").bind("click",function(e) {
+          $('div.edit',lemmaVE.editDiv).removeClass("edit");
           lemmaVE.linkTypeUI.addClass("edit");
           //init tree to current type
           var curItem = $('#trm'+(lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeLinkTypeID), lemmaVE.linkTypeTree),
@@ -1829,11 +2159,14 @@ EDITORS.LemmaVE.prototype = {
           setTimeout(function(){
               $('.linkTypeUI',lemmaVE.linkTypeUI).scrollTop(offset);
             },50);
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         this.linkTypeTree.unbind("blur").bind("blur",function(e) {
-          $('div.valueLabelDiv',lemmaVE.linkTypeUI).html("Current Linktype "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID));
-          $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID)+" link</u>");
+          var linkType = lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID);
+          $('div.valueLabelDiv',lemmaVE.linkTypeUI).html("Current Linktype "+linkType);
+          $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+linkType+" link</u>");
           lemmaVE.linkTypeUI.removeClass("edit");
         });
         //change sequence type
@@ -1842,21 +2175,28 @@ EDITORS.LemmaVE.prototype = {
               return;
             }
             var args = event.args, dropDownContent = '',
+                linkType,
                 item =  lemmaVE.linkTypeTree.jqxTree('getItem', args.element);
             if (item.value && item.value != lemmaVE.linkTypeID) {//user selected to change sequence type
               //save new subtype to entity
               lemmaVE.linkTypeID = item.value;
-              $('div.valueLabelDiv',lemmaVE.linkTypeUI).html("Current Linktype "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID));
-              $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID)+" link</u>");
+              linkType = lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID)
+              $('div.valueLabelDiv',lemmaVE.linkTypeUI).html("Current Linktype "+linkType);
+              $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+linkType+" link</u>");
             }
             lemmaVE.linkTypeUI.removeClass("edit");
         });
         //attach event handlers
         $('span.addButton',lemmaVE.linkTypeUI).unbind("click").bind("click",function(e) {
-            var linkTypeID = lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeLinkTypeID;
+            var linkType;
+            lemmaVE.linkTypeID = lemmaVE.linkTypeID?lemmaVE.linkTypeID:seeLinkTypeID;
+            linkType = lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID);
             if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.setLinkRelatedMode) {
               lemmaVE.wordlistVE.setLinkRelatedMode(true);
+              $('span.addButton',lemmaVE.linkTypeUI).html("Click Lemma for New "+linkType);
             }
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     DEBUG.traceExit("createLinkTypeUI");
@@ -1919,6 +2259,8 @@ EDITORS.LemmaVE.prototype = {
       } else {
         $(this).parent().addClass('expand');
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     $('div.relationentry',this.relUI).unbind("dblclick").bind("dblclick",function(e) {
       var entTag = $(this).prop('tag'),entity;
@@ -1931,6 +2273,8 @@ EDITORS.LemmaVE.prototype = {
     });
     $('span.unlink',this.relUI).unbind("click").bind("click",function(e) {
       lemmaVE.unlinkRelated( $(this).prop('typeID'), $(this).prop('entGID'));
+      e.stopImmediatePropagation();
+      return false;
     });
     DEBUG.traceExit("createRelatedUI");
   },
@@ -1990,6 +2334,9 @@ EDITORS.LemmaVE.prototype = {
       savedata["cmd"] = "inflectTok";
       savedata["lemID"] = this.entID;
       savedata["tokGID"] = tokGID;
+      if (infID) {
+        savedata["infID"] = infID;
+      }
       if (infProps) {
         savedata["infProps"] = infProps;
       }
@@ -2092,9 +2439,11 @@ EDITORS.LemmaVE.prototype = {
 */
 
   linkRelatedEntity: function(toGID) {
-    var fromGID = 'lem:' + this.entID,
-        linkTypeID = this.linkTypeID;
+    var lemmaVE = this,
+        fromGID = 'lem:' + lemmaVE.entID,
+        linkTypeID = lemmaVE.linkTypeID;
     this.linkRelated(fromGID, linkTypeID, toGID);
+    $('span.addButton',lemmaVE.linkTypeUI).html("<u>Add New "+lemmaVE.dataMgr.getTermFromID(lemmaVE.linkTypeID)+" link</u>");
   },
 
 /**
@@ -2237,18 +2586,38 @@ EDITORS.LemmaVE.prototype = {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var oldLemID;
+              var oldLemID, i, j, entGID, inflection;
               if (typeof data == 'object' && data.success && data.entities) {
                 //update data
-                lemmaVE.dataMgr.updateLocalCache(data,null);
                 oldLemID = lemmaVE.entID;
+                if (lemmaVE.entity && lemmaVE.entity.entityIDs && lemmaVE.entity.entityIDs.length) {
+                  for (i in lemmaVE.entity.entityIDs) {
+                    entGID = lemmaVE.entity.entityIDs[i];
+                    if (entGID.match(/inf/)) {
+                      inflection = lemmaVE.dataMgr.getEntityFromGID(entGID);
+                      if (inflection && inflection.entityIDs && inflection.entityIDs.length) {
+                        for (j in inflection.entityIDs) {
+                          entGID = inflection.entityIDs[j];
+                          lemmaVE.wordlistVE.insertWordEntry(entGID,'lem'+oldLemID);
+                        }
+                      }
+                    } else {
+                      lemmaVE.wordlistVE.insertWordEntry(entGID,'lem'+oldLemID);
+                    }
+                  }
+                }
+                lemmaVE.dataMgr.updateLocalCache(data,null);
                 if (lemmaVE.wordlistVE){
-                  if (!lemmaVE.wordlistVE.nextWord()) {
-                    lemmaVE.wordlistVE.prevWord();
+                  if (!lemmaVE.wordlistVE.nextWord(lemmaVE.tag)) {
+                    if (!lemmaVE.wordlistVE.prevWord(lemmaVE.tag)) {
+                      lemmaVE.entID = null;
+                      lemmaVE.showLemma();
+                    };
                   }
                   lemmaVE.wordlistVE.removeWordlistEntry('lem'+oldLemID);
-                  lemmaVE.entID = null;
-                  lemmaVE.showLemma();
+                  if (lemmaVE.tag) {
+                    lemmaVE.wordlistVE.scrollEntIntoView(lemmaVE.tag);
+                  }
                 }
               }
               if (data.editionHealth) {
@@ -2300,8 +2669,11 @@ EDITORS.LemmaVE.prototype = {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var newLemID, newCatID,updLemID;
+              var newLemID, newCatID,updLemID, oldCompAnalysis;
               if (typeof data == 'object' && data.success && data.entities) {
+                if (lemmaVE.isLemma && lemmaVE.entity && lemmaVE.entity.compAnalysis) {
+                  oldCompAnalysis = lemmaVE.entity.compAnalysis;
+                }
                 //update data
                 lemmaVE.dataMgr.updateLocalCache(data,null);
                 if (compAnalysis) {
@@ -2311,14 +2683,17 @@ EDITORS.LemmaVE.prototype = {
                       Object.keys(data.entities.insert.lem).length) {
                     for (newLemID in data.entities.insert.lem) {
                       lemmaVE.wordlistVE.insertLemmaEntry(newLemID);
+                      lemmaVE.wordlistVE.updateLemmaLookup('lem'+newLemID);
                     }
                   }
                   if (data.entities && data.entities.update && data.entities.update.lem &&
                       Object.keys(data.entities.update.lem).length) {
                     for (updLemID in data.entities.update.lem) {
                       lemmaVE.wordlistVE.updateLemmaEntry(updLemID);
+                      lemmaVE.wordlistVE.updateLemmaLookup('lem'+updLemID,((updLemID == lemmaVE.entID)?oldCompAnalysis:null));
                     }
                   }
+                  lemmaVE.entity = lemmaVE.dataMgr.getEntity('lem',lemmaVE.entID);
                 }
                 lemmaVE.showLemma();
               }

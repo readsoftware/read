@@ -79,6 +79,8 @@ $graphemeCharacterMap = array(
 "◊"=>array("srt"=>"885","ssrt"=>"885","typ"=>"I"),
 "◈"=>array("srt"=>"885","ssrt"=>"885","typ"=>"I"),//bark obstruction =>space
 "○"=>array("srt"=>"820","ssrt"=>"820","typ"=>"P"),
+"⊗"=>array("srt"=>"822","ssrt"=>"822","typ"=>"P"),
+"◎"=>array("srt"=>"823","ssrt"=>"823","typ"=>"P"),
 "◦"=>array("srt"=>"810","ssrt"=>"810","typ"=>"P"),
 "•"=>array("srt"=>"805","ssrt"=>"805","typ"=>"P"),
 "∙"=>array("srt"=>"804","ssrt"=>"804","typ"=>"I"),// 2219
@@ -107,7 +109,7 @@ $graphemeCharacterMap = array(
 "+"=>array("srt"=>"953","ssrt"=>"953","typ"=>"O"),
 "/"=>array(
     "/"=>array(
-        "/"=>array("srt"=>"954","ssrt"=>"954","typ"=>"O")),
+        "/"=>array("srt"=>"954","ssrt"=>"954","typ"=>"I")),
     "srt"=>"959","ssrt"=>"959","typ"=>"O"), // debug temp assiqnment remove after / clean up
 "#"=>array("srt"=>"956","ssrt"=>"956","typ"=>"O"),
 "…"=>array("srt"=>"955","ssrt"=>"955","typ"=>"O"),
@@ -146,8 +148,10 @@ $graphemeCharacterMap = array(
     "srt"=>"520","ssrt"=>"520","typ"=>"C"),
 "ḅ"=>array("srt"=>"521","ssrt"=>"521","typ"=>"C"),
 "c"=>array(
-    "̱"=>array("srt"=>"321","ssrt"=>"321","typ"=>"C"),
-    "̄"=>array("srt"=>"322","ssrt"=>"322","typ"=>"C"),
+    "̱"=>array("srt"=>"321","ssrt"=>"321","typ"=>"C",
+      "̄"=>array("srt"=>"323","ssrt"=>"322","typ"=>"C")),
+    "̄"=>array("srt"=>"322","ssrt"=>"321","typ"=>"C",
+      "̱"=>array("srt"=>"323","ssrt"=>"322","typ"=>"C")),
     "̂"=>array("srt"=>"329","ssrt"=>"329","typ"=>"C"),
     "h"=>array("srt"=>"330","ssrt"=>"330","typ"=>"C"),
     "srt"=>"320","ssrt"=>"320","typ"=>"C"),
@@ -309,10 +313,10 @@ $graphemeCharacterMap = array(
     "̱"=>array("srt"=>"621","ssrt"=>"621","typ"=>"C"),
     "srt"=>"620","ssrt"=>"620","typ"=>"C"),
 "ś"=>array(
-    "̱"=>array(
-      "̄"=>array("srt"=>"603","ssrt"=>"603","typ"=>"C"),
-      "srt"=>"601","ssrt"=>"601","typ"=>"C"),
-    "̄"=>array("srt"=>"602","ssrt"=>"602","typ"=>"C"),
+    "̱"=>array("srt"=>"601","ssrt"=>"601","typ"=>"C",
+      "̄"=>array("srt"=>"603","ssrt"=>"603","typ"=>"C")),
+    "̄"=>array("srt"=>"602","ssrt"=>"602","typ"=>"C",
+      "̱"=>array("srt"=>"603","ssrt"=>"603","typ"=>"C")),
     "͟"=>array("srt"=>"608","ssrt"=>"608","typ"=>"C"),
     "̂"=>array("srt"=>"609","ssrt"=>"609","typ"=>"C"),
     "srt"=>"600","ssrt"=>"600","typ"=>"C"),

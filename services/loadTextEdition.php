@@ -101,7 +101,8 @@
   $atbIDs = array();
   $attrs = array();
   $publicOnly = false;
-  $saveToCache = false;
+  $userOnly = false;
+  $saveEditionToCache = false;
   $ednID = (array_key_exists('edn',$_REQUEST)? $_REQUEST['edn']:null);
   $edition = null;
   if ($ednID) {
@@ -111,7 +112,12 @@
   if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
     array_push($warnings,"Warning no edition available for id $ednID .");
   } else if ($edition->isReadonly()){// edition non owner check cached snapshot
-    $retString = getCachedEdition($ednID);//get user or public cached edition if there is one.
+    $publicOnly = $edition->isPublic();
+    $userOnly = isLoggedIn();
+    if (USECACHE) {
+      $retString = getCachedEdition($ednID);//get user or public cached edition if there is one.
+    }
+    $saveEditionToCache = true;
   }
   if (count($warnings) == 0 && !$retString) {// edition found so process/load it
     $termInfo = getTermInfoForLangCode('en');
@@ -121,15 +127,14 @@
     $textPhysSeqTypeID = $termInfo['idByTerm_ParentLabel']['textphysical-sequencetype'];//term dependency
     $linePhysSeqTypeID = $termInfo['idByTerm_ParentLabel']['linephysical-textphysical'];//term dependency
     $ednID = $edition->getID();
-    $retString = '{"entities":{"update":{"edn":{"'.$ednID.'":{"description":"'.$edition->getDescription().'",'.
+    $retString = '{"entities":{"update":{"edn":{"'.$ednID.'":{"description":'.json_encode($edition->getDescription()).','.
                                '"id":"'.$ednID.'",'.
-                               '"value":"'.$edition->getDescription().'",'.
+                               '"value":'.json_encode($edition->getDescription()).','.
                                '"readonly":'.($edition->isReadonly()?'true':'false').','.
                                '"typeID":"'.$edition->getTypeID().'",'.
                                '"txtID":"'.$edition->getTextID().'",'.
                                '"seqIDs":["'.join('","',$edition->getSequenceIDs()).'"]';
-    $publicOnly = $edition->isPublic();
-    $saveToCache = $edition->isReadonly();
+//    $saveToCache = $edition->isReadonly();
     $AnoIDs = $edition->getAnnotationIDs();
     if ($AnoIDs && count($AnoIDs) > 0) {
       $retString .= ',"annotationIDs":["'.join('","',$AnoIDs).'"]';
@@ -146,9 +151,9 @@
     if ($seqIDs && count($seqIDs) > 0) {
       $condition = "seq_id in (".join(",",$seqIDs).")";
       if ($publicOnly){//get only public entities
-        $condition .= ' and 2 = ANY ("seq_visibility_ids")';
-      } else if (isLoggedIn() && $edition->isReadonly()) {
-        $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
+        $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+      } else if ($userOnly) {
+        $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
       }
       $sequences = new Sequences($condition,null,null,null);
       $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -183,7 +188,7 @@
                                         '"value":"'.$sequence->getLabel().'",'.
                                         '"readonly":'.($sequence->isReadonly()?'true':'false').','.
                                         '"typeID":"'.$seqTypeID.'",'.
-                                        '"entityIDs":["'.join('","',$sequence->getEntityIDs()).'"]';
+                                        '"entityIDs":['.(count($sequence->getEntityIDs())?'"'.join('","',$sequence->getEntityIDs()).'"':'').']';
           $superscript = $sequence->getSuperScript();
           if ($superscript && count($superscript) > 0) {
             $seqRetString .= ',"sup":"'.$superscript.'"';
@@ -203,7 +208,9 @@
         if ($linePhysSeqIDs && count($linePhysSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$linePhysSeqIDs).")";
           if ($publicOnly){//get only public entities
-            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
+            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+          } else if ($userOnly) {
+            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
           }
           $sequences = new Sequences($condition,null,null,null);
           $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -219,7 +226,7 @@
                                             '"value":"'.$sequence->getLabel().'",'.
                                             '"readonly":'.($sequence->isReadonly()?'true':'false').','.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
-                                            '"children":'.getSeqData($sequence,$edition->getOwnerID()).','.
+                                            '"children":'.getSeqData($sequence).','.
                                             '"entityIDs":['.(count($seqEntityIDs)?'"'.join('","',$seqEntityIDs).'"':'').']';
               $superscript = $sequence->getSuperScript();
               if ($superscript && count($superscript) > 0) {
@@ -250,8 +257,9 @@
         if ($txtDivSeqIDs && count($txtDivSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$txtDivSeqIDs).")";
           if ($publicOnly){//get only public entities
-            $condition .= ' and 2 = ANY ("seq_visibility_ids")';
-//            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
+            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+          } else if ($userOnly) {
+            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
           }
           $sequences = new Sequences($condition,null,null,null);
           $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -267,7 +275,7 @@
                                             '"value":"'.$sequence->getLabel().'",'.
                                             '"readonly":'.($sequence->isReadonly()?'true':'false').','.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
-                                            '"children":'.getSeqData($sequence,$edition->getOwnerID()).','.
+                                            '"children":'.getSeqData($sequence).','.
                                             '"entityIDs":["'.((isset($seqEntityIDs) && count($seqEntityIDs)>0)?join('","',$seqEntityIDs):'').'"]';
               $superscript = $sequence->getSuperScript();
               if ($superscript && count($superscript) > 0) {
@@ -290,8 +298,9 @@
         if ($structuralSeqIDs && count($structuralSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$structuralSeqIDs).")";
           if ($publicOnly){//get only public entities
-            $condition .= ' and 2 = ANY ("seq_visibility_ids")';
-//            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
+            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+          } else if ($userOnly) {
+            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
           }
           $sequences = new Sequences($condition,null,null,null);
           $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -307,7 +316,7 @@
                                             '"value":"'.$sequence->getLabel().'",'.
                                             '"readonly":'.($sequence->isReadonly()?'true':'false').','.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
-                                            '"children":'.getSeqData($sequence,$edition->getOwnerID()).
+                                            '"children":'.getChildEntitiesJsonString($sequence->getEntityIDs()).
                                             (count(@$seqEntityIDs)?',"entityIDs":["'.join('","',$seqEntityIDs).'"]':'');
               $superscript = $sequence->getSuperScript();
               if ($superscript && count($superscript) > 0) {
@@ -351,7 +360,7 @@
   if (count($errors) > 0) {
 //    $retVal["errors"] = $errors;
   }
-  if ($saveToCache) {
+  if ($saveEditionToCache) {
     saveCachedEdition($ednID,$retString);
   }
 //  $jsonRetVal = json_encode($retVal);
@@ -365,7 +374,7 @@
   }
 
   function getChildEntitiesJsonString($seqEntityIDs) {
-    global $anoIDs,$atbIDs,$gra2SclMap,$segID2sclIDs,$processedTokIDs,$errors,$warnings,$publicOnly;
+    global $anoIDs,$atbIDs,$gra2SclMap,$segID2sclIDs,$processedTokIDs,$errors,$warnings,$publicOnly,$userOnly;
     static $prefixProcessOrder = array('seq','scl','gra','cmp','tok','seg','atb','ano');//important attr before anno to terminate
     $tokLookup = array();
     if (!$seqEntityIDs) return '""';
@@ -409,8 +418,9 @@
           case 'seq':
             $condition = "seq_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("seq_visibility_ids")';
-//              $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids"))';
+              $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+            } else if ($userOnly) {
+              $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
             }
             $sequences = new Sequences($condition,null,null,null);
             $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -460,8 +470,9 @@
           case 'cmp':
             $condition = "cmp_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("cmp_visibility_ids")';
-//              $condition .= ' and (2 = ANY ("cmp_visibility_ids") or 3 = ANY ("cmp_visibility_ids"))';
+              $condition .= ' and (2 = ANY ("cmp_visibility_ids") or 6 = ANY ("cmp_visibility_ids"))';
+            } else if ($userOnly) {
+              $condition .= ' and (2 = ANY ("cmp_visibility_ids") or 3 = ANY ("cmp_visibility_ids") or 6 = ANY ("cmp_visibility_ids"))';
             }
             $compounds = new Compounds($condition,null,null,null);
             $compounds->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -515,8 +526,9 @@
           case 'tok':
             $condition = "tok_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities   TODO check if readonly should be a check for visibility on usrgroups for this user
-              $condition .= ' and 2 = ANY ("tok_visibility_ids")';
-//              $condition .= ' and (2 = ANY ("tok_visibility_ids") or 3 = ANY ("tok_visibility_ids"))';
+              $condition .= ' and (2 = ANY ("tok_visibility_ids") or 6 = ANY ("tok_visibility_ids"))';
+            } else if ($userOnly) {
+              $condition .= ' and (2 = ANY ("tok_visibility_ids") or 3 = ANY ("tok_visibility_ids") or 6 = ANY ("tok_visibility_ids"))';
             }
             $tokens = new Tokens($condition,null,null,null);
             $tokens->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -566,8 +578,9 @@
           case 'gra':
             $condition = "gra_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("gra_visibility_ids")';
- //             $condition .= ' and (2 = ANY ("gra_visibility_ids") or 3 = ANY ("gra_visibility_ids"))';
+               $condition .= ' and (2 = ANY ("gra_visibility_ids") or 6 = ANY ("gra_visibility_ids"))';
+            } else if ($userOnly) {
+              $condition .= ' and (2 = ANY ("gra_visibility_ids") or 3 = ANY ("gra_visibility_ids") or 6 = ANY ("gra_visibility_ids"))';
             }
             $graphemes = new Graphemes($condition,null,null,null);
             $graphemes->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -585,6 +598,10 @@
                 if ($grapheme->getDecomposition()) {
                    $entities['gra'][$graID]['decomp'] = preg_replace("/:/",'',$grapheme->getDecomposition());
                 }
+                $entities['gra'][$graID]['sclID'] = @$gra2SclMap[$graID];
+                if (!$entities['gra'][$graID]['sclID']) {
+                  unset($entities['gra'][$graID]['sclID']);
+                }
                 $AnoIDs = $grapheme->getAnnotationIDs();
                 if (count($AnoIDs) > 0) {
                   $entities['gra'][$graID]['annotationIDs'] = $AnoIDs;
@@ -599,8 +616,9 @@
           case 'scl':
             $condition = "scl_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("scl_visibility_ids")';
-//              $condition .= ' and (2 = ANY ("scl_visibility_ids") or 3 = ANY ("scl_visibility_ids"))';
+              $condition .= ' and (2 = ANY ("scl_visibility_ids") or 6 = ANY ("scl_visibility_ids"))';
+            } else if ($userOnly) {
+              $condition .= ' and (2 = ANY ("scl_visibility_ids") or 3 = ANY ("scl_visibility_ids") or 6 = ANY ("scl_visibility_ids"))';
             }
             $syllables = new SyllableClusters($condition,null,null,null);
             $syllables->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -668,8 +686,9 @@
           case 'seg':
             $condition = "seg_id in (".join(",",$entIDs).")";
             if ($publicOnly){//get only public entities
-              $condition .= ' and 2 = ANY ("seg_visibility_ids")';
-//              $condition .= ' and (2 = ANY ("seg_visibility_ids") or 3 = ANY ("seg_visibility_ids"))';
+              $condition .= ' and (2 = ANY ("seg_visibility_ids") or 6 = ANY ("seg_visibility_ids"))';
+            } else if ($userOnly) {
+              $condition .= ' and (2 = ANY ("seg_visibility_ids") or 3 = ANY ("seg_visibility_ids") or 6 = ANY ("seg_visibility_ids"))';
             }
             $segments = new Segments($condition,null,null,null);
             $segments->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -771,7 +790,7 @@
                                         'url' => $annotation->getURL(),
                                         'typeID' => $annotation->getTypeID());
                 $vis = $annotation->getVisibilityIDs();
-                if (in_array(2,$vis)) {
+                if (in_array(6,$vis)) {
                   $vis = "Public";
                 } else if (in_array(3,$vis)) {
                   $vis = "User";
@@ -868,7 +887,7 @@
               if ($atbID && !array_key_exists($atbID, $entities['atb'])) {
                 $entities['atb'][$atbID] = array( 'title'=> $attribution->getTitle(),
                                         'id' => $atbID,
-                                        'value'=> $attribution->getTitle().($attribution->getDetail()?$attribution->getDetail():''),
+                                        'value'=> $attribution->getTitle().($attribution->getDetail()?": ".$attribution->getDetail():''),
                                         'readonly' => $attribution->isReadonly(),
                                         'grpID' => $attribution->getGroupID(),
                                         'bibID' => $attribution->getBibliographyID(),
@@ -903,7 +922,7 @@
                                         'url' => $annotation->getURL(),
                                         'typeID' => $annotation->getTypeID());
                 $vis = $annotation->getVisibilityIDs();
-                if (in_array(2,$vis)) {
+                if (in_array(6,$vis)) {
                   $vis = "Public";
                 } else if (in_array(3,$vis)) {
                   $vis = "User";
@@ -936,18 +955,21 @@
     return json_encode($entities);
   }
 
-  function getSeqData($sequence,$userID = null) {  // check for cache
-    if(USECACHE) {
-      $cacheKey = "seq".$sequence->getID()."userID".getUserID();
+  function getSeqData($sequence) {  // check for cache
+    global $publicOnly,$edition,$userOnly;
+    if(USECACHE & !$edition->isReadonly()) {
+      $cacheKey = "seq".$sequence->getID()."ednOwnerID".$edition->getOwnerID();
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->hasError() || !$jsonCache->getID()) {
         $jsonCache = new JsonCache();
         $jsonCache->setLabel($cacheKey);
         $jsonCache->setJsonString(getChildEntitiesJsonString($sequence->getEntityIDs()));
-        $jsonCache->setVisibilityIDs('{"'.($userID?$userID:'3').'"}');
+        $jsonCache->setVisibilityIDs($edition->getVisibilityIDs());
+        $jsonCache->setOwnerID($edition->getOwnerID());
         $jsonCache->save();
-      } else if ($jsonCache->isDirty() && ! $jsonCache->isReadonly()) {
+      } else if ($jsonCache->isDirty() && !$jsonCache->isReadonly()) {
         $jsonCache->setJsonString(getChildEntitiesJsonString($sequence->getEntityIDs()));
+        $jsonCache->clearDirtyBit();
         $jsonCache->save();
       }
       if ($jsonCache->getID() && !$jsonCache->hasError()) {
@@ -961,31 +983,36 @@
   }
 
   function saveCachedEdition($ednID, $jsonString) {  // save json string to cache
-    global $publicOnly;
+    global $publicOnly,$edition,$userOnly;
     if(USECACHE) {
-      $cacheKey = "edn".$ednID.($publicOnly?"userID2":"userID".getUserID());
-      $jsonCache = new JsonCache();
-      $jsonCache->setLabel($cacheKey);
+      $cacheKey = "edn".$ednID."userID6";// warning!!!  6 is reserved system userID for public access
+      $jsonCache = new JsonCache($cacheKey);
+      if ($jsonCache->hasError() || !$jsonCache->getID()) {
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel($cacheKey);
+        $jsonCache->setVisibilityIDs(array(6));// warning!!!  6 is reserved system userID for public access
+        $jsonCache->setOwnerID(6);// warning!!!  6 is reserved system userID for public access
+      }
       $jsonCache->setJsonString($jsonString);
-      $jsonCache->setVisibilityIDs('{"'.($publicOnly?'2':getUserID()).'"}');
+      $jsonCache->clearDirtyBit();
       $jsonCache->save();
+    } else {
+      error_log("warning!!! edition $ednID cached info not saved because caching is off");
     }
   }
 
   function getCachedEdition($ednID) {  // check for cached edition for user or public
+    global $publicOnly,$edition,$userOnly;
     if(USECACHE) {
-      $cacheKey = "edn".$ednID."userID".getUserID();
+      $cacheKey = "edn".$ednID."userID6";// warning!!!  6 is reserved system userID for public access
       $jsonCache = new JsonCache($cacheKey);
-      if ($jsonCache->hasError() || !$jsonCache->getID()) {
-        $cacheKey = "edn".$ednID."userID2";//try public edition
-        $jsonCache = new JsonCache($cacheKey);
-      }
-      if ($jsonCache->getID() && !$jsonCache->hasError()) {
+      if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty()) {
         return $jsonCache->getJsonString();
       } else {
         return "";
       }
     } else {
+      error_log("warning!!! edition $ednID cached info not used because caching is off");
       return "";
     }
   }

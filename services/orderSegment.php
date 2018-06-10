@@ -71,10 +71,12 @@ if (!$data) {
     $segID = $data['segID'];
   }
   $ord = null;
+  $ordIsSet = false;
   if ( isset($data['ord'])) {//get ordinal
     $ord = $data['ord'];
+    $ordIsSet = true;
   }
-  if (count($errors) == 0 && ($segID && $ord || $blnID)) {
+  if (count($errors) == 0 && ($segID && $ordIsSet || $blnID)) {
     if ($cmd == "clearOrdinals") {
       if (!$baseline) {
         array_push($errors,"Insufficient parameters to clear Segment Ordinals");
@@ -86,26 +88,28 @@ if (!$data) {
             $segment->save();
             if ($segment->hasError()) {
               array_push($errors,"error resetting ordinal for segment '".$segment->getGlobalID()."' - ".$segment->getErrors(true));
-            }else {
+            } else {
               addRemovePropertyReturnData("seg",$segment->getID(),'ordinal');
             }
           }
         }
       }
     } else if ($cmd == "setOrdinal") {
-      if (!($segID && $ord)) {
+      if (!($segID && $ordIsSet)) {
         array_push($errors,"Insufficient parameters to set Segment Ordinals");
       } else {
         $segment = new Segment($segID);
         if ($segment->hasError()) {
           array_push($errors,"error loading edition id $seqID - ".join(",",$segment->getErrors()));
         } else {
-          $segment->storeScratchProperty("blnOrdinal",$ord);
+          $segment->storeScratchProperty("blnOrdinal",($ordIsSet?$ord:null));
           $segment->save();
           if ($segment->hasError()) {
             array_push($errors,"error setting ordinal for segment '".$segment->getGlobalID()."' - ".$segment->getErrors(true));
-          }else {
+          } else if ($ord){
             addUpdateEntityReturnData("seg",$segID,'ordinal', $segment->getScratchProperty("blnOrdinal"));
+          } else {
+            addRemovePropertyReturnData("seg",$segment->getID(),'ordinal');
           }
         }
       }

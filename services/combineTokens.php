@@ -178,7 +178,7 @@
     }
   }
 
-  //update compound hierarchy of remove token
+  //update compound hierarchy of removed token
   if (count($errors) == 0 && count($context2) > 0) {
     while (count($context2) && ($removeTokCmpGID || $oldTokCmpGID2 != $newTokCmpGID2)) {
       $cmpTag = array_pop($context2);
@@ -251,11 +251,12 @@
     if ($removeTokCmpGID) { //remove GID from parent
       $tokCmpIndex = array_search($removeTokCmpGID,$textDivSeq2EntityIDs);
       array_splice($textDivSeq2EntityIDs,$tokCmpIndex,1);
-      //todo  handle case where last entity in this text div
+      //signal handle case where last entity in this text div
     } else {//propagate replacement
       $tokCmpIndex = array_search($oldTokCmpGID2,$textDivSeq2EntityIDs);
       array_splice($textDivSeq2EntityIDs,$tokCmpIndex,1,$newTokCmpGID2);
     }
+    $txtDiv2IsEmpty = (count($textDivSeq2EntityIDs) === 0);
     $textDivSeq2->setEntityIDs($textDivSeq2EntityIDs);
     //save text division sequence
     $textDivSeq2->save();
@@ -263,15 +264,23 @@
     if ($textDivSeq2->hasError()) {
       array_push($errors,"error updating text division sequence '".$textDivSeq2->getLabel()."' - ".$textDivSeq2->getErrors(true));
     }else if ($oldTxtDivSeqGID2 != $newTxtDivSeqGID2) { // ||//cloned so it's new
-//              @$oldTxtDivSeqGID != @$newTxtDivSeqGID && $textDivSeqTag1 == $textDivSeqTag2){//updated and same as tok1 so rewrite
-      addNewEntityReturnData('seq',$textDivSeq2);//if same will overwrite
+      if ($txtDiv2IsEmpty) {//last entity removed (can't be same text div)
+        addRemoveEntityReturnData('seq',$oldTxtDivSeqID2);
+        if ($separateTextDivisions) {
+          $oldTxtDivSeqID2->markForDelete();
+          $alteredTextDivSeq2ID = $textDivSeq1->getID();
+        }
+      } else {
+        addNewEntityReturnData('seq',$textDivSeq2);//if same will overwrite
+        $alteredTextDivSeq2ID = $textDivSeq2->getID();
+      }
       if (array_key_exists('alteredTextDivSeqIDs',$retVal)) {
         if (!array_key_exists($oldTxtDivSeqID2,$retVal['alteredTextDivSeqIDs'])) {
-          $retVal['alteredTextDivSeqIDs'][$oldTxtDivSeqID2]= $textDivSeq2->getID();
+          $retVal['alteredTextDivSeqIDs'][$oldTxtDivSeqID2]= $alteredTextDivSeq2ID;
         }
       } else {
         $retVal['alteredTextDivSeqIDs'] = array();
-        $retVal['alteredTextDivSeqIDs'][$oldTxtDivSeqID2]= $textDivSeq2->getID();
+        $retVal['alteredTextDivSeqIDs'][$oldTxtDivSeqID2]= $alteredTextDivSeq2ID;
       }
       //clone text sequence if not owned
       if ($seqText->isReadonly()) {
@@ -281,7 +290,11 @@
       $textSeqEntityIDs = $seqText->getEntityIDs();
       $txtDivSeqIndex = array_search($oldTxtDivSeqGID2,$textSeqEntityIDs);
       if ($txtDivSeqIndex !== false) {
-        array_splice($textSeqEntityIDs,$txtDivSeqIndex,1,$newTxtDivSeqGID2);
+        if ($txtDiv2IsEmpty) {//just remove
+          array_splice($textSeqEntityIDs,$txtDivSeqIndex,1);
+        } else {
+          array_splice($textSeqEntityIDs,$txtDivSeqIndex,1,$newTxtDivSeqGID2);
+        }
         $seqText->setEntityIDs($textSeqEntityIDs);
         //save text sequence
         $seqText->save();
@@ -293,10 +306,37 @@
           addUpdateEntityReturnData('seq',$seqText->getID(),'entityIDs',$seqText->getEntityIDs());
         }
       }
-    }else { // only updated
+    } else { // only updated
       //changed components on a cached sequence so invalidate cache to recalc on next refresh
       invalidateCachedSeq($textDivSeq2->getID(),$ednOwnerID);
-      addUpdateEntityReturnData('seq',$textDivSeq2->getID(),'entityIDs',$textDivSeq2->getEntityIDs());
+      if ($txtDiv2IsEmpty) {//last entity removed (can't be same text div)
+        addRemoveEntityReturnData('seq',$oldTxtDivSeqID2);
+        if ($separateTextDivisions) {
+          $textDivSeq2->markForDelete();
+        }
+        //clone text sequence if not owned
+        if ($seqText->isReadonly()) {
+          $oldTextSeqID = $seqText->getID();
+          $seqText = $seqText->cloneEntity($defAttrIDs,$defVisIDs);
+        }
+        $textSeqEntityIDs = $seqText->getEntityIDs();
+        $txtDivSeqIndex = array_search($oldTxtDivSeqGID2,$textSeqEntityIDs);
+        if ($txtDivSeqIndex !== false) {
+          array_splice($textSeqEntityIDs,$txtDivSeqIndex,1);
+          $seqText->setEntityIDs($textSeqEntityIDs);
+          //save text sequence
+          $seqText->save();
+          if ($seqText->hasError()) {
+            array_push($errors,"error updating text sequence '".$seqText->getLabel()."' - ".$seqText->getErrors(true));
+          }else if ($oldTextSeqID){//cloned so it's new
+            addNewEntityReturnData('seq',$seqText);
+          }else { // only updated
+            addUpdateEntityReturnData('seq',$seqText->getID(),'entityIDs',$seqText->getEntityIDs());
+          }
+        }
+      } else {
+        addUpdateEntityReturnData('seq',$textDivSeq2->getID(),'entityIDs',$textDivSeq2->getEntityIDs());
+      }
     }
   }
 
@@ -327,6 +367,8 @@
       addUpdateEntityReturnData('tok',$token1->getID(),'graphemeIDs',$token1->getGraphemeIDs());
       addUpdateEntityReturnData('tok',$token1->getID(),'value',$token1->getValue());
       addUpdateEntityReturnData('tok',$token1->getID(),'transcr',$token1->getTranscription());
+      addUpdateEntityReturnData('tok',$token1->getID(),'sort',$token1->getSortCode());
+      addUpdateEntityReturnData('tok',$token1->getID(),'sort2',$token1->getSortCode2());
       addUpdateEntityReturnData('tok',$token1->getID(),'syllableClusterIDs',$token1->getSyllableClusterIDs());
     }
   }
@@ -381,14 +423,6 @@
       array_push($errors,"error updating text division sequence '".$textDivSeq1->getLabel()."' - ".$textDivSeq1->getErrors(true));
     }else if ($oldTxtDivSeqGID1 != $newTxtDivSeqGID1){//cloned so it's new
       addNewEntityReturnData('seq',$textDivSeq1);
-      if (array_key_exists('alteredTextDivSeqIDs',$retVal)) {
-        if (!array_key_exists($origTextDivID1,$retVal['alteredTextDivSeqIDs'])) {
-          $retVal['alteredTextDivSeqIDs'][$origTextDivID1]= $textDivSeq1->getID();
-        }
-      } else {
-        $retVal['alteredTextDivSeqIDs'] = array();
-        $retVal['alteredTextDivSeqIDs'][$origTextDivID1]= $textDivSeq1->getID();
-      }
       //clone text sequence if not owned
       if ($seqText->isReadonly()) {
         $oldTextSeqID = $seqText->getID();
@@ -414,6 +448,14 @@
       invalidateCachedSeq($textDivSeq1->getID(),$ednOwnerID);
       addUpdateEntityReturnData('seq',$textDivSeq1->getID(),'entityIDs',$textDivSeq1->getEntityIDs());
     }
+    if (array_key_exists('alteredTextDivSeqIDs',$retVal)) {
+      if (!array_key_exists($origTextDivID1,$retVal['alteredTextDivSeqIDs'])) {
+        $retVal['alteredTextDivSeqIDs'][$origTextDivID1]= $textDivSeq1->getID();
+      }
+    } else {
+      $retVal['alteredTextDivSeqIDs'] = array();
+      $retVal['alteredTextDivSeqIDs'][$origTextDivID1]= $textDivSeq1->getID();
+    }
   }
 
 
@@ -430,6 +472,7 @@
       $edition->setSequenceIDs($edSeqIds);
     }
     $edition->save();
+    invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
     if ($edition->hasError()) {
       array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
     }else{

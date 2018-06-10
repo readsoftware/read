@@ -55,7 +55,7 @@
   $catID = (array_key_exists('catID',$_REQUEST)? $_REQUEST['catID']:null);
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
-  $refreshWordMap = (array_key_exists('refreshWordMap',$_REQUEST)? true:false);
+  $refreshWordMap = ((array_key_exists('refreshWordMap',$_REQUEST) || array_key_exists('refreshLookUps',$_REQUEST))? true:false);
   $useTranscription = (!array_key_exists('usevalue',$_REQUEST)? true:false);
   $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
   $termInfo = getTermInfoForLangCode('en');
@@ -81,7 +81,7 @@
           '{\stylesheet{\ql \li0\ri0\nowidctlpar\wrapdefault\hyphpar0\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1031\langfe1031\cgrid\langnp1031\langfenp1031 \snext0 \sqformat \spriority0 Normal;}'."\n".
           '{\s1\ql \fi-425\li425\ri0\sa200\nowidctlpar\wrapdefault\hyphpar0\aspalpha\aspnum\faauto\adjustright\rin0\lin425\itap0 \rtlch\fcs1 \ab\ai\af0\afs24\alang2057 \ltrch\fcs0 \fs24\lang2057\langfe1031\cgrid\langnp2057\langfenp1031 \sbasedon0 \snext1 \sqformat \spriority0 Glossary;}'."\n".
           '{\*\cs55 \additive \sunhideused \spriority1 Default Paragraph Font;}'."\n".
-          '{\*\cs02 \additive \i\f38 \sqformat \spriority1 etym;}'."\n".
+          '{\*\cs02 \additive \f38 \sqformat \spriority1 etym;}'."\n".
           '{\*\cs51 \additive \b\i\fs24\f38 \sqformat \spriority1 lemma;}'."\n".
           '{\*\cs03 \additive \i \sqformat \spriority1 pali;}'."\n".
           '{\*\cs04 \additive \i\f38 \sqformat \spriority1 attestation;}'."\n".
@@ -107,7 +107,7 @@
           $lemStyle = '{\cs51\b\i\fs24\f38 ';
           $posStyle = '{\cs05\f38 ';
           $glossStyle = '{\cs06\f38 ';
-          $etymStyle = '{\cs02\i\f38 ';
+          $etymStyle = '{\cs02\f38 ';
           $lemAnoStyle = '{\cs08\f38 ';
           $attestedAnoStyle = '{\cs09\f38 ';
           $attestedStyle = '{\cs04\i\f38 ';
@@ -148,15 +148,20 @@
         $lemmaGender = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
         $lemmaPos = $lemmaPosID && array_key_exists($lemmaPosID,$termLookup) ? $termLookup[$lemmaPosID] : '';
+        $isVerb = false;
         if ($lemmaPos) {
           $isVerb = ($lemmaPos == 'v.');
         }
-        $lemmaSpos = $lemma->getSubpartOfSpeech();
+        $lemmaSposID = $lemma->getSubpartOfSpeech();
+        $lemmaSpos = $lemmaSposID && array_key_exists($lemmaSposID,$termLookup) ? $termLookup[$lemmaSposID] : '';
+        if ($lemmaSpos  == "common adj.") {//warning term dependency
+          $lemmaSpos = "adj.";
+        }
         $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
         if ($lemmaGender) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
           $rtf .= $space.$eol.$posStyle.$termLookup[$lemmaGender].($lemmaCF[2]==2?'(?)':'').$endStyle.$eol;
         } else if ($lemmaSpos) {
-          $rtf .= $space.$eol.$posStyle.$termLookup[$lemmaSpos].($lemmaCF[1]==2?'(?)':'').$endStyle.$eol;
+          $rtf .= $space.$eol.$posStyle.$lemmaSpos.($lemmaCF[1]==2?'(?)':'').$endStyle.$eol;
         }else if ($lemmaPos) {
           $rtf .= $space.$eol.$posStyle.$lemmaPos.($lemmaCF[0]==2?'(?)':'').$endStyle.$eol;
         }
@@ -186,13 +191,13 @@
             }
           }
         }
+        $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/");
+        $replacement = array("aï","aü","","","","","");
         $lemmaComponents = $lemma->getComponents(true);
         if ($lemmaComponents && $lemmaComponents->getCount()) {
           $rtf .= $softReturn.$eol;
           $hasAttestations = true; // signal see also
           $groupedForms = array();
-          $pattern = array("/ʔ/","/°/","/\/\/\//","/#/","/◊/");
-          $replacement = array("","","","","");
           foreach ($lemmaComponents as $lemmaComponent) {
             $entPrefix = $lemmaComponent->getEntityTypeCode();
             $entID = $lemmaComponent->getID();
@@ -212,9 +217,18 @@
               $infString = '';
               if ($isVerb) { //term dependency
                 if ($vmood) {
-                  $vtensemood = $termLookup[$vmood].($ingCF[2]==2?'(?)':'');
+                  $vmood = $termLookup[$vmood];
+                }
+                if ($vtense) {
+                  $vtense = $termLookup[$vtense];
+                  if (strtolower($vtense) == "pres." && strtolower($vmood) == "indic.") {
+                    $vmood = null;
+                  }
+                }
+                if ($vmood) {
+                  $vtensemood = $vmood.($ingCF[2]==2?'(?)':'');
                 } else if ($vtense) {
-                  $vtensemood = $termLookup[$vtense].($ingCF[0]==2?'(?)':'');
+                  $vtensemood = $vtense.($ingCF[0]==2?'(?)':'');
                 } else {
                   $vtensemood = '?';
                 }
@@ -283,6 +297,10 @@
               }
               $inflectionComponents = $inflection->getComponents(true);
               foreach ($inflectionComponents as $inflectionComponent) {
+                //guard code
+                if (!$inflectionComponent->getID()){ //skip unreadable links
+                  continue;
+                }
                 if ($useTranscription) {
                   $value = $inflectionComponent->getTranscription();
                 } else {
@@ -439,6 +457,10 @@
                     } else if (!$lemmaGender){//handle noun supress infection gender output
                       $rtf .= $key1." ";
                     }
+                  } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {
+                    if ($lemmaPos != 'adv.' && $lemmaPos != 'ind.'){ //term dependency
+                      $rtf .= "unclear: ";
+                    }
                   }
                   if ($key1 != '?' || $key1 == '?' && ($key2 != '?' || $key3 != '?')) {
                     $rtf .= $key3." ".$key2." ";
@@ -461,14 +483,27 @@
                         $rtf .= ", ";
                       }
                       $rtf .= $attestedStyle.$formTranscr.$endStyle;
-                      ksort($locInfo['loc']);
+                      $sortedLocs = array_keys($locInfo['loc']);
+                      usort($sortedLocs,"compareWordLocations");
                       $isFirstLoc = true;
-                      foreach ($locInfo['loc'] as $formLoc => $cntLoc) {
+                      foreach ($sortedLocs as $formLoc) {
+                        $cntLoc = $locInfo['loc'][$formLoc];
                         if ($isFirstLoc) {
                           $rtf .= $space.$eol.$linRefStyle;
                           $isFirstLoc = false;
                         } else {
                           $rtf .= ", ";
+                        }
+                        //remove internal ordinal
+                        $locParts = explode(":",$formLoc);
+                        if (count($locParts) == 3) {
+                          if (strpos(trim($locParts[0]),"sort") === 0) {
+                            $formLoc = $locParts[2];
+                          } else {
+                            $formLoc = $locParts[0].$locParts[2];
+                          }
+                        } else if (count($locParts) == 2) {
+                          $formLoc = $locParts[1];
                         }
                         $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
                       }
@@ -485,8 +520,8 @@
           $rtf .= $space;
         }
         $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
-        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LinkageType');
-        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LinkageType');
+        $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LemmaLinkage');
+        $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LemmaLinkage');
         $relatedNode = null;
         if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;
@@ -587,9 +622,9 @@
   function getWordTagToLocationLabelMap($catalog, $refreshWordMap) {
     global $term_parentLabelToID;
     $catID = $catalog->getID();
-    if (!$refreshWordMap && array_key_exists("cache-cat$catID",$_SESSION) &&
-          array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID"])) {
-      return $_SESSION["cache-cat$catID"]['wrdTag2LocLabel'];
+    if (!$refreshWordMap && array_key_exists("cache-cat$catID".DBNAME,$_SESSION) &&
+          array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID".DBNAME])) {
+      return $_SESSION["cache-cat$catID".DBNAME]['wrdTag2LocLabel'];
     }
     $editionIDs = $catalog->getEditionIDs();
     $wrdTag2LocLabel = array();
@@ -607,7 +642,7 @@
         if ($text && !$text->hasError()) {
           $ednLabel = $text->getRef();
           if (!$ednLabel) {
-            $ednLabel='t'.$text->getID();
+//            $ednLabel='sort'.$text->getID();
           }
         }
         $ednSequences = $edition->getSequences(true);
@@ -635,6 +670,7 @@
         }
       }
       if ($physSeqGIDs && count($physSeqGIDs)) {// capture each physical line sequence once
+        $ord = 1;
         foreach ($physSeqGIDs as $physSeqGID) {
           $sequence = new Sequence(substr($physSeqGID,4));
           $label = $sequence->getSuperScript();
@@ -646,11 +682,13 @@
           }
           $sclGIDs = $sequence->getEntityIDs();
           if ($label && count($sclGIDs)) {//create lookup for location of word span B11-B12
+            $label = "$ord:".$label; //save ordinal of line for sorting later.
             foreach ($sclGIDs as $sclGID) {
               $tag = preg_replace("/:/","",$sclGID);
               $sclTagToLabel[$tag] = $label;
             }
           }
+          $ord++;
         }
       }
       if ($ednLblBySeqTag && count($ednLblBySeqTag) > 0) {
@@ -741,7 +779,8 @@
                   $label2 = null;
                 }
                 if($label2 && $label2 != $label) {
-                  $label .= "-" . $label2;
+                  $posColon = strpos($label2,':');
+                  $label .= "&ndash;" . ($posColon !== false?substr($label2, $posColon+1):$label2);
                 }
                 $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
               } else {

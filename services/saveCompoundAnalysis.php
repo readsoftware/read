@@ -96,9 +96,9 @@ if (!$data) {
         }
       }
       if (!$rootNode) {
-        foreach($analysis as $key => $node) {
+        foreach($analysis as $nodeID => $node) {
           if (array_key_exists('root',$node)) {
-            $rootkey = $key;
+            $rootkey = $nodeID;
             $rootNode = $node;
             break;
           }
@@ -163,15 +163,21 @@ if (count($errors) == 0) {
   } else {
     //iterate through nodes to load or create lemma,
     //update compound analysis if needed,
-    //create lemma lookup by nodeID
+    //create lemma lookup by nodeID and by nodehash
     $lemmaByNodeID = array();
+    $lemmaByNodeHash = array();
     foreach ($analysis as $nodeID => $node) {
-      if (array_key_exists('lemID',$node)) {//user supplied match for lemma so open it
+      $nodeHash = $node['value'].(array_key_exists('markup',$node)?"-".$node['markup']:"");
+      if (array_key_exists($nodeHash,$lemmaByNodeHash)) {//already have a lemma that matches node so use it to prevent duplication
+        $lemma = $lemmaByNodeHash[$nodeHash];
+      } else if (array_key_exists('lemID',$node)) {//user supplied match for lemma so open it
         $lemma = new Lemma($node['lemID']);
         if ($lemma->hasError()) {
           array_push($errors,"error creating lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
           $lemma = null;
         }
+      } else if (array_key_exists('root',$node) && $rootLemma){ //root node there must be an existing lemma
+        $lemma = $rootLemma;
       } else { //create new
         $lemma = new Lemma();
         $lemma->setCatalogID($catID);
@@ -186,37 +192,44 @@ if (count($errors) == 0) {
         $lemma->setCompoundAnalysis($node['markup']);
       }
       $lemmaByNodeID[$nodeID] = $lemma;
+      $lemmaByNodeHash[$nodeHash] = $lemma;
     }
+
     if (count($errors) == 0) {
       //iterate through nodes
       //save lemma
-      foreach($lemmaByNodeID as $key => $lemma) {
+      foreach($lemmaByNodeID as $nodeID => $lemma) {
+        $lemID = $lemma->getID();
         if ($lemma->isDirty()) {
-          $lemID = $lemma->getID();
           $lemma->save();
-          if ($lemma->hasError()) {
-            array_push($errors,"error creating lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
-          }else{
-            if ($lemID != $lemma->getID()) {
-              $lemma->storeTempProperty('isNew',1);
-              if (array_key_exists('lemID',$analysis[$key])) {
-                array_push($errors,"error node $key has lemID and detected as new lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
-              } else {
-                $analysis[$key]['lemID'] = $lemma->getID();
-              }
+        }
+        if ($lemma->hasError()) {
+          array_push($errors,"error creating lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
+        }else{
+          if ($lemID != $lemma->getID()) {//new lemma case
+            $lemma->storeTempProperty('isNew',1);
+            if (array_key_exists('lemID',$analysis[$nodeID])) {
+              array_push($errors,"error node $nodeID has lemID and detected as new lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
+            } else {
+              $analysis[$nodeID]['lemID'] = $lemma->getID();
             }
+          } else {
+            if (array_key_exists('lemID',$analysis[$nodeID])) {
+              array_push($warnings,"warning node $nodeID has lemID ".$analysis[$nodeID]['lemID']." being replaced with lemID $lemID");
+            }
+            $analysis[$nodeID]['lemID'] = $lemID;
           }
         }
       }
       //iterate through nodes
       //if subkeys then create links checking subnodes isHead
-      $headConstituentLinkTypeID = Entity::getIDofTermParentLabel('CompoundConstituentHead-LinkageType');
-      $constituentLinkTypeID = Entity::getIDofTermParentLabel('CompoundConstituent-LinkageType');
-      $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LinkageType');
-      foreach( $analysis as $key => $node) {
-        $lemma = $lemmaByNodeID[$key];
-        //create see links from node to rootnode
-        if ($rootLemID && !array_key_exists('root',$node)) {
+      $headConstituentLinkTypeID = Entity::getIDofTermParentLabel('CompoundConstituentHead-LemmaLinkage');
+      $constituentLinkTypeID = Entity::getIDofTermParentLabel('CompoundConstituent-LemmaLinkage');
+      $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LemmaLinkage');
+      foreach( $analysis as $nodeID => $node) {
+        $lemma = $lemmaByNodeID[$nodeID];
+        //create see links from node to rootnode if not rootnode and not already linked with rootnode
+        if ($rootLemID && !array_key_exists('root',$node) && $lemma->getTempProperty('rootlinked') != 1) {
           $toLemGID = 'lem:'.$rootLemID;
           $fromLemGID = 'lem:'.$lemma->getID();
           $annoLink = createRelationshipLink($fromLemGID,$toLemGID,$seeLinkTypeID);
@@ -239,11 +252,12 @@ if (count($errors) == 0) {
               if ($lemma->hasError()) {
                 array_push($errors,"error adding relation link to $fromLemGID  '".$lemma->getValue()."' - ".$lemma->getErrors(true));
               } else {
-                $lemma->storeTempProperty('linked',1);
+                $lemma->storeTempProperty('rootlinked',1);
               }
             }
           }
         }
+
         if (array_key_exists('subKeys',$node)) {//compound so create links for each constituent/sub lemma
           //create compound analysis links
           $toLemGID = 'lem:'.$lemma->getID();
@@ -262,6 +276,8 @@ if (count($errors) == 0) {
                 if (count($annoIDs)) {
                   if (!in_array($annoLink->getID(),$annoIDs)) {
                     array_push($annoIDs,$annoLink->getID());
+                  } else {
+                    continue;
                   }
                 } else {
                   $annoIDs = array($annoLink->getID());
@@ -278,14 +294,15 @@ if (count($errors) == 0) {
           }
         }
       }
-      foreach($lemmaByNodeID as $key => $lemma) {
+
+      foreach($lemmaByNodeHash as $nodeHash => $lemma) {// iterate through affected lemma adding client return data
         if ($lemma->getTempProperty('isNew')) {
           addNewEntityReturnData('lem',$lemma);
         } else {
           if ($lemma->getCompoundAnalysis()) {
             addUpdateEntityReturnData('lem',$lemma->getID(),'compAnalysis',$lemma->getCompoundAnalysis());
           }
-          if ($lemma->getTempProperty('linked')) {
+          if ($lemma->getTempProperty('linked') || $lemma->getTempProperty('rootlinked')) {
             addUpdateEntityReturnData('lem',$lemma->getID(),'annotationIDs',$lemma->getAnnotationIDs());
             addUpdateEntityReturnData('lem',$lemma->getID(),'relatedEntGIDsByType',$lemma->getRelatedEntitiesByLinkType());
           }
@@ -306,60 +323,6 @@ if (count($errors) == 0) {
   }
 }
 
-/*
-addUpdateEntityReturnData('cmp',$compound->getID(),'entityIDs',$compound->getComponentIDs());
-addUpdateEntityReturnData('cmp',$compound->getID(),'tokenIDs',$compound->getTokenIDs());
-addUpdateEntityReturnData('cmp',$compound->getID(),'value',$compound->getValue());
-addUpdateEntityReturnData('cmp',$compound->getID(),'transcr',$compound->getTranscription());
-addUpdateEntityReturnData('cmp',$compound->getID(),'sort', $compound->getSortCode());
-addUpdateEntityReturnData('cmp',$compound->getID(),'sort2', $compound->getSortCode2());
-} else {
-addUpdateEntityReturnData('tok',$token->getID(),'graphemeIDs',$token->getGraphemeIDs());
-addUpdateEntityReturnData('tok',$token->getID(),'value',$token->getValue());
-addUpdateEntityReturnData('tok',$token->getID(),'transcr',$token->getTranscription());
-addUpdateEntityReturnData('tok',$token->getID(),'syllableClusterIDs',$token->getSyllableClusterIDs());
-addUpdateEntityReturnData('tok',$token->getID(),'sort', $token->getSortCode());
-addUpdateEntityReturnData('tok',$token->getID(),'sort2', $token->getSortCode2());
-}
-addNewEntityReturnData('tok',$newSplitToken);
-if (isset($newSplitToken2)) {
-addNewEntityReturnData('tok',$newSplitToken2);
-}
-
-//update compound heirarchy
-if (count($errors) == 0 && isset($compounds) && count($compounds) > 0) {//update compounds
-while (count($compounds)) {
-$compound = array_shift($compounds);
-$componentGIDs = $compound->getComponentIDs();
-$oldTokCmpIndex = array_search($oldTokCmpGID,$componentGIDs);
-array_splice($componentGIDs,$oldTokCmpIndex,1,$tokCmpReplaceGIDs);
-$tokCmpReplaceGIDs = $componentGIDs;
-$oldTokCmpGID = $compound->getGlobalID();
-if (!$compound->isReadonly()) {
-$compound->markForDelete();
-addRemoveEntityReturnData('cmp',$compound->getID());
-}
-if ($compound->hasError()) {
-array_push($errors,"error updating compound clone '".$compound->getValue()."' - ".$compound->getErrors(true));
-break;
-}
-}
-}
-$newTokCmpGID = $tokCmpReplaceGIDs;//ensure this gets altered in the text div
-}
-
-}else { // only updated
-addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
-}
-//update edition seqIDs
-$edition->setSequenceIDs($edSeqIds);
-$edition->save();
-if ($edition->hasError()) {
-array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
-}else{
-addUpdateEntityReturnData('edn',$edition->getID(),'seqIDs',$edition->getSequenceIDs());
-}
-*/
 
 $retVal["success"] = false;
 if (count($errors)) {

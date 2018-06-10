@@ -93,6 +93,8 @@ EDITORS.SequenceVE.prototype = {
                                                  propertyMgrDiv: this.$propertyMgrDiv,
                                                  editor: seqVE,
                                                  ednID: this.edition.id,
+                                                 hideSubType: true,
+                                                 hideComponents: true,
                                                  propVEType: "entPropVE",
                                                  dataMgr: this.dataMgr,
                                                  splitterDiv: this.$splitterDiv });
@@ -710,7 +712,7 @@ EDITORS.SequenceVE.prototype = {
 */
 
     function updateSelectionHandler(e,senderID, selectionIDs, entTag) {
-      if (senderID == seqVE.id || !seqVE.linkTargetTag) {
+      if (senderID == seqVE.id || !seqVE.linkTargetTag || !entTag) {
         return;
       }
       DEBUG.log("event","selection changed recieved by sequenceVE in "+seqVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
@@ -729,6 +731,41 @@ EDITORS.SequenceVE.prototype = {
     };
 
     $(this.editDiv).unbind('updateselection').bind('updateselection', updateSelectionHandler);
+
+/**
+* put your comment there...
+*
+* @param object e System event object
+* @param senderID
+* @param selectionIDs
+* @param string entTag Entity tag
+*/
+
+    function structureLinkResponseHandler(e,senderID, senderEdnID, linkTargetTag, selectionIDs) {
+      if (senderID == seqVE.id || senderEdnID != seqVE.edition.id || !seqVE.linkTargetTag || !selectionIDs) {
+        return;
+      }
+      DEBUG.log("event","selection changed recieved by sequenceVE in "+seqVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
+      var parentEntTag = seqVE.linkTargetTag,
+          $linkElement = $('.linktarget',seqVE.$structTree);
+          $linkElement.removeClass('linktarget');
+      if (seqVE.entPropVE && seqVE.entPropVE.saveSequence) {
+        seqVE.entPropVE.saveSequence(parentEntTag.substring(3), null, null, null, selectionIDs, null, null, null, function(newSeqID) {
+          var elem = $linkElement[0], newItem, i,
+              newItems = seqVE.getSubItems(selectionIDs,0);
+          if (newItems && newItems.length){
+            for (i in newItems) {
+              newItem = newItems[i];
+              seqVE.$structTree.jqxTree('addTo',newItem,elem);
+              seqVE.attachMenuEventHandler($(elem));
+              seqVE.$structTree.jqxTree('expandItem', elem);
+            }
+          }
+        },null);
+      }
+    };
+
+    $(this.editDiv).unbind('structurelinkresponse').bind('structurelinkresponse', structureLinkResponseHandler);
 
 
 /**
@@ -926,7 +963,7 @@ EDITORS.SequenceVE.prototype = {
 */
 
   createContextMenu: function(e,item) {
-    var seqVE = this,
+    var seqVE = this,i,subItem,subType,
         scrollTop = $(window).scrollTop(),
         scrollLeft = $(window).scrollLeft(),
         $ctxMenu, menuItems, tag = item.id,
@@ -949,6 +986,31 @@ EDITORS.SequenceVE.prototype = {
         menuItems.push({ label: "Remove",
                             id: "Remove",
                          value: "Remove" });
+      } else {
+        wordsOnly = true;
+        for (i = 0; i< item.subtreeElement.children.length; i++) {
+          subItem = seqVE.$structTree.jqxTree('getItem', item.subtreeElement.children[i]);
+          if (subItem) {
+            if (subItem.hasItems) {
+              wordsOnly = false;
+              break;
+            } else {
+              subType = subItem.id.substring(0,3);
+              if (subType !== "scl" && subType !== "tok" && subType !== "cmp") {
+                wordsOnly = false;
+                break;
+              }
+            }
+          }
+        }
+        if (wordsOnly){
+          if (!menuItems) {
+            menuItems = [];
+          }
+          menuItems.push({ label: "RemoveAll",
+                              id: "RemoveAll",
+                           value: "RemoveAll" });
+        }
       }
     }
     if (menuItems && menuItems.length) {
@@ -1004,6 +1066,18 @@ EDITORS.SequenceVE.prototype = {
                 }
               }
               break;
+            case "RemoveAll":
+              if (selectedItem != null) {
+                entTag = selectedItem.id;
+                if (entTag.match(/seq/)) {
+                  entID = entTag.substring(3);
+                  entGID = entTag.substring(0,3)+":"+entID;
+                  if (seqVE.entPropVE && seqVE.entPropVE.saveSequence) {
+                    seqVE.entPropVE.saveSequence(entID, null, null, null, "",null, null, null, null,null);
+                  }
+                }
+              }
+              break;
             case "Tag":
               if (selectedItem != null && seqVE.curTagID) {
                  entTag = selectedItem.id;
@@ -1024,6 +1098,10 @@ EDITORS.SequenceVE.prototype = {
                   //callback needs to add item to parent, attach MenuEventHandler and expanded parent node
                   seqVE.linkTargetTag = selectedItem.id;
                   $(selectedItem.element).addClass('linktarget');
+                  if (seqVE.edition) {
+                    ednTag = "edn"+ seqVE.edition.id;
+                    $('.editContainer').trigger('linkStructRequest',[seqVE.id,ednTag,seqVE.linkTargetTag]);
+                  }
                 }
               }
               break;

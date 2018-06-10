@@ -120,11 +120,16 @@ if (!$data) {
   $decomp = null;//required
   if ( isset($data['decomp'])) {//get decomposition string
     $decomp = $data['decomp'];
-    $matchCnt = preg_match("/([aiïüueo’]+)(?:([\s-‐])([aiïüueo’]+))?/",$decomp,$decompParts);
-    if ($matchCnt == 1 && $decomp == array_shift($decompParts)) {
-      $decomp = join(":",$decompParts);// create decomp sting of form tok1endvowel:sep:tok2startvowel
-    } else {
-      array_push($errors,"invalid parameter to save sandhi ");
+    if (strlen($decomp)) {
+      $matchCnt = preg_match("/([-‐]|[aāiīïüuūeēoō’l̥̄rṛṝ]+)(?:([\s-‐])([aāiīïüuūeēoō’l̥̄rṛṝ]+))?/",$decomp,$decompParts);
+      if ($matchCnt == 1 && $decomp == array_shift($decompParts)) {
+        if (count($decompParts) == 1) {
+          $decompParts = array("",$decompParts[0],"");
+        }
+        $decomp = join(":",$decompParts);// create decomp sting of form tok1endvowel:sep:tok2startvowel
+      } else {
+        array_push($errors,"invalid parameter to save sandhi ");
+      }
     }
   } else {
     array_push($errors,"missing parameter for save sandhi ");
@@ -167,7 +172,7 @@ if (count($errors) == 0 && $graID && $decomp !== null) {
     if (count($decomp) > 0 && !$origDecomp) {//grapheme doesn't have decomp so add the passed in decomp
       $cmd = "add";
     } else if ($decomp !== $origDecomp) {
-      if (count($origDecomp) > 0 && !$decomp) {//grapheme has decomp and need to set it to null
+      if (strlen($origDecomp) > 0 && strlen($decomp) == 0) {//grapheme has decomp and need to set it to null
         $cmd = 'remove';
       }else if (count($origDecomp) > 0 && count($decomp)>0) {//grapheme has decomp and need to change it to
         $cmd = 'change';
@@ -230,7 +235,7 @@ if (count($errors) == 0 && $graID && $cmd && $cmd != "NOP" ) {
       array_push($errors,"error adding sandhi at edge of word not supported for graID $graID grapheme ".$grapheme->getValue()." for ".$token1->getValue());
     }
   } else if (($cmd == "remove" || $cmd == "change") && $token1 && $token2){
-    // remove or change  command must have 2 tokens with shared grapheme at beginning and end
+    // remove or change  command must have 2 tokens in order with shared grapheme at beginning and end
     $firstToken = $secToken = null;
     //get token1 graphemeIDs and find position of target grapheme (should be last)
     $tokGraIDs = $token1->getGraphemeIDs();
@@ -310,6 +315,7 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
       $origSyllableGraphemes = $syllable->getGraphemes(true);
       //clone syllable  TODO determine if case for not cloning syllable (owned with readonly grapheme)
       $clonedSyllable = $syllable->cloneEntity($defAttrIDs,$defVisIDs);
+      $newSyllableID = $clonedSyllable->getID();
       //clone graphemes
       foreach ($origSyllableGraphemes as $grapheme) {//copy all grapheme and set decomp for clone of ref grapheme
         $newGrapheme = $grapheme->cloneEntity($defAttrIDs,$defVisIDs);
@@ -318,6 +324,7 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
         }
         $newGrapheme->save();
         addNewEntityReturnData('gra',$newGrapheme);
+        addUpdateEntityReturnData('gra',$newGrapheme->getID(),'sclID',$newSyllableID);
         if ($graID == $grapheme->getID()) {//capture the sandhi graID
           $sandhiGraID = $newGrapheme->getID();
         }
@@ -328,6 +335,10 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
       $clonedSyllable->setGraphemeIDs($newGraIDs);
       $clonedSyllable->save();
       addNewEntityReturnData('scl',$clonedSyllable);
+      $newSclID = $clonedSyllable->getID();
+      foreach ($newGraIDs as $newSylGraID) {
+        addUpdateEntityReturnData('gra',$newSylGraID,'sclID',$newSclID);
+      }
       //update physical line seq with cloned scl
       $physLineSeq = null;
       foreach($seqPhys->getEntities(true) as $edPhysLineSeq) {
@@ -369,25 +380,223 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
     if ($grapheme->hasError()) {
       array_push($errors,"error updating sandhi for '".$grapheme->getLabel()."' - ".$grapheme->getErrors(true));
     }else { // only updated
-      $sandhiGraID = $graID;
-      addUpdateEntityReturnData('gra',$grapheme->getID(),'decomp',preg_replace("/\:/",'',$grapheme->getDecomposition()));
-      if ($token1 && $cmd == "update") {
-        $token1->getValue(true);
-        $token1->save();
-        addUpdateEntityReturnData('tok',$token1->getID(),'value',$token1->getValue());
-        addUpdateEntityReturnData('tok',$token1->getID(),'transcr',$token1->getTranscription());
+      $sandhiGraID = $grapheme->getID();
+      if ($cmd == "remove") {
+        addRemovePropertyReturnData('gra',$grapheme->getID(),'decomp');
+      } else {
+        addUpdateEntityReturnData('gra',$grapheme->getID(),'decomp',preg_replace("/\:/",'',$grapheme->getDecomposition()));
       }
-      if ($token2 && $cmd == "update") {
-        $token2->getValue(true);
-        $token2->save();
-        addUpdateEntityReturnData('tok',$token2->getID(),'value',$token2->getValue());
-        addUpdateEntityReturnData('tok',$token2->getID(),'transcr',$token2->getTranscription());
+      if ($token1) {
+        if ($cmd == "update") {
+          $token1->getValue(true);
+          $token1->save();
+          addUpdateEntityReturnData('tok',$token1->getID(),'value',$token1->getValue());
+          addUpdateEntityReturnData('tok',$token1->getID(),'transcr',$token1->getTranscription());
+          addUpdateEntityReturnData('tok',$token1->getID(),'graphemeIDs',$token1->getGraphemeIDs());
+          addUpdateEntityReturnData('tok',$token1->getID(),'sort',$token1->getSortCode());
+          addUpdateEntityReturnData('tok',$token1->getID(),'sort2',$token1->getSortCode2());
+        }
+      }
+      if ($token2) {
+        if ($cmd == "update") {
+          $token2->getValue(true);
+          $token2->save();
+          addUpdateEntityReturnData('tok',$token2->getID(),'value',$token2->getValue());
+          addUpdateEntityReturnData('tok',$token2->getID(),'transcr',$token2->getTranscription());
+          addUpdateEntityReturnData('tok',$token2->getID(),'graphemeIDs',$token2->getGraphemeIDs());
+          addUpdateEntityReturnData('tok',$token2->getID(),'sort',$token2->getSortCode());
+          addUpdateEntityReturnData('tok',$token2->getID(),'sort2',$token2->getSortCode2());
+        }
       }
     }
   }
 }
 
 // adjust tokens depending on command
+//for remove we need to add graphemes of token 2 to token1 (excluding shared grapheme) using new graphemes if syllable cloned
+if ( count($errors) == 0 && $cmd == "remove" && $token1 && $token2) {
+  //capture GID so we can find where to update heirarchy
+  $replaceTokCmpGID = $token1->getGlobalID();
+  if ($token1->isReadonly()) {
+    $token1 = $token1->cloneEntity($defAttrIDs,$defVisIDs);
+  }
+  if (count($newGraIDs)>0){ // the original syllable was cloned so transfer the new graphemeID
+    $tokGraIDs = $token1->getGraphemeIDs();
+    foreach ($origSyllableGraIDs as $origGraID) {
+      $newTokGraID = array_shift($newGraIDs);
+      $tokGraIndex = array_search($origGraID,$tokGraIDs);
+      if ($tokGraIndex !== false) {
+        array_splice($tokGraIDs,$tokGraIndex,1,$newTokGraID);
+      } else {
+        array_push($warnings,"warning updating graphemes for token skipping graID $origGraID, not found in token");
+      }
+    }
+    $token1->setGraphemeIDs($tokGraIDs);
+    $token1->save();
+  }
+  // combine graphemes of token1 with token2
+  $tokGraIDs = $token1->getGraphemeIDs();
+  $tok2GraIDs = $token2->getGraphemeIDs();
+  $tok2FirstGraID = array_shift($tok2GraIDs);
+  if ($tok2FirstGraID != $sandhiGraID){// warn here instead of reverting
+    array_push($warnings,"warning remove: unexpected grapheme at beginning of second token $tok2FirstGraID not equal to sandhi $sandhiGraID");
+  }
+  //split graphemes and share sandhi vowel
+  $tokGraIDs = array_merge($tokGraIDs,$tok2GraIDs);
+  $tokSandhiGraIndex = array_search($sandhiGraID,$tokGraIDs);
+  $token1->setGraphemeIDs($tokGraIDs);
+  $token1->getValue(true);
+  $token1->save();
+  addRemoveEntityReturnData('tok',$token2);
+  $removeTokGID = $token2->getGlobalID();
+  if (!$token2->isReadonly()) {
+    $token2->markForDelete();
+  }
+  //signal display entity change
+  if ($replaceTokCmpGID != $token1->getGlobalID()) {//cloned
+    addNewEntityReturnData('tok',$token1);
+    $newTokCmpGID = $token1->getGlobalID();
+  } else {
+    $replaceTokCmpGID = null;
+    addUpdateEntityReturnData('tok',$token1->getID(),'graphemeIDs',$token1->getGraphemeIDs());
+    addUpdateEntityReturnData('tok',$token1->getID(),'value',$token1->getValue());
+    addUpdateEntityReturnData('tok',$token1->getID(),'transcr',$token1->getTranscription());
+    addUpdateEntityReturnData('tok',$token1->getID(),'sort',$token1->getSortCode());
+    addUpdateEntityReturnData('tok',$token1->getID(),'sort2',$token1->getSortCode2());
+    addUpdateEntityReturnData('tok',$token1->getID(),'syllableClusterIDs',$token1->getSyllableClusterIDs());
+  }
+
+  //update containment hierarchy
+  $oldTextDivSeqGID = null;
+  $newTextDivSeqGID = null;
+  //check for compound containers and update as needed
+  if (count($errors)==0 && array_key_exists('cmp',$ctxLookup)) {// compounds so change GIDs
+    $cmpIDs = $ctxLookup['cmp'];
+    while (count($cmpIDs) && ($replaceTokCmpGID || $removeTokGID)) {
+      $cmpID = array_pop($cmpIDs);
+      $compound = new Compound($cmpID);
+      $componentGIDs = $compound->getComponentIDs();
+      if ($removeTokGID) {
+        $removeTokIndex = array_search($removeTokGID,$componentGIDs);
+        if ($removeTokIndex !== false) {
+          array_splice($componentGIDs,$removeTokIndex,1);
+          $removeTokGID = null;
+        }
+      }
+      if (count($componentGIDs) == 1) {//can remove compound level
+        if (!$compound->isReadonly()) {
+          $compound = $compound->markForDelete();
+        }
+        addRemoveEntityReturnData('cmp',$compound);
+        $replaceTokCmpGID = "cmp:$cmpID";
+        $newTokCmpGID = $componentGIDs[0];
+        continue;
+      }
+      if ($compound->isReadonly()) {
+        $compound = $compound->cloneEntity($defAttrIDs,$defVisIDs);
+      }
+      $replaceTokCmpIndex = array_search($replaceTokCmpGID,$componentGIDs);
+      if ($replaceTokCmpIndex !== false) {
+        array_splice($componentGIDs,$replaceTokCmpIndex,1,$newTokCmpGID);
+        $compound->setComponentIDs($componentGIDs);
+        $compound->getValue(true);//cause recalc
+        $compound->save();
+        if ($compound->hasError()) {
+          array_push($errors,"error updating compound clone '".$compound->getValue()."' - ".$compound->getErrors(true));
+          break;
+        } else if ($cmpID != $compound->getID()) { // clone so pragate change
+          $replaceTokCmpGID = "cmp:$cmpID";
+          $newTokCmpGID = $compound->getGlobalID();
+          addNewEntityReturnData('cmp',$compound);
+        } else {
+          $newTokCmpGID = $replaceTokCmpGID = null;
+          addUpdateEntityReturnData('cmp',$compound->getID(),'entityIDs',$compound->getComponentIDs());
+          addUpdateEntityReturnData('cmp',$compound->getID(),'tokenIDs',$compound->getTokenIDs());
+          addUpdateEntityReturnData('cmp',$compound->getID(),'value',$compound->getValue());
+          addUpdateEntityReturnData('cmp',$compound->getID(),'transcr',$compound->getTranscription());
+          addUpdateEntityReturnData('cmp',$compound->getID(),'sort',$compound->getSortCode());
+          addUpdateEntityReturnData('cmp',$compound->getID(),'sort2',$compound->getSortCode2());
+        }
+      } else {
+        array_push($errors,"error unable to find $replaceTokCmpGID in components of '".$compound->getValue());
+        $replaceTokCmpGID = null;
+      }
+    }
+  }
+  //check textDiv and update as needed
+  if (count($errors)==0 && ($replaceTokCmpGID && $newTokCmpGID || $removeTokGID)) {
+    $textDivSeq = null;
+    //find textDivSeq
+    if (array_key_exists('seq',$ctxLookup)) {
+      $textDivSeqID = $ctxLookup['seq'][0];
+      $textDivSeq = new Sequence($textDivSeqID);
+    } else {
+      foreach($seqText->getEntities(true) as $edTextDivSeq) {
+        if (in_array($origTok1GID,$edTextDivSeq->getEntityIDs())) {
+          $textDivSeq = $edTextDivSeq;
+          break;
+        }
+      }
+    }
+    //update textDivSeq
+    if ($textDivSeq) {
+      if ($textDivSeq->isReadonly()) {//clone it
+        $oldTextDivSeqGID = $textDivSeq->getGlobalID();
+        $textDivSeq = $textDivSeq->cloneEntity($defAttrIDs,$defVisIDs);
+      }
+      $textDivSeqEntityIDs = $textDivSeq->getEntityIDs();
+      if ($removeTokGID) {
+        $removeTokIndex = array_search($removeTokGID,$textDivSeqEntityIDs);
+        if ($removeTokIndex !== false) {
+          array_splice($textDivSeqEntityIDs,$removeTokIndex,1);
+          $removeTokGID = null;
+        }
+      }
+      if ($replaceTokCmpGID) {
+        $replaceTokCmpIndex = array_search($replaceTokCmpGID,$textDivSeqEntityIDs);
+        if ($replaceTokCmpIndex !== false) {
+          array_splice($textDivSeqEntityIDs,$replaceTokCmpIndex,1,$newTokCmpGID);
+        }
+      }
+      $textDivSeq->setEntityIDs($textDivSeqEntityIDs);
+      $textDivSeq->save();
+      $newTextDivSeqGID = $textDivSeq->getGlobalID();
+      if ($textDivSeq->hasError()) {
+        array_push($errors,"error updating text division sequence '".$textDivSeq->getLabel()."' - ".$textDivSeq->getErrors(true));
+      } else if ($oldTextDivSeqGID){ // cloned
+        addNewEntityReturnData('seq',$textDivSeq); //??altered physline parameter??
+        $retVal['alteredTextDivSeqID'] = $textDivSeq->getID();
+      } else { // only updated
+        invalidateCachedSeq($textDivSeq->getID(),$ednOwnerID);
+        addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
+      }
+    }
+  }
+
+  // update Text (Text Division Container) Sequence if needed
+  if (count($errors) == 0 && $oldTextDivSeqGID && $oldTextDivSeqGID != $newTextDivSeqGID){//cloned so update container
+    //clone text sequence if not owned
+    if ($seqText->isReadonly()) {
+      $oldTextSeqID = $seqText->getID();
+      $seqText = $seqText->cloneEntity($defAttrIDs,$defVisIDs);
+    }
+    $textSeqEntityIDs = $seqText->getEntityIDs();
+    $txtDivSeqIndex = array_search($oldTextDivSeqGID,$textSeqEntityIDs);
+    if ($txtDivSeqIndex) {
+      array_splice($textSeqEntityIDs,$txtDivSeqIndex,1,$newTextDivSeqGID);
+      $seqText->setEntityIDs($textSeqEntityIDs);
+      //save text sequence
+      $seqText->save();
+      if ($seqText->hasError()) {
+        array_push($errors,"error updating text sequence '".$seqText->getLabel()."' - ".$seqText->getErrors(true));
+      }else if ($oldTextSeqID){//cloned so it's new
+        addNewEntityReturnData('seq',$seqText);
+      }else { // only updated
+        addUpdateEntityReturnData('seq',$seqText->getID(),'entityIDs',$seqText->getEntityIDs());
+      }
+    }
+  }
+}
 //for add we need to split token using new graphemes if syllable cloned
 if ( count($errors) == 0 && $cmd == "add" && $token1) {
   //capture GID so we can find where to update heirarchy
@@ -539,7 +748,6 @@ if ( count($errors) == 0 && $cmd == "add" && $token1) {
       }
     }
     //update textDivSeq
-    $oldTxtDivSeqGID = null;
     if ($textDivSeq) {
       if ($textDivSeq->isReadonly()) {//clone it
         $oldTextDivSeqGID = $textDivSeq->getGlobalID();
@@ -566,16 +774,16 @@ if ( count($errors) == 0 && $cmd == "add" && $token1) {
   }
 
   // update Text (Text Division Container) Sequence if needed
-  if (count($errors) == 0 && @$oldTxtDivSeqGID && @$oldTxtDivSeqGID != @$newTxtDivSeqGID){//cloned so update container
+  if (count($errors) == 0 && $oldTextDivSeqGID && $oldTextDivSeqGID != $newTextDivSeqGID){//cloned so update container
     //clone text sequence if not owned
     if ($seqText->isReadonly()) {
       $oldTextSeqID = $seqText->getID();
       $seqText = $seqText->cloneEntity($defAttrIDs,$defVisIDs);
     }
     $textSeqEntityIDs = $seqText->getEntityIDs();
-    $txtDivSeqIndex = array_search($oldTxtDivSeqGID,$textSeqEntityIDs);
+    $txtDivSeqIndex = array_search($oldTextDivSeqGID,$textSeqEntityIDs);
     if ($txtDivSeqIndex) {
-      array_splice($textSeqEntityIDs,$txtDivSeqIndex,1,$newTxtDivSeqGID);
+      array_splice($textSeqEntityIDs,$txtDivSeqIndex,1,$newTextDivSeqGID);
       $seqText->setEntityIDs($textSeqEntityIDs);
       //save text sequence
       $seqText->save();
@@ -596,6 +804,7 @@ if (count($errors) == 0 && $edition) {
   //touch edition for synch code
   $edition->storeScratchProperty("lastModified",$edition->getModified());
   $edition->save();
+  invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
 }
 
 

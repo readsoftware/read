@@ -123,7 +123,7 @@ if (!$data) {
       $vis = array(3);
     }
     if ( $data['vis'] == "Public"){
-      $vis = array(2);
+      $vis = array(6);
     }
     if ( $data['vis'] == "Private"){
       $vis =getUserDefVisibilityIDs();
@@ -259,7 +259,7 @@ if (count($errors) == 0) {
     case "updateAno":
       if ($vis){
         $annotation->setVisibilityIDs($vis);
-        if (in_array(2,$vis)) {
+        if (in_array(6,$vis)) {
           $vis = "Public";
         } else if (in_array(3,$vis)) {
           $vis = "User";

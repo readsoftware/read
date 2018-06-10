@@ -70,43 +70,8 @@
   require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
   require_once (dirname(__FILE__) . '/../model/entities/EntityFactory.php');//get user access control
+  require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
 //  $userID = 12;
-  $prefixToTableName = array(//todo change this to read from the db structure or from the terms
-            "col" => "collection",
-            "itm" => "item",
-            "prt" => "part",
-            "frg" => "fragment",
-            "img" => "image",
-            "spn" => "span",
-            "srf" => "surface",
-            "txt" => "text",
-            "mcx" => "materialcontext",
-            "tmd" => "textmetadata",
-            "bln" => "baseline",
-            "seg" => "segment",
-            "run" => "run",
-            "lin" => "line",
-            "scl" => "syllablecluster",
-            "gra" => "grapheme",
-            "tok" => "token",
-            "cmp" => "compound",
-            "lem" => "lemma",
-            "inf" => "inflection",
-            "trm" => "term",
-            "prn" => "propernoun",
-            "cat" => "catalog",
-            "seq" => "sequence",
-            "lnk" => "link",
-            "edn" => "edition",
-            "bib" => "bibliography",
-            "ano" => "annotation",
-            "atb" => "attribution",
-            "atg" => "attributiongroup",
-            "ugr" => "usergroup",
-            "dat" => "date",
-            "ugr" => "usergroup",
-            "era" => "era");
-
   $dbMgr = new DBManager();
   $labelsToColNames = array();
   $columnNames = array();

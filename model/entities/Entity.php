@@ -97,6 +97,10 @@
       if (!self::$_termInfo) {
         self::$_termInfo = getTermInfoForLangCode('en');
       }
+       if (!$termID) {
+         error_log("call to retrieve term with empty term id");
+         return "";
+       }
       return self::$_termInfo['labelByID'][$termID];
     }
 
@@ -618,7 +622,7 @@
     * @return array of string GID of annotation objects or empty array
     */
     public function getLinkedAnnotationsByType() {
-      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkfrom_ids) and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified");
+      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkfrom_ids) and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified",null,null,null);
       if ($annotations->getCount()>0){
         $linkedAnoIDsByType = array();
         $curType = null;
@@ -645,7 +649,7 @@
     * @return array of array of int $ID of annotation objects or empty array
     */
     public function getLinkedByAnnotationsByType() {
-      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkto_ids) and ano_linkfrom_ids is null and not ano_owner_id = 1","ano_type_id,modified");
+      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkto_ids) and ano_linkfrom_ids is null and not ano_owner_id = 1","ano_type_id,modified",null,null,null);
       if ($annotations->getCount()>0){
         $linkedByAnoIDsByType = array();
         $curType = null;
@@ -669,7 +673,7 @@
     */
     public function getRelatedEntitiesByLinkType() {
       $fromEntTag = $this->getGlobalPrefix().$this->getID();
-      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkfrom_ids) and ano_linkto_ids is not null and not ano_owner_id = 1 ","ano_type_id,modified");
+      $annotations = new Annotations("'".$this->getGlobalID()."'"." = ANY(ano_linkfrom_ids) and ano_linkto_ids is not null and not ano_owner_id = 1 ","ano_type_id,modified",null,null,null);
       if ($annotations->getCount()>0){
         $relatedEntGIDsByLinkType = array();
         $curType = null;
@@ -753,7 +757,7 @@
     * @return boolean indicating that this object is readonly
     */
     public function isReadonly() {
-      if ($this->_visibility_ids && $this->getVisibilityIDs() && in_array(2,$this->getVisibilityIDs()) ||
+      if ($this->_visibility_ids && $this->getVisibilityIDs() && in_array(2,$this->getVisibilityIDs()) && !in_array(6,$this->getVisibilityIDs()) ||
            $this->getOwnerID() == 2 ||
           ($this->getOwnerID() &&
             $this->getOwnerID()!= getUserDefEditorID() &&
@@ -764,12 +768,21 @@
     }
 
     /**
+    * Query published
+    *
+    * @return boolean indicating that this object is published and immutable
+    */
+    public function isPublished() {
+      return (in_array(2,$this->getVisibilityIDs()));
+    }
+
+    /**
     * Query public
     *
     * @return boolean indicating that this object is public
     */
     public function isPublic() {
-      return in_array(2,$this->getVisibilityIDs());
+      return (in_array(2,$this->getVisibilityIDs()) || in_array(6,$this->getVisibilityIDs()));
     }
 
     /**
@@ -924,6 +937,15 @@
     */
     public function getGlobalID() {
       return $this->getGlobalPrefix().":".$this->_id;
+    }
+
+    /**
+    * Get Entity unique Tag
+    *
+    * @return int returns the global prefix concatenated with the primary Key for the Entity
+    */
+    public function getEntityTag() {
+      return $this->getGlobalPrefix().$this->_id;
     }
 
     /**

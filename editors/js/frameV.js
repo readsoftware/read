@@ -136,7 +136,9 @@ EDITORS.FrameV.prototype = {
             url = frameV.serviceURL;
           } else {
 //            url = basepath+'/plugins/azesdictionary/m_dictionary.php';
+//            url = 'https://gandhari.org/beta/plugins/azesdictionary/m_dictionary.php';
             url = 'https://gandhari.org/beta/plugins/azesdictionary/m_dictionary.php';
+            url = basepath+'/plugins/dictionary/index.php';
           }
           entity = frameV.dataMgr.getEntity(prefix,id);
           url += '?dictionary='+frameV.dictionary+'&searchstring='+entity.value.replace(/ʔ/g,'')+'&searchtype=F&strJSON={"dictionary":"'+frameV.dictionary+'","mode":"F:'+entity.value.replace(/ʔ/g,'')+'"}';

@@ -193,9 +193,11 @@ EDITORS.EditionVE.prototype = {
           items.push(item);
         }
       }
-    }
-    if (items.length == 0) {
-      items.push({id:'off',label:'Off',value:'off'});
+      if (items.length == 0) {
+        items.push({id:'off',label:'Off',value:'off'});
+      } else {
+        items = [{ label:"All", expanded:true, items:items}];
+      }
     }
     return items;
   },
@@ -322,10 +324,21 @@ EDITORS.EditionVE.prototype = {
 
   getUsedSeqsList: function () {
     var usedSeqIDs = Object.keys(this.seqGIDsByType),//get the cur seqIDs
-        colorChoices = ['cyan','yellowgreen','coral','yellow','cadetblue','aqua',
+        colorChoices = {"Analysis":"#C2CBCE",//warning!!! term dependency
+                        "Chapter":"#61A3D9",//warning!!! term dependency
+                        "Section":"#9BC2E6",//warning!!! term dependency
+                        "Paragraph":"#BDD7EE",//warning!!! term dependency
+                        "Sentence":"#70ad47",//warning!!! term dependency
+                        "Clause":"#a9d08e",//warning!!! term dependency
+                        "Phrase":"#c4dfb2",//warning!!! term dependency
+                        "List":"#FE642E",//warning!!! term dependency
+                        "Item":"#fe9d7a",//warning!!! term dependency
+                        "Stanza":"#FFC03C",//warning!!! term dependency
+                        "Pāda":"#FFE699",//warning!!! term dependency
+                        "other":['cyan','yellowgreen','coral','yellow','cadetblue','aqua',
                         'gold','khaki','lavender','lightcyan','lightgrey','lightsteelblue','palegreen',
-                        'plum','pink','skyblue','sandbrown','silver','springgreen','violet','tan'],
-        items = [], i, item, tagID, label, color, cssSelectors,scope = "#"+this.contentDiv.attr('id');
+                        'plum','pink','skyblue','sandbrown','silver','springgreen','violet','tan']},
+        items = [], i, item, tagID, label, color;
 
     //if empty nothing tagged create single item "off" using off for all item values
     if (!usedSeqIDs || usedSeqIDs.length == 0) {
@@ -336,13 +349,18 @@ EDITORS.EditionVE.prototype = {
         tagID = usedSeqIDs[i];
         label = this.dataMgr.getTermFromID(tagID.substring(3));
         //set background color from a list reserving primary color tag color to match tag name.
-        color = colorChoices[i];
+        if (colorChoices[label]){
+          color = colorChoices[label];
+        } else {
+          color = colorChoices["other"][i%colorChoices["other"].length];
+        }
         item = {id:tagID,
                 label:label,
                 value:color
                };
         items.push(item);
       }
+      items = [{ label:"All", expanded:true, items:items}];
     }
     return items;
   },
@@ -475,7 +493,7 @@ EDITORS.EditionVE.prototype = {
         seqGIDs = this.seqGIDsByType[seqTypeTag], i, seqGID, label, seqTag,
         component, sequence, firstEntGID, insertElem,
         seqLabel = this.dataMgr.getTermFromID(seqTypeTag.substring(3));
-    if (seqGIDs.length > 0) {
+    if (seqGIDs && seqGIDs.length > 0) {
       for (i=0; i<seqGIDs.length; i++) {
         seqGID = seqGIDs[i];
         seqTag = seqGID.replace(':','');
@@ -562,7 +580,7 @@ EDITORS.EditionVE.prototype = {
         element = $('#'+item.id,this.showTagTree);
         if (element.length) {
           element = element.get(0);
-          injectSeqMarkers(item.id,null);
+          ednVE.injectSeqMarkers(item.id,null);
           cntNewCheckedItems++;
           this.showTagTree.jqxTree('checkItem', element, true);
         }
@@ -584,14 +602,14 @@ EDITORS.EditionVE.prototype = {
 * refresh sequence type markers in edition display
 */
 
-  refreshSeqMarkers: function () {
-    var ednVE = this, element,segTypeTag, color,
-        checkedItems, i, item;
+  refreshSeqMarkers: function (seqIDs) {
+    var ednVE = this, element,segTypeTag, color,label,
+        checkedItems, i, item, seqID, sequence, $marker;
     checkedItems = this.showSeqTree.jqxTree('getCheckedItems');
     this.calcSeqList();
+    this.removeAllSeqMarkers();
     this.showSeqTree.jqxTree('clear');
     this.showSeqTree.jqxTree('addTo', this.getUsedSeqsList());
-//    this.removeAllSeqMarkers();
     for (i in checkedItems) {
       item = checkedItems[i];
       element = $('#'+item.id,this.showSeqTree);
@@ -601,6 +619,18 @@ EDITORS.EditionVE.prototype = {
         element = element.get(0);
         if ($('sup.'+segTypeTag,ednVE.editDiv).length == 0) {
           ednVE.injectSeqMarkers(segTypeTag,color);
+        } else if (seqIDs && seqIDs.length > 0){
+          for (j in seqIDs) {
+            seqID = seqIDs[j];
+            sequence = ednVE.dataMgr.getEntity('seq',seqID);
+            if (sequence) {
+              label = sequence.sup? sequence.sup : ( sequence.value?sequence.value:'seq'+seqID);
+              $marker = $('sup.seq'+seqID,ednVE.editDiv);
+              if ($marker) {
+                $marker.html(label);
+              }
+            }
+          }
         }
         this.showSeqTree.jqxTree('checkItem', element, true);
       } else {
@@ -614,7 +644,43 @@ EDITORS.EditionVE.prototype = {
   },
 
   removeAllSeqMarkers: function () {
-    $('sup',this.editDiv).remove();
+    $('sup:not(.footnote)',this.editDiv).remove();
+  },
+
+ afterUpdate: function(entTag) {
+    var ednVE = this, prefix, entID, entity, $elems,classes, match, txtDivSeqID, lineOrd, $header, physLineID;
+    entTag = entTag.replace(":","");// ensure GID is converted incase
+    prefix = entTag.substring(0,3);
+    entID = entTag.substring(3);
+    //find scope of change
+    if (prefix == "seq") {
+// todo define cases where this makes sense like structure sequence changes.
+    } else {
+      $elems = $(".grpGra."+entTag,ednVE.contentDiv);
+      if ($elems.length > 0) {
+        classes = $elems.get(0).className;
+        match = classes.match(/seq(\d+)/);
+        if (match && match.length > 1) {
+          txtDivSeqID = match[1];
+          ednVE.calcTextDivGraphemeLookups(txtDivSeqID);
+        }
+        match = classes.match(/ordL\d+/);
+        if (match) {
+          lineOrd = match[0];
+          $header = $(".textDivHeader."+lineOrd);
+          if ($header.length == 1) {
+            classes = $header.get(0).className;
+            match = classes.match(/lineseq(\d+)/);
+            if (match && match.length > 1) {
+              physLineID = match[1];
+              ednVE.calcLineGraphemeLookups(physLineID);
+              ednVE.reRenderPhysLine(lineOrd,physLineID);
+            }
+          }
+        }
+      }
+    }
+    //update presentation
   },
 
 
@@ -623,8 +689,8 @@ EDITORS.EditionVE.prototype = {
 */
 
   createStaticToolbar: function () {
-    var ednVE = this;
-    var btnObjLevelName = this.id+'objlevel',
+    var ednVE = this,
+        btnObjLevelName = this.id+'objlevel',
         btnEdStyleName = this.id+'edstyle',
         btnFormatName = this.id+'edformat',
         btnLinkName = this.id+'link',
@@ -788,6 +854,7 @@ EDITORS.EditionVE.prototype = {
                       ednVE.downloadRTFLink.attr('href',basepath+"/services/exportRTFEdition.php?db="+dbName+"&ednID="+ednVE.edition.id+"&style="+ednVE.repType+"&download=1");
                       ednVE.downloadRTFBtn.attr('title',"Download Physical '"+ednVE.repType+"' View to RTF");
                       ednVE.renderEdition();
+                      ednVE.refreshSeqMarkers();
                     });
 
     this.formatBtnDiv = $('<div class="toolbuttondiv">' +
@@ -856,7 +923,7 @@ EDITORS.EditionVE.prototype = {
     this.showTagDdBtn = $('#'+ddbtnShowTagName,this.showTagBtnDiv);
     this.showTagTree.jqxTree({
            source: this.getUsedTagsList(),
-           hasThreeStates: false, checkboxes: true,
+           hasThreeStates: true, checkboxes: true,
            width: '250px',
            theme:'energyblue'
     });
@@ -897,7 +964,7 @@ EDITORS.EditionVE.prototype = {
     this.showSeqDdBtn = $('#'+ddbtnShowSeqName,this.showSeqBtnDiv);
     this.showSeqTree.jqxTree({
            source: this.getUsedSeqsList(),
-           hasThreeStates: false, checkboxes: true,
+           hasThreeStates: true, checkboxes: true,
            width: '250px',
            theme:'energyblue'
     });
@@ -1140,7 +1207,7 @@ EDITORS.EditionVE.prototype = {
     var ednVE = this;
       //modify
       if (!this.editMode && !ednVE.edition.readonly) {
-        $('sup',this.editDiv).remove();
+//        $('sup',this.editDiv).remove();
         this.editMode = "modify";
         editModeBtn.html("Modify");
         if (!this.sclEd) {
@@ -1169,6 +1236,7 @@ EDITORS.EditionVE.prototype = {
         }
         if (ednVE.sclEd) {
           $('.selected',ednVE.contentDiv).removeClass('selected');
+          ednVE.removeFreeTextLineUI();
           delete(ednVE.sclEd);
         }
         $(ednVE.contentDiv).removeClass("modify").addClass('tcmodify');
@@ -1211,6 +1279,7 @@ EDITORS.EditionVE.prototype = {
       } else if (ednVE.editMode == "tag") {
           delete ednVE.editMode;
           editModeBtn.html("View");
+          ednVE.refreshSeqMarkers();
           $(ednVE.contentDiv).removeClass('tagging');
           this.edStyleBtn.removeAttr('disabled');
           this.linkSclBtn.removeAttr('disabled');
@@ -1239,6 +1308,7 @@ EDITORS.EditionVE.prototype = {
                                       .replace(/ord\d+/,"")
                                       .replace(/ordL\d+/,"")
                                       .replace(/seg\d+/,"")
+                                      .replace(/prepadding/,"")
                                       .replace(/firstLine/,"")
                                       .replace(/lastLine/,"")
                                       .replace(/selected/,"")
@@ -1393,6 +1463,7 @@ EDITORS.EditionVE.prototype = {
                                       .replace(/ord\d+/,"")
                                       .replace(/ordL\d+/,"")
                                       .replace(/seg\d+/,"")
+                                      .replace(/prepadding/,"")
                                       .replace(/firstLine/,"")
                                       .replace(/lastLine/,"")
                                       .replace(/selected/,"")
@@ -1566,20 +1637,26 @@ mergeLine: function (direction,cbError) {
 * @param function cbError Error callback function\n*/
 
   createCompound: function (cbError) {
-    var ednVE = this, sclEd = this.sclEd, startNode, prevNode, headerNode, grdCnt = 500,
+    var ednVE = this, sclEd = this.sclEd, startNode, prevNode, headerNode, grdCnt = 500, refreshCmpTag,
         context,refDivSeqID, grpClass = "",hdrClass = "", sclIDs, bndryVal = sclEd.getCurTokenBoundary(),
-        refSclID, newTokID, physLineSeqID, lineOrdTag, isLastLine, createcompounddata;
-    if (sclEd) {
+        refSclID, newTokID, physLineSeqID, adjPhysLineSeqID, adjPhysLineSeqIDs = [], trgTokTag, $tokNodes,
+        curLineOrdTag, lineOrdTag, adjLineOrdTag, isLastLine, createcompounddata;
+    if (sclEd && sclEd.syllable && sclEd.syllable.length && bndryVal == 0) {
       context = sclEd.syllable[0].className.replace(/grpGra/,"")
                                       .replace(/ord\d+/,"")
                                       .replace(/ordL\d+/,"")
                                       .replace(/seg\d+/,"")
+                                      .replace(/prepadding/,"")
                                       .replace(/firstLine/,"")
                                       .replace(/lastLine/,"")
                                       .replace(/selected/,"")
                                       .trim()
                                       .replace(/\s+/g,",")
                                       .split(",");
+      if (sclEd.syllable[0].className.match(/cmp\d+/)) {
+        refreshCmpTag = sclEd.syllable[0].className.match(/cmp\d+/)[0];
+      }
+      refSclID = sclEd.sclID;
       lineOrdTag = sclEd.syllable[0].className.match(/ordL\d+/)[0];
       headerNode = $('.textDivHeader.'+lineOrdTag,ednVE.contentDiv);
       physLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
@@ -1590,16 +1667,39 @@ mergeLine: function (direction,cbError) {
         context: context,
         insPos: sclEd.getTokenCurPos()
       };
+      if (sclEd.syllable[0].className.match(/tok\d+/)) {
+        trgTokTag = sclEd.syllable[0].className.match(/tok\d+/)[0];
+        $tokNodes = $('.grpGra.'+trgTokTag,ednVE.contentDiv);
+        adjPhysLineSeqIDs = $tokNodes.map(function(index,elem)  {
+            tempOrdTag = elem.className.match(/ordL\d+/)[0];
+            if (tempOrdTag == curLineOrdTag || tempOrdTag == lineOrdTag) {
+              return null;
+            }
+            curLineOrdTag = tempOrdTag;
+            headerNode = $('.textDivHeader.'+curLineOrdTag,ednVE.contentDiv);
+            if (headerNode && headerNode.length) {
+              adjPhysLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
+            }
+            return [[curLineOrdTag,adjPhysLineSeqID]];
+          });
+      }
+/*      if (sclEd.caretAtBOL()) {//find previous line seq ID
+        adjLineOrdTag = 'ordL'+ (parseInt(lineOrdTag.substring(4))-1);
+        headerNode = $('.textDivHeader.'+adjLineOrdTag,ednVE.contentDiv);
+        if (headerNode && headerNode.length) {
+          adjPhysLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
+        }
+      } else if (sclEd.caretAtEOL()){//find following line seq ID
+        adjLineOrdTag = 'ordL'+ (parseInt(lineOrdTag.substring(4))+1);
+        headerNode = $('.textDivHeader.'+adjLineOrdTag,ednVE.contentDiv);
+        if (headerNode && headerNode.length) {
+          adjPhysLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
+        }
+      }
+      DEBUG.log("err","physLine id = "+physLineSeqID+", adjPhysLine id = "+adjPhysLineSeqID);
+      */
       if (DEBUG.healthLogOn) {
         createcompounddata['hlthLog'] = 1;
-      }
-      if (bndryVal < 0) {//at beginning of token get prev compound or token to combine with
-        //if compound and token is not first or if token at beginning of edition then beep
-        //else find prev entity and add to data
-      }
-      if (bndryVal > 0) {//at end of token get next compound or token to combine with
-        //if compound and token is not last or if token at end of edition then beep
-        //else find prev entity and add to data
       }
       DEBUG.log("gen","call to create Compound for tokID "+ sclEd.getTokenID() +
                   " at position " + createcompounddata.insPos +
@@ -1614,7 +1714,7 @@ mergeLine: function (direction,cbError) {
           data: createcompounddata,
           asynch: true,
           success: function (data, status, xhr) {
-              var oldSeqIDTag, newSeqIDTag;
+              var oldSeqIDTag, newSeqIDTag,i;
               if (typeof data == 'object' && data.success && data.entities) {
                 //update data
                 ednVE.dataMgr.updateLocalCache(data,ednVE.edition.txtID);
@@ -1637,22 +1737,52 @@ mergeLine: function (direction,cbError) {
                 ednVE.calcLineGraphemeLookups(physLineSeqID);
                 //redraw line
                 ednVE.reRenderPhysLine(lineOrdTag,physLineSeqID);
+                if (adjPhysLineSeqIDs && adjPhysLineSeqIDs.length > 0) {
+                  for (i=0; i < adjPhysLineSeqIDs.length; i++) {
+                    adjLineOrdTag = adjPhysLineSeqIDs[i][0];
+                    adjPhysLineSeqID = adjPhysLineSeqIDs[i][1];
+                    if (adjLineOrdTag && adjPhysLineSeqID) {
+                      // calcLineGraphemeLookups
+                      ednVE.calcLineGraphemeLookups(adjPhysLineSeqID);
+                      //redraw line
+                      ednVE.reRenderPhysLine(adjLineOrdTag,adjPhysLineSeqID);
+                    }
+                  }
+                }
+                ednVE.refreshSeqMarkers();
                 //position sylED on new syllable
                 if (typeof sclEd != "undefined") {
+                  sclIDs = [];
                   if (data.entities.update && data.entities.update.tok) {//split an owned token
                     for (tokID in data.entities.update.tok) {
-                      newTokID = tokID;
-                      break;
+                      if (data.entities.update.tok[tokID].syllableClusterIDs) {
+                        sclIDs = sclIDs.concat(data.entities.update.tok[tokID].syllableClusterIDs);
+                      }
                     }
-                  } else { // cloned the token before splitting
+                  }
+                  if (data.entities.insert && data.entities.insert.tok) {//split an owned token
                     for (tokID in data.entities.insert.tok) {
-                      newTokID = tokID;
+                      if (data.entities.insert.tok[tokID].syllableClusterIDs) {
+                        sclIDs = sclIDs.concat(data.entities.insert.tok[tokID].syllableClusterIDs);
+                      }
+                    }
+                  }
+                  if (sclIDs && sclIDs.length && (!refSclID || sclIDs.indexOf(refSclID) == -1)) {
+                    sclEd.moveToSyllable(sclIDs[0],'caretAtStart');
+                  } else {
+                    sclEd.init(sclEd.syllable);
+                  }
+                }
+                if (ednVE.propMgr && ednVE.propMgr.setEntity) {
+                  if (!refreshCmpTag && data.entities.insert && data.entities.insert.cmp) {
+                    for (cmpID in data.entities.insert.cmp) {
+                      refreshCmpTag = "cmp"+cmpID;
                       break;
                     }
                   }
-                  sclIDs = entities.tok[newTokID].syllableClusterIDs;
-                  refSclID = sclIDs[0];
-                  sclEd.moveToSyllable(refSclID,'caretAtStart');
+                  if (refreshCmpTag) {
+                    ednVE.propMgr.setEntity(refreshCmpTag);
+                  }
                 }
                 if (data.editionHealth) {
                   DEBUG.log("health","***Create Compound***");
@@ -1673,6 +1803,20 @@ mergeLine: function (direction,cbError) {
               }
           }
       });// end ajax
+    } else {
+      //invalid call to create compound
+      UTILITY.beep();
+      if (bndryVal < 0) {//at beginning of token get prev compound or token to combine with
+        DEBUG.log("err"," createCompound at token boundary with previous token underconstruction");
+        //if compound and token is not first or if token at beginning of edition then beep
+        //else find prev entity and add to data
+      } else if (bndryVal > 0) {//at end of token get next compound or token to combine with
+        DEBUG.log("err","createCompound at token boundary with following token underconstruction");
+        //if compound and token is not last or if token at end of edition then beep
+        //else find prev entity and add to data
+      } else {
+        DEBUG.log("err"," invalid call to createCompound, either no syllable editor found, cursor not at syllable boundary or editor on invalid syllable");
+      }
     }
   },
 
@@ -1710,6 +1854,7 @@ mergeLine: function (direction,cbError) {
                            .replace(/ordL\d+/,"")
                            .replace(/seg\d+/,"")
                            .replace(/scl\d+/,"")
+                           .replace(/prepadding/,"")
                            .replace(/firstLine/,"")
                            .replace(/lastLine/,"")
                            .replace(/selected/,"")
@@ -1726,6 +1871,7 @@ mergeLine: function (direction,cbError) {
                                         .replace(/ordL\d+/,"")
                                         .replace(/seg\d+/,"")
                                         .replace(/scl\d+/,"")
+                                        .replace(/prepadding/,"")
                                         .replace(/firstLine/,"")
                                         .replace(/lastLine/,"")
                                         .replace(/selected/,"")
@@ -1787,10 +1933,11 @@ mergeLine: function (direction,cbError) {
                           DEBUG.log("data","after combineTokens dump sequence \n" + DEBUG.dumpSeqData(seqID,0,1,ednVE.lookup.gra));
                         }
                       }
-                    } else if (txtDivSeqID) {
-                      ednVE.calcTextDivGraphemeLookups(txtDivSeqID);
-                      DEBUG.log("data","after combineTokens dump sequence \n" + DEBUG.dumpSeqData(txtDivSeqID,0,1,ednVE.lookup.gra));
                     }
+                  }
+                  if (txtDivSeqID) {
+                    ednVE.calcTextDivGraphemeLookups(txtDivSeqID);
+                    DEBUG.log("data","after combineTokens dump sequence \n" + DEBUG.dumpSeqData(txtDivSeqID,0,1,ednVE.lookup.gra));
                   }
                   // calcLineGraphemeLookups
                   ednVE.calcLineGraphemeLookups(physLineSeqID);
@@ -1913,6 +2060,7 @@ mergeLine: function (direction,cbError) {
                                       .replace(/ord\d+/,"")
                                       .replace(/ordL\d+/,"")
                                       .replace(/seg\d+/,"")
+                                      .replace(/prepadding/,"")
                                       .replace(/firstLine/,"")
                                       .replace(/lastLine/,"")
                                       .replace(/selected/,"")
@@ -2018,7 +2166,7 @@ mergeLine: function (direction,cbError) {
     var ednVE = this,sel,range, startNode, prevNode, headerNode, grdCnt = 500,
         context,refDivSeqID,refEntGID,grpClass = "",hdrClass = "", newLineHTML = "",
         newSclID, newTokGID, newTextDivSeqGID,newPhysLineSeqID,newLineOrd,refLineSeqGID,
-        insertdata, refTokID, posInsert = 'before', beforeFirst = false;
+        insertdata, refTokID, posInsert = 'after', beforeFirst = false;
     if (window.getSelection) {
       sel = window.getSelection();
       if (sel.getRangeAt && sel.rangeCount) {
@@ -2050,6 +2198,12 @@ mergeLine: function (direction,cbError) {
           headerNode = $(startNode);
         } else if (startNode.className.match(/grpGra|boundary|linebreak|TCM/)){ //somewhere on line so move left to find header
           prevNode = $(startNode).prev();// !!assume caret at start means prev node is line header
+          if (prevNode.hasClass('TCM')) {//skip TCMs
+            prevNode = prevNode.prev();
+          }
+          if (prevNode.hasClass('textDivHeader')) {//on first syllable of line
+            posInsert = 'before';
+          }
           while (prevNode.length && !prevNode.hasClass('textDivHeader') && grdCnt--) {
             if (prevNode.hasClass('grpGra')) {// found not at first syllable start group
               posInsert = 'after';
@@ -2076,7 +2230,7 @@ mergeLine: function (direction,cbError) {
           return;
         }
       } else {
-        //if not endHeader then check for split token on this lines linebreak
+        //if not endHeader then check for cross line token on this lines linebreak
         if (!headerNode.hasClass('endHeader') && headerNode.nextUntil('br','.linebreak').attr('class').match(/split/)) {
           alert("Inserting line between lines sharing a token is not allowed. Please split the last token of this line first.");
           return;
@@ -2247,7 +2401,7 @@ mergeLine: function (direction,cbError) {
       }
       if (trgHeaderNode.length) {
         if (trgHeaderNode.hasClass('freetext')) {
-          trgFreetextNode = trgHeaderNode.nextUntil('linebreak','.freetext');
+          trgFreetextNode = trgHeaderNode.nextUntil('.linebreak','.freetext');
         } else {
           trgSclID = (trgHeaderNode.nextUntil('.linebreak','.grpGra').first().attr('class')).match(/scl(\d+)/)[1];
         }
@@ -2264,6 +2418,7 @@ mergeLine: function (direction,cbError) {
                                                   .replace(/seg\d+/,"")
                                                   .replace(/ordL\d+/,"")
                                                   .replace(/scl\d+/,"")
+                                                  .replace(/prepadding/,"")
                                                   .replace(/firstLine/,"")
                                                   .replace(/lastLine/,"")
                                                   .replace(/selected/,"")
@@ -2297,7 +2452,9 @@ mergeLine: function (direction,cbError) {
                 " and context "+ JSON.stringify(deletedata));
     DEBUG.log("data","before deleteLine sequence dump\n" + DEBUG.dumpSeqData(this.physSeq.id,0,1,ednVE.lookup.gra));
     DEBUG.log("data","before deleteLine sequence dump\n" + DEBUG.dumpSeqData(delLineSeqGID.substring(4),0,1,ednVE.lookup.gra));
-    DEBUG.log("data","before deleteLine sequence dump\n" + DEBUG.dumpSeqData(this.textSeq.id,0,1,ednVE.lookup.gra));
+    if ( this.textSeq) {// freetext line exclude
+      DEBUG.log("data","before deleteLine sequence dump\n" + DEBUG.dumpSeqData(this.textSeq.id,0,1,ednVE.lookup.gra));
+    }
     //call service with ednID, ord position and line label
     $.ajax({
         type:"POST",
@@ -2319,7 +2476,9 @@ mergeLine: function (direction,cbError) {
                 ednVE.textSeq = ednVE.dataMgr.getEntity('seq',data['newTextSeqID']);
               }
               DEBUG.log("data","after deleteLine sequence dump\n" + DEBUG.dumpSeqData(ednVE.physSeq.id,0,1,ednVE.lookup.gra));
-              DEBUG.log("data","after deleteLine sequence dump\n" + DEBUG.dumpSeqData(ednVE.textSeq.id,0,1,ednVE.lookup.gra));
+              if ( this.textSeq) { // freetext line exclude
+                DEBUG.log("data","after deleteLine sequence dump\n" + DEBUG.dumpSeqData(ednVE.textSeq.id,0,1,ednVE.lookup.gra));
+              }
               if (typeof ednVE.sclEd != "undefined" && trgSclID) {
                 ednVE.sclEd.moveToSyllable(trgSclID,'caretAtStart');
               } else if (trgFreetextNode) {
@@ -2573,6 +2732,7 @@ mergeLine: function (direction,cbError) {
                                   .replace(/ord\d+/,"")
                                   .replace(/ordL\d+/,"")
                                   .replace(/seg\d+/,"")
+                                  .replace(/prepadding/,"")
                                   .replace(/firstLine/,"")
                                   .replace(/lastLine/,"")
                                   .replace(/selected/,"")
@@ -2827,6 +2987,28 @@ mergeLine: function (direction,cbError) {
 
 
     /**
+    * handle 'linkRequest' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string linkSource Identifies the source element to link
+    * @param boolean autoAdvance Indicates set mode to fire autoadvance linking code
+    */
+
+    function linkStructRequestHandler(e,senderID, structEdnTag, linkTargetTag) {
+      if (senderID == ednVE.id) {
+        return;
+      }
+      DEBUG.log("event","struct link request recieved by editionVE in "+ednVE.id+" from "+senderID+" with edntion tag "+ structEdnTag +
+                "linking to " + linkTargetTag);
+      ednVE.structLinkMode = linkTargetTag;
+      ednVE.layoutMgr.curLayout.trigger('focusin',ednVE.id);
+    };
+
+    $(this.editDiv).unbind('linkStructRequest').bind('linkStructRequest', linkStructRequestHandler);
+
+
+    /**
     * handle 'autoLinkOrdRequest' event
     *
     * @param object e System event object
@@ -2839,7 +3021,13 @@ mergeLine: function (direction,cbError) {
       if (senderID == ednVE.id) {
         return;
       }
-      DEBUG.log("event","link request recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource);
+      DEBUG.log("event","autolinkOrd request recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource);
+      if (ednVE.linkMode && !ednVE.autoLink) {//left in link mode, ok to change to autolinkOrd
+        ednVE.linkMode = false;
+      } else if ((ednVE.linkMode && ednVE.autoLink)) {
+        DEBUG.log("err","edition editor in autolink scl to seg mode aborting autolinkord request from source "+ linkSource);
+        $('.editContainer').trigger('autoLinkOrdAbort',[this.id,this.autoLinkOrdBln]);
+      }
       ednVE.pendingAutoLinkOrdBln= linkSource;
       ednVE.pendingAutoLinkOrdMode = (mode == 0?"default":(mode == 1?"start":(mode == 2?"startstop":"multi")));
       //if bln is linked to this text then show highlight
@@ -2858,7 +3046,7 @@ mergeLine: function (direction,cbError) {
     * @param string linkEditionID identifies the edition being linked to
     */
 
-    function autoLinkOrdCompleteHandler(e,senderID, linkSource, linkEditionID) {
+    function autoLinkOrdCompleteHandler(e,senderID, linkSource, linkEditionID, linkedSclsSegID) {
       if (senderID == ednVE.id) {
         return;
       }
@@ -2892,6 +3080,8 @@ mergeLine: function (direction,cbError) {
       if (senderID == ednVE.id) {
         return;
       }
+
+
       DEBUG.log("event","link abort recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource+" and target "+linkTarget);
       ednVE.linkMode = false;
     };
@@ -3156,7 +3346,7 @@ mergeLine: function (direction,cbError) {
     function grpGraDblClickHandler(e) {
       var classes = $(this).attr('class'), objLevel = ednVE.layoutMgr.getEditionObjectLevel(),
           firstGroup, lastGroup, ord, minOrd = 10000000, maxOrd = 0,
-          entTag, headernode, segIDs = [],i, sclIDs = [],sclID, lineord;
+          entTag, sandhiSelector = "", headernode, segIDs = [],i, sclIDs = [],sclID, lineord;
       if(!e.ctrlKey){//if not multiselect
         $(".selected", ednVE.contentDiv).removeClass("selected");
         ednVE.selOrderGrpGraClasses = [];
@@ -3164,8 +3354,14 @@ mergeLine: function (direction,cbError) {
       ednVE.selOrderGrpGraClasses.push(classes);
       if (objLevel == 'token' && ednVE.editMode != "modify") {
         entTag = classes.match(/tok\d+/)[0];
+        sandhiSelector = ",.grpGra.s"+entTag;
       } else if (objLevel == 'compound' && ednVE.editMode != "modify") {
-        entTag = classes.match(/cmp\d+/) ? classes.match(/cmp\d+/)[0] : classes.match(/tok\d+/)[0];
+        if (classes.match(/cmp\d+/)) {
+          entTag = classes.match(/cmp\d+/)[0];
+        } else {
+          entTag = classes.match(/tok\d+/)[0];
+          sandhiSelector = ",.grpGra.s"+entTag;
+        }
       } else if (objLevel == 'line' && ednVE.editMode != "modify") {
         if ($(this).prev().hasClass('textDivHeader')) {
           headernode = $(this).prev();
@@ -3185,7 +3381,7 @@ mergeLine: function (direction,cbError) {
       if (objLevel == 'line' ) {
         $("."+lineord+":not(.textDivHeader)",ednVE.contentDiv).addClass("selected");
       } else {
-        $(".grpGra."+entTag,ednVE.contentDiv).addClass("selected");
+        $(".grpGra."+entTag+sandhiSelector,ednVE.contentDiv).addClass("selected");
       }
       if (ednVE.componentLinkMode && ednVE.entPropVE && ednVE.entPropVE.addSequenceEntityGID ){
         ednVE.entPropVE.addSequenceEntityGID(entTag.substring(0,3)+':'+entTag.substring(3));
@@ -3358,19 +3554,19 @@ mergeLine: function (direction,cbError) {
 */
 
     function keyDownHandler(e) {
-      var sclEditor = ednVE.sclEd,tcmEditor = ednVE.tcmEd, direction,adjNode,prevNode, loopLimit =5,
-          prevSyllable, nextSyllable, key;
+      var sclEditor = ednVE.sclEd,tcmEditor = ednVE.tcmEd, direction,$adjNode,$prevNode, loopLimit =5,
+          prevSyllable, nextSyllable, key, ordL;
       if (ednVE.editMode == 'modify' && sclEditor) {
         switch (e.keyCode || e.which) {
           case 38://'Up':
-            if (!sclEditor || !sclEditor.syllable || sclEditor.syllable.hasClass("firstLine")) {
+            if (!sclEditor.syllable || sclEditor.syllable.hasClass("firstLine")) {
               e.stopImmediatePropagation();
               return false;
             }
             sclEditor.save();
             break;
           case 40://'Down':
-            if (!sclEditor || !sclEditor.syllable || sclEditor.syllable.hasClass("lastLine")) {
+            if (!sclEditor.syllable || sclEditor.syllable.hasClass("lastLine")) {
               e.stopImmediatePropagation();
               return false;
             }
@@ -3378,14 +3574,14 @@ mergeLine: function (direction,cbError) {
             break;
           case 37://"Left":
             DEBUG.log("nav","Call to left arrow keydown for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-            if (!sclEditor || sclEditor.moveCursor("left",e.shiftKey)) {
+            if (sclEditor.moveCursor("left",e.shiftKey)) {
               e.stopImmediatePropagation();
               return false;
             }
             break;
           case 39://"Right":
             DEBUG.log("nav","Call to right arrow keydown for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-            if (!sclEditor || sclEditor.moveCursor("right",e.shiftKey)) {
+            if (sclEditor.moveCursor("right",e.shiftKey)) {
               e.stopImmediatePropagation();
               return false;
             }
@@ -3397,10 +3593,10 @@ mergeLine: function (direction,cbError) {
 //            return false;//eat all other keys
             break;
           case 13://"Enter":
-            if (sclEditor && sclEditor.hasCaret()) {
+            if (sclEditor.hasCaret()) {
               if (sclEditor.caretAtBOL() ||
                   sclEditor.caretAtEOL()) {
-                ednVE.insertLine();
+                ednVE.insertFreeTextLine();
               } else if (sclEditor.caretAtBoundary()) {
                 ednVE.splitLine();
               } else {
@@ -3411,101 +3607,164 @@ mergeLine: function (direction,cbError) {
             }
             break;
           case 8://"Backspace":
-            if ((e.ctrlKey || e.metaKey) && sclEditor ) {
-              if (sclEditor.isSelectAll()) {
+            if (e.ctrlKey || e.metaKey) {//ctrl + backspace
+              if (sclEditor.isSelectAll()) {//entire syllable selected
                 sclEditor.removeSelected();
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
               } else if (sclEditor.hasCaret() &&
-                        sclEditor.caretAtBoundary("left")) {
-                prevNode = sclEditor.prevAdjacent();
+                        sclEditor.caretAtBoundary("left")) { // caret at left boundary of syllable
+                $prevNode = sclEditor.prevAdjacent();
+                //move over TCM so we check beyond TCM
+                if ($prevNode.hasClass('TCM')){
+                  $prevNode = $prevNode.prev();
+                }
                 //check for sclEditor state next to left side auxilary element boundary, TCM or linebreak
-                if (prevNode.hasClass('TCM')){
-                  //process removing TCM
+                if ($prevNode.hasClass('TCM')){
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
-                } else if (prevNode.hasClass('boundary')) {
-                  //process removing boundary
+                } else if ($prevNode.hasClass('boundary')) {
+                  //process removing boundary by combining this token with the previous
                   DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to boundary node");
                   ednVE.combineTokens('prev');
-                } else if (prevNode.hasClass('textDivHeader')) {
-                  //process removing linebreak
-                  ednVE.mergeLine('prev');
-                  DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
+                } else if ($prevNode.hasClass('textDivHeader')) {
+                  if ($prevNode.hasClass('startHeader') || $prevNode.hasClass('freetext')) {
+                    UTILITY.beep();
+                    DEBUG.log("warn","Ctrl Backspace at beginning of edition or on freetext line, ignoring keystroke");
+                  } else {
+                    headerClasses = $prevNode.attr('class');
+                    ordL = headerClasses.match(/ordL(\d+)/);
+                    if (ordL && ordL.length >1) {
+                      ordL = ordL[1];
+                      ordL = parseInt(ordL);
+                      ordL--;
+                      $prevHeader = $('.textDivHeader.ordL'+ordL,ednVE.contentDiv);
+                      if ($prevHeader && $prevHeader.length && !$prevHeader.hasClass('freetext')) {
+                        //process removing linebreak
+                        ednVE.combineTokens('prev');
+                        e.stopImmediatePropagation();
+                        return false;//eat all other keys
+                      }
+                    }
+                    UTILITY.beep();
+                    DEBUG.log("warn","Ctrl Backspace next to freetext line, ignoring keystroke");
+                    alert("warning combining word with freetext line not allowed, ignoring keystroke");
+                  }
                 } else { //unknown so do nothing but beep  or should we send this to VSE like Del case
                   UTILITY.beep();
                   DEBUG.log("warn","BEEP! Ctrl Backspace at unknown location, ignoring keystroke");
                 }
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
-              } else {
+              } else { // caret not at left boundary so sent to syllable editor for processing
                 var ret = sclEditor.preprocessKey("Backspace",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
                 if (ret === false) {
                   sclEditor.synchSelection();
-                  e.stopImmediatePropagation();
-                  return false;//eat all other keys
-                } else if (ret === "error") {
-                  e.stopImmediatePropagation();
-                  return false;//eat all other keys
                 }
+                e.stopImmediatePropagation();
+                return false;//eat all other keys
               }
-            } else {
+            } else if (sclEditor.caretAtBOL()){ //simple backspace at beginning of line so try to merge with previous line
+              $prevNode = sclEditor.prevAdjacent();
+              //move over TCM so we check beyond TCM
+              if ($prevNode.hasClass('TCM')){
+                $prevNode = $prevNode.prev();
+              }
+              //check for sclEditor state next to left side auxilary element boundary, TCM or linebreak
+              if ($prevNode.hasClass('TCM')){
+                DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
+              } else if ($prevNode.hasClass('textDivHeader')) {
+                if ($prevNode.hasClass('startHeader') || $prevNode.hasClass('freetext')) {
+                  UTILITY.beep();
+                  DEBUG.log("warn","Ctrl Backspace at beginning of edition or on freetext line, ignoring keystroke");
+                  e.stopImmediatePropagation();
+                  return false;//eat all other keys
+                } else {
+                  headerClasses = $prevNode.attr('class');
+                  ordL = headerClasses.match(/ordL(\d+)/);
+                  if (ordL && ordL.length >1) {
+                    ordL = ordL[1];
+                    ordL = parseInt(ordL);
+                    ordL--;
+                    $prevHeader = $('.textDivHeader.ordL'+ordL,ednVE.contentDiv);
+                    if ($prevHeader && $prevHeader.length && !$prevHeader.hasClass('freetext')) {
+                      //process removing linebreak
+                      ednVE.mergeLine('prev');
+                      e.stopImmediatePropagation();
+                      return false;//eat all other keys
+                    }
+                  }
+                  UTILITY.beep();
+                  DEBUG.log("warn","Ctrl Backspace next to freetext line, ignoring keystroke");
+                  alert("warning merging with freetext line not allowed, ignoring keystroke");
+                }
+                DEBUG.log("nav","Call to ctrl Backspace for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
+              }
+            } else { //simple backspace so pass to syllable editor for processing
               var ret = sclEditor.preprocessKey("Backspace",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
               if (ret === false) {
                 sclEditor.synchSelection();
-                e.stopImmediatePropagation();
-                return false;//eat all other keys
-              } else if (ret === "error") {
-                e.stopImmediatePropagation();
-                return false;//eat all other keys
               }
+              e.stopImmediatePropagation();
+              return false;//eat all other keys
             }
             break;
           case 32:// space " ":
-            if (sclEditor) {
-              if (sclEditor.hasCaret()) {
-                //if caret at syllable boundary
-                if (sclEditor.caretAtBoundary()) {
-                  //check if left side
-                  if (sclEditor.caretAtBoundary("left")) {
-                    adjNode = sclEditor.prevAdjacent();
-                  } else {
-                    adjNode = sclEditor.nextAdjacent();
-                  }
-                  //if next to cmp toksep change to simple boundary - separate compound
-                  if (adjNode.hasClass("toksep")) {
-                    UTILITY.beep();
-                    DEBUG.log("warn","BEEP! Call to token break next to compound separator for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                  //if cursor next to a boundry (not cmp toksep) then error
-                  } else if (adjNode.hasClass("boundary")) {
-                    UTILITY.beep();
-                    DEBUG.log("warn","BEEP! Ignoring call to token break next to boundary for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                  //if cursor next to a linebreak then error
-                  } else if (adjNode.hasClass("linebreak")) {
-                    UTILITY.beep();
-                    DEBUG.log("warn","BEEP! Call to token break next to linebreak for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                  //else intra token
-                  } else {
-                    DEBUG.log("gen","Call to token break intra token for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                    ednVE.splitToken();
+            if (sclEditor.hasCaret()) {
+              //if caret at syllable boundary
+              if (sclEditor.caretAtBoundary()) {
+                //check if left side
+                if (sclEditor.caretAtBoundary("left")) {
+                  $adjNode = sclEditor.prevAdjacent();
+                  if ($adjNode.hasClass("TCM")){
+                    $adjNode = sclEditor.prevAdjacent();
                   }
                 } else {
-                  //else intra syllable so separate scl, token, etc.
-                  DEBUG.log("gen","Call to token break intra syllable for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                  $adjNode = sclEditor.nextAdjacent();
+                  if ($adjNode.hasClass("TCM")){
+                    $adjNode = sclEditor.nextAdjacent();
+                  }
+                }
+                //if next to cmp toksep change to simple boundary - separate compound
+                if ($adjNode.hasClass("toksep")) {
+                  //split crossline token
+                  ednVE.splitToken();
+                  UTILITY.beep();
+                  DEBUG.log("warn","BEEP! Call to token break next to compound separator for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                //if cursor next to a boundry (not cmp toksep) then error can't break token at token start or end
+                } else if ($adjNode.hasClass("boundary")) {
+                  UTILITY.beep();
+                  DEBUG.log("warn","BEEP! Ignoring call to token break next to boundary for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                //if cursor next to a linebreak then error
+                } else if ($adjNode.hasClass("linebreak")) {
+                  //check for crossline token or compound
+                  if ($adjNode.hasClass("toksplit") || $adjNode.hasClass("cmpsplit")) {
+                    //split crossline token
+                    ednVE.splitToken();
+                  } else {
+                    UTILITY.beep();
+                    DEBUG.log("warn","BEEP! Call to token break next to linebreak for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                  }
+                //else intra token
+                } else {
+                  DEBUG.log("gen","Call to token break intra token for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
                   ednVE.splitToken();
                 }
-              } else if (e.key != ' ') {
-                break;
               } else {
-                UTILITY.beep();
-                DEBUG.log("warn","BEEP! Call to token break not supported for selection for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                //else intra syllable so separate scl, token, etc.
+                DEBUG.log("gen","Call to token break intra syllable for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                ednVE.splitToken();
               }
-//              DEBUG.log("gen""BEEP! Call to space with token '"+sclEditor.getTokenID()+"' at position "+sclEditor.getTokenCurPos());
-              e.stopImmediatePropagation();
-              return false;
+            } else if (e.key != ' ') {
+              break;
+            } else {
+              UTILITY.beep();
+              DEBUG.log("warn","BEEP! Call to token break not supported for selection for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
             }
+            e.stopImmediatePropagation();
+            return false;
             break;
           case 45://"Insert":
-            if ((e.ctrlKey || e.metaKey) && sclEditor && (sclEditor.caretAtBoundary('left') || sclEditor.caretAtBoundary('right')) ) {
+            if ((e.ctrlKey || e.metaKey) && (sclEditor.caretAtBoundary('left') || sclEditor.caretAtBoundary('right')) ) {
               sclEditor.insertNew();
             } else {
               DEBUG.log("nav","Call to ctrl Insert for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" curson not at boundary");
@@ -3514,90 +3773,97 @@ mergeLine: function (direction,cbError) {
             return false;
             break;
           case 46://"Del":
-            if ( sclEditor ) {
-              if ((e.ctrlKey || e.metaKey) && sclEditor.isSelectAll()) {
+            if (e.ctrlKey || e.metaKey) {//ctrl + delete
+              if (sclEditor.isSelectAll()) {//entire syllable selected
                 sclEditor.removeSelected();
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
-              } else if (sclEditor.hasCaret()) {
-                if (sclEditor.caretAtBoundary()) {
-                  var adjNode;
-                  //check if left side
-                  if (sclEditor.caretAtBoundary("left")) {
-                    adjNode = sclEditor.prevAdjacent();
-                    while(adjNode.hasClass('TCM') && loopLimit) {
-                      adjNode = $(adjNode[0]).prev();
-                      loopLimit--;
-                    }
-                    direction = "prev";
-                  } else {
-                    adjNode = sclEditor.nextAdjacent();
-                    while(adjNode.hasClass('TCM') && loopLimit) {
-                      adjNode = $(adjNode[0]).next();
-                      loopLimit--;
-                    }
-                    direction = "next";
-                  }
-                  //check for sclEditor state next to right side auxilary element boundary, TCM or linebreak
-                  if (adjNode.hasClass('TCM') && (e.ctrlKey || e.metaKey)){
-                    //process removing TCM
-                    DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
-                  } else if (adjNode.hasClass('boundary') && (e.ctrlKey || e.metaKey)) {
-                    //process removing boundary
-                    DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to boundary node");
-                    ednVE.combineTokens(direction);
-                  } else if (adjNode.hasClass('linebreak') && direction == 'next') {
-                    //process removing compound split before linebreak
-                    if (adjNode.hasClass('cmpsplit')) {
-                      ednVE.combineTokens(direction);
-                    } else {
-                      if (e.ctrlKey || e.metaKey) {
-                        ednVE.mergeLine('next');
-                      } else {
-                        //alert("TEST combine tokens "+direction);
-                        ednVE.combineTokens(direction);
-                      }
-                    }
-                    DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to linebreak node");
-                  } else {//send ctrl + del to VSE on unknown boundary ????
-                    var ret = sclEditor.preprocessKey("Del",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
-                    if (ret === false) {
-                      sclEditor.synchSelection();
-                    }
-                  }
-                  e.stopImmediatePropagation();
-                  return false;//eat all other keys
-                }  else {
-                  var ret = sclEditor.preprocessKey("Del",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
-                  if (ret === false) {
-                    sclEditor.synchSelection();
-                  }
-                  e.stopImmediatePropagation();
-                  return false;//eat all other keys
+              } else if (sclEditor.hasCaret() &&
+                        sclEditor.caretAtBoundary("right")) { // caret at right boundary of syllable
+                $adjNode = sclEditor.nextAdjacent();
+                //move over TCM so we check beyond TCM
+                if ($adjNode && $adjNode.hasClass('TCM')){
+                  $adjNode = $adjNode.next();
                 }
-              } else {
-                UTILITY.beep();
+                if ($adjNode && $adjNode.hasClass('TCM')){
+                  //todo: process removing TCM ?? ignore right now
+                  DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
+                } else if ($adjNode && $adjNode.hasClass('boundary')) {
+                  //process removing boundary
+                  DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to boundary node");
+                  ednVE.combineTokens('next');
+                } else if ($adjNode && $adjNode.hasClass('linebreak')) {
+                  //process removing compound split before linebreak
+                  headerClasses = $adjNode.attr('class');
+                  ordL = headerClasses.match(/ordL(\d+)/);
+                  if (ordL && ordL.length >1) {
+                    ordL = ordL[1];
+                    ordL = parseInt(ordL);
+                    ordL++;
+                    $nextHeader = $('.textDivHeader.ordL'+ordL,ednVE.contentDiv);
+                    if ($nextHeader && $nextHeader.length && !$nextHeader.hasClass('freetext')) {
+                      //process cobining cross line words
+                      ednVE.combineTokens('next');
+                      e.stopImmediatePropagation();
+                      return false;//eat all other keys
+                    }
+                  }
+                  UTILITY.beep();
+                  DEBUG.log("warn","Ctrl Del with adjacent freetext line, ignoring keystroke");
+                  alert("warning combining word with freetext line not allowed, ignoring keystroke");
+                } else {//send ctrl + del to VSE on unknown boundary ????
+                  UTILITY.beep();
+                  DEBUG.log("warn","BEEP! Ctrl Del at unknown adjacent node, ignoring keystroke");
+                }
                 e.stopImmediatePropagation();
-                return false;
-              }
-            }
-            break;
-          default:
-/*            key = (e.which == null?String.fromCharCode(e.keyCode):
-                    (e.which != 0 )?String.fromCharCode(e.which):null);
-            if ( key ) {
-              if (e.ctrlKey && (key.toLowerCase() == "c" || key.toLowerCase() == "v")) {// copy or paste so let it pass
-                return;
-              }
-              if (key >= "A" && key <= "Z" && !e.shiftKey) {
-                key = key.toLowerCase();
-              }
-              //DEBUG.log("nav","Call to keypress with key '"+key+"' for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-              if (!sclEditor.preprocessKey(key,(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e)) {
+                return false;//eat all other keys
+              } else { // caret not at right boundary so sent to syllable editor for processing
+                var ret = sclEditor.preprocessKey("Del",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
+                if (ret === false) {
+                  sclEditor.synchSelection();
+                }
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
               }
-            }*/
+            } else if (sclEditor.caretAtEOL()){ //simple del at end of line so try to merge with next line
+                $adjNode = sclEditor.nextAdjacent();
+                //move over TCM so we check beyond TCM
+                if ($adjNode.hasClass('TCM')){
+                  $adjNode = $adjNode.next();
+                }
+                if ($adjNode.hasClass('TCM')){
+                  //todo: process removing TCM ?? ignore right now
+                  DEBUG.log("nav","Call to ctrl Del for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" next to TCM node");
+                  e.stopImmediatePropagation();
+                  return false;//eat all other keys
+                } else if ($adjNode.hasClass('linebreak')) {
+                  headerClasses = $adjNode.attr('class');
+                  ordL = headerClasses.match(/ordL(\d+)/);
+                  if (ordL && ordL.length >1) {
+                    ordL = ordL[1];
+                    ordL = parseInt(ordL);
+                    ordL++;
+                    $nextHeader = $('.textDivHeader.ordL'+ordL,ednVE.contentDiv);
+                    if ($nextHeader && $nextHeader.length && !$nextHeader.hasClass('freetext')) {
+                      //process removing linebreak
+                      ednVE.mergeLine('next');
+                      e.stopImmediatePropagation();
+                      return false;//eat all other keys
+                    }
+                  }
+                  UTILITY.beep();
+                  DEBUG.log("warn","Ctrl Del with adjacent freetext line, ignoring keystroke");
+                  alert("warning merging with freetext line not allowed, ignoring keystroke");
+                }
+            } else {
+              var ret = sclEditor.preprocessKey("Del",(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e);
+              if (ret === false) {
+                sclEditor.synchSelection();
+              }
+              e.stopImmediatePropagation();
+              return false;//eat all other keys
+            }
+            break;
         }
       } else if (ednVE.editMode == "tcm"  && tcmEditor ) {
         switch (e.keyCode || e.which) {
@@ -3627,6 +3893,10 @@ mergeLine: function (direction,cbError) {
           case 16://"Shift":
           case 17://"Control":
           default:
+            if (e.ctrlKey || e.metaKey) {// copy or paste so let it pass
+              DEBUG.log("event","Call to keydown in tcm with ctrl key ");
+              return;
+            }
             e.stopImmediatePropagation();
             return false;//eat all other keys
             break;
@@ -3648,6 +3918,10 @@ mergeLine: function (direction,cbError) {
             DEBUG.log("nav","Call to right arrow keydown ");
             break;
           default:
+            if (e.ctrlKey || e.metaKey) {// copy or paste so let it pass
+              DEBUG.log("event","Call to keydown with ctrl key");
+              return;
+            }
             e.stopImmediatePropagation();
             return false;//eat all other keys
             break;
@@ -3674,6 +3948,7 @@ mergeLine: function (direction,cbError) {
       if (key && ednVE.editMode == "modify" && sclEditor) {
 //        DEBUG.log("gen""Call to keypress with key '"+key+"' for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
         if ((e.ctrlKey || e.metaKey) && (key.toLowerCase() == "c" || key.toLowerCase() == "v")) {// copy or paste so let it pass
+          DEBUG.log("event","Call to keypress with copy paste key '"+key+"' for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
           return;
         }
         if (key == '-' || key == '‐') {//compound separator
@@ -3686,22 +3961,32 @@ mergeLine: function (direction,cbError) {
                 if (sclEditor.caretAtBoundary("left")) {
                   adjNode = sclEditor.prevAdjacent();
                   direction = "prev";
+                  if (adjNode.hasClass("TCM")){
+                    adjNode = adjNode.prev();
+                  }
                 } else {
                   adjNode = sclEditor.nextAdjacent();
                   direction = "next";
+                  if (adjNode.hasClass("TCM")){
+                    adjNode = adjNode.next();
+                  }
                 }
                 //if next to cmp toksep change to simple boundary - separate compound
                 if (adjNode.hasClass("toksep")) {
                   UTILITY.beep();
                   DEBUG.log("warn","BEEP! Call to create compound next to compound separator not allowed for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
-                //if cursor next to a boundry (not cmp toksep) then error
+                //cursor next to a boundry (not cmp toksep)
                 } else if (adjNode.hasClass("boundary")) {
                   DEBUG.log("gen","Call to create compound next to boundary for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
                   ednVE.createCompound();
-                //if cursor next to a linebreak then error
-                } else if (adjNode.hasClass("linebreak")) {
-                  UTILITY.beep();
-                  DEBUG.log("warn","BEEP! Call to create compound next to linebreak not implemented for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                //cursor next to a linebreak
+                } else if (adjNode.hasClass("linebreak")){
+                  DEBUG.log("gen","Call to token break at end of line break for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                  ednVE.createCompound();
+                //cursor next to a line header
+                } else if (adjNode.hasClass("textDivHeader")){
+                  DEBUG.log("gen","Call to token break at beginning of line break for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
+                  ednVE.createCompound();
                 //else intra token
                 } else {
                   DEBUG.log("gen","Call to token break intra token for '"+sclEditor.curSyl+"' with state "+sclEditor.state);
@@ -3720,7 +4005,7 @@ mergeLine: function (direction,cbError) {
             e.stopImmediatePropagation();
             return false;
           }
-        }
+        }//end compound separator
         if (((e.keyCode || e.which) == 32 && e.key == ' ') || //since some special key combinations pass keycode == 32 which are not a space
             !sclEditor.preprocessKey(key,(e.ctrlKey || e.metaKey),e.shiftKey,e.altKey,e)) {
           e.stopImmediatePropagation();
@@ -3730,6 +4015,12 @@ mergeLine: function (direction,cbError) {
         //tcmEditor.processKey(key,e.ctrlKey,e.shiftKey,e.altKey,e);
 //        e.stopImmediatePropagation();
 //        return false;//eat all other keys
+       } else {
+        if ((e.ctrlKey || e.metaKey) && key && key.toLowerCase() == "v") {// paste so eat it
+          DEBUG.log("event","Call to keypress with paste");
+          e.stopImmediatePropagation();
+          return false;//eat all other keys
+        }
        }
     };
 
@@ -3940,7 +4231,7 @@ mergeLine: function (direction,cbError) {
       mmTarget = e.target;
     }
     //assign handler for all syllable elements
-    $("span", this.editDiv).unbind("mousemove").bind("mousemove", sclMouseMoveHandler);
+//    $("span", this.editDiv).unbind("mousemove").bind("mousemove", sclMouseMoveHandler);
 
 
 /**
@@ -3953,7 +4244,8 @@ mergeLine: function (direction,cbError) {
 
     function findNextGraGroupOrFreetext(elem) {
       var nextNode = $(elem), grdCnt = 500;
-      if (!nextNode.hasClass('grpGra') && !nextNode.hasClass('freetext')) {// move atleast one node
+      if (!nextNode.hasClass('grpGra') && !nextNode.hasClass('freetext') ||
+          nextNode.hasClass('textDivHeader') && !nextNode.hasClass('endHeader')) {// move atleast one node
         nextNode = nextNode.next();
       }
       while (nextNode.length && !nextNode.hasClass('grpGra') && !nextNode.hasClass('freetext')  && grdCnt--) {
@@ -3977,7 +4269,8 @@ mergeLine: function (direction,cbError) {
 
     function findPrevGraGroupOrFreetext(elem) {
       var prevNode = $(elem), grdCnt = 500;
-      if (!prevNode.hasClass('grpGra') && !prevNode.hasClass('freetext')) {// move atleast one node
+      if (!prevNode.hasClass('grpGra') && !prevNode.hasClass('freetext') ||
+          prevNode.hasClass('textDivHeader') && !prevNode.hasClass('startHeader')) {// move atleast one node
         prevNode = prevNode.prev();
       }
       while (prevNode.length && !prevNode.hasClass('grpGra') && !prevNode.hasClass('freetext') && grdCnt--) {
@@ -4030,9 +4323,9 @@ mergeLine: function (direction,cbError) {
                         startOffset == endOffset && mdTarget == this);
         isReverseSelection = (!isCaretOnly &&((startContainer != endContainer &&
                                                 (sel && startContainer == sel.focusNode &&
-                                                        startOffset == sel.focusOffset||
-                                                 endContainer.parentElement == mdTarget ||
-                                                 endContainer.parentElement == mdTarget.parentElement)) ||
+                                                        startOffset == sel.focusOffset||( mdTarget &&
+                                                 (endContainer.parentElement == mdTarget ||
+                                                 endContainer.parentElement == mdTarget.parentElement)))) ||
                                               (startContainer == endContainer &&
                                                 sel && sel.anchorOffset != null &&
                                                 sel.focusOffset == startOffset
@@ -4040,6 +4333,7 @@ mergeLine: function (direction,cbError) {
                                                 mdTarget != this && mdTarget.id.match(/textContent/) != null));
 /********************************* Caret Reposition cases ***************************************/
         if (isCaretOnly){
+          DEBUG.trace("ednVE mousup","1 "+muTime);
           //handle caret reposition by snapping to nearest syllable- nearest text position in that syllable
           //range still on selected node case
           if (startContainer.nodeName == 'SPAN' && startContainer.className.match(/selected/) && eTarget !== startContainer ||
@@ -4048,6 +4342,7 @@ mergeLine: function (direction,cbError) {
           }
           // line label case
           if (e.target.nodeName == 'SPAN' && e.target.className.match(/textDivHeader/)) {
+          DEBUG.trace("ednVE mousup","2 "+muTime);
             //choose first syllable on line next('.grpGra')
             nextNode = $(e.target).next();
             while (nextNode.length && !nextNode.hasClass('grpGra') && !nextNode.hasClass('freetext')) {
@@ -4058,6 +4353,7 @@ mergeLine: function (direction,cbError) {
             newStartOffset = newEndOffset = 0;
           } else if (e.target.nodeName == 'DIV' // user end of line click or range issue in browser
                      && e.target.id.match(/textContent/) != null) {
+          DEBUG.trace("ednVE mousup","3 "+muTime);
             // check range offset which should indicate the index of the closest childnode
             if (startOffset > 0 && startOffset <= e.target.childNodes.length) {
               if (startNode = findPrevGraGroupOrFreetext( startContainer != e.target ?
@@ -4078,12 +4374,11 @@ mergeLine: function (direction,cbError) {
                      && e.target.className.match(/freetext/) != null) {
             //alert(" clicked on freetext field under constrution");
            // $(".selected",ednVE.contentDiv).removeClass("selected");
-            startNode = eTarget;
-            newStartContainer = newEndContainer = startNode.firstChild;
-            newStartOffset = newEndOffset = 0;
-           // e.stopImmediatePropagation();
-           // mdTarget = mmTarget = null;
-          //  return false;
+          DEBUG.trace("ednVE mousup","4 "+muTime);
+            ednVE.createEditFreeTextLineUI($(e.target));
+            e.stopImmediatePropagation();
+            mdTarget = mmTarget = null;
+            return false;
           } else if (useTarget) {// startContainer is selected different from target
             startNode = eTarget;
           } else if (startContainer.nodeName == "#text") {// text click case (usual case)
@@ -4109,6 +4404,7 @@ mergeLine: function (direction,cbError) {
                 //with TCM offset directing intra syllable cases
                 if ((classes.indexOf("ord0") > -1) &&
                     (selectNode = findNextGraGroupOrFreetext(startNode))) {//TCM at start of syllable find next grapheme group
+          DEBUG.trace("ednVE mousup","5 "+muTime);
                   newStartContainer = newEndContainer = selectNode.firstChild;
                   newStartOffset = newEndOffset = 0;
                 } else if (selectNode = findPrevGraGroupOrFreetext(startNode)){ // find previous grapheme groups last text position
@@ -4131,6 +4427,7 @@ mergeLine: function (direction,cbError) {
             }
             sclID = selectNode.get(0).className.match(/scl(\d+)/)[1];
           } else if (startNode && startNode.nodeName == "DIV" && startNode.className.match(/freetext/)) {
+          DEBUG.trace("ednVE mousup","6 "+muTime);
             sclID = null;  // todo invalidate VSE ??
             selectNode = $(startNode);
           } else {
@@ -4150,6 +4447,7 @@ mergeLine: function (direction,cbError) {
             //move start to next nearest grpGra
             if (startContainer.nodeName == 'SPAN' && startContainer.className.match(/textDivHeader/)) {
               //choose first syllable on line next('.grpGra')
+          DEBUG.trace("ednVE mousup","7");
               if (startNode = findNextGraGroupOrFreetext(startContainer)) {
                 newStartContainer = startNode.firstChild;
                 newStartOffset = 0;
@@ -4157,6 +4455,7 @@ mergeLine: function (direction,cbError) {
             } else if (startContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                        && startContainer.id.match(/textContent/) != null) {
               // check range offset which should indicate the index of the closest childnode
+          DEBUG.trace("ednVE mousup","8");
               if (startOffset > 0 && startOffset <= startContainer.childNodes.length &&
                 (startNode = findPrevGraGroupOrFreetext(startContainer.childNodes[startOffset]))) {
                   newStartContainer = startNode.firstChild;
@@ -4167,8 +4466,11 @@ mergeLine: function (direction,cbError) {
               }
             } else if (startContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                      && startContainer.className.match(/freetext/) != null) {
-              alert("selection started on freetext field - under constrution");
-              return;
+          DEBUG.trace("ednVE mousup","9");
+              ednVE.createEditFreeTextLineUI($(startContainer));
+//              alert("selection started on freetext field - under constrution");
+              e.stopImmediatePropagation();
+              return false;
             } else if (startContainer.nodeName == "#text") {// text click case (usual case)
               if (startOffset == startContainer.textContent.length) { //at the end of previous syllable
                 startNode = findNextGraGroupOrFreetext(startContainer.parentNode);
@@ -4184,12 +4486,14 @@ mergeLine: function (direction,cbError) {
             //move end to prev nearest grpGra
             if (endContainer.nodeName == 'SPAN' && endContainer.className.match(/textDivHeader/)) {
               //choose first syllable on line next('.grpGra')
+          DEBUG.trace("ednVE mousup","10");
               if (endNode = findNextGraGroupOrFreetext(endContainer)) {
                 newEndContainer = endNode.firstChild;
                 newEndOffset = 0;
               }
             } else if (endContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                        && endContainer.id.match(/textContent/) != null) {
+          DEBUG.trace("ednVE mousup","11");
               // check range offset which should indicate the index of the closest childnode
               if (endOffset > 0 && endOffset <= endContainer.childNodes.length &&
                     (endNode = findPrevGraGroupOrFreetext(endContainer.childNodes[endOffset]))) {
@@ -4201,8 +4505,11 @@ mergeLine: function (direction,cbError) {
               }
             } else if (endContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                      && endContainer.className.match(/freetext/) != null) {
-              alert("selection ended on freetext field - under constrution");
-              return;
+          DEBUG.trace("ednVE mousup","12");
+              ednVE.createEditFreeTextLineUI($(endContainer));
+//              alert("selection ended on freetext field - under constrution");
+              e.stopImmediatePropagation();
+              return false;
             } else if (endContainer.nodeName == "#text") {
               endNode = endContainer.parentNode;
             } else {
@@ -4262,6 +4569,7 @@ mergeLine: function (direction,cbError) {
                 //forward selection so move to first text position of syllable to right.
                 endNode = findPrevGraGroupOrFreetext(endNode);
               } else {
+          DEBUG.trace("ednVE mousup","13");
                 //error case unsupport selection node
                 DEBUG.log("gen","processing mouse up for selection startnode on element " + classes + " and is not a supported node type");
                 //select first grpGra
@@ -4317,8 +4625,13 @@ mergeLine: function (direction,cbError) {
               }
             } else if (endContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                      && endContainer.className.match(/freetext/) != null) {
-              alert(" ended reverse selection on freetext field - under constrution");
-              return;
+//              alert(" ended reverse selection on freetext field - under constrution");
+//              return;
+          DEBUG.trace("ednVE mousup","14");
+              ednVE.createEditFreeTextLineUI($(endContainer));
+//              alert("selection ended on freetext field - under constrution");
+              e.stopImmediatePropagation();
+              return false;
             } else if (endContainer.nodeName == "#text") {// text click case (usual case)
               startNode = endContainer.parentNode;
             } else { // element click case
@@ -4345,8 +4658,13 @@ mergeLine: function (direction,cbError) {
               }
             } else if (startContainer.nodeName == 'DIV' // user end of line click or range issue in browser
                      && startContainer.className.match(/freetext/) != null) {
-              alert(" started reverse selection on freetext field - under constrution");
-              return;
+//              alert(" started reverse selection on freetext field - under constrution");
+//              return;
+          DEBUG.trace("ednVE mousup","15");
+              ednVE.createEditFreeTextLineUI($(startContainer));
+//              alert("selection ended on freetext field - under constrution");
+              e.stopImmediatePropagation();
+              return false;
             } else if (startContainer.nodeName == "#text") {
               endNode = startContainer.parentNode;
             } else {
@@ -4385,8 +4703,18 @@ mergeLine: function (direction,cbError) {
               }
             }
 
-            sclID = selectNode.get(0).className.match(/scl(\d+)/)[1];
-            selectOrdPos = parseInt(selectNode.get(0).className.match(/ord(\d+)/)[1]);
+            sclID = selectNode.get(0).className.match(/scl(\d+)/);
+            if (sclID) {
+              sclID = parseInt(sclID[1]);
+            } else {
+              sclID = null;
+            }
+            selectOrdPos = selectNode.get(0).className.match(/ord(\d+)/);
+            if (selectOrdPos) {
+              selectOrdPos = parseInt(selectOrdPos[1]);
+            } else {
+              selectOrdPos = null;
+            }
             //fixup end of selection
             classes = endNode.className;
             if (classes.indexOf("grpGra") == -1) {//not at syllable need to adjust
@@ -4404,10 +4732,11 @@ mergeLine: function (direction,cbError) {
                 endNode = $(ednVE.contentDiv).find(".grpGra:first").get(0);
               }
               newEndOffset = 0;
-           }
+            }
             if (endNode) {
               //if not same syllable need to contract to end of selectNode
-              endOrdPos = parseInt(endNode.className.match(/ord(\d+)/)[1]);
+              ord =endNode.className.match(/ord(\d+)/);
+              endOrdPos = (ord?parseInt(ord[1]):null);
               if (endOrdPos < selectOrdPos &&
                   sclID != endNode.className.match(/scl(\d+)/)[1]) { //syllable to right of select syllable so end is last text of syllable
                   //get the last group for this sclID and set offset to end of text
@@ -4489,6 +4818,7 @@ mergeLine: function (direction,cbError) {
                             selectNode = $(".grpGra.scl"+sclIDSelect+":first",ednVE.contentDiv);
                         ednVE.sclEd.saving = false;
                         ednVE.sclEd.dirty = false;
+                        ednVE.removeFreeTextLineUI();
                         ednVE.sclEd.init(selectNode);
                       },
                       function(errStr) {
@@ -4496,6 +4826,7 @@ mergeLine: function (direction,cbError) {
                         alert("Error from navigation while trying to save current syllable - "+errStr);
                       });
           } else {
+            ednVE.removeFreeTextLineUI();
             ednVE.sclEd.init(selectNode);
           }
         }
@@ -4514,6 +4845,12 @@ mergeLine: function (direction,cbError) {
         mdTarget = null;
         mmTarget = null;
         return false;
+      } else if (ednVE.structLinkMode) {
+        selectIDs = ednVE.getSelectionEntityGIDs();
+        if (selectIDs && selectIDs.length){
+          $('.editContainer').trigger('structurelinkresponse',[this.id,ednVE.edition.id,ednVE.structLinkMode,selectIDs]);
+        }
+        ednVE.structLinkMode = null;
       } else if (!e.ctrlKey && !(eTarget.id && eTarget.id.match(/textContent/) && sRange.commonAncestorContainer == sRange.startContainer)) {
         $(".selected",ednVE.contentDiv).removeClass("selected");
         $('.editContainer').trigger('updateselection',[ednVE.id,[""]]);
@@ -4693,63 +5030,181 @@ mergeLine: function (direction,cbError) {
 
 
 /**
+* remove freetext line view/edit UI
+*
+*/
+
+  removeFreeTextLineUI: function() {
+    var ednVE = this;
+    $('.freetextInput',ednVE.contentDiv).each(function(index,elem) {
+      var $freeTextInput = $(elem), $freeTextDiv = $freeTextInput.parent(),
+         classes = $freeTextDiv.attr('class'),
+         freeTextLineSeqID = classes.match(/lineseq(\d+)/)[1],
+         strFreetext=$freeTextInput.val();
+      if (freeTextLineSeqID) {
+        freeTextLineSequence = ednVE.dataMgr.getEntity('seq',freeTextLineSeqID);
+        if (freeTextLineSequence) {
+          if (freeTextLineSequence.freetext == strFreetext){//input is same as saved on server
+            if ($freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.removeClass('dirty');
+            }
+          } else if (strFreetext.length) {
+            if (!$freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.addClass('dirty');
+            }
+            if ($freeTextDiv.hasClass('error')) {
+              $freeTextDiv.removeClass('error');
+            }
+            if ($freeTextDiv.hasClass('valid')) {
+              $freeTextDiv.removeClass('valid');
+            }
+            if (freeTextLineSequence.errorMsg) {
+              delete freeTextLineSequence.errorMsg;
+            }
+          } else {// blank line or spaces
+            if (!$freeTextDiv.hasClass('error')) {
+              $freeTextDiv.addClass('error');
+            }
+            if ($freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.removeClass('dirty');
+            }
+            if ($freeTextDiv.hasClass('valid')) {
+              $freeTextDiv.removeClass('valid');
+            }
+            freeTextLineSequence.errorMsg = "blank or space only line text not supported, please enter …";
+          }
+          freeTextLineSequence.localfreetext = strFreetext;
+        }
+      }
+      //set FreeText line display
+      if (!strFreetext || strFreetext.trim() == "") {
+        $freeTextDiv.html("blank or space only line text not supported, please enter …");
+      } else {
+        $freeTextDiv.html(strFreetext);
+      }
+    });
+  },
+
+
+/**
 * create freetext line view/edit UI
 *
 * @param node freeTextDiv Html div used to contain the freetext UI
 */
 
-  createEditFreeTextLineUI: function(freeTextDiv) {
-    var ednVE = this, classes = freeTextDiv.attr('class'), validateData, sel, range, selElem,
-        freeTextInput, validateBtn, errMsgDiv, resultsTable, lostFocusToValidate = false,
+  createEditFreeTextLineUI: function($freeTextDiv) {
+    var ednVE = this, classes = $freeTextDiv.attr('class'), validateData, sel, range, selElem,
+        $freeTextInput, validateBtn, errMsgDiv, resultsTable, lostFocusToValidate = false,
         ord = classes.match(/ordL(\d+)/)[1],html, freeTextLineSequence,tranlit,//errXoffset = 10, errYoffset=10,
         freeTextLineSeqID = classes.match(/lineseq(\d+)/)[1];
+    ednVE.removeFreeTextLineUI();
     if (freeTextLineSeqID) {
       freeTextLineSequence = ednVE.dataMgr.getEntity('seq',freeTextLineSeqID);
-      translit = freeTextLineSequence.freetext;
-      if (freeTextLineSequence.validationMsg && !freeTextDiv.hasClass('error')) {
-        freeTextDiv.addClass('error');
+      if ( typeof freeTextLineSequence.localfreetext == 'undefined') {//first time
+        freeTextLineSequence.localfreetext = freeTextLineSequence.freetext;
+        if (freeTextLineSequence.validationMsg) {
+          freeTextLineSequence.errorMsg = decodeURIComponent(freeTextLineSequence.validationMsg);
+          $freeTextDiv.addClass('error');
+        }
+      } else {
+        if (freeTextLineSequence.localfreetext != freeTextLineSequence.freetext) {
+          if (freeTextLineSequence.localfreetext &&
+              freeTextLineSequence.localfreetext.trim().length &&
+              freeTextLineSequence.errorMsg) {
+            delete freeTextLineSequence.errorMsg;
+            $freeTextDiv.addClass('dirty');
+            $freeTextDiv.removeClass('error');
+            $freeTextDiv.removeClass('valid');
+          }
+        }
+        if (freeTextLineSequence.errorMsg) {
+          $freeTextDiv.addClass('error');
+          $freeTextDiv.removeClass('dirty');
+          $freeTextDiv.removeClass('valid');
+        }
       }
-      errMsg = (freeTextLineSequence.validationMsg?decodeURIComponent(freeTextLineSequence.validationMsg):"No Errors");
-      html = '<input class="freetextInput" contenteditable="true" value="'+translit+'" />'+
+      errMsg = (freeTextLineSequence.errorMsg?freeTextLineSequence.errorMsg:"");
+      html = '<input class="freetextInput" contenteditable="true" value="'+freeTextLineSequence.localfreetext+'" />'+
              '<button class="validateButton" >Validate</button>'+
              '<button class="commitButton" >Commit</button>'+
              '<div class="validationError">'+errMsg+'</div>';
-      freeTextDiv.html(html);
-      freeTextInput = $('.freetextInput',freeTextDiv);
-      validateBtn = $('.validateButton',freeTextDiv);
-      commitBtn = $('.commitButton',freeTextDiv);
-      errMsgDiv = $('.validationError',freeTextDiv);
-      freeTextInput.unbind('keydown').bind('keydown', function(e) {
+      $freeTextDiv.html(html);
+      $freeTextInput = $('.freetextInput',$freeTextDiv);
+      validateBtn = $('.validateButton',$freeTextDiv);
+      commitBtn = $('.commitButton',$freeTextDiv);
+      errMsgDiv = $('.validationError',$freeTextDiv);
+      $freeTextInput.unbind('keydown').bind('keydown', function(e) {
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('keypress').bind('keypress', function(e) {
-        freeTextDiv.removeClass('valid');
+      $freeTextInput.unbind('keypress').bind('keypress', function(e) {
+        $freeTextDiv.removeClass('valid');
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('keyup').bind('keyup', function(e) {
+      $freeTextInput.unbind('keyup').bind('keyup', function(e) {
         //if up arrow then navigate to the first syllable of the prev line, down arrow the next line
         // or if line is freetext then invoke edit UI
         //retrack this line to just display string.
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('paste').bind('paste', function(e) {
+      $freeTextInput.unbind('paste').bind('paste', function(e) {
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('mousedown').bind('mousedown', function(e) {
+      $freeTextInput.unbind('mousedown').bind('mousedown', function(e) {
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('mouseup').bind('mouseup', function(e) {
-        $(this).focus();
+      $freeTextInput.unbind('mouseup').bind('mouseup', function(e) {
+        $freeTextInput.focus();
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('change').bind('change', function(e) {
-        $(this).focus();
+      $freeTextInput.unbind('change').bind('change', function(e) {
+        $freeTextInput.focus();
         e.stopImmediatePropagation();
       });
-      freeTextInput.unbind('blur').bind('blur', function(e) {
-        freeTextLineSequence.freetext = freeTextInput.val(); //temp solution TODO call save freetext service.
+      $freeTextInput.surpressBlurOnce = true;
+      $freeTextInput.unbind('blur').bind('blur', function(e) {
+        var strFreetext = $freeTextInput.val();
+        if ($freeTextInput.surpressBlurOnce){
+          delete $freeTextInput.surpressBlurOnce;
+          e.stopImmediatePropagation();
+          return false;
+        }
+        freeTextLineSequence.localfreetext = $freeTextInput.val(); //temp solution TODO call save freetext service.
         if (!lostFocusToValidate) {
-          freeTextDiv.html(freeTextInput.val());
+          if (!strFreetext || strFreetext.trim() == "") {
+            $freeTextDiv.html("blank or space only line text not supported, please enter …");
+          } else {
+            $freeTextDiv.html(strFreetext);
+          }
+          if (freeTextLineSequence.freetext == strFreetext){//input is same as saved on server
+            if ($freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.removeClass('dirty');
+            }
+          } else if (strFreetext.length) {
+            if (!$freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.addClass('dirty');
+            }
+            if ($freeTextDiv.hasClass('error')) {
+              $freeTextDiv.removeClass('error');
+            }
+            if ($freeTextDiv.hasClass('valid')) {
+              $freeTextDiv.removeClass('valid');
+            }
+            if (freeTextLineSequence.errorMsg) {
+              delete freeTextLineSequence.errorMsg;
+            }
+          } else {
+            if (!$freeTextDiv.hasClass('error')) {
+              $freeTextDiv.addClass('error');
+            }
+            if ($freeTextDiv.hasClass('dirty')) {
+              $freeTextDiv.removeClass('dirty');
+            }
+            if ($freeTextDiv.hasClass('valid')) {
+              $freeTextDiv.removeClass('valid');
+            }
+            freeTextLineSequence.errorMsg = "blank or space only line text not supported, please enter …";
+          }
+          freeTextLineSequence.localfreetext = strFreetext;
         } else {
           lostFocusToValidate = false;
         }
@@ -4772,60 +5227,79 @@ mergeLine: function (direction,cbError) {
         return false;
       });
       validateBtn.unbind('click').bind('click', function(e) {
+        var strFreetext = $freeTextInput.val();
         lostFocusToValidate = true;
-        freeTextInput.focus();
-        validateData = { seqID: freeTextLineSeqID,
-                         freetext: freeTextInput.val()};
-        $.ajax({
-            type:"POST",
-            dataType: 'json',
-            url: basepath+'/services/validateFreeTextLine.php?db='+dbName,
-            data: validateData,
-            asynch: true,
-            success: function (data, status, xhr) {
-              var seqID = freeTextLineSeqID;
-              if (typeof data == 'object') {
-                if (data.entities) {
-                  //update data
-                  ednVE.dataMgr.updateLocalCache(data,ednVE.edition.txtID);
-                }
-                if (data.success) {
-                  if (!data.errString) {
-                    //remove any error and/or dirty indicators
-                    if (freeTextDiv.hasClass('error')) {
-                      freeTextDiv.removeClass('error');
-                    }
-                    //mark as valid so commit btn will show
-                    if (!freeTextDiv.hasClass('valid')) {
-                      freeTextDiv.addClass('valid');
-                    }
-                    //ensure that seq.validationMsg was removed
-                    errMsgDiv.html();
-                  } else {
-                    //remove any valid and/or dirty indicators
-                    if (freeTextDiv.hasClass('valid')) {
-                      freeTextDiv.removeClass('valid');
-                    }
-                    //mark validationError
-                    if (!freeTextDiv.hasClass('error')) {
-                      freeTextDiv.addClass('error');
-                    }
-                    //and update error UI
-                    errMsgDiv.html(decodeURIComponent(data.errString));
+        if (!strFreetext || strFreetext.trim() == "") {
+          //remove any valid and/or dirty indicators
+          if ($freeTextDiv.hasClass('valid')) {
+            $freeTextDiv.removeClass('valid');
+          }
+          if ($freeTextDiv.hasClass('dirty')) {
+            $freeTextDiv.removeClass('dirty');
+          }
+          //mark validationError
+          if (!$freeTextDiv.hasClass('error')) {
+            $freeTextDiv.addClass('error');
+          }
+          //and update error UI
+          freeTextLineSequence.localfreetext = strFreetext;
+          freeTextLineSequence.validationMsg = "blank or space only line text not supported, please enter …";
+          errMsgDiv.html(freeTextLineSequence.validationMsg);
+        } else {
+          $freeTextInput.focus();
+          validateData = { seqID: freeTextLineSeqID,
+                           freetext: $freeTextInput.val()};
+          $.ajax({
+              type:"POST",
+              dataType: 'json',
+              url: basepath+'/services/validateFreeTextLine.php?db='+dbName,
+              data: validateData,
+              asynch: true,
+              success: function (data, status, xhr) {
+                var seqID = freeTextLineSeqID;
+                if (typeof data == 'object') {
+                  if (data.entities) {
+                    //update data
+                    ednVE.dataMgr.updateLocalCache(data,ednVE.edition.txtID);
                   }
-                }else if (data['errors']) {
-                  alert("Error(s) occurred while trying to validate a freetext line. Error: " + data['errors'].join(" : "));
+                  if (data.success) {
+                    if (!data.errString) {
+                      //remove any error and/or dirty indicators
+                      if ($freeTextDiv.hasClass('error')) {
+                        $freeTextDiv.removeClass('error');
+                      }
+                      //mark as valid so commit btn will show
+                      if (!$freeTextDiv.hasClass('valid')) {
+                        $freeTextDiv.addClass('valid');
+                      }
+                      //ensure that seq.validationMsg was removed
+                      errMsgDiv.html();
+                    } else {
+                      //remove any valid and/or dirty indicators
+                      if ($freeTextDiv.hasClass('valid')) {
+                        $freeTextDiv.removeClass('valid');
+                      }
+                      //mark validationError
+                      if (!$freeTextDiv.hasClass('error')) {
+                        $freeTextDiv.addClass('error');
+                      }
+                      //and update error UI
+                      errMsgDiv.html(decodeURIComponent(data.errString));
+                    }
+                  }else if (data['errors']) {
+                    alert("Error(s) occurred while trying to validate a freetext line. Error: " + data['errors'].join(" : "));
+                  }
+                  if (data.warnings) {
+                    DEBUG.log("warn", "warnings during  validate freetext - " + data.warnings.join(" : "));
+                  }
                 }
-                if (data.warnings) {
-                  DEBUG.log("warn", "warnings during  validate freetext - " + data.warnings.join(" : "));
-                }
+              },// end success cb
+              error: function (xhr,status,error) {
+                  // add record failed.
+                  errStr = "An error occurred while trying to call  validate freetext. Error: " + error;
               }
-            },// end success cb
-            error: function (xhr,status,error) {
-                // add record failed.
-                errStr = "An error occurred while trying to call  validate freetext. Error: " + error;
-            }
-        });// end ajax
+          });// end ajax
+        }
         e.stopImmediatePropagation();
         return false;
       });
@@ -4838,7 +5312,7 @@ mergeLine: function (direction,cbError) {
         return false;
       });
       commitBtn.unbind('click').bind('click', function(e) {
-        freeTextInput.focus();
+        $freeTextInput.focus();
         commitData = { seqID: freeTextLineSeqID,
                        ednID: ednVE.edition.id};
         if (DEBUG.healthLogOn) {
@@ -4904,8 +5378,6 @@ mergeLine: function (direction,cbError) {
         e.stopImmediatePropagation();
         return false;
       });
-      freeTextInput.focus();
-      freeTextInput.select();
       if (window.getSelection) {
         sel = window.getSelection();
         if (sel.getRangeAt && sel.rangeCount) {
@@ -4915,7 +5387,7 @@ mergeLine: function (direction,cbError) {
         range = document.selection.createRange();
       }
       if (range) {
-        selElem = freeTextDiv.get(0);
+        selElem = $freeTextDiv.get(0);
         range.setStart(selElem,0);
         range.setEnd(selElem,0);
         if (sel) {
@@ -4923,6 +5395,7 @@ mergeLine: function (direction,cbError) {
           sel.addRange(range);
         }
       }
+      $freeTextInput.focus();
     }
   },
 
@@ -4938,7 +5411,7 @@ mergeLine: function (direction,cbError) {
         seqID, ednSeqIDs = this.edition.seqIDs,
         seqLK = this.dataMgr.entities['seq'],
         i,cnt;
-    this.lookup = { 'gra':{}, 'scl':{}, 'tok':{}, 'cmp':{}};
+    this.lookup = { 'gra':{}, 'scl':{}, 'tok':{}, 'cmp':{}, 'seq':{}};
     if (seqLK && Object.keys(seqLK).length && ednSeqIDs && ednSeqIDs.length) {
       cnt = ednSeqIDs.length;
       for (i=0; i<cnt; i++) {
@@ -5105,10 +5578,15 @@ mergeLine: function (direction,cbError) {
   */
   calcTextDivGraphemeLookups : function(textDivSeqID) {
     var textDiv = this.dataMgr.entities['seq'][textDivSeqID],
-        i, textDivTag, textDivGID, textDivGIDs = textDiv.entityIDs;
-    for (i=0; i<textDivGIDs.length; i++) {//iterate through the entities of this sequence
-      textDivGID = textDivGIDs[i];
-      this.walkTokenContext(textDivGID,'seq'+textDivSeqID,true,null);
+        i, textDivTag, textDivGID, textDivGIDs;
+    if (textDiv && textDiv.entityIDs) {
+      textDivGIDs = textDiv.entityIDs;
+      for (i=0; i<textDivGIDs.length; i++) {//iterate through the entities of this sequence
+        textDivGID = textDivGIDs[i];
+        this.walkTokenContext(textDivGID,'seq'+textDivSeqID,true,null);
+      }
+    } else {
+      DEBUG.log("warn", "warnings Calculating Text Division lookup entity not available - skipping seq:" + textDivSeqID);
     }
   },
 
@@ -5240,7 +5718,8 @@ mergeLine: function (direction,cbError) {
             continue;
           }
           nextGraID = (j+1 < graIDs.length)? graIDs[j+1] :
-                        (nextSclID ? entities['scl'][nextSclID].graphemeIDs[0]:null);
+                        ((nextSclID && entities['scl'][nextSclID]&&
+                          entities['scl'][nextSclID].graphemeIDs) ? entities['scl'][nextSclID].graphemeIDs[0]:null);
           if (!this.lookup.gra[graID]) {
             this.lookup.gra[graID] = {};
           }
@@ -5257,11 +5736,12 @@ mergeLine: function (direction,cbError) {
         }
         entFootnote = this.getEntFootnoteHtml('scl'+sclID);
         if (entFootnote) {
-          if (this.lookup.gra[graID].fnMarker) {
-            this.lookup.gra[graID].fnMarker += entFootnote;
-          } else {
-            this.lookup.gra[graID].fnMarker = entFootnote;
+          if (!this.lookup.gra[graID].fnMarker) {
+            this.lookup.gra[graID].fnMarker = {};
           }
+          this.lookup.gra[graID].fnMarker['scl'+sclID] = entFootnote;
+        } else if (this.lookup.gra[graID].fnMarker && this.lookup.gra[graID].fnMarker['scl'+sclID]) {
+          delete this.lookup.gra[graID].fnMarker['scl'+sclID];
         }
       }
       // update last grapheme boundary to appropriate linebreak
@@ -5283,10 +5763,13 @@ mergeLine: function (direction,cbError) {
       }
       entFootnote = this.getEntFootnoteHtml('seq'+physLineSeqID);
       if (entFootnote) {
-        if (this.lookup.gra[graID].fnMarker) {
-          this.lookup.gra[graID].fnMarker += entFootnote;
+        if (!this.lookup.seq[physLineSeqID]) {
+          this.lookup.seq[physLineSeqID] = {};
+        }
+        if (this.lookup.seq[physLineSeqID].fnMarker) {
+          this.lookup.seq[physLineSeqID].fnMarker += entFootnote;
         } else {
-          this.lookup.gra[graID].fnMarker = entFootnote;
+          this.lookup.seq[physLineSeqID].fnMarker = entFootnote;
         }
       }
     } else if (!physLineSeq){
@@ -5421,22 +5904,37 @@ mergeLine: function (direction,cbError) {
           //for each token's grapheme
           for (k=0; k<graIDs.length; k++) {
             graID = graIDs[k];
-            if (k==0 && entities.gra[graID] && entities.gra[graID].decomp && entities.gra[graID].tokIDs) {
-              entities.gra[graID].tokIDs.push(entID);
-            }
             // add/update lookup with containing tokID, context string, and Boundary
             if (!this.lookup.gra[graID]) {
               this.lookup.gra[graID] = {};
             }
-            this.lookup.gra[graID].tokID = entID;
-            this.lookup.gra[graID].tokctx = context+' tok'+entID;
+            if (k==0) {
+              if (entities.gra && entities.gra[graID] && entities.gra[graID].decomp &&
+                  entities.gra[graID].decomp.length){//sandhi case
+                if (entities.gra[graID].tokIDs) {
+                  entities.gra[graID].tokIDs.push(entID);
+                }
+                if (this.lookup.gra[graID].tokID &&
+                    this.lookup.gra[graID].tokctx) {
+                  this.lookup.gra[graID].stokID = entID;
+                  this.lookup.gra[graID].tokctx += ' stok'+entID;
+                }
+              } else {
+                this.lookup.gra[graID].tokID = entID;
+                this.lookup.gra[graID].tokctx = context+' tok'+entID;
+              }
+            } else {
+              this.lookup.gra[graID].tokID = entID;
+              this.lookup.gra[graID].tokctx = context+' tok'+entID;
+            }
             if ((k+1) == graIDs.length) { // last grapheme of this token create the HTML boundary marker
               if (entFootnote) {
-                if (this.lookup.gra[graID].fnMarker) {
-                  this.lookup.gra[graID].fnMarker += entFootnote;
-                } else {
-                  this.lookup.gra[graID].fnMarker = entFootnote;
+                if (!this.lookup.gra[graID].fnMarker) {
+                  this.lookup.gra[graID].fnMarker = {};
                 }
+                this.lookup.gra[graID].fnMarker[context+' tok'+entID] = entFootnote;
+              } else if (this.lookup.gra[graID].fnMarker && this.lookup.gra[graID].fnMarker[context+' tok'+entID]) {
+                delete this.lookup.gra[graID].fnMarker[context+' tok'+entID];
               }
               isCmpTokenSeparator = (!isLastEnt && context.search(/cmp/)>-1);
               if (!entities.gra[graID] || !entities.gra[graID].type) {
@@ -5456,7 +5954,7 @@ mergeLine: function (direction,cbError) {
             }else{//in the case where the boundary changes it's necessary to erase the old boundary HTML
               delete this.lookup.gra[graID].boundary;
             }
-          }
+          }//end for each grapheme
         }
         break;
       default:
@@ -5481,16 +5979,20 @@ mergeLine: function (direction,cbError) {
 
   renderPhysicalLine: function (physLineSeqID, headerClass, groupClass,grpOrdStart, lineord) {
     DEBUG.traceEntry("editionVE.renderPhysicalLine","physLseqID = " + physLineSeqID);
-    var  entities = this.dataMgr.entities, physLineSeq = entities.seq[physLineSeqID],
-        grpOrd = grpOrdStart?grpOrdStart:1,sclID,sclIDs,i,j, hasNonReconConsnt, hasNonAddedConsnt, isConsnt, typ,
-        graLU, grapheme,previousA, previousGraTCMS, graID,graIDs,i,j,lineHTML,grpHTML = "",inRestore = false,
+    var  entities = this.dataMgr.entities, physLineSeq = entities.seq[physLineSeqID], fnCtx,
+        grpOrd = grpOrdStart?grpOrdStart:1, sclID, sclIDs, i, j, hasNonReconConsnt, hasNonAddedConsnt, isConsnt, typ,
+        graLU, grapheme, previousA, previousGraTCMS, graID, graIDs, lineHTML, grpHTML = "", inRestore = false,
         prevGraIsVowelCarrier = false, plusSign = (this.repType == "diplomatic" ? "+&nbsp":"+");
     if (physLineSeq && physLineSeq.entityIDs && physLineSeq.entityIDs.length) {
       //calculate line header
       lineHTML = '<span class="textDivHeader seqLabel'+(headerClass?' '+ headerClass:'')+
                       (lineord?' ordL'+ lineord:'')+
                       (physLineSeqID?' lineseq'+ physLineSeqID:'')+'">'+
-                       physLineSeq.label+'</span>';
+                       physLineSeq.label;
+      if ( this.lookup.seq && this.lookup.seq[physLineSeqID] && this.lookup.seq[physLineSeqID].fnMarker ) {
+        lineHTML += this.lookup.seq[physLineSeqID].fnMarker;
+      }
+      lineHTML += '</span>';
       sclIDs = physLineSeq.entityIDs;
       //for each syllable in physical line sequence
       for(i=0; i<sclIDs.length; i++) {
@@ -5544,6 +6046,12 @@ mergeLine: function (direction,cbError) {
                 lineHTML += graLU.preTCM.replace(/⟨\*/g,"").replace(/[⟨⟩]/g,"");
               }
               previousA = false;
+            }
+            if (grapheme.decomp && grapheme.decomp.length) { //sandhi
+              if (grpHTML) {
+                lineHTML += grpHTML+ '</span>';
+                grpHTML = '';
+              }
             }
             //if no group find context and start grapheme group
             if (!grpHTML) {
@@ -5627,7 +6135,9 @@ mergeLine: function (direction,cbError) {
                 lineHTML += grpHTML+ '</span>';
                 grpHTML = '';
               }
-              lineHTML += graLU.fnMarker;
+              for (fnCtx in graLU.fnMarker) {
+                lineHTML += graLU.fnMarker[fnCtx];
+              }
             }
             //check for split syllable token break or compound token break
             if (graLU.boundary) {
@@ -5782,9 +6292,10 @@ mergeLine: function (direction,cbError) {
       grpClass = !j?' firstLine': ((j+1) == textLineSeqIDs.length ? ' lastLine':'');
       ret = this.renderPhysicalLine(seqID,hdrClass,grpClass,grpOrd,j+1);
       html = ret[0];
-    $(this.contentDiv).append(html);
+      $(this.contentDiv).append(html);
       grpOrd = ret[1];
     }
+    $(this.contentDiv).append('<hr class="viewEndRule">');
     DEBUG.trace("editionVE.renderEdition","before add Handlers to DOM for edn " + this.edition.id);
     this.renumberFootnotes();
     this.addEventHandlers(); // needs to be done after content created
@@ -5961,7 +6472,10 @@ mergeLine: function (direction,cbError) {
                   graTemp = grapheme.value;
                   graTemp = graTemp[0].toUpperCase() + (graTemp.length > 1? graTemp.substring(1):"");
                   grpHTML += graTemp;
-                } else if (j==1 && prevGraIsVowelCarrier && previousA && previousGraTCMS == grapheme.txtcrit) {
+                } else if (prevGraIsVowelCarrier && previousA &&
+                          (previousGraTCMS == grapheme.txtcrit ||
+                           (!previousGraTCMS|| previousGraTCMS == "S") &&
+                           (!grapheme.txtcrit|| grapheme.txtcrit == "S"))) {
                   if (grapheme.value == 'i') {
                     grpHTML += "ï";
                   }else if (grapheme.value == 'u') {
@@ -5999,7 +6513,9 @@ mergeLine: function (direction,cbError) {
                     grpHTML = '';
                   }
                   if (graLU.fnMarker) {
-                    wordHTML += graLU.fnMarker;
+                    for (fnCtx in graLU.fnMarker) {
+                      wordHTML += graLU.fnMarker[fnCtx];
+                    }
                   }
                   //add break node to html
   //                if (graLU.boundary.indexOf('toksep') == -1) {
@@ -6008,7 +6524,7 @@ mergeLine: function (direction,cbError) {
                 }
               }
             }
-            if (prevGraIsVowelCarrier && grapheme.value == "a") {
+            if (grapheme.value == "a") {
               previousA = true;
               previousGraTCMS = grapheme.txtcrit;
             } else {
@@ -6021,7 +6537,7 @@ mergeLine: function (direction,cbError) {
             grpHTML = '';
           }
           wordHTML = wordHTML.replace(/\/\/\//g,""); // remove edge indicator
-          wordHTML = wordHTML.replace(/_+/g,"_").replace(/(_)([^\.])*/g,".$2");//.replace(/\.\./g,".");
+          wordHTML = wordHTML.replace(/_+/g,"_").replace(/(_)([^\.])/g,".$2");//.replace(/\.\./g,".");
           parentDiv.append(wordHTML);
           wordHTML = "";
         }//end for token IDs
@@ -6126,6 +6642,7 @@ mergeLine: function (direction,cbError) {
       }
     }
     $('.prose',this.contentDiv).last().addClass('lastStructure');
+    $(this.contentDiv).append('<hr class="viewEndRule">');
     DEBUG.trace("editionVE.renderEditionStructure","before add Handlers to DOM for edn " + this.edition.id);
     this.renumberFootnotes();
     this.addEventHandlers(); // needs to be done after content created
@@ -6161,8 +6678,6 @@ mergeLine: function (direction,cbError) {
       this.renumberLines();
     }
   },
-
-
 
 
 /**
@@ -6234,6 +6749,7 @@ mergeLine: function (direction,cbError) {
                 each(function(index,elem){
                   elem.className = elem.className.replace(/ordL\d+/,'')
                                                   .replace(/ord\d+/,"ord"+(grpOrd++))
+                                                  .replace(/prepadding/,"")
                                                   .replace(/firstLine/,"")
                                                   .replace(/lastLine/,"") +
                                                   newLineOrd +
@@ -6255,6 +6771,9 @@ mergeLine: function (direction,cbError) {
               segID = ednVE.dataMgr.entities.scl[sclID[1]].segID;
               if (segID) {
                 elem.className = elem.className.replace(/seg\d+/,"seg"+ segID);
+                elem.className = elem.className.replace(/noseg/,"");
+              } else {
+                elem.className = elem.className.replace(/seg\d+/,"noseg");
               }
             }
         });

@@ -191,7 +191,8 @@ MANAGERS.DataManager.prototype = {
       }
       for (prefix in inserts) {
         for (entID in inserts[prefix]) {
-          if (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp') {
+//          if (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp') {
+          if (prefix == 'tok' || prefix == 'cmp') {
             this.calcSwitchHash(prefix,entID);
           }
         }
@@ -224,7 +225,8 @@ MANAGERS.DataManager.prototype = {
         for (entID in updates[prefix]) {
           for (prop in updates[prefix][entID]) {
             if ((prop == 'entityIDs' || prop == 'graphemeIDs') &&
-                (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp')) {
+                (prefix == 'tok' || prefix == 'cmp')) {
+//                (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp')) {
               this.calcSwitchHash(prefix,entID);
               continue;
             }
@@ -335,6 +337,191 @@ MANAGERS.DataManager.prototype = {
 
 
 /**
+* checkForSandhi - determine if entity contains a sandhi
+*
+* @param string entTag entity tag to be checked
+*
+* @returns boolean indicating that entity contains a sandhi
+*/
+
+  checkForSandhi: function (entTag) {
+    var prefix = entTag.substring(0,3),
+        entID = entTag.substring(3),
+        tokIDs = [], graIDs = [],i,entity;
+    if (prefix == "cmp") { // get tok IDs
+      entity = this.getEntity(prefix,entID);
+      tokIDs = entity.tokenIDs;
+    } else if (prefix == "tok") {
+      tokIDs.push(entID);
+    }
+    if (tokIDs.length > 0) {
+      for (i in tokIDs) {
+        entity = this.getEntity("tok",tokIDs[i]);
+        if (entity && entity.graphemeIDs && entity.graphemeIDs.length > 0) {
+          graIDs = graIDs.concat( entity.graphemeIDs);
+        }
+      }
+    }
+    if (graIDs.length > 0) {
+      for (i in graIDs) {
+        entity = this.getEntity("gra",graIDs[i]);
+        if (entity.decomp && entity.decomp.length) {
+          return true;
+        }
+      }
+    }
+    return false;
+  },
+
+
+/**
+* checkLinksDissolvable - determine if entity links can be dissolved (ids removed)
+*
+* @param string array entGIDs identifying the entities to be checked
+*
+* @returns boolean indicating that entity links can be dissolved
+*/
+
+  checkLinksDissolvable: function (entGIDs) {
+    var i, childEntity, entity;
+    if (entGIDs && entGIDs.length >0) {
+      for (i=0; i<entGIDs.length; i++){// check if all children are readonly
+        entity = this.getEntityFromGID(entGIDs[i]);
+        switch (entGIDs[i].substring(0,3)) {
+          case "seq":
+              if (!entity.readonly &&
+                  entity.entityIDs &&
+                  entity.entityIDs.length > 0 &&
+                  !this.checkEntityDeletable(entGIDs[i])) {
+                return false;
+              }
+            break;
+          case "edn":
+              if (!entity.readonly && entity.seqIDs && entity.seqIDs.length > 0) {
+                return false;
+              }
+            break;
+          case "txt":
+              if (!entity.readonly && entity.ednIDs && entity.ednIDs.length > 0) {
+                return false;
+              }
+            break;
+          case "lem":
+//              if (entity.readonly) {
+                return false;
+//              }
+            break;
+          case "tok":
+          case "cmp":
+          case "scl":
+          case "gra":
+            break;
+          default:
+            return false; //error on keep link side
+        }
+      }
+    }
+    return true;
+  },
+
+
+/**
+* checkEntityDeletable - determine if entity can be deleted
+*
+* @param string entGID identifies the entity to be checked
+*
+* @returns boolean indicating that entity can be deleted
+*/
+
+  checkEntityDeletable: function (entGID) {
+    var entTag = entGID.replace(":",""),
+        prefix = entTag.substring(0,3),
+        entID = entTag.substring(3),
+        entIDs = [],i, childEntity,
+        entity = this.getEntityFromGID(entTag);
+    if (entity && !entity.readonly) {//owned and editable
+      switch (prefix) {
+        case "seq":
+          if (!entity.entityIDs || entity.entityIDs.length == 0) {
+            return true;
+          } else if (this.getTermFromID(entity.typeID) == "Text" || //warning!!! term dependency
+                     this.getTermFromID(entity.typeID) == "TextPhysical") { //warning!!! term dependency
+            return this.checkLinksDissolvable(entity.entityIDs);
+          }
+
+          break;
+        case "edn":
+          if (!entity.seqIDs || entity.seqIDs.length == 0) {
+            return true;
+          } else {
+            return (this.checkLinksDissolvable(entity.seqIDs.map(function(id) { return "seq"+id;})));
+          }
+          break;
+        case "txt": //require that all resource be removed
+          if ((!entity.ednIDs || entity.ednIDs.length == 0) &&
+              (!entity.imageIDs || entity.imageIDs.length == 0) &&
+              (!entity.blnIDs || entity.blnIDs.length == 0) &&
+              (!entity.tmdIDs || entity.tmdIDs.length == 0)) {
+            return true;
+          }
+          break;
+        case "cat":
+          if (this.getTermFromID(entity.typeID) == "Glossary") {
+            if (!entity.lemIDs || entity.lemIDs.length == 0) {
+              return true;
+            } else {
+              return (this.checkLinksDissolvable(entity.lemIDs.map(function(id) { return "lem"+id;})));
+            }
+          }
+          break;
+      }
+    }
+    return false;
+  },
+
+
+/**
+* checkForSplit - determine is syllable is split
+*
+* @param int tokID token id to be checked
+* @param int sclID syllable id to be checked
+* @param boolean end determine whether to check end or start(defalut) of token
+*
+* @returns int position of split or zero if not split
+*/
+
+  checkForSplit: function (tokID, sclID, end) {
+    var token = this.entities.tok[tokID],
+        strTok = token.value,strTokCompare,
+        syllable = this.entities.scl[sclID],
+        strScl = syllable.value,
+        cntScl = strScl.length,
+        split = 0,
+        i = 0,j;
+    if (!end) { //check start of token
+      strTokCompare = strTok.substring(0,cntScl);
+      split = 0;
+      while ( strScl != strTokCompare) {
+        split++;
+        strScl = strScl.substring(1);//remove lead char
+        strTokCompare = strTokCompare.substring(0, strTokCompare.length - 1);
+      }
+    } else {
+      strTokCompare = strTok.substring(strTok.length - cntScl);
+      if (strScl != strTokCompare) {
+        split = cntScl;
+        while ( strScl != strTokCompare) {
+          split--;
+          strTokCompare = strTokCompare.substring(1);//remove lead char
+          strScl = strScl.substring(0, strScl.length - 1);
+        }
+      }
+    }
+    return split;
+  },
+
+
+/**
 * calculate switch hash for an entity
 *
 * @param string prefix Short string indicating the type of entity
@@ -346,7 +533,7 @@ MANAGERS.DataManager.prototype = {
     if (this.entities[prefix] && this.entities[prefix][entID]) {
       entity = this.entities[prefix][entID];
       switch (prefix) {
-        case "scl":
+        case "xxxscl"://xxxdeprecate this case
           if (entity['segID']) {
             startID = endID = entity['segID'];
           } else {
@@ -359,11 +546,19 @@ MANAGERS.DataManager.prototype = {
             endSclID = entity['syllableClusterIDs'][entity['syllableClusterIDs'].length-1];
             if (startSclID && this.entities['scl'][startSclID] && this.entities['scl'][startSclID]['segID']) {
               startID = this.entities['scl'][startSclID]['segID'];
+              split = this.checkForSplit(entity.id,startSclID,false);
+              if (split){
+                startID = "scl"+startSclID+"S"+split;
+              }
             } else {
               DEBUG.log("error",'in dataManager.calcSwitchHash token id ' + entID + ' start syllable invalid or missing segment id.');
             }
             if (endSclID && this.entities['scl'][endSclID] && this.entities['scl'][endSclID]['segID']) {
               endID = this.entities['scl'][endSclID]['segID'];
+              split = this.checkForSplit(entity.id,endSclID,true);
+              if (split){
+                endID = "scl"+endSclID+"S"+split;
+              }
             } else {
               DEBUG.log("error",'in dataManager.calcSwitchHash token id ' + entID + ' end syllable invalid or missing segment id.');
             }
@@ -379,6 +574,10 @@ MANAGERS.DataManager.prototype = {
               startSclID = this.entities['tok'][startTokID]['syllableClusterIDs'][0];
               if (startSclID && this.entities['scl'][startSclID] && this.entities['scl'][startSclID]['segID']) {
                 startID = this.entities['scl'][startSclID]['segID'];
+                split = this.checkForSplit(startTokID,startSclID,false);
+                if (split){
+                  startID = "scl"+startSclID+"S"+split;
+                }
               } else {
                 DEBUG.log("error",'in dataManager.calcSwitchHash start token id ' + startTokID + ' start syllable invalid or missing segment id.');
               }
@@ -389,6 +588,10 @@ MANAGERS.DataManager.prototype = {
               endSclID = this.entities['tok'][endTokID]['syllableClusterIDs'][this.entities['tok'][endTokID]['syllableClusterIDs'].length-1];
               if (endSclID && this.entities['scl'][endSclID] && this.entities['scl'][endSclID]['segID']) {
                 endID = this.entities['scl'][endSclID]['segID'];
+                split = this.checkForSplit(endTokID,endSclID,true);
+                if (split){
+                  endID = "scl"+endSclID+"S"+split;
+                }
               } else {
                 DEBUG.log("error",'in dataManager.calcSwitchHash end token id ' + endTokID + ' end syllable invalid or missing segment id.');
               }
@@ -693,7 +896,8 @@ MANAGERS.DataManager.prototype = {
         prefix = entTag.substring(0,3),
         entID = entTag.substring(3),
         entity;
-    if (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp' ) {
+// deprecate switch for scl    if (prefix == 'scl' || prefix == 'tok' || prefix == 'cmp' ) {
+    if (prefix == 'tok' || prefix == 'cmp' ) {
       entity = this.getEntityFromGID(entTag);
       if (entity && !entity.startSegID) {
         this.calcSwitchHash(prefix,entID);
@@ -1189,9 +1393,9 @@ MANAGERS.DataManager.prototype = {
           success: function (data, status, xhr) {
               DEBUG.traceEntry("dataMgr.loadBaseline.SuccessCB","blnID = " + blnID);
               var loadedBlnID;
-              dataMgr.loadingBaseline = 0;
               if (typeof data == 'object' && data.entities && data.entities.update &&
-                    data.entities.update.bln && Object.keys(data.entities.update.bln).length > 0) {
+                    data.entities.update.bln && Object.keys(data.entities.update.bln).length > 0 &&
+                    data.entities.update.bln[blnID]) {
                 dataMgr.updateLocalCache(data, null);
                 //flag baseline as loaded
                 loadedBlnID = Object.keys(data.entities.update.bln)[0];
@@ -1199,6 +1403,7 @@ MANAGERS.DataManager.prototype = {
               } else {//nothing found for blnID so mark it as not available
                 dataMgr.baselineUnavailable[blnID] = 1;
               }
+              dataMgr.loadingBaseline = 0;
               if (data.warnings) {
                 DEBUG.log("warn", "warnings during loadBaseline - " + data.warnings.join(" : "));
               }
@@ -1458,9 +1663,10 @@ MANAGERS.DataManager.prototype = {
           success: function (data, status, xhr) {
               DEBUG.traceEntry("dataMgr.loadTextResource.SuccessCB");
               dataMgr.loadingTextResources = 0;
-              if (typeof data == 'object' && data.entities && data.entities.update &&
-                    ((data.entities.update.bln && Object.keys(data.entities.update.bln).length > 0) ||
-                    (data.entities.update.edn && Object.keys(data.entities.update.edn).length > 0))) {
+//              if (typeof data == 'object' && data.entities && data.entities.update &&
+//                    ((data.entities.update.bln && Object.keys(data.entities.update.bln).length > 0) ||
+//                    (data.entities.update.edn && Object.keys(data.entities.update.edn).length > 0))) {
+              if (typeof data == 'object' && data.entities && data.entities.update) {
                 dataMgr.updateLocalCache(data, null);
                 dataMgr.textResourcesLoaded = true;
               }

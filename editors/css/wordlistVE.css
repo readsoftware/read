@@ -67,6 +67,7 @@
 
 .wordlistContentDiv{
   overflow:auto;
+  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode"!important;
 }
 
 .edndraghandle:hover {

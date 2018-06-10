@@ -138,6 +138,7 @@ if (count($errors) == 0) {
     }
     if ($ref !== null) {
       $text->setRef($ref);
+      clearSessionCatCache();
       if ($txtID) {
         addUpdateEntityReturnData("txt",$txtID,'ref', $text->getRef());
       }
@@ -193,6 +194,10 @@ if (count($errors)) {
   $retVal["errors"] = $errors;
 } else {
   $retVal["success"] = true;
+//  invalidateCache('AllTextResources'.getUserDefEditorID());
+//  invalidateCache('SearchAllResults'.getUserDefEditorID());
+  invalidateCache('AllTextResources');
+  invalidateCache('SearchAllResults');
 }
 if (count($warnings)) {
   $retVal["warnings"] = $warnings;

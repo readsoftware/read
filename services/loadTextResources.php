@@ -96,38 +96,60 @@
                                'atb' => array());
 //  $entities["update"] = array( 'txt' => array());
   $txtIDs = (array_key_exists('ids',$_REQUEST)? $_REQUEST['ids']:null);
-  if (!$txtIDs && isset($_SESSION['ka_searchAllResults_'.DBNAME])) {
-    //decode the cached text
-    $textSearchAllRetVal = json_decode($_SESSION['ka_searchAllResults_'.DBNAME],true);
-    if (isset($textSearchAllRetVal['entities']) &&
-        isset($textSearchAllRetVal['entities']['insert'])&&//depends on loadTextSearchEntities using "insert"
-        isset($textSearchAllRetVal['entities']['insert']['txt'])){
-      $txtIDs = array_keys($textSearchAllRetVal['entities']['insert']['txt']);
+  $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:false);
+  $jsonRetVal = "";
+  $jsonCache = null;
+  $isLoadAll = false;
+  if (!$txtIDs  && !$refresh && defined("USECACHE") && USECACHE) {
+    // check for cache
+    $dbMgr = new DBManager();
+    if (!$dbMgr->getError()) {
+      $userDefID = getUserDefEditorID();
+ //     $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+ //     $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
+      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources'");
+      if ($dbMgr->getRowCount() > 0 ) {
+        $row = $dbMgr->fetchResultRow();
+        $jsonCache = new JsonCache($row);
+        if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
+          $jsonRetVal = $jsonCache->getJsonString();
+        }
+      }
     }
   }
 
-  if ($txtIDs && count($txtIDs) > 0) {
+  if (!$jsonRetVal) {
     $imgIDs = array();
     $anoIDs = array();
     $atbIDs = array();
-    if (is_string($txtIDs)){
-      $txtIDs = explode(',',$txtIDs);
+    if ($txtIDs && count($txtIDs) > 0) {
+      if (is_array($txtIDs)){
+        $condition = "txt_id in (".join(',',$txtIDs).")";
+      } else {
+        $condition = "txt_id in ($txtIDs)";
+      }
+      $texts = new Texts($condition,"txt_id",null,null);
+    } else {
+      $texts = new Texts("","txt_id",null,null);
+      $isLoadAll = true;
     }
     $termInfo = getTermInfoForLangCode('en');
     $dictionaryCatalogTypeID = $termInfo['idByTerm_ParentLabel']['dictionary-catalogtype'];//term dependency
 
-    foreach ($txtIDs as $txtID){
+    foreach ($texts as $text){
+      $txtID = $text->getID();
       if ($txtID && !array_key_exists($txtID, $entities['update']['txt'])) {//skip duplicates if any
         $entities['update']['txt'][$txtID] = array('tmdIDs' => array(),
                                                    'ednIDs' => array(),
+                                                   'imageIDs' => array(),
                                                    'blnIDs' => array());
-        $text = new Text($txtID);
         $txtImgIDs = $text->getImageIDs();
         if ($txtImgIDs && count($txtImgIDs) > 0) {
           $imgIDs = array_unique(array_merge($imgIDs,$txtImgIDs));
+          $entities['update']['txt'][$txtID]['imageIDs'] = $txtImgIDs;
         }
       }
-    } //for txtIDs
+    } //for texts
     $txtIDs = array_keys($entities['update']['txt']);
     $strTxtIDs = join(",",$txtIDs);
     //find surfaces for all texts
@@ -319,7 +341,9 @@
         if (count($catIDs)) {
           $entities['update']['edn'][$ednID]['catIDs'] = $catIDs;
         }
-        array_push($entities['update']['txt'][$edition->getTextID()]['ednIDs'],$ednID);
+        if (!in_array($ednID,$entities['update']['txt'][$edition->getTextID()]['ednIDs'])) {
+          array_push($entities['update']['txt'][$edition->getTextID()]['ednIDs'],$ednID);
+        }
         $AnoIDs = $edition->getAnnotationIDs();
         if (count($AnoIDs) > 0) {
           $entities['update']['edn'][$ednID]['annotationIDs'] = $AnoIDs;
@@ -344,26 +368,66 @@
       getRelatedEntities($entityIDs);
     }
     // strip away empty entityType arrays
-    foreach ($entities as $prefix => $entityArray) {
-      if ( count($entityArray) == 0) {
-        unset($entities[$prefix]);
+    foreach ($entities['update']['txt'] as $txtID => $propsArray) {
+      if (count($propsArray['tmdIDs']) == 0) {
+        unset($entities['update']['txt'][$txtID]['tmdIDs']);
+      }
+      if (count($propsArray['imageIDs']) == 0) {
+        unset($entities['update']['txt'][$txtID]['imageIDs']);
+      }
+      if (count($propsArray['blnIDs']) == 0) {
+        unset($entities['update']['txt'][$txtID]['blnIDs']);
+      }
+      if (count($propsArray['ednIDs']) == 0) {
+        unset($entities['update']['txt'][$txtID]['ednIDs']);
+      }
+      if (count($propsArray) == 0) {
+        unset($entities['update']['txt'][$txtID]);
       }
     }
+    foreach ($entities['update'] as $prefix => $entityArray) {
+      if ( count($entityArray) == 0) {
+        unset($entities['update'][$prefix]);
+      }
+    }
+    $retVal["success"] = false;
+    if (count($errors)) {
+      $retVal["errors"] = $errors;
+    } else {
+      $retVal["success"] = true;
+    }
+    if (count($warnings)) {
+      $retVal["warnings"] = $warnings;
+    }
+    if (count($entities)) {
+      $retVal["entities"] = $entities;
+    }
+    $jsonRetVal = json_encode($retVal);
+    if (count($errors) == 0 && USECACHE && $isLoadAll) {
+      if (!$jsonCache) {
+        $userDefID = getUserDefEditorID();
+//        $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+//        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
+        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources'");
+        if ($dbMgr->getRowCount() > 0 ) {
+          $row = $dbMgr->fetchResultRow();
+          $jsonCache = new JsonCache($row);
+        } else {
+          $jsonCache = new JsonCache();
+          $jsonCache->setLabel('AllTextResources');
+          $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+          $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
+        }
+      }
+      $jsonCache->setJsonString($jsonRetVal);
+      $jsonCache->clearDirtyBit();
+      $jsonCache->save();
+    }
+  }
+  if (!$jsonRetVal){
+    $jsonRetVal = json_encode(array("success"=>true));
   }
 
-  $retVal["success"] = false;
-  if (count($errors)) {
-    $retVal["errors"] = $errors;
-  } else {
-    $retVal["success"] = true;
-  }
-  if (count($warnings)) {
-    $retVal["warnings"] = $warnings;
-  }
-  if (count($entities)) {
-    $retVal["entities"] = $entities;
-  }
-  $jsonRetVal = json_encode($retVal);
   if (array_key_exists("callback",$_REQUEST)) {
     $cb = $_REQUEST['callback'];
     if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap
@@ -445,7 +509,7 @@
                                         'url' => $annotation->getURL(),
                                         'typeID' => $annotation->getTypeID());
                 $vis = $annotation->getVisibilityIDs();
-                if (in_array(2,$vis)) {
+                if (in_array(6,$vis)) {
                   $vis = "Public";
                 } else if (in_array(3,$vis)) {
                   $vis = "User";

@@ -140,7 +140,14 @@ MANAGERS.LayoutManager.prototype = {
   },
 
   refreshCursor: function(){
-    this.editors.searchVE.updateCursorInfoBar();
+    if (this.editors.searchVE) {
+      this.editors.searchVE.updateCursorInfoBar();
+    }
+  },
+
+
+  refreshCatalogResources: function(){
+    this.editors.searchVE.updateCatalogInfoBar();
   },
 
 
@@ -780,7 +787,7 @@ MANAGERS.LayoutManager.prototype = {
       //for each pane editor clean up old layout
       for (paneID in this.editors) {
         //if text Page Editor
-        if (paneID.indexOf('pane') ==0) {
+        if (paneID.indexOf('pane') == 0) {
           //read entID,txtID from editor config
           txtIDs[paneID] = this.editors[paneID].config.txtID;
           entGIDs[paneID] = this.editors[paneID].config.entGID;
@@ -830,6 +837,22 @@ MANAGERS.LayoutManager.prototype = {
     }
     if ($("."+paneID,this.curLayout).length) {//remove children
       $("."+paneID,this.curLayout).children().remove();
+      $("."+paneID,this.curLayout).html(this.editPlaceholderHTML);
+    }
+  },
+
+
+/**
+* resetLayoutManager
+*
+* clear all editors and resets all layouts to placeholder
+*/
+
+  resetLayoutManager: function(){
+    for (paneID in this.editors) {
+      if (paneID.indexOf('pane') == 0) {
+        this.clearPane(paneID);
+      }
     }
   },
 
@@ -877,7 +900,7 @@ MANAGERS.LayoutManager.prototype = {
   getTextDefaultBlnID: function(txtID){
     var layoutMgr = this,i,blnID = null,
         textEntity = this.dataMgr.getEntity('txt',txtID);
-    if (textEntity.blnIDs.length) {
+    if (textEntity && textEntity.blnIDs && textEntity.blnIDs.length > 0) {
       for (i=0; i < textEntity.blnIDs.length; i++) {
         blnID = textEntity.blnIDs[i];
         if (this.dataMgr.checkEntityType(this.dataMgr.getEntity('bln',blnID),'Image')) {
@@ -1124,9 +1147,9 @@ MANAGERS.LayoutManager.prototype = {
           if (catalog.value == "GD" || catalog.value == "MW") {
             catCode = catalog.value.toLowerCase();
             config['dictionary'] = catCode;
-            config['url'] = basepath+'/plugins/dictionary/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
+            config['url'] = basepath+'/plugins/dictionary/index.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
 //            config['url'] = basepath+'/plugins/dictionary/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
-            config['url'] = 'https://gandhari.org/beta/plugins/dictionary/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
+//            config['url'] = 'https://gandhari.org/beta/plugins/dictionary/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
 //            config['url'] = 'http://gandhari.org/~glass/testing/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
             config['entGID'] = entGID;
             this.editors[paneID] = new EDITORS.FrameV(config);
@@ -1135,7 +1158,7 @@ MANAGERS.LayoutManager.prototype = {
             config['bibliography'] = catCode;
             config['url'] = basepath+'/plugins/bibliography/a_bibliography.php?initial=a';
 //            config['url'] = basepath+'/plugins/bibliography/a_bibliography.php?initial=a';
-            config['url'] = 'https://gandhari.org/beta/plugins/bibliography/a_bibliography.php?initial=a';
+//            config['url'] = 'https://gandhari.org/beta/plugins/bibliography/a_bibliography.php?initial=a';
 //            config['url'] = 'http://gandhari.org/~glass/testing/a_bibliography.php?initial=a';
             config['entGID'] = entGID;
             this.editors[paneID] = new EDITORS.FrameV(config);
@@ -1254,6 +1277,9 @@ MANAGERS.LayoutManager.prototype = {
              typeof editor.displayProperties == 'function') {
            editor.displayProperties(true);
          }
+      }
+      if (this.editors.searchVE) {// sync the play button
+        this.editors.searchVE.syncPlayButton(paneID);
       }
       layoutMgr.pushState();
     }//end if
@@ -1386,6 +1412,9 @@ MANAGERS.LayoutManager.prototype = {
         if (this.landingPage) {
           newPage = "landingPage";
         }
+    }
+    if (this.editors.searchVE) {// sync the play button
+      this.editors.searchVE.syncPlayButton(pageID)
     }
     if (newPage) {
       $(document.body).removeClass(this.currentPage);

@@ -56,6 +56,8 @@
   $edn2CatMap = array();
   $segID2sclIDs = array();
   $cknLookup = array();
+  $catID = (array_key_exists('cat',$_REQUEST)? $_REQUEST['cat']:null);
+//  $ednID = (array_key_exists('edn',$_REQUEST)? $_REQUEST['edn']:null);
   $entities = array( 'insert' => array(),
                      'update' => array());
   $entities["update"] = array( 'edn' => array(),
@@ -67,8 +69,6 @@
                                'tok' => array(),
                                'ano' => array(),
                                'atb' => array());
-  $catID = (array_key_exists('cat',$_REQUEST)? $_REQUEST['cat']:null);
-  $ednID = (array_key_exists('edn',$_REQUEST)? $_REQUEST['edn']:null);
   $termInfo = getTermInfoForLangCode('en');
 
   $anoIDs = array();
@@ -81,7 +81,7 @@
   $catalog = new Catalog($catID);
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
     array_push($warnings,"Warning no catalog available for id $catID .");
-  } else {
+  } else if (!$catalog->isMarkedDelete()){
     $catID = $catalog->getID();
     $entities['update']['cat'][$catID] = array('description'=> $catalog->getDescription(),
                                                'id' => $catID,
@@ -127,6 +127,9 @@
           if ($lemma->getCompoundAnalysis()) {
             $entities["update"]['lem'][$lemID]['compAnalysis'] = $lemma->getCompoundAnalysis();
           }
+          if ($lemma->getScratchProperty('phonetics')) {
+            $entities["update"]['lem'][$lemID]['phonetics'] = $lemma->getScratchProperty('phonetics');
+          }
           $lemCompIDs = $lemma->getComponentIDs();
           if (count($lemCompIDs) > 0) {
             foreach ($lemCompIDs as $gid) {
@@ -152,7 +155,9 @@
         $entities["update"]['cat'][$catID]['lemIDs'] = $lemIDs;
       }
     }
-  } // else
+  } else {
+    array_push($errors,"Error no catalog available for id $catID .");
+  }
   if (count( $atbIDs) > 0) {
     $entityIDs['atb'] = $atbIDs;
   }
@@ -433,7 +438,7 @@
             if ($atbID && !array_key_exists($atbID, $entities['update']['atb'])) {
               $entities['update']['atb'][$atbID] = array( 'title'=> $attribution->getTitle(),
                                       'id' => $atbID,
-                                      'value'=> $attribution->getTitle().($attribution->getDetail()?$attribution->getDetail():''),
+                                      'value'=> $attribution->getTitle().($attribution->getDetail()?": ".$attribution->getDetail():''),
                                       'readonly' => $attribution->isReadonly(),
                                       'grpID' => $attribution->getGroupID(),
                                       'bibID' => $attribution->getBibliographyID(),
@@ -468,7 +473,7 @@
                                       'url' => $annotation->getURL(),
                                       'typeID' => $annotation->getTypeID());
               $vis = $annotation->getVisibilityIDs();
-              if (in_array(2,$vis)) {
+              if (in_array(6,$vis)) {
                 $vis = "Public";
               } else if (in_array(3,$vis)) {
                 $vis = "User";

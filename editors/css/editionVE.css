@@ -25,7 +25,6 @@
 #textEditPage .textDivHeader, #textEditPage h3 {
   font-weight: bold;
   padding-right: 15px;
-  margin-left: -20px;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -50,10 +49,12 @@ div.modify .TCM {
 #textEditPage .textDivHeader::-moz-selection{ background: transparent; color:black;}
 #textEditPage div.editContainer > div::selection{ background: transparent; color:black;}
 #textEditPage div.editContainer > div::-moz-selection{ background: transparent; color:black;}
+#textEditPage .boundary::selection{ background: transparent; color:black;}
+#textEditPage .boundary::-moz-selection{ background: transparent; color:black;}
 #textEditPage .linebreak::selection{ background: transparent; color:black;}
 #textEditPage .linebreak::-moz-selection{ background: transparent; color:black;}
-#textEditPage .selected::selection{ background: #648cc8; color:white}
-#textEditPage .selected::-moz-selection{ background: #648cc8; color:white}
+#textEditPage .selected::selection{ background: #2F5597; color:white}
+#textEditPage .selected::-moz-selection{ background: #2F5597; color:white}
 
 #textEditPage > span{
   margin-top: 10px;
@@ -66,7 +67,7 @@ div.modify .TCM {
 }
 
 div.selected span.wordTranslation {
-  background: #2F5597 !important;
+  background: #2F9755 !important;
   color:white !important;
 }
 .toksep {
@@ -79,6 +80,11 @@ div.editContainer.showTokenSep .toksep {
   visibility: visible;
 }
 
+.modify .selected {
+  color: white;
+  background-color: #2F9755;
+}
+
 .selected {
   color: white;
   background-color: #2F5597;
@@ -86,6 +92,7 @@ div.editContainer.showTokenSep .toksep {
 
 #textEditPage .editContainer {
   text-align: left;
+  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode"!important;
 }
 
 #textEditPage .editContainer.hasFocus {
@@ -108,6 +115,13 @@ div.editContainer.showTokenSep .toksep {
   background-color: blue;
 }
 
+.viewEndRule {
+  padding: 1px;
+  color: inherit;
+  background-color: transparent;
+  border: none;
+}
+
 #textEditPage .tcmedit {
   background-color: #e5e5e5;
 }
@@ -125,6 +139,7 @@ div.editContainer.showTokenSep .toksep {
 span.grpGra, span.TCM {
   padding-right: 1px;
   display: inline-flex;
+  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode"!important;
 }
 
 span.grpGra.prepadding {
@@ -149,7 +164,6 @@ div.section.level3,
 div.section.level4,
 div.section.level5{
   display: inline-block;
-  width: 95%;
 }
 
 div.section.Sentence{
@@ -188,9 +202,9 @@ div.prose.lastStructure {
   display: none;
 }
 .ednveContentDiv, .transVContentDiv {
-  padding-left: 30px;
-  overflow-y: auto;
-  max-width: 96%;
+  padding-left: 8px;
+  overflow-y: scroll;
+  height: inherit!important;
   overflow-wrap: break-word;
 }
 .listDropdownButton {
@@ -213,7 +227,6 @@ div.prose.lastStructure {
 }
 .prose {
   display: inline-flex;
-  justify-content: space-evenly;
   word-break: keep-all;
   align-items: flex-start;
   flex-wrap: wrap;
@@ -228,12 +241,26 @@ div.prose.lastStructure {
 #textEditPage span:not(.selected):not(.tcmedit) {
   background-color: white;
   color:black;
-  line-height: 1.4;
+  line-height: 1.5;
+}
+.textDivHeader>sup {
+  padding-left: 2px;
+  font-weight: normal;
+}
+.textDivHeader.freetext {
+  vertical-align: top;
 }
 div.freetext {
   display: inline-block;
   width: 90%;
   color: #404040;
+  background-color: rgb(216,216,216);
+}
+div.freetext.error {
+  color: #D01010;
+}
+div.freetext.dirty {
+  background-color: rgb(255,192,76);
 }
 .freetext .validationError{
   display: none;
@@ -259,6 +286,9 @@ div.freetext {
 }
 .freetextInput{
   width: 80%;
+}
+.freetext.error .freetextInput{
+  border: solid 1px red;
 }
 .freetextResultTable{
   display: none;

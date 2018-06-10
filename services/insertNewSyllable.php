@@ -342,6 +342,9 @@
         $newSyllable->save();
         addNewEntityReturnData('scl',$newSyllable);
         $newSclID = $newSyllable->getID();
+        foreach ($newSylGraIDs as $newSylGraID) {
+          addUpdateEntityReturnData('gra',$newSylGraID,'sclID',$newSclID);
+        }
         if ($newSyllable->hasError()) {
           array_push($errors,"error creating syllable '".$newSyllable->getValue()."' - ".$newSyllable->getErrors(true));
         }else{// update container hierarchy clone as needed
@@ -528,7 +531,7 @@
               $retVal['newTextDivSeqGID'] = $newTxtDivSeqGID;
             }else { // only updated
               //changed components on a cached sequence so invalidate cache to recalc on next refresh
-              invalidateCachedSeq($textDivSeq->getID());
+              invalidateCachedSeq($textDivSeq->getID(), $ednOwnerID);
               addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
             }
           }
@@ -578,6 +581,7 @@
             $edition->setSequenceIDs($edSeqIds);
           }
           $edition->save();
+          invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
           if ($edition->hasError()) {
             array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
           }else{

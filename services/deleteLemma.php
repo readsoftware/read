@@ -247,10 +247,22 @@ if (count($errors) == 0) {
       }
     }
   }
+  $lemCatID = $lemma->getCatalogID();
   //delete lemma
   $lemma->markForDelete();
   // and remove from local cache
   addRemoveEntityReturnData('lem',$lemma->getID());
+  //update catalog info
+  $lemmas = new Lemmas("lem_catalog_id = $lemCatID and not lem_owner_id = 1","lem_id",null,null);
+  if ($lemmas && !$lemmas->getError()){
+    $catLemIDs = array();
+    if ($lemmas->getCount()>0) {
+      foreach($lemmas as $catLemma){
+        array_push($catLemIDs, $catLemma->getID());
+      }
+    }
+    addUpdateEntityReturnData('cat',$lemCatID,"lemIDs",$catLemIDs);
+  }
 }
 
 /*

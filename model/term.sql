@@ -1,27 +1,3 @@
-/**
-* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
-* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
-* at <https://github.com/readsoftware>.
-*
-* READ is free software: you can redistribute it and/or modify it under the terms of the
-* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
-* or (at your option) any later version.
-*
-* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-* See the GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License along with READ.
-* If not, see <http://www.gnu.org/licenses/>.
-*/
-/**
-* @author      Stephen White  <stephenawhite57@gmail.com>
-* @copyright   @see AUTHORS in repository root
-* @link        https://github.com/readsoftware
-* @version     1.0
-* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
-* @package     READ Research Environment for Ancient Documents
-*/
 INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list_ids","trm_description","trm_code","trm_url","trm_annotation_ids","trm_attribution_ids","trm_owner_id","trm_visibility_ids") VALUES
 (1,'en=>"SystemOntology"',NULL,780,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (2,'en=>"SystemEntity"',1,782,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
@@ -742,12 +718,12 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (737,'en=>"LinePhysical"',736,778,'{1287}',NULL,'Line',NULL,NULL,NULL,1,'{2}'),
 (738,'en=>"Text"',735,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (739,'en=>"TextDivision"',738,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(740,'en=>"Analysis"',735,778,'{741,1437,744,750}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(741,'en=>"Chapter"',740,778,'{744,745,742,1442}',NULL,'Chapter',NULL,NULL,NULL,1,'{2}'),
+(740,'en=>"Analysis"',735,778,'{741,1437,744,750}',NULL,'Analysis',NULL,NULL,NULL,1,'{2}'),
+(741,'en=>"Chapter"',740,778,'{1437,744,745,742,1442}',NULL,'Chapter',NULL,NULL,NULL,1,'{2}'),
 (742,'en=>"Stanza"',741,778,'{743}',NULL,'Stanza',NULL,NULL,NULL,1,'{2}'),
 (743,'en=>"Pāda"',742,778,'{972,1345}',NULL,'Pāda',NULL,NULL,NULL,1,'{2}'),
 (744,'en=>"Paragraph"',1437,778,'{745,742,972,1345}',NULL,'Paragraph',NULL,NULL,NULL,1,'{2}'),
-(745,'en=>"Sentence"',744,778,'{746,747}',NULL,'Sentence',NULL,NULL,NULL,1,'{2}'),
+(745,'en=>"Sentence"',744,778,'{746,747,972,1345}',NULL,'Sentence',NULL,NULL,NULL,1,'{2}'),
 (746,'en=>"Clause"',745,778,'{747}',NULL,'Clause',NULL,NULL,NULL,1,'{2}'),
 (747,'en=>"Phrase"',746,778,'{972,1345}',NULL,'Phrase',NULL,NULL,NULL,1,'{2}'),
 (748,'en=>"NounPhrase"',747,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
@@ -1416,14 +1392,17 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1431,'en=>"omx"',720,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1432,'en=>"obx"',720,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1433,'en=>"FK-PairMultiple_Semantic(Term)-Text"',773,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1434,'en=>"CompoundConstituent"',278,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1435,'en=>"CompoundConstituentHead"',278,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1434,'en=>"CompoundConstituent"',1444,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1435,'en=>"CompoundConstituentHead"',1444,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1436,'en=>"ArchaeologicalReport"',339,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1437,'en=>"Section"',741,778,'{744,745,742,1442,972,1345}',NULL,'Section',NULL,NULL,NULL,1,'{2}'),
 (1438,'en=>"FreeText"',736,778,NULL,NULL,'Line',NULL,NULL,NULL,1,'{2}'),
-(1439,'en=>"Compare"',278,778,NULL,NULL,'cf',NULL,NULL,NULL,1,'{2}'),
-(1440,'en=>"See"',278,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1439,'en=>"Compare"',1444,778,NULL,NULL,'cf.',NULL,NULL,NULL,1,'{2}'),
+(1440,'en=>"See"',1444,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1441,'en=>"Glossary"',264,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1442,'en=>"List"',741,778,'{1443}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1443,'en=>"Item"',1442,778,'{742,744,745,972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}');
-ALTER SEQUENCE term_trm_id_seq RESTART WITH 1444;
+(1443,'en=>"Item"',1442,778,'{742,744,745,972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1444,'en=>"LemmaLinkage"',278,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1445,'en=>"Alternate"',1444,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1446,'en=>"GVerbalVoice"',873,776,'{877}',NULL,'Verbal Voice',NULL,NULL,NULL,1,'{2}');
+ALTER SEQUENCE term_trm_id_seq RESTART WITH 1447;

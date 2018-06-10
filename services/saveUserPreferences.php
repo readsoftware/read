@@ -18,9 +18,9 @@
 
 
 /**
-* getUserPreferences
+* saveUserPreferences
 *
-* Load the user's preferences.
+* Saves the user's preferences.
 *
 * Preference include default attributions, viewability, and edit control among others.
 * Arguments passed as name=value where name is a valid preference name will change the value

@@ -49,6 +49,7 @@ require_once (dirname(__FILE__) . '/../model/entities/Edition.php');
 require_once (dirname(__FILE__) . '/../model/entities/Text.php');
 require_once (dirname(__FILE__) . '/../model/entities/JsonCache.php');
 require_once (dirname(__FILE__) . '/clientDataUtils.php');
+
 $dbMgr = new DBManager();
 $retVal = array();
 $errors = array();
@@ -115,7 +116,7 @@ if (!$data) {
     $path = IMAGE_ROOT."/".DBNAME.$path;
     $url = IMAGE_SITE_BASE_URL."/".DBNAME.$path;
   } else {
-    // add code to check entity access
+    //todo add code to check entity access
     $path = IMAGE_ROOT."/".DBNAME."/".$entTag;
     $url = IMAGE_SITE_BASE_URL."/".DBNAME."/".$entTag;
   }
@@ -164,59 +165,6 @@ if (array_key_exists("callback",$_REQUEST)) {
   }
 } else {
   print $jsonRetVal;
-}
-
-function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $maxSizeX = 150, $maxSizeY = 150) {
-  $sourcefile = $srcPath.$srcFilename;
-  $thumbfile = $targetPath.getThumbFromFilename($srcFilename);
-  list($imageW,$imageH) = getimagesize($sourcefile);
-  //shrink and preserve aspect
-  $percent = $maxSizeX/$imageW;
-  if ($percent>1) {
-    $percent = 1;
-  }
-  if ($percent*$imageH > $maxSizeY) {
-    $percent = $maxSizeY/$imageH;
-  }
-  $thumbW = round($percent*$imageW);
-  $thumbH = round($percent*$imageH);
-
-  $thumbImage = imagecreatetruecolor($thumbW,$thumbH);
-
-  switch($ext){
-    case 'png':
-      $sourceImage = imagecreatefrompng($sourcefile);
-      break;
-    case 'gif':
-      $sourceImage = imagecreatefromgif($sourcefile);
-      break;
-    case 'jpg':
-    case 'jpeg':
-    default:
-      $sourceImage = imagecreatefromjpeg($sourcefile);
-  }
-
-  if ($sourceImage) {
-    imagecopyresampled($thumbImage,$sourceImage,0,0,0,0,$thumbW,$thumbH,$imageW,$imageH);
-    switch($ext){
-      case 'png':
-        $ret = imagepng($thumbImage,$thumbfile,9);
-        break;
-      case 'gif':
-        $ret = imagegif($thumbImage,$thumbfile,100);
-        break;
-      case 'jpg':
-      case 'jpeg':
-      default:
-        $ret = imagejpeg($thumbImage,$thumbfile,100);
-    }
-    imagedestroy($thumbImage);
-    imagedestroy($sourceImage);
-    if ($ret) {
-      return $thumbBaseURL.getThumbFromFilename($srcFilename);
-    }
-  }
-  return false;
 }
 
 ?>

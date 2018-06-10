@@ -365,12 +365,12 @@ EDITORS.sclEditor.prototype = {
         (this.savingHash || this.savingHash != this.sclID + this.rawSyl + this.curSyl)) {//ignore already in save process
       //save the syllable requires the context (edn, seq-tok-scl, prevGra) and newSyl graphemes.
       this.savingHash = this.sclID + this.rawSyl + this.curSyl;
-      var VSE = this, ednID = this.ednVE.edition.id,
-          ednVE = this.ednVE, lineOrdTag, headerNode, physLineSeqID,
-          tNodes = this.textNodes.map(function(index,elem){return elem.textContent;}),
-          prevTCM = null, cntGuard = 0, savedata={},
+      var VSE = this, ednID = VSE.ednVE.edition.id,
+          ednVE = VSE.ednVE, lineOrdTag, headerNode, physLineSeqID,
+          tNodes = VSE.textNodes.map(function(index,elem){return elem.textContent;}),
+          prevTCM = null, cntGuard = 0, savedata={},prevGrapheme,
           prevNode = $(this.syllable.get(0)).prev(), prevCtxStrings = '', ctxStrings = [], i,
-          contxt = this.syllable.map(function(index,elem){return elem.className.replace(/grpGra/,"")
+          contxt = VSE.syllable.map(function(index,elem){return elem.className.replace(/grpGra/,"")
                                                                                 .replace(/ord\d+/,"")
                                                                                 .replace(/ordL\d+/,"")
                                                                                 .replace(/firstLine/,"")
@@ -388,16 +388,24 @@ EDITORS.sclEditor.prototype = {
       while ( !prevNode.hasClass("grpGra") && !prevNode.hasClass("textDivHeader") && cntGuard++ < 500) {
         prevNode = prevNode.prev();
       }
-      lineOrdTag = this.syllable[0].className.match(/ordL\d+/)[0];
+      lineOrdTag = VSE.syllable[0].className.match(/ordL\d+/)[0];
       headerNode = $('.textDivHeader.'+lineOrdTag,ednVE.contentDiv);
       physLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
       if (prevNode.hasClass("grpGra")) {//find the previous syllable's last grapheme's TCM
-        sclID = prevNode.get(0).className.match(/scl(\d+)/)[1];
-        graIDs = entities['scl'][sclID].graphemeIDs;
-        prevTCM = entities['gra'][graIDs[graIDs.length-1]].txtcrit;
+        sclID = prevNode.get(0).className.match(/scl(\d+)/);
+        if (sclID) {
+          sclID = sclID[1];
+          graIDs = entities['scl'][sclID].graphemeIDs;
+          if (graIDs & graIDs.length) {
+            prevGrapheme = entities['gra'][graIDs[graIDs.length-1]];
+            if (prevGrapheme) {
+              prevTCM = entities['gra'][graIDs[graIDs.length-1]].txtcrit;
+            }
+          }
+        }
       }
       // if not owned then save raw to new.
-      DEBUG.log("gen","in code to calculate save data with origStr "+this.rawSyl+" and curStr "+this.curSyl);
+      DEBUG.log("gen","in code to calculate save data with origStr "+VSE.rawSyl+" and curStr "+VSE.curSyl);
       DEBUG.log("data","before saveSyllable sequence dump\n" + DEBUG.dumpSeqData(ednVE.physSeq.id,0,1,ednVE.lookup.gra));
       DEBUG.log("data","before saveSyllable sequence dump\n" + DEBUG.dumpSeqData(physLineSeqID,0,1,ednVE.lookup.gra));
       DEBUG.log("data","before saveSyllable sequence dump\n" + DEBUG.dumpSeqData(ednVE.textSeq.id,0,1,ednVE.lookup.gra));
@@ -520,7 +528,7 @@ EDITORS.sclEditor.prototype = {
         prevSyllable, nextSyllable;
     DEBUG.log("event","call to move syllable "+ direction +
                 (skipSynch?" skipping synch":"") +
-                " with origStr "+this.rawSyl+" and curStr "+this.curSyl);
+                " with origStr "+VSE.rawSyl+" and curStr "+VSE.curSyl);
     //if no syllable in direction beep otherwise move editor to first character of next or
     //last character of previous syllable according to direction
     if (isPrev && this.ordFirst == 1) {
@@ -529,47 +537,47 @@ EDITORS.sclEditor.prototype = {
         return true;
     }
     if (isPrev) {
-      prevSyllable = $('.grpGra.ord'+( -1 + parseInt(this.ordFirst)),this.contentDiv);
+      prevSyllable = $('.grpGra.ord'+( -1 + parseInt(VSE.ordFirst)),VSE.contentDiv);
       if (!prevSyllable.length) { //might have erased ordinal so try 2
-        prevSyllable = $('.grpGra.ord'+(-2 + parseInt(this.ordFirst)),this.contentDiv);
+        prevSyllable = $('.grpGra.ord'+(-2 + parseInt(VSE.ordFirst)),VSE.contentDiv);
       }
       if (prevSyllable && prevSyllable.hasClass("grpGra")) { // found syllable
-        if (this.curSyl != this.rawSyl && this.dirty) {
-          this.save( function () {
+        if (VSE.curSyl != VSE.rawSyl && VSE.dirty) {
+          VSE.save( function () {
                       VSE.init(prevSyllable,"last",false);
                       });
         } else {
           VSE.init(prevSyllable,"last",skipSynch);
         }
-      } else if (this.curSyl != this.rawSyl && this.dirty) {
-          this.save( function () {
+      } else if (VSE.curSyl != VSE.rawSyl && VSE.dirty) {
+          VSE.save( function () {
                       VSE.init(VSE.syllable,"last",false);
                       });
       } else {
-        DEBUG.log("err","error handling move prev no syllable found before '"+this.curSyl+"'");
+        DEBUG.log("err","error handling move prev no syllable found before '"+VSE.curSyl+"'");
       }
     } else {
-      nextSyllable = $('.grpGra.ord'+(1 + parseInt(this.ordLast)),this.contentDiv);
+      nextSyllable = $('.grpGra.ord'+(1 + parseInt(VSE.ordLast)),VSE.contentDiv);
       if (!nextSyllable.length) { //might have erased ordinal so try 2
-        nextSyllable = $('.grpGra.ord'+(2 + parseInt(this.ordLast)),this.contentDiv);
+        nextSyllable = $('.grpGra.ord'+(2 + parseInt(VSE.ordLast)),VSE.contentDiv);
       }
       if (nextSyllable && nextSyllable.hasClass("grpGra")) { // found syllable
-        if (this.curSyl != this.rawSyl && this.dirty && !this.invalid) {
-          this.save( function () {
+        if (this.curSyl != VSE.rawSyl && VSE.dirty && !VSE.invalid) {
+          VSE.save( function () {
                       VSE.init(nextSyllable,"first",false);
                       });
         } else {
           VSE.init(nextSyllable,"first",skipSynch);
         }
-      } else if (this.curSyl != this.rawSyl && this.dirty) {
-          this.save( function () {
+      } else if (VSE.curSyl != VSE.rawSyl && VSE.dirty) {
+          this.VSE( function () {
                       VSE.init(VSE.syllable,"endOfSyllable",false);
                       });
-      } else if (this.ednVE.autoInsert) {
+      } else if (VSE.ednVE.autoInsert) {
         this.insertNew();
       } else {
         UTILITY.beep();
-        DEBUG.log("err","error handling move next no syllable found after '"+this.curSyl+"'");
+        DEBUG.log("err","error handling move next no syllable found after '"+VSE.curSyl+"'");
       }
     }
     return true;
@@ -807,10 +815,15 @@ EDITORS.sclEditor.prototype = {
         this.syllable.focus();
         $(this.contentDiv).focus();
       }
-    } else { // multiple text and/or TCM case
+    } else { // multiple text nodes and/or TCM case
 //      DEBUG.log("warn","BEEP! VSE Replace text for syllable with embedded TCMs not implemented yet!");
-      startNodeIndex = this.charToNodeMap[this.anchorPos][0];
-      startNodeOffset = this.charToNodeMap[this.anchorPos][1];
+      if (this.beforeSplitIndex >=0 && this.anchorPos == this.cursorPos && this.beforeSplitIndex == this.anchorIndex){
+        startNodeIndex = this.anchorIndex;
+        startNodeOffset = this.anchorNodePos;
+      } else {
+        startNodeIndex = this.charToNodeMap[this.anchorPos][0];
+        startNodeOffset = this.charToNodeMap[this.anchorPos][1];
+      }
       selectLen = this.cursorPos - this.anchorPos;
       if (selectLen < 0) {
         revSelect = true;
@@ -1097,6 +1110,7 @@ EDITORS.sclEditor.prototype = {
     var keyType = key?this._keyTypeMap[key.toLowerCase()]:null,
         posV = this.state.indexOf("V"),
         posA = this.state.indexOf("A"),
+        posS = this.state.indexOf("S"),
         posT = this.state.indexOf("T"),
         posC = this.state.indexOf("C"),
         posM = this.state.indexOf("M"),
@@ -1111,30 +1125,33 @@ EDITORS.sclEditor.prototype = {
        // selection = this.anchorPos != this.cursorPos;
         selection = (posEnd - posStart) > 1;
     DEBUG.log("gen","preprocess key '"+key+"' keyType "+keyType+" cursyl "+this.curSyl+" state "+this.state+" posV "+posV
-                +" posSelStart "+posSelStart+" posSelEnd "+posSelEnd+" posStart "+posStart+" posEnd "+posEnd);
+                +" posSelStart "+posSelStart+" posSelEnd "+posSelEnd+" posStart "+posStart+" posEnd "+posEnd+" posS "+posS);
 /****************************Special Control Keys************************************/
     if (key == "z" && ctrl) {
       DEBUG.log("warn","BEEP! Undo not implemented yet!");
+      UTILITY.beep();
       return false;
     }
-    if (key == "c" && ctrl) {
-      DEBUG.log("warn","BEEP! Copy not implemented yet!");
+//    if (key == "c" && ctrl) {
+//      DEBUG.log("warn","BEEP! Copy not implemented yet!");
       //return false;
-    }
+//    }
     if (key == "x" && ctrl) {
       DEBUG.log("warn","BEEP! Cut not implemented yet!");
+      UTILITY.beep();
       return false;
     }
-    if (key == "v" && ctrl) {
-      DEBUG.log("warn","BEEP! VSE Paste not implemented yet!");
+//    if (key == "v" && ctrl) {
+//      DEBUG.log("warn","BEEP! VSE Paste not implemented yet!");
       //return false;
-    }
+//    }
     if (key == "Backspace" || key == "Del" || key == "Delete") {
       //**********selection cases**********
       if (selection) {
         // split syllable case not allowed
-        if (this.isSplitSyllable()) {
+        if (this.isSplitSyllable() && posStart < posS && posS < posEnd) {
           DEBUG.log("warn","BEEP! Deleting of split syllable not currently allowed!");
+          UTILITY.beep();
           return "error";
         } else if ( posStart == 0 && posEnd == this.state.length - 1 ) {// fully selected
           //vowel only cases
@@ -1191,7 +1208,7 @@ EDITORS.sclEditor.prototype = {
           this.ednVE.combineTokens((key == "Del")?"next":"prev",null);
 //          alert("split syllable tokenCombine underconstruction");
           return false;
-        } else if (this.isSplitSyllable() && ( key == "Backspace" || key == "Del")) {
+        } else if (false && this.isSplitSyllable() && ( key == "Backspace" || key == "Del")) {
           UTILITY.beep();
           DEBUG.log("warn","BEEP! Deleting of characters on a split syllable is currently not allowed");
           return "error";
@@ -1222,7 +1239,7 @@ EDITORS.sclEditor.prototype = {
           this.replaceText(".","left","select");
           return false;
         } else if (key == "Del") {
-          if (this.isSplitSyllable()) {
+          if (false && this.isSplitSyllable()) {
             DEBUG.log("warn","BEEP! Deleting of characters on a split syllable is currently not allowed");
             return "error";
           }
@@ -1236,8 +1253,9 @@ EDITORS.sclEditor.prototype = {
           this.replaceText("","right","select");
           return false;
         } else if (key == "Backspace") {
-          if (this.isSplitSyllable()) {
+          if (this.isSplitSyllable() && posStart == 1 && posS == 2) {
             DEBUG.log("warn","BEEP! Deleting of characters on a split syllable is currently not allowed");
+            UTILITY.beep();
             return "error";
           }
           if ((posT > posM) && (posStart > posM) && (posStart <= posT+1)) {//modifier with virāma
@@ -1254,6 +1272,10 @@ EDITORS.sclEditor.prototype = {
     } else if (!selection && (this.curSyl == "+" || this.curSyl == "?")) {
       UTILITY.beep();
       DEBUG.log("warn","BEEP! Cannot enter characters before or after "+this.curSyl);
+      return false;
+    } else if (this.isSplitSyllable() && posStart < posS && posS < posEnd) {
+      DEBUG.log("warn","BEEP! Replacement across split syllable not currently allowed!");
+      UTILITY.beep();
       return false;
     } else if (keyType) {
       switch (keyType) {
@@ -1453,6 +1475,15 @@ EDITORS.sclEditor.prototype = {
               this.replaceText('///',"selected","end");
               return false;
             }
+          } else if (keyType == 'N' && posStart == this.state.length - 2 && posEnd == this.state.length - 1){
+            var chrs = (this.curSyl + key).split(""), len = chrs.length;
+            if (
+                len == 4 && this._graphemeMap[chrs[0]][chrs[1]][chrs[2]][chrs[3]] ||
+                len == 3 && this._graphemeMap[chrs[0]][chrs[1]][chrs[2]] ||
+                len == 2 && this._graphemeMap[chrs[0]][chrs[1]]){
+              this.replaceText(key,"insert","end");
+              return false;
+            }
           }
           UTILITY.beep();
           DEBUG.log("warn","BEEP! Unrecognized token character ignor for "+this.curSyl+" with state "+this.state);
@@ -1517,7 +1548,7 @@ EDITORS.sclEditor.prototype = {
   caretAtBOL: function(){
     return (this.caretAtBoundary('left') &&
             (this.prevAdjacent().hasClass('textDivHeader') ||
-              this.prevAdjacent().prev().hasClass('textDivHeader')));
+              this.prevAdjacent().prev().hasClass('textDivHeader')));//in case of TCM
   },
 
 
@@ -1530,7 +1561,7 @@ EDITORS.sclEditor.prototype = {
   caretAtEOL: function(){
     return (this.caretAtBoundary('right') &&
             (this.nextAdjacent().hasClass('linebreak') ||
-              this.nextAdjacent().next().hasClass('linebreak')));
+              this.nextAdjacent().next().hasClass('linebreak')));//in case of TCM
   },
 
 
@@ -1578,9 +1609,9 @@ EDITORS.sclEditor.prototype = {
 
   getTokenID: function(refSclID){
     var sclID = refSclID?refSclID:this.sclID,
-        refNode = $('.grpGra.scl'+sclID,this.contentDiv).get(0);
-    if (refNode && refNode.className && refNode.className.match(/tok(\d+)/)) {
-      return refNode.className.match(/tok(\d+)/)[1];
+        refNode = $('.grpGra.scl'+sclID,this.contentDiv);
+    if (refNode && refNode.length && refNode.get(0).className && refNode.get(0).className.match(/tok(\d+)/)) {
+      return refNode.get(0).className.match(/tok(\d+)/)[1];
     }
     return null;
   },
@@ -1690,8 +1721,8 @@ EDITORS.sclEditor.prototype = {
 
   getSylSplitIndex: function(){
     var cntNodes = this.syllable.length, firstNode = $(this.syllable[0]), nodesTilSplit = null, splitIndex = null;
-    nodesTilSplit = firstNode.prev().nextUntil(".boundary,.linebreak,br",'.grpGra.scl'+this.sclID);
-    splitIndex = nodesTilSplit.length;
+    nodesTilSplit = firstNode.prev().nextUntil(".boundary,.linebreak,br",'.grpGra.scl'+this.sclID);//get all syl nodes until a boundary
+    splitIndex = nodesTilSplit.length;//count of nodes is index of node before split base 1
     if (splitIndex && splitIndex < cntNodes) {
       return splitIndex;
     }
@@ -1707,8 +1738,8 @@ EDITORS.sclEditor.prototype = {
 
   getPreSplitText: function(){
     var cntNodes = this.syllable.length, preString = '', i;
-    if (this.splitIndex) {
-      for(i=0; i< this.splitIndex; i++) {
+    if (this.beforeSplitIndex >= 0) {
+      for(i=0; i<= this.beforeSplitIndex; i++) {
         preString += this.syllable[i].textContent;
       }
       return preString;
@@ -1745,10 +1776,10 @@ EDITORS.sclEditor.prototype = {
     this.lastTextNode = this.textNodes[this.textNodes.length-1];
     this.ordLast = this.lastTextNode.parentNode.className.match(/ord(\d+)/)[1];
     if (iSplit = this.getSylSplitIndex()) {
-      this.splitIndex = iSplit;
+      this.beforeSplitIndex = iSplit-1;
       this.strPreSplit = this.getPreSplitText();
-    } else if (this.splitIndex || this.strPreSplit) {
-      delete this.splitIndex;
+    } else if (this.beforeSplitIndex || this.strPreSplit) {
+      delete this.beforeSplitIndex;
       delete this.strPreSplit;
     }
     DEBUG.traceExit("computeSyllable");
@@ -2037,7 +2068,9 @@ EDITORS.sclEditor.prototype = {
           pos = 0;
           for(i=0; i < childNodes.length; i++){
             if (childNodes[i] == anchorSclNode) {//found anchorNode
-              this.anchorPos = parseInt(pos) + (anchorIsStart?range.startOffset:range.endOffset);
+              this.anchorNodePos = (anchorIsStart?range.startOffset:range.endOffset);
+              this.anchorPos = parseInt(pos) + this.anchorNodePos;
+              this.anchorIndex = i;
               DEBUG.trace("synchSyl","set anchor to start of '"+this.curSyl+"' "+this.anchorPos);
               DEBUG.trace("synchSyl","set anchor startOffset "+range.startOffset+" endOffset "+range.endOffset);
               break;
@@ -2068,12 +2101,12 @@ EDITORS.sclEditor.prototype = {
           range.setEnd(this.lastTextNode,this.lastTextNode.textContent.length);
           this.anchorPos = this.cursorPos = this.curSyl.length;
           DEBUG.trace("synchSyl","set anchor to end of '"+this.curSyl+"' to end "+this.anchorPos);
-          this.cursorNodePos = this.lastTextNode.textContent.length;
-          this.cursorIndex = this.textNodes.length - 1;
+          this.anchorNodePos = this.cursorNodePos = this.lastTextNode.textContent.length;
+          this.anchorIndex = this.cursorIndex = this.textNodes.length - 1;
         } else {
           range.setStart(this.firstTextNode,0);
           range.setEnd(this.firstTextNode,0);
-          this.anchorPos = this.cursorPos = this.cursorNodePos = this.cursorIndex = 0;
+          this.anchorIndex = this.cursorIndex = this.anchorPos = this.cursorPos = this.cursorNodePos = this.cursorIndex = 0;
         }
         rangeChanged = true;
       }
@@ -2084,6 +2117,7 @@ EDITORS.sclEditor.prototype = {
     }
     DEBUG.trace('synchSelection',"Leaving synch selection for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
     this.calculateState();
+    DEBUG.log('gen',"Hint = "+ hint +"  for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
     DEBUG.traceExit('synchSelection',"Hint = "+ hint +"  for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
   },
 
@@ -2104,6 +2138,7 @@ EDITORS.sclEditor.prototype = {
       this.graStrings = [];
       var i = 0, inc, chr,chr2,chr3,chr4,typ,
           cnt = this.curSyl.length,
+          splitPositioned = false,
           anchorPositioned = false,
           cursorPositioned = false;
       if(this.anchorPos == 0) {
@@ -2142,7 +2177,7 @@ EDITORS.sclEditor.prototype = {
                 }else{//found valid grapheme, save it
                   this.graStrings.push( chr + chr2 + chr3 + chr4);
                   typ = this._graphemeMap[chr][chr2][chr3][chr4]['typ'];
-                  this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] =
+                  this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] = //map all 4 chars to the same grapheme position
                     this.charPosGraStrMap[2 + i] = this.charPosGraStrMap[3 + i] = -1 + this.graStrings.length;
                 }
               }else if (!this._graphemeMap[chr][chr2][chr3]["srt"]){ // invalid sequence
@@ -2151,7 +2186,7 @@ EDITORS.sclEditor.prototype = {
               }else{//found valid grapheme, save it
                 this.graStrings.push( chr + chr2 + chr3);
                 typ = this._graphemeMap[chr][chr2][chr3]['typ'];
-                this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] =
+                this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] =//map all 3 chars to the same grapheme position
                   this.charPosGraStrMap[2 + i] = -1 + this.graStrings.length;
               }
             }else if (!this._graphemeMap[chr][chr2]["srt"]){ // invalid sequence
@@ -2160,7 +2195,7 @@ EDITORS.sclEditor.prototype = {
             }else{//found valid grapheme, save it
                 this.graStrings.push( chr + chr2);
                 typ = this._graphemeMap[chr][chr2]['typ'];
-                this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] = -1 + this.graStrings.length;
+                this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] = -1 + this.graStrings.length;//map both chars to the same grapheme position
             }
           }else if (!this._graphemeMap[chr]["srt"]){ // invalid sequence
               DEBUG.log("warn","scl" + this.sclID + " has incomplete sequence starting at character " + i+ " " +chr +" has no sort code");
@@ -2168,10 +2203,10 @@ EDITORS.sclEditor.prototype = {
           }else{//found valid grapheme, save it
                 this.graStrings.push( chr );
                 typ = this._graphemeMap[chr]['typ'];
-                this.charPosGraStrMap[i] = -1 + this.graStrings.length;
+                this.charPosGraStrMap[i] = -1 + this.graStrings.length;//map char to the same grapheme position
           }
         }
-        this.graPosStrPosMap[-1 + this.graStrings.length] = i;
+        this.graPosStrPosMap[-1 + this.graStrings.length] = i;//not used yet
         i += inc;
         if (typ == "CH") {// aspirated case
           if(!anchorPositioned && this.anchorPos <= i) {
@@ -2187,7 +2222,12 @@ EDITORS.sclEditor.prototype = {
               }
             } else {
               if (this.anchorPos == this.cursorPos) {
-                this.state += "CH><";
+                if (this.beforeSplitIndex >= 0 && this.beforeSplitIndex < this.anchorIndex) {
+                  this.state += "CHS><";
+                  splitPositioned = true;
+                } else {
+                  this.state += "CH><";
+                }
                 cursorPositioned = true;
               } else if (this.cursorPos <= i-1) {
                 if (cursorPositioned) {
@@ -2298,6 +2338,9 @@ EDITORS.sclEditor.prototype = {
             cursorPositioned = true;
           }
         }
+        if(this.beforeSplitIndex >= 0 && i == this.strPreSplit.length && !splitPositioned) {
+          this.state += "S";
+        }
       }//end while
       if(!anchorPositioned) {
         this.state += ">";
@@ -2329,10 +2372,13 @@ EDITORS.sclEditor.prototype = {
     "◊" :"I",
     "◈" :"I",
     "○" :"P",
+    "⊗" :"P",
+    "◎" :"P",
     "°" :"P",
     "◦" :"P",
     "•" :"P",
     "∙" :"I",
+    "◯" :"I",
     "☒" :"P",
     "☸" :"P",
     "❀" :"P",
@@ -2504,6 +2550,8 @@ EDITORS.sclEditor.prototype = {
     "◊": { "srt": "885", "typ": "I" },
     "◈": { "srt": "885", "typ": "I" },
     "○": { "srt": "820", "typ": "P" },
+    "⊗": { "srt": "822", "typ": "P" },
+    "◎": { "srt": "823", "typ": "P" },
     "◦": { "srt": "810", "typ": "P" },
     "°": { "srt": "810", "typ": "P" },
     "∙": { "srt": "804", "typ": "I" },

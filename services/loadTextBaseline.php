@@ -310,7 +310,7 @@
               if ($atbID && !array_key_exists($atbID, $entities["insert"]['atb'])) {
                 $entities["insert"]['atb'][$atbID] = array( 'title'=> $attribution->getTitle(),
                                         'id' => $atbID,
-                                        'value'=> $attribution->getTitle().($attribution->getDetail()?$attribution->getDetail():''),
+                                        'value'=> $attribution->getTitle().($attribution->getDetail()?": ".$attribution->getDetail():''),
                                         'readonly' => $attribution->isReadonly(),
                                         'grpID' => $attribution->getGroupID(),
                                         'bibID' => $attribution->getBibliographyID(),
@@ -345,7 +345,7 @@
                                         'url' => $annotation->getURL(),
                                         'typeID' => $annotation->getTypeID());
                 $vis = $annotation->getVisibilityIDs();
-                if (in_array(2,$vis)) {
+                if (in_array(6,$vis)) {
                   $vis = "Public";
                 } else if (in_array(3,$vis)) {
                   $vis = "User";

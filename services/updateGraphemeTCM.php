@@ -277,6 +277,10 @@
       }
       $syllable->setGraphemeIDs($newGraIDs);
       $syllable->save();
+      $newSclID = $syllable->getID();
+      foreach ($newGraIDs as $newGraID) {
+        addUpdateEntityReturnData('gra',$newGraID,'sclID',$newSclID);
+      }
       if ($syllable->hasError()) {
         array_push($errors,"error saving syllable '".$syllable->getValue()."' - ".$syllable->getErrors(true));
       } else if ($sclID != $syllable->getID()) { //cloned
@@ -635,6 +639,7 @@
     //update edition seqIDs
     $edition->setSequenceIDs($edSeqIds);
     $edition->save();
+    invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
     if ($edition->hasError()) {
       array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
     }else{

@@ -77,7 +77,7 @@
                             <resp>editor</resp>
                             <persName ref="#AS">
                                 <forename>Andrea</forename>
-                                <surname>Baums</surname>
+                                <surname>Schlosser</surname>
                             </persName>
                         </respStmt>
                     </titleStmt>
@@ -89,7 +89,7 @@
                         <msDesc>
                             <msIdentifier>
                                 <institution>BAdW/LMU</institution>
-                                <idno xml:id="inv-eiad"><xsl:value-of select="$text/CKN"/></idno>
+                                <idno><xsl:value-of select="$text/CKN"/></idno>
                             </msIdentifier>
                             <msContents>
                                 <msItem>

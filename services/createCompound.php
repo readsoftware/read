@@ -195,20 +195,22 @@
       }
       //update compound heirarchy
       if (count($errors) == 0 && isset($compounds) && count($compounds) > 0) {//update compounds
-        while (count($compounds) && $oldTokCmpGID != $newTokCmpGID) {
+        while (count($compounds) > 0) {
           $compound = array_shift($compounds);
-          $componentIDs = $compound->getComponentIDs();
-          $tokCmpIndex = array_search($oldTokCmpGID,$componentIDs);
-          array_splice($componentIDs,$tokCmpIndex,1,$newTokCmpGID);
-          if ($oldTokCmpGID && $oldTokCmpGID != $newSplitTokGID) {
-            //addRemoveEntityReturnData(substr($oldTokCmpGID,0,3),substr($oldTokCmpGID,4));
+          $componentIDs = null;
+          if ($oldTokCmpGID != $newTokCmpGID) {
+            $componentIDs = $compound->getComponentIDs();
+            $tokCmpIndex = array_search($oldTokCmpGID,$componentIDs);
+            array_splice($componentIDs,$tokCmpIndex,1,$newTokCmpGID);
           }
           $oldTokCmpGID = $compound->getGlobalID();
           if ($compound->isReadonly()) {
             $compound = $compound->cloneEntity($defAttrIDs,$defVisIDs);
           }
           // update compound container
-          $compound->setComponentIDs($componentIDs);
+          if ($componentIDs) {
+            $compound->setComponentIDs($componentIDs);
+          }
           $compound->getValue(true);//cause recalc
           $compound->save();
           $newTokCmpGID = $compound->getGlobalID();
@@ -289,6 +291,7 @@
         $edition->setSequenceIDs($edSeqIds);
       }
       $edition->save();
+      invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
       if ($edition->hasError()) {
         array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
       }else{

@@ -178,7 +178,7 @@
 .paleoChart, .taggingDiv{
   display: block;
   overflow-y: auto;
-  max-height: 450px;
+/*  max-height: 450px;*/
   overflow-x: hidden;
 }
 .columnHeader{

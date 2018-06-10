@@ -51,6 +51,8 @@ EDITORS.EntityPropVE = function(entPropVECfg) {
   this.entGID = entPropVECfg['entGID'] ? entPropVECfg['entGID']:null;
   this.controlVE = entPropVECfg['editor'] ? entPropVECfg['editor']:null;
   this.ednID = entPropVECfg['ednID'] ? entPropVECfg['ednID']:null;
+  this.hideSubType = entPropVECfg['hideSubType'] ? entPropVECfg['hideSubType']:false;
+  this.hideComponents = entPropVECfg['hideComponents'] ? entPropVECfg['hideComponents']:false;
   this.dataMgr = entPropVECfg['dataMgr'] ? entPropVECfg['dataMgr']:null;
   this.propMgr = entPropVECfg['propMgr'] ? entPropVECfg['propMgr']:null;
   this.contentDiv = entPropVECfg['contentDiv'] ? $(entPropVECfg['contentDiv']):null;
@@ -116,6 +118,22 @@ EDITORS.EntityPropVE.prototype = {
 
 
 /**
+* clears the editor's entity and refresh display
+*
+*/
+
+  clear: function() {
+    DEBUG.traceEntry("clearEntity");
+    this.prefix = null;
+    this.entID = null;
+    this.tag = null;
+    this.entity = null;
+    this.showEntity();
+    DEBUG.traceExit("clearEntity");
+  },
+
+
+/**
 * get editor's type string
 *
 * @returns string
@@ -148,6 +166,13 @@ EDITORS.EntityPropVE.prototype = {
   },
 
 
+  afterUpdate: function() {
+    if (this.controlVE && this.controlVE.afterUpdate) {
+      this.controlVE.afterUpdate(this.tag);
+    }
+  },
+
+
 /**
 * show entity's properties by creating UI for each property
 *
@@ -157,6 +182,7 @@ EDITORS.EntityPropVE.prototype = {
 
   showEntity: function(prefix,id) {
     DEBUG.traceEntry("showEntity");
+    var entPropVE = this;
     if (prefix && id && this.dataMgr.getEntity(prefix,id)) {
       this.prefix = prefix;
       this.entID = id;
@@ -192,13 +218,17 @@ EDITORS.EntityPropVE.prototype = {
       this.createAnnotationUI();
       this.createAttributionUI();
 
-      if (this.prefix == "seq" && this.entity ) {
+      if (this.prefix == "seq" && this.entity && !this.hideSubType) {
         this.createSubTypeUI();
       }
       if ((this.prefix == "seq" || this.prefix == "edn" || this.prefix == "cmp" ||
-           this.prefix == "tok" || this.prefix == "scl" || this.prefix == "cat" ) && this.entity ) {
+           this.prefix == "tok" || this.prefix == "scl" || this.prefix == "cat" ) && this.entity && !this.hideComponents) {
         this.createComponentsUI();
       }
+      this.contentDiv.append('<hr class="viewEndRule">');
+      this.contentDiv.unbind("click").bind("click",function(e) {
+        $('div.edit',entPropVE.contentDiv).removeClass("edit");
+      });
     } else {
       this.contentDiv.html('Entity Property Viewer - no entity information found.');
     }
@@ -215,6 +245,10 @@ EDITORS.EntityPropVE.prototype = {
     var entPropVE = this, matchEntityTags,i, matchEntity, matchValue, matchAttr;
         switchable = !(this.dataMgr.getEntity('edn',this.controlVE.getEdnID())).readonly;
 
+    //check for sandhi and ignore UI
+    if (this.dataMgr.checkForSandhi(this.tag)) {
+      return;
+    }
     //create UI container
     this.altTransUI = $('<div class="altTransUI '+(switchable?'':'readonly')+'"></div>');
     this.contentDiv.append(this.altTransUI);
@@ -250,6 +284,8 @@ EDITORS.EntityPropVE.prototype = {
           var classes = $(this).attr('class'), entTag;
           entTag = classes.match(/(?:seq|scl|ano|tok|cmp)\d+/)[0];
           entPropVE.switchEntity(entPropVE.tag,entTag);
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     }
@@ -342,9 +378,12 @@ EDITORS.EntityPropVE.prototype = {
       //click to edit
       if (valueEditable) {
         $('div.valueLabelDiv',this.valueUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.valueUI.addClass("edit");
           $('div.valueInputDiv input',this.valueUI).focus();
           //$('div.valueInputDiv input',this.valueUI).select();
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         $('div.valueInputDiv input',this.valueUI).unbind("blur").bind("blur",function(e) {
@@ -354,6 +393,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //mark dirty on input
         $('div.valueInputDiv input',this.valueUI).unbind("input").bind("input",function(e) {
+          var curInput = $(this).val(), btnText = $('.saveDiv',entPropVE.valueUI).html();
           if ($('div.valueLabelDiv',this.valueUI).text() != $(this).val()) {
             if (!$(this).parent().parent().hasClass("dirty")) {
               $(this).parent().parent().addClass("dirty");
@@ -361,25 +401,57 @@ EDITORS.EntityPropVE.prototype = {
           } else if ($(this).parent().parent().hasClass("dirty")) {
             $(this).parent().parent().removeClass("dirty");
           }
+          if (!curInput && btnText == "Save" &&
+                entPropVE.dataMgr.checkEntityDeletable(entPropVE.tag) &&
+               (entPropVE.prefix == "edn" ||
+                entPropVE.prefix == "txt" ||
+                entPropVE.prefix == "cat")) {
+            $('.saveDiv',entPropVE.valueUI).html("Delete").css('color','red');
+          } else if (curInput && btnText != "Save") {
+            $('.saveDiv',entPropVE.valueUI).html("Save").css('color','white');
+          }
         });
         //save data
         $('.saveDiv',this.valueUI).unbind("click").bind("click",function(e) {
-          var val;
+          var isSave = ($(this).html()== 'Save'),val,
+              origText = $('div.valueLabelDiv',entPropVE.valueUI).html();
           if ($('.propEditUI',entPropVE.valueUI).hasClass('dirty')) {
             val = $('div.valueInputDiv input',entPropVE.valueUI).val();
             $('div.valueLabelDiv',entPropVE.valueUI).html(val);
             $('.propEditUI',entPropVE.valueUI).removeClass('dirty');
-            if (entPropVE.prefix == "seq") {
-               entPropVE.changeSequenceLabel(val);
-            } else if (entPropVE.prefix == "edn") {
-               entPropVE.saveEditionLabel(val);
-            } else if (entPropVE.prefix == "txt") {
-               entPropVE.changeTextTitle(val);
-            } else if (entPropVE.prefix == "cat") {
-               entPropVE.changeCatalogTitle(val);
+            if (isSave) {
+              if (entPropVE.prefix == "seq") {
+                 entPropVE.changeSequenceLabel(val);
+              } else if (entPropVE.prefix == "edn") {
+                 entPropVE.saveEditionLabel(val);
+              } else if (entPropVE.prefix == "txt") {
+                 entPropVE.changeTextTitle(val);
+              } else if (entPropVE.prefix == "cat") {
+                 entPropVE.changeCatalogTitle(val);
+              }
+            } else { //delete case
+              switch (entPropVE.prefix) {
+                case "edn":
+                  if (confirm('Are you sure you want to delete edition "' + origText + '"?')) { // is delete
+                    entPropVE.deleteEdition();
+                  }
+                  break;
+                case "txt":
+                  if (confirm('Are you sure you want to delete text "' + origText + '"?')) { // is delete
+                    entPropVE.deleteText();
+                  }
+                  break;
+                case "cat":
+                  if (confirm('Are you sure you want to delete Catalog "' + origText + '"?')) { // is delete
+                    entPropVE.deleteGlossary();
+                  }
+                  break;
+              }
             }
+            entPropVE.valueUI.removeClass("edit");
+            e.stopImmediatePropagation();
+            return false;
           }
-          entPropVE.valueUI.removeClass("edit");
         });
       }
       //click to flip editors
@@ -387,6 +459,8 @@ EDITORS.EntityPropVE.prototype = {
         if (entPropVE.propMgr && entPropVE.propMgr.showVE) {
           entPropVE.propMgr.showVE("tabPropVE",entPropVE.propMgr.currentVE.tag);
         }
+        e.stopImmediatePropagation();
+        return false;
       });
 /*      //previous entity
       $('.med-prevword',this.valueUI).unbind("click").bind("click",function(e) {
@@ -431,9 +505,12 @@ EDITORS.EntityPropVE.prototype = {
       //click to edit
       if (!this.entity.readonly) {
         $('div.valueLabelDiv',this.supUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.supUI.addClass("edit");
           $('div.valueInputDiv input',this.supUI).focus();
           //$('div.valueInputDiv input',this.supUI).select();
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         $('div.valueInputDiv input',this.supUI).unbind("blur").bind("blur",function(e) {
@@ -463,6 +540,8 @@ EDITORS.EntityPropVE.prototype = {
             }
           }
           entPropVE.supUI.removeClass("edit");
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     DEBUG.traceExit("createSuperScriptDisplay");
@@ -495,9 +574,12 @@ EDITORS.EntityPropVE.prototype = {
       //click to edit
       if (!this.entity.readonly) {
         $('div.valueLabelDiv',this.refUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.refUI.addClass("edit");
           $('div.valueInputDiv input',this.refUI).focus();
           //$('div.valueInputDiv input',this.refUI).select();
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         $('div.valueInputDiv input',this.refUI).unbind("blur").bind("blur",function(e) {
@@ -527,6 +609,8 @@ EDITORS.EntityPropVE.prototype = {
             }
           }
           entPropVE.refUI.removeClass("edit");
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     DEBUG.traceExit("createTextRefDisplay");
@@ -558,9 +642,12 @@ EDITORS.EntityPropVE.prototype = {
       //click to edit
       if (!this.entity.readonly) {
         $('div.valueLabelDiv',this.invUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.invUI.addClass("edit");
           $('div.valueInputDiv input',this.invUI).focus();
           //$('div.valueInputDiv input',this.invUI).select();
+          e.stopImmediatePropagation();
+          return false;
         });
         //blur to cancel
         $('div.valueInputDiv input',this.invUI).unbind("blur").bind("blur",function(e) {
@@ -590,6 +677,8 @@ EDITORS.EntityPropVE.prototype = {
             }
           }
           entPropVE.invUI.removeClass("edit");
+          e.stopImmediatePropagation();
+          return false;
         });
       }
     DEBUG.traceExit("createTextInvDisplay");
@@ -658,6 +747,8 @@ EDITORS.EntityPropVE.prototype = {
       if (entPropVE.prefix == 'cat') {
         entPropVE.changeCatalogType($(this).prop('trmID'));
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     return radioGroup;
   },
@@ -706,7 +797,10 @@ EDITORS.EntityPropVE.prototype = {
     //attach event handlers
       //click to edit
       $('div.valueLabelDiv',this.typeUI).unbind("click").bind("click",function(e) {
+        $('div.edit',entPropVE.contentDiv).removeClass("edit");
         entPropVE.typeUI.addClass("edit");
+        e.stopImmediatePropagation();
+        return false;
       });
     DEBUG.traceExit("createTypeUI");
   },
@@ -718,8 +812,10 @@ EDITORS.EntityPropVE.prototype = {
 
   createSeqTypeUI: function() {//type ui for sequence entities
     var entPropVE = this,
-        valueEditable = (this.prefix == "seq" && this.entity && !this.entity.readonly),
         value = this.dataMgr.getTermFromID(this.entity.typeID),
+        valueEditable = (this.prefix == "seq" && this.entity && !this.entity.readonly &&
+                          value && !(value == "Text" || value == "TextDivision" || // warning!!! term dependency
+                                     value == "TextPhysical" || value == "LinePhysical" )),// warning!!! term dependency
         treeSeqTypeName = this.id+'seqtypetree';
     DEBUG.traceEntry("createSeqTypeUI");
     //create UI container
@@ -729,69 +825,71 @@ EDITORS.EntityPropVE.prototype = {
     this.typeUI.append($('<div class="propDisplayUI">'+
                           '<div class="valueLabelDiv propDisplayElement'+(valueEditable?"":" readonly")+'">'+value+'</div>'+
                           '</div>'));
-    //create input with save button
-    this.typeUI.append($('<div class="propEditUI">'+
-                    '<div class="propEditElement"><div id="'+ treeSeqTypeName+'"></div></div>'+
-                    '</div>'));
-    this.seqTypeTree = $('#'+treeSeqTypeName,this.typeUI);
-    this.seqTypeTree.jqxTree({
-           source: this.dataMgr.seqTypes,
-           hasThreeStates: false, checkboxes: false,
-           theme:'energyblue'
-    });
-    $('.propEditElement',this.typeUI).addClass('seqTypeUI');
-    //attach event handlers
-      if (valueEditable) {
+    if (valueEditable) {
+      //create input with save button
+      this.typeUI.append($('<div class="propEditUI">'+
+                      '<div class="propEditElement"><div id="'+ treeSeqTypeName+'"></div></div>'+
+                      '</div>'));
+      this.seqTypeTree = $('#'+treeSeqTypeName,this.typeUI);
+      this.seqTypeTree.jqxTree({
+             source: this.dataMgr.seqTypes,
+             hasThreeStates: false, checkboxes: false,
+             theme:'energyblue'
+      });
+      $('.propEditElement',this.typeUI).addClass('seqTypeUI');
+      //attach event handlers
       //click to edit
-        $('div.valueLabelDiv',this.typeUI).unbind("click").bind("click",function(e) {
-          entPropVE.typeUI.addClass("edit");
-          //init tree to current type
-          var curItem = $('#trm'+entPropVE.entity.typeID, entPropVE.seqTypeTree),
-              offset = 0;
-          if (curItem && curItem.length) {
-            curItem = curItem.get(0);
-            entPropVE.suppressSelect = true;
-            entPropVE.seqTypeTree.jqxTree('selectItem',curItem);
-            //expand selected item sub tree if needed
-            curItem = entPropVE.seqTypeTree.jqxTree('getSelectedItem');
-            while (curItem && curItem.parentElement) {
-              entPropVE.seqTypeTree.jqxTree('expandItem',curItem.parentElement);
-              curItem = entPropVE.seqTypeTree.jqxTree('getItem',curItem.parentElement);
-            }
-            curItem = entPropVE.seqTypeTree.jqxTree('getItem',$('li:first',entPropVE.seqTypeTree).get(0));
-            while (curItem && !curItem.selected) {
-              offset += 25;
-              if (curItem.isExpanded) {
-                offset += 2;
-              }
-              curItem = entPropVE.seqTypeTree.jqxTree('getNextItem',curItem.element);
-            }
-            delete entPropVE.suppressSelect;
+      $('div.valueLabelDiv',this.typeUI).unbind("click").bind("click",function(e) {
+        entPropVE.typeUI.addClass("edit");
+        //init tree to current type
+        var curItem = $('#trm'+entPropVE.entity.typeID, entPropVE.seqTypeTree),
+            offset = 0;
+        if (curItem && curItem.length) {
+          curItem = curItem.get(0);
+          entPropVE.suppressSelect = true;
+          entPropVE.seqTypeTree.jqxTree('selectItem',curItem);
+          //expand selected item sub tree if needed
+          curItem = entPropVE.seqTypeTree.jqxTree('getSelectedItem');
+          while (curItem && curItem.parentElement) {
+            entPropVE.seqTypeTree.jqxTree('expandItem',curItem.parentElement);
+            curItem = entPropVE.seqTypeTree.jqxTree('getItem',curItem.parentElement);
           }
-          setTimeout(function(){
-              $('.seqTypeUI',entPropVE.typeUI).scrollTop(offset);
-            },50);
-        });
-        //blur to cancel
-        this.seqTypeTree.unbind("blur").bind("blur",function(e) {
-          $('div.valueLabelDiv',entPropVE.typeUI).html(entPropVE.dataMgr.getTermFromID(entPropVE.entity.typeID));
+          curItem = entPropVE.seqTypeTree.jqxTree('getItem',$('li:first',entPropVE.seqTypeTree).get(0));
+          while (curItem && !curItem.selected) {
+            offset += 25;
+            if (curItem.isExpanded) {
+              offset += 2;
+            }
+            curItem = entPropVE.seqTypeTree.jqxTree('getNextItem',curItem.element);
+          }
+          delete entPropVE.suppressSelect;
+        }
+        setTimeout(function(){
+            $('.seqTypeUI',entPropVE.typeUI).scrollTop(offset);
+          },50);
+        e.stopImmediatePropagation();
+        return false;
+      });
+      //blur to cancel
+      this.seqTypeTree.unbind("blur").bind("blur",function(e) {
+        $('div.valueLabelDiv',entPropVE.typeUI).html(entPropVE.dataMgr.getTermFromID(entPropVE.entity.typeID));
+        entPropVE.typeUI.removeClass("edit");
+      });
+      //change sequence type
+      this.seqTypeTree.on('select', function (event) {
+          if (entPropVE.suppressSelect) {
+            return;
+          }
+          var args = event.args, dropDownContent = '',
+              item =  entPropVE.seqTypeTree.jqxTree('getItem', args.element);
+          if (item.value && item.value != entPropVE.entity.typeID) {//user selected to change sequence type
+            //save new type to entity
+            entPropVE.changeSequenceType(item.value);
+            $('div.valueLabelDiv',entPropVE.typeUI).html(entPropVE.dataMgr.getTermFromID(item.value));
+          }
           entPropVE.typeUI.removeClass("edit");
-        });
-        //change sequence type
-        this.seqTypeTree.on('select', function (event) {
-            if (entPropVE.suppressSelect) {
-              return;
-            }
-            var args = event.args, dropDownContent = '',
-                item =  entPropVE.seqTypeTree.jqxTree('getItem', args.element);
-            if (item.value && item.value != entPropVE.entity.typeID) {//user selected to change sequence type
-              //save new type to entity
-              entPropVE.changeSequenceType(item.value);
-              $('div.valueLabelDiv',entPropVE.typeUI).html(entPropVE.dataMgr.getTermFromID(item.value));
-            }
-            entPropVE.typeUI.removeClass("edit");
-        });
-      }
+      });
+    }
     DEBUG.traceExit("createSeqTypeUI");
   },
 
@@ -801,12 +899,16 @@ EDITORS.EntityPropVE.prototype = {
 */
 
   createSubTypeUI: function() {//subtype ui for sequence entities
-    var entPropVE = this,
-        valueEditable = (this.prefix == "seq" && this.entity && !this.entity.readonly),
-        value, subTypeID = (this.entity.subtypeID?this.entity.subtypeID:this.entity.typeID),
+    var entPropVE = this, subTypeID = (this.entity.subtypeID?this.entity.subtypeID:this.entity.typeID),
+        value = this.dataMgr.getTermFromID(subTypeID),
+        valueEditable = (this.prefix == "seq" && this.entity && !this.entity.readonly &&
+                          value && !(value == "Text" || value == "TextDivision" || // warning!!! term dependency
+                                     value == "TextPhysical" || value == "LinePhysical" )),// warning!!! term dependency
         treeSubSeqTypeName = this.id+'subseqtypetree';
+    if (!valueEditable){
+      return;
+    }
     DEBUG.traceEntry("createSubTypeUI");
-    value = this.dataMgr.getTermFromID(subTypeID);
     //create UI container
     this.subTypeUI = $('<div class="subTypeUI"></div>');
     this.contentDiv.append(this.subTypeUI);
@@ -815,21 +917,22 @@ EDITORS.EntityPropVE.prototype = {
                           '<div class="valueLabelDiv propDisplayElement'+(valueEditable?"":" readonly")+'">Current Subtype '+value+'</div>'+
                           ((this.entity.readonly)?'':('<span class="addButton"><u>Add New '+value+'</u></span></div>'))+
                           '</div>'));
-    //create input with selection tree
-    this.subTypeUI.append($('<div class="propEditUI">'+
-                    '<div class="propEditElement"><div id="'+ treeSubSeqTypeName+'"></div></div>'+
-                    '</div>'));
-    this.subSeqTypeTree = $('#'+treeSubSeqTypeName,this.subTypeUI);
-    this.subSeqTypeTree.jqxTree({
-           source: this.dataMgr.seqTypes,
-           hasThreeStates: false, checkboxes: false,
-           theme:'energyblue'
-    });
-    $('.propEditElement',this.subTypeUI).addClass('seqSubTypeUI');
-    //attach event handlers
-      if (valueEditable) {
+    if (valueEditable) {
+      //create input with selection tree
+      this.subTypeUI.append($('<div class="propEditUI">'+
+                      '<div class="propEditElement"><div id="'+ treeSubSeqTypeName+'"></div></div>'+
+                      '</div>'));
+      this.subSeqTypeTree = $('#'+treeSubSeqTypeName,this.subTypeUI);
+      this.subSeqTypeTree.jqxTree({
+             source: this.dataMgr.seqTypes,
+             hasThreeStates: false, checkboxes: false,
+             theme:'energyblue'
+      });
+      $('.propEditElement',this.subTypeUI).addClass('seqSubTypeUI');
+      //attach event handlers
       //click to edit
-        $('div.valueLabelDiv',this.subTypeUI).unbind("click").bind("click",function(e) {
+      $('div.valueLabelDiv',this.subTypeUI).unbind("click").bind("click",function(e) {
+          $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.subTypeUI.addClass("edit");
           //init tree to current type
           var curItem = $('#trm'+(entPropVE.entity.subtypeID?entPropVE.entity.subtypeID:entPropVE.entity.typeID), entPropVE.subSeqTypeTree),
@@ -857,34 +960,38 @@ EDITORS.EntityPropVE.prototype = {
           setTimeout(function(){
               $('.seqSubTypeUI',entPropVE.subTypeUI).scrollTop(offset);
             },50);
-        });
-        //blur to cancel
-        this.subSeqTypeTree.unbind("blur").bind("blur",function(e) {
+          e.stopImmediatePropagation();
+          return false;
+      });
+      //blur to cancel
+      this.subSeqTypeTree.unbind("blur").bind("blur",function(e) {
           $('div.valueLabelDiv',entPropVE.subTypeUI).html("Current Subtype "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID));
           $('span.addButton',entPropVE.subTypeUI).html("<u>Add New "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID)+"</u>");
           entPropVE.subTypeUI.removeClass("edit");
-        });
-        //change sequence type
-        this.subSeqTypeTree.on('select', function (event) {
-            if (entPropVE.suppressSubSelect) {
-              return;
-            }
-            var args = event.args, dropDownContent = '',
-                item =  entPropVE.subSeqTypeTree.jqxTree('getItem', args.element);
-            if (item.value && item.value != entPropVE.entity.subtypeID) {//user selected to change sequence type
-              //save new subtype to entity
-              entPropVE.entity.subtypeID = item.value;
-              $('div.valueLabelDiv',entPropVE.subTypeUI).html("Current Subtype "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID));
-              $('span.addButton',entPropVE.subTypeUI).html("<u>Add New "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID)+"</u>");
-            }
-            entPropVE.subTypeUI.removeClass("edit");
-        });
-        //attach event handlers
-        $('span.addButton',entPropVE.subTypeUI).unbind("click").bind("click",function(e) {
-            var subTypeID = entPropVE.entity.subtypeID?entPropVE.entity.subtypeID:entPropVE.entity.typeID;
-            entPropVE.addNewSubSequenceType(subTypeID);
-        });
-      }
+      });
+      //change sequence type
+      this.subSeqTypeTree.on('select', function (event) {
+          if (entPropVE.suppressSubSelect) {
+            return;
+          }
+          var args = event.args, dropDownContent = '',
+              item =  entPropVE.subSeqTypeTree.jqxTree('getItem', args.element);
+          if (item.value && item.value != entPropVE.entity.subtypeID) {//user selected to change sequence type
+            //save new subtype to entity
+            entPropVE.entity.subtypeID = item.value;
+            $('div.valueLabelDiv',entPropVE.subTypeUI).html("Current Subtype "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID));
+            $('span.addButton',entPropVE.subTypeUI).html("<u>Add New "+entPropVE.dataMgr.getTermFromID(entPropVE.entity.subtypeID)+"</u>");
+          }
+          entPropVE.subTypeUI.removeClass("edit");
+      });
+      //attach event handlers
+      $('span.addButton',entPropVE.subTypeUI).unbind("click").bind("click",function(e) {
+          var subTypeID = entPropVE.entity.subtypeID?entPropVE.entity.subtypeID:entPropVE.entity.typeID;
+          entPropVE.addNewSubSequenceType(subTypeID);
+          e.stopImmediatePropagation();
+          return false;
+      });
+    }
     DEBUG.traceExit("createSubTypeUI");
   },
 
@@ -919,7 +1026,7 @@ EDITORS.EntityPropVE.prototype = {
     if (this.prefix == "cat") {
       addBtnLabel = 'Add edition';
     } else {
-      addBtnLabel = (this.controlVE.componentLinkMode?'Cancel link mode':'Add component');
+      addBtnLabel = (this.controlVE.componentLinkMode?'Leave link mode':'Add component');
     }
     displayUI.append($('<div class="componentsUIHeader"><span>Components:</span>'+
                        ((this.entity.readonly || graIDs)?'':('<span class="addButton"><u>'+addBtnLabel+'</u></span></div>'))));
@@ -950,7 +1057,7 @@ EDITORS.EntityPropVE.prototype = {
                               '<div class="valueInputDiv propEditElement">'+
                                 '<input class="valueInput" placeholder="Enter Decomposition"/>'+
                               '</div>'+
-                              '<div class="saveDiv propEditElement">Save</div>'+
+                              '<button class="saveDiv propEditElement">Save</button>'+
                             '</div>'));
           //click to edit
           $('div.sandhibtn',sandhiUI).unbind("click").bind("click",function(e) {
@@ -959,10 +1066,14 @@ EDITORS.EntityPropVE.prototype = {
                 entity = entPropVE.dataMgr.getEntityFromGID(entTag);
             if (entity && entity.decomp) {
               inputElem.val(entity.decomp);
+              $('.saveDiv',sandhiUI).html('Save');
             }
             //show edit UI
+            $('div.edit',entPropVE.contentDiv).removeClass("edit");
             graSandhiUI.addClass("edit");//mark component's sandhiUI div
             inputElem.focus().select();
+            e.stopImmediatePropagation();
+            return false;
           });
           //blur to cancel
           $('div.valueInputDiv input',sandhiUI).unbind("blur").bind("blur",function(e) {
@@ -980,12 +1091,17 @@ EDITORS.EntityPropVE.prototype = {
                   ((entity.decomp && !val) ||
                    (val &&
                     (!entity.decomp || entity.decomp != val) &&
-                    val.toLowerCase().match(/^([aiïüueo’]+|[aiïüueo’]+[\s-‐][aiïüueo’]+)$/)))) {
+                    val.toLowerCase().match(/^([-‐]|[aāiīïüuūeēoō’l̥̄rṛṝ]+|[aāiīïüuūeēoō’l̥̄rṛṝ]+[\s-‐][aāiīïüuūeēoō’l̥̄rṛṝ]+)$/)))) {//todo extract to config for lang-script
               if (!$(this).parent().parent().hasClass("dirty")) {
                 $(this).parent().parent().addClass("dirty");
               }
             } else if ($(this).parent().parent().hasClass("dirty")) {
               $(this).parent().parent().removeClass("dirty");
+            }
+            if (entity.decomp && (!val || val.length == 0)){
+              $('.saveDiv',sandhiUI).html('Delete').css('color','red');
+            } else {
+              $('.saveDiv',sandhiUI).html('Save').css('color','white');
             }
           });
           //save data
@@ -998,6 +1114,8 @@ EDITORS.EntityPropVE.prototype = {
               entPropVE.saveSandhi(entTag,val);
             }
             graSandhiUI.removeClass("edit");
+            e.stopImmediatePropagation();
+            return false;
           });
         }
         displayUI.append(componentEntry);
@@ -1088,11 +1206,14 @@ EDITORS.EntityPropVE.prototype = {
         } else {
           alert("unlinking of "+entPropVE.prefix+" type entity components is under construction");
         }
+        e.stopImmediatePropagation();
+        return false;
       });
     }
     //attach event handlers
     $('span.addButton',this.componentsUI).unbind("click").bind("click",function(e) {
       if ($(this).text() == 'Add edition') {
+        $('div.edit',entPropVE.contentDiv).removeClass("edit");
         entPropVE.componentsUI.addClass("edit");
       } else if ($(this).text() == 'Add component') {//switch to linking mode
         if (entPropVE.prefix == 'seq' && entPropVE.controlVE && entPropVE.controlVE.type == 'EditionVE') {
@@ -1101,17 +1222,19 @@ EDITORS.EntityPropVE.prototype = {
               confirm("Would you like to replace components with current selection?")) {
               entPropVE.changeSequenceEntityIDs(selectedGIDs);
           } else {
-            $(this).html('<u>Cancel link mode</u>');
+            $(this).html('<u>Leave link mode</u>');
             entPropVE.controlVE.setComponentLinkMode(true,entPropVE.entity.typeID);
           }
         } else {
-          $(this).html('<u>Cancel link mode</u>');
+          $(this).html('<u>Leave link mode</u>');
           entPropVE.controlVE.setComponentLinkMode(true,entPropVE.entity.typeID);
         }
       } else {//cancel linking mode
         $(this).html('<u>Add component</u>');
         entPropVE.controlVE.setComponentLinkMode(false);
       }
+      e.stopImmediatePropagation();
+      return false;
     });
     DEBUG.traceExit("createComponentsUI");
   },
@@ -1143,7 +1266,7 @@ EDITORS.EntityPropVE.prototype = {
       context = this.controlVE.getFullContextFromGrapheme(graID);
       if (context) {
         savedata['context'] = context;
-        txtDivSeqID = context[0].substring(3);
+        txtDivSeqID = context[0].substring(3);//caution dependency on class add order, assumes txtDiv seqTag is first
       }
     }
     //jqAjax synch save
@@ -1707,6 +1830,9 @@ EDITORS.EntityPropVE.prototype = {
               //update data
               entPropVE.dataMgr.updateLocalCache(data,null);
               entPropVE.propMgr.showVE();
+              if (entPropVE.propMgr && entPropVE.propMgr.entityUpdated) {
+                entPropVE.propMgr.entityUpdated();
+              }
             }
             if (data.errors) {
               alert("An error occurred while trying to remove annotation record. Error: " + data.errors.join());
@@ -1718,6 +1844,120 @@ EDITORS.EntityPropVE.prototype = {
         }
     });
     DEBUG.traceExit("removeAnno");
+  },
+
+
+/**
+* delete glossary
+*
+*/
+
+  deleteGlossary: function() {
+    var entPropVE = this, savedata = {};
+    DEBUG.traceEntry("deleteGlossary");
+      savedata = {catID:entPropVE.entID};
+      //save data
+      $.ajax({
+        dataType: 'json',
+        url: basepath+'/services/deleteCatalog.php?db='+dbName,
+        data: savedata,
+        asynch: true,
+        success: function (data, status, xhr) {
+          if (typeof data == 'object' && data.success && data.entities) {
+            entPropVE.dataMgr.updateLocalCache(data,null);
+            if (entPropVE.controlVE && entPropVE.controlVE.layoutMgr) {
+              entPropVE.controlVE.layoutMgr.clearPane(entPropVE.config.id);
+              entPropVE.controlVE.layoutMgr.refreshCursor();
+              entPropVE.controlVE.layoutMgr.refreshCatalogResources();
+            }
+            if (data['errors']) {
+              alert("Error(s) occurred while trying to delete Glossary . Error(s): " +
+                    data['errors'].join());
+            }
+          }
+        },// end success cb
+        error: function (xhr,status,error) {
+          // add record failed.
+          alert("An error occurred while trying to delete Glossary. Error: " + error);
+        }
+      });// end ajax
+    DEBUG.traceExit("deleteGlossary");
+  },
+
+
+/**
+* delete text
+*
+*/
+
+  deleteText: function() {
+    var entPropVE = this, savedata = {};
+    DEBUG.traceEntry("deleteText");
+      savedata = {txtID:entPropVE.entID};
+      //save data
+      $.ajax({
+        dataType: 'json',
+        url: basepath+'/services/deleteText.php?db='+dbName,
+        data: savedata,
+        asynch: true,
+        success: function (data, status, xhr) {
+          var controlVE =entPropVE.controlVE, txtID = entPropVE.entID;
+          if (typeof data == 'object' && data.success && data.entities) {
+            entPropVE.dataMgr.updateLocalCache(data,null);
+            entPropVE.clear();
+            if (controlVE && controlVE.id == "searchVE" &&
+                controlVE.removeTextRow) {
+              controlVE.removeTextRow(txtID);
+            }
+            if (data['errors']) {
+              alert("Error(s) occurred while trying to delete Text . Error(s): " +
+                    data['errors'].join());
+            }
+          }
+        },// end success cb
+        error: function (xhr,status,error) {
+          // add record failed.
+          alert("An error occurred while trying to delete Text. Error: " + error);
+        }
+      });// end ajax
+    DEBUG.traceExit("deleteText");
+  },
+
+
+/**
+* delete edition
+*
+*/
+
+  deleteEdition: function() {
+    var entPropVE = this, savedata = {};
+    DEBUG.traceEntry("deleteEdition");
+      savedata = {ednID:entPropVE.entID};
+      //save data
+      $.ajax({
+        dataType: 'json',
+        url: basepath+'/services/deleteEdition.php?db='+dbName,
+        data: savedata,
+        asynch: true,
+        success: function (data, status, xhr) {
+          if (typeof data == 'object' && data.success && data.entities) {
+            entPropVE.dataMgr.updateLocalCache(data,null);
+            if (entPropVE.controlVE && entPropVE.controlVE.layoutMgr) {
+              entPropVE.controlVE.layoutMgr.clearPane(entPropVE.config.id);
+              entPropVE.controlVE.layoutMgr.refreshCursor();
+            }
+            if (data['errors']) {
+              alert("Error(s) occurred while trying to delete Edition . Error(s): " +
+                    data['errors'].join());
+            }
+          }
+        },// end success cb
+        error: function (xhr,status,error) {
+          // add record failed.
+          alert("An error occurred while trying to delete Edition. Error: " + error);
+        }
+      });// end ajax
+    DEBUG.traceExit("deleteEdition");
   },
 
 
@@ -1944,7 +2184,7 @@ EDITORS.EntityPropVE.prototype = {
     if (typeID) {
       savedata["typeID"] = typeID;
     }
-    if (entityIDs) {
+    if (entityIDs !== null) {
       savedata["entityIDs"] = entityIDs;
     }
     if (removeEntityGID) {
@@ -1992,7 +2232,7 @@ EDITORS.EntityPropVE.prototype = {
                     entPropVE.controlVE.setDefaultSeqType(sequence.typeID);
                   }
                   if (entPropVE.controlVE && entPropVE.controlVE.refreshSeqMarkers) {
-                    entPropVE.controlVE.refreshSeqMarkers();
+                    entPropVE.controlVE.refreshSeqMarkers([seqID]);
                   }
                   if (entPropVE.controlVE && entPropVE.controlVE.refreshPhysLineHeader) {
                     entPropVE.controlVE.refreshPhysLineHeader(seqID);

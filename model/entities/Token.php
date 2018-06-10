@@ -184,7 +184,7 @@
             $grapheme->calculateSort();
           }
           $graSort = $grapheme->getSortCode();
-          if ($decomp && ($i === 0 || $i == $last) && $grapheme->getType()==$typeVowel) {// handle sandhi vowels
+          if ($decomp && ($i === 0 || $i == $last) ) {// handle sandhi vowels
             $sandhi = explode(":",$decomp);
             $str = $i?$sandhi[0]:$sandhi[2];
 //            $str = $i?$sandhi[0]:"ʔ".$sandhi[1];
@@ -331,9 +331,9 @@
       $sclIDs = array();
       $sclGraIDs = array();
       $graIDs = $this->getGraphemeIDs();
-      while ($graIDs && $graID = array_shift($graIDs)) {
-        if (count($sclGraIDs)==0){
-          $syls = new SyllableClusters("$graID = ANY(\"scl_grapheme_ids\")",null,null,null);
+      while ($graIDs && $graID = array_shift($graIDs)) {//for each token grapheme
+        if (count($sclGraIDs)==0){//get syllable for the current grapheme
+          $syls = new SyllableClusters("$graID = ANY(scl_grapheme_ids)",null,null,null);
           if (!$syls || $syls->getCount() == 0) {
               array_push($this->_errors,"invalid token state tok:".$this->_id."has grapheme gra:$graID not associated with a visible syllableCluster");
               return null;
@@ -343,7 +343,7 @@
           array_push($sclIDs,$syls->current()->getID());
           $graIndex = array_search($graID,$sclGraIDs);
           if ($graIndex > 0) {
-            if (count($sclIDs) == 1) {// likely split syllable so trim
+            if (count($sclIDs) == 1) {//first syllable of token and token 1st grapheme not at beginning of syllable, likely split syllable so trim
               $sclGraIDs = array_slice($sclGraIDs,$graIndex);
             } else {
               array_push($this->_errors,"token graphemes are out of synch with syllableCluster id = ".$syls->current()->getID());
@@ -351,7 +351,7 @@
             }
           }
         }
-        while ($sclGraIDs && $sclGraID = array_shift($sclGraIDs)) {
+        while ($sclGraIDs && $sclGraID = array_shift($sclGraIDs)) {//match syllable graphemes to token graphemes until end of either
           if ($graID == $sclGraID) {
             if (count($sclGraIDs)==0) { // need another syllable so loop outer
               break;

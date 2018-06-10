@@ -130,7 +130,11 @@ if (!$data) {
     }
     $entityIDs = null;
     if ( isset($data['entityIDs'])) {//get entityIDs for sequence
-      $entityIDs = $data['entityIDs'];
+      if ($data['entityIDs'] && $data['entityIDs'] != '') {
+        $entityIDs = $data['entityIDs'];
+      } else {
+        $entityIDs = array();
+      }
     }
     $removeEntityGID = null;
     if ( isset($data['removeEntityGID'])) {//get removeEntityGID for sequence
@@ -157,6 +161,9 @@ if (count($errors) == 0) {
         addUpdateEntityReturnData("seq",$seqID,'value', $sequence->getLabel());
         addUpdateEntityReturnData("seq",$seqID,'label', $sequence->getLabel());
       }
+      if ($sequence->getType()=='LinePhysical') {
+        clearSessionCatCache();
+      }
     }
     if ($superscript !== null) {
       $sequence->setSuperScript($superscript);
@@ -170,7 +177,7 @@ if (count($errors) == 0) {
         addUpdateEntityReturnData("seq",$seqID,'typeID', $sequence->getTypeID());
       }
     }
-    if ($entityIDs) {
+    if (isset($entityIDs)) {
       $sequence->setEntityIDs($entityIDs);
       if ($seqID) {
         addUpdateEntityReturnData("seq",$seqID,'entityIDs', $sequence->getEntityIDs());
@@ -227,8 +234,8 @@ if (count($errors) == 0) {
     } else if ($addEntityGID && $edition) {
       $skip = false;
       if (strpos($addEntityGID,'seq')!== false){ //adding sequence to sequence check nesting level and loops
-        $skip = checkInContainment($addEntityGID,$seqGID,$edition->getSequenceIDs(),6);
-        array_push($warnings,"warning reference loop detected or level constraint exceeded, cancel component add of $addEntityGID to sequence '".$sequence->getLabel());
+        $skip = checkInContainment($addEntityGID,$seqGID,$edition->getSequenceIDs(),8);
+        array_push($warnings,"warning reference loop detected or level constraint (8) exceeded, cancel component add of $addEntityGID to sequence '".$sequence->getLabel());
       }
       if (!$skip) {
         $entityIDs = $sequence->getEntityIDs();
@@ -288,6 +295,7 @@ if (count($errors) == 0 && $edition) {
   //touch edition for synch code
   $edition->storeScratchProperty("lastModified",$edition->getModified());
   $edition->save();
+  invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
 }
 
 $retVal["success"] = false;
@@ -321,7 +329,7 @@ function invalidateParentCache($seqGID,$ednSeqIDs) {
   $containers = new Sequences("'$seqGID' = ANY(seq_entity_ids)",null,null,null);
   if ($containers && count($containers) > 0){
     foreach($containers as $seqContainer){
-      invalidateCachedSeq($seqContainer->getID());
+      ($seqContainer->getID());
     }
   }
 }

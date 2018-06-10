@@ -263,8 +263,8 @@
     *
     * @return int array of Syllable IDs of all syllables linked to this segment
     */
-    public function getSyllableIDs() {
-      if ((!$this->_syllable_ids || count($this->_syllable_ids) == 0) && $this->_id) {
+    public function getSyllableIDs($reFetch = false) {
+      if ((!$this->_syllable_ids || count($this->_syllable_ids) == 0 || $reFetch) && $this->_id) {
         $condition = $this->_id." = scl_segment_id ";
         $dbMgr = new DBManager();
         $dbMgr->query("select scl_id from syllablecluster where scl_segment_id = ".$this->_id);
@@ -298,7 +298,7 @@
     * Get boundary polygon on baseline for this segment
     *
     * @param boolean $asString determines where to return as a string (default = false)
-    * @return Polygon array|string|null which describes the boundary of the segment within the image
+    * @return Polygons array|string|null which describes the boundary of the segment within the image
     */
     public function getImageBoundary($asString = false) {
       if ($asString){

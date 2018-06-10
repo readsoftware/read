@@ -165,7 +165,6 @@ if (count($errors) == 0) {
   // create new free text line seq
   $newFreeTextLine = new Sequence();
   $newFreeTextLine->setLabel('NL1');
-  $newFreeTextLine->setSuperScript('L1');
   $newFreeTextLine->setTypeID(Entity::getIDofTermParentLabel('freetext-textphysical'));//term dependency
   $newFreeTextLine->setOwnerID($defOwnerID);
   $newFreeTextLine->setVisibilityIDs($defVisIDs);

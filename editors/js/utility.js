@@ -70,9 +70,16 @@ var UTILITY = UTILITY || {};
         i;
     if(!cnt) return null;
     var x = y = 0; //center
-    for(i=0;i<cnt;i++){
-      x += points[i][0];
-      y += points[i][1];
+    if ( points[0].constructor.name == "Array" && points[0].length === 2) {//tuples
+      for(i=0;i<cnt;i++){
+        x += points[i][0];
+        y += points[i][1];
+      }
+    } else {
+      for(i=0;i<cnt;i++){
+        x += points[i];
+        y += points[i+1];
+      }
     }
     return [Math.round(x/cnt),Math.round(y/cnt)];
   };

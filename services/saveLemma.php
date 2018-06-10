@@ -168,7 +168,7 @@ if (!$data) {
     }
   }
   $lemProps = null;
-  if ( isset($data['lemProps'])) {//get inflection
+  if ( isset($data['lemProps'])) {//get lemma props
     $lemProps = $data['lemProps'];
   }
   $infProps = null;
@@ -330,6 +330,9 @@ if (count($errors) == 0) {
             $lemma->setCertainty((!$propval || $propval == "")?array(3,3,3,3,3):$propval);
             addUpdateEntityReturnData('lem',$lemma->getID(),'certainty',$lemma->getCertainty());
             break;
+          default:
+            $lemma->storeScratchProperty($propname,$propval);
+            addUpdateEntityReturnData('lem',$lemma->getID(),$propname,$lemma->getScratchProperty($propname));
         }
       }
       $lemma->save();
@@ -341,6 +344,9 @@ if (count($errors) == 0) {
       if ($inflection) {// add token to passed inflection
         $entIDs = $inflection->getComponentIDs();
         if ($entIDs && is_array($entIDs)) {
+          if (in_array($tokGID,$entIDs)) {
+            break;
+          }
           array_push($entIDs,$tokGID);
         } else {
           $entIDs = array($tokGID);
@@ -355,7 +361,10 @@ if (count($errors) == 0) {
       } else if ($lemma) {
         $entIDs = $lemma->getComponentIDs();
         if ($entIDs && is_array($entIDs)) {
-          array_push($entIDs,$tokGID);
+          if (in_array($tokGID,$entIDs)) {
+            break;
+          }
+          array_push($entIDs,$tokGID);// fix 612 here  ensure unique.
         } else {
           $entIDs = array($tokGID);
         }
@@ -370,36 +379,44 @@ if (count($errors) == 0) {
       break;
     case "inflectTok":
       if ($lemma) {
+        //if token in inf then remove from old before then proceed
+        if ($inflection){
+          unlinkInflectedToken($tokGID,$inflection,$lemma);
+        } else {
+          unlinkUninflectedToken($tokGID,$lemma);
+        }
         //calc lemma's inflection hash lookup
         $lemEntities = $lemma->getComponents(true);
         $hashLU = array();
-        foreach ($lemEntities as $entity) {
-          if(substr($entity->getGlobalID(),0,3) != "inf") {
-            continue;
+        if ($lemEntities) {
+          foreach ($lemEntities as $entity) {
+            if(substr($entity->getGlobalID(),0,3) != "inf") {
+              continue;
+            }
+            $gender = $entity->getGender();
+            $num = $entity->getGramaticalNumber();
+            $case = $entity->getCase();
+            $person = $entity->getVerbalPerson();
+            $voice = $entity->getVerbalVoice();
+            $tense = $entity->getVerbalTense();
+            $mood = $entity->getVerbalMood();
+            $conj2nd = $entity->getSecondConjugation();
+            $cf = $entity->getCertainty();
+            $hash = "".($tense?$tense.$cf[0]:"").
+                    "-".($voice?$voice.$cf[1]:"").
+                    "-".($mood?$mood.$cf[2]:"").
+                    "-".($gender?$gender.$cf[3]:"").
+                    "-".($num?$num.$cf[4]:"").
+                    "-".($case?$case.$cf[5]:"").
+                    "-".($person?$person.$cf[6]:"").
+                    "-".($conj2nd?$conj2nd.$cf[7]:"");
+            if (array_key_exists($hash,$hashLU)) {
+              array_push($warnings,"lemma ".$lemma->getGlobalID()." has duplicate inflections ".
+                                  $entity->getGlobalID()." and ".$hashLU[$hash]->getGlobalID());
+              continue;
+            }
+            $hashLU[$hash] = $entity;
           }
-          $gender = $entity->getGender();
-          $num = $entity->getGramaticalNumber();
-          $case = $entity->getCase();
-          $person = $entity->getVerbalPerson();
-          $voice = $entity->getVerbalVoice();
-          $tense = $entity->getVerbalTense();
-          $mood = $entity->getVerbalMood();
-          $conj2nd = $entity->getSecondConjugation();
-          $cf = $entity->getCertainty();
-          $hash = "".($tense?$tense.$cf[0]:"").
-                  "-".($voice?$voice.$cf[1]:"").
-                  "-".($mood?$mood.$cf[2]:"").
-                  "-".($gender?$gender.$cf[3]:"").
-                  "-".($num?$num.$cf[4]:"").
-                  "-".($case?$case.$cf[5]:"").
-                  "-".($person?$person.$cf[6]:"").
-                  "-".($conj2nd?$conj2nd.$cf[7]:"");
-          if (array_key_exists($hash,$hashLU)) {
-            array_push($warnings,"lemma ".$lemma->getGlobalID()." has duplicate inflections ".
-                                $entity->getGlobalID()." and ".$hashLU[$hash]->getGlobalID());
-            continue;
-          }
-          $hashLU[$hash] = $entity;
         }
         //calc tok's inflection hash (infProps)
         if (array_key_exists('certainty',$infProps)) {
@@ -420,7 +437,9 @@ if (count($errors) == 0) {
           $tokInflection = $hashLU[$hash];
           $entIDs = $tokInflection->getComponentIDs();
           if ($entIDs && is_array($entIDs)) {
-            array_push($entIDs,$tokGID);
+            if (!in_array($tokGID,$entIDs)) {
+              array_push($entIDs,$tokGID);
+            }
           } else {
             $entIDs = array($tokGID);
           }
@@ -498,43 +517,13 @@ if (count($errors) == 0) {
           }
         }
       }
+      break;
     case "unlinkTok":
       if ($lemma) {
         if (!$infGID) { //unlink uninflected token
-          $entIDs = $lemma->getComponentIDs();
-          $tokCmpIndex = array_search($tokGID,$entIDs);
-          array_splice($entIDs,$tokCmpIndex,1);
-          $lemma->setComponentIDs($entIDs);
-          $lemma->save();
-          if ($lemma->hasError()) {
-            array_push($errors,"error unlinking token $tokGID lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
-          } else {
-            addUpdateEntityReturnData('lem',$lemma->getID(),'entityIDs',$lemma->getComponentIDs());
-          }
+         unlinkUninflectedToken($tokGID,$lemma);
         } else {//inflected token
-          $entIDs = $inflection->getComponentIDs();
-          $tokCmpIndex = array_search($tokGID,$entIDs);
-          array_splice($entIDs,$tokCmpIndex,1);
-          $inflection->setComponentIDs($entIDs);
-          $inflection->save();
-          if ($inflection->hasError()) {
-            array_push($errors,"error unlinking token $tokGID inflection $infGID - ".$inflection->getErrors(true));
-          } else if (count($entIDs) > 0) {
-            addUpdateEntityReturnData('inf',$inflection->getID(),'entityIDs',$inflection->getComponentIDs());
-          } else { //last inflected token so remove inflection
-            $inflection->markForDelete();
-            addRemoveEntityReturnData('inf',$inflection->getID());
-            $entIDs = $lemma->getComponentIDs();
-            $infIndex = array_search($infGID,$entIDs);
-            array_splice($entIDs,$infIndex,1);
-            $lemma->setComponentIDs($entIDs);
-            $lemma->save();
-            if ($lemma->hasError()) {
-              array_push($errors,"error unlinking token $tokGID lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
-            } else {
-              addUpdateEntityReturnData('lem',$lemma->getID(),'entityIDs',$lemma->getComponentIDs());
-            }
-          }
+          unlinkInflectedToken($tokGID,$inflection,$lemma);
         }
       }
       break;
@@ -642,4 +631,51 @@ if (array_key_exists("callback",$_REQUEST)) {
 } else {
   print json_encode($retVal);
 }
+
+function unlinkInflectedToken($tokGID,$inflection,$lemma) {
+//  global $inflection,$lemma;
+  $entIDs = $inflection->getComponentIDs();
+  $tokCmpIndex = array_search($tokGID,$entIDs);
+  if ($tokCmpIndex !== false){
+    array_splice($entIDs,$tokCmpIndex,1);
+    $inflection->setComponentIDs($entIDs);
+    $inflection->save();
+    if ($inflection->hasError()) {
+      array_push($errors,"error unlinking token $tokGID inflection $infGID - ".$inflection->getErrors(true));
+    } else if (count($entIDs) > 0) {
+      addUpdateEntityReturnData('inf',$inflection->getID(),'entityIDs',$inflection->getComponentIDs());
+    } else { //last inflected token so remove inflection
+      $inflection->markForDelete();
+      addRemoveEntityReturnData('inf',$inflection->getID());
+      $entIDs = $lemma->getComponentIDs();
+      $infIndex = array_search($inflection->getGlobalID(),$entIDs);
+      array_splice($entIDs,$infIndex,1);
+      $lemma->setComponentIDs($entIDs);
+      $lemma->save();
+      if ($lemma->hasError()) {
+        array_push($errors,"error unlinking token $tokGID lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
+      } else {
+        addUpdateEntityReturnData('lem',$lemma->getID(),'entityIDs',$lemma->getComponentIDs());
+      }
+    }
+  }
+}
+function unlinkUninflectedToken($tokGID,$lemma) {
+//  global $lemma;
+  $entIDs = $lemma->getComponentIDs();
+  if ($entIDs && is_array($entIDs)) {
+    $tokCmpIndex = array_search($tokGID,$entIDs);
+    if ($tokCmpIndex !== false){
+      array_splice($entIDs,$tokCmpIndex,1);
+      $lemma->setComponentIDs($entIDs);
+      $lemma->save();
+      if ($lemma->hasError()) {
+        array_push($errors,"error unlinking token $tokGID lemma '".$lemma->getValue()."' - ".$lemma->getErrors(true));
+      } else {
+        addUpdateEntityReturnData('lem',$lemma->getID(),'entityIDs',$lemma->getComponentIDs());
+      }
+    }
+  }
+}
+
 ?>

@@ -231,14 +231,15 @@
                 $sort .= substr($graSort,0,2);
                 $sort2 .= substr($graSort,2,1);
               }
-              if ($decomp && ($i === 0 || $i == $last) && $grapheme->getType()==$typeVowel) {// handle sandhi vowels
+              if ($decomp && ($i === 0 || $i == $last) ) {// handle sandhi vowels
                 $sandhi = explode(":",$decomp);
                 $strVal = ($j==0 && $i== 0 )? $sandhi[2]: // 1st token of compound with first grapheme vowel sandhi use second part of decomposition
                           (($j==$lastT && $i == $last) ? $sandhi[0] : // last token of compound with last grapheme vowel sandhi use first part of decomposion
                           (($i ||
                             $prevTokenLastGraphemeID && // test for intra-compound token transition
                               $prevTokenLastGraphemeID != $grapheme->getID()) ? $grapheme->getValue():""));
-                $strTrans = $i?$sandhi[0]:"";
+//                $strTrans = $i?$sandhi[0]:"";
+                $strTrans = $i?$grapheme->getValue():"";
   /*              $strVal = $j==0 && $i== 0 ? "ʔ".$sandhi[2]: // 1st token of compound with first grapheme vowel sandhi use second part of decomposition
                           $j==$lastT && $i == $last ? $sandhi[0] : // last token of compound with last grapheme vowel sandhi use first part of decomposion
                           ($i || // test for intra-compound token transition

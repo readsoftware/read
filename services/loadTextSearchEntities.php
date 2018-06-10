@@ -138,10 +138,33 @@
   if ( isset($_REQUEST['refresh'])) {
     $refresh = $_REQUEST['refresh'];
   }
+  $jsonRetVal = "";
+  $jsonCache = null;
+  $isSearchAll = ($condition === "");
+  if ($isSearchAll && !$refresh && // if search all text then check cache.
+      defined("USECACHE") && USECACHE) {
+    // check for cache
+    $dbMgr = new DBManager();
+    if (!$dbMgr->getError()) {
+      $userDefID = getUserDefEditorID();
+//      $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+//      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults$cacheUserLabel'");
+      $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults'");
+      if ($dbMgr->getRowCount() > 0 ) {
+        $row = $dbMgr->fetchResultRow();
+        $jsonCache = new JsonCache($row);
+        if (!$jsonCache->hasError() && !$jsonCache->isDirty()) {
+          $jsonRetVal = $jsonCache->getJsonString();
+//          $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] = "all";
+        } else if (!$jsonCache->hasError()){
+          $jsonRetVal = null;
+        }
+      }
+    }
+  }
 
   $termInfo = getTermInfoForLangCode('en');
-  if (!isset($_SESSION['ka_searchAllResults_'.DBNAME]) || $refresh ||
-      (defined("USECACHE") && !USECACHE)) {//if not in SESSION or refresh request
+  if (!$jsonRetVal) {//if not cached value for search all
     $imgIDs = array();
     $anoIDs = array();
     $atbIDs = array();
@@ -224,6 +247,23 @@
       getRelatedEntities($entityIDs);
     }
     // strip away empty entityType arrays
+    foreach ($entities['txt'] as $txtID => $propsArray) {
+      if (count($propsArray['tmdIDs']) == 0) {
+        unset($entities['txt'][$txtID]['tmdIDs']);
+      }
+      if (array_key_exists('imageIDs',$propsArray) && count($propsArray['imageIDs']) == 0) {
+        unset($entities['txt'][$txtID]['imageIDs']);
+      }
+      if (count($propsArray['blnIDs']) == 0) {
+        unset($entities['txt'][$txtID]['blnIDs']);
+      }
+      if (count($propsArray['ednIDs']) == 0) {
+        unset($entities['txt'][$txtID]['ednIDs']);
+      }
+      if (count($propsArray) == 0) {
+        unset($entities['txt'][$txtID]);
+      }
+    }
     foreach ($entities as $prefix => $entityArray) {
       if ( count($entityArray) == 0) {
         unset($entities[$prefix]);
@@ -248,9 +288,30 @@
     if (count($entities)) {
       $retVal["entities"] = array("insert"=>$entities);//dependencies for this to remain "insert"
     }
-    $_SESSION['ka_searchAllResults_'.DBNAME] = json_encode($retVal);
+    $jsonRetVal = json_encode($retVal);
+    if (count($errors) == 0 && $isSearchAll && USECACHE) {//only cache searchAll
+      if (!$jsonCache) {
+        $userDefID = getUserDefEditorID();
+//        $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
+//        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults$cacheUserLabel'");
+        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllResults'");
+        if ($dbMgr->getRowCount() > 0 ) {
+          $row = $dbMgr->fetchResultRow();
+          $jsonCache = new JsonCache($row);
+        } else {
+          $jsonCache = new JsonCache();
+          //$jsonCache->setLabel('SearchAllResults'.$cacheUserLabel);
+          $jsonCache->setLabel('SearchAllResults');
+          $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
+          $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
+        }
+      }
+      $jsonCache->setJsonString($jsonRetVal);
+      $jsonCache->clearDirtyBit();
+      $jsonCache->save();
+    }
+//    $_SESSION['ka_lastSearchTxtIDs_'.DBNAME] = $txtIDs;
   }
-  $jsonRetVal = $_SESSION['ka_searchAllResults_'.DBNAME];
   if (array_key_exists("callback",$_REQUEST)) {
     $cb = $_REQUEST['callback'];
     if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap
@@ -297,7 +358,7 @@
             if ($atbID && !array_key_exists($atbID, $entities['atb'])) {
               $entities['atb'][$atbID] = array( 'title'=> $attribution->getTitle(),
                                      'id' => $atbID,
-                                      'value'=> $attribution->getTitle().($attribution->getDetail()?$attribution->getDetail():''),
+                                      'value'=> $attribution->getTitle().($attribution->getDetail()?": ".$attribution->getDetail():''),
                                       'readonly' => $attribution->isReadonly(),
                                       'grpID' => $attribution->getGroupID(),
                                       'bibID' => $attribution->getBibliographyID(),
@@ -332,7 +393,7 @@
                                       'url' => $annotation->getURL(),
                                       'typeID' => $annotation->getTypeID());
               $vis = $annotation->getVisibilityIDs();
-              if (in_array(2,$vis)) {
+              if (in_array(6,$vis)) {
                 $vis = "Public";
               } else if (in_array(3,$vis)) {
                 $vis = "User";

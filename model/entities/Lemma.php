@@ -142,7 +142,7 @@
     * @return string for searching
     */
     public function calcSearchValue($val){
-      return preg_replace('/<|>|\{|\}|\[|\]|\(|\)|\-|-|⟨|⟫|⟪|⟩|«|»|·|\!|\~|\^|\=|\*/',"",$val);
+      return preg_replace('/<|>|\{|\}|\[|\]|\(|\)|\-|-|⟨|⟫|⟪|⟩|«|»|·|\!|\~|\^|\=|\*|†/',"",$val);
     }
 
     /**
@@ -224,6 +224,7 @@
       $str = $this->replaceClassNasals($str);
       $cnt = mb_strlen($str);
       $sort = $sort2 = "0.";
+      $errors = array();
       for ($i =0; $i<$cnt;) {
         $inc=1;
         $char = mb_substr($str,$i,1);

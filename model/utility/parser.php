@@ -80,6 +80,19 @@ class Parser {
             $_compounds,
             $_errors,
             $_termLookups,
+            $_analysisID,
+            $_chapterID,
+            $_sectionID,
+            $_stanzaID,
+            $_padaID,
+            $_rootrefID,
+            $_textreferenceID,
+            $_textphysicalID,
+            $_linephysicalID,
+            $_textID,
+            $_textdivisionID,
+            $_publishedID,
+            $_idLookup,
             $_sessUid,
             $_breakOnError,
             $_configs;
@@ -123,11 +136,39 @@ class Parser {
     //   Transcription
     //   BaselineType
     $this->_breakOnError = false;
-    $this->_termLookups = getTermInfoForLangCode('en');
-    $this->_termLookups = $this->_termLookups['idByTerm_ParentLabel'];
+    $this->_terminfo = getTermInfoForLangCode('en');
+    $this->_termLookups = $this->_terminfo['idByTerm_ParentLabel'];
+    $this->_analysisID = $this->_termLookups['analysis-sequencetype'];//warning!!! term dependency
+    $this->_chapterID = $this->_termLookups['chapter-analysis'];//warning!!! term dependency
+    $this->_sectionID = $this->_termLookups['section-chapter'];//warning!!! term dependency
+    $this->_stanzaID = $this->_termLookups['stanza-chapter'];//warning!!! term dependency
+    $this->_padaID = $this->_termLookups['pāda-stanza'];//warning!!! term dependency
+    $this->_rootrefID = $this->_termLookups['rootref-textreference'];//warning!!! term dependency
+    $this->_textreferenceID = $this->_termLookups['textreference-sequencetype'];//warning!!! term dependency
+    $this->_textphysicalID = $this->_termLookups['textphysical-sequencetype'];//warning!!! term dependency
+    $this->_textID = $this->_termLookups['text-sequencetype'];//warning!!! term dependency
+    $this->_textdivisionID = $this->_termLookups['textdivision-text'];
+    $this->_linephysicalID = $this->_termLookups['linephysical-textphysical'];//warning!!! term dependency
+    $this->_publishedID = $this->_termLookups['published-editiontype'];//warning!!! term dependency
+    $this->_idLookup = array();
   }
 
   //*******************************PUBLIC FUNCTIONS************************************
+
+    /**
+    * saveParseResults - saves parse entities fixing up any links need
+    *
+    * @return boolean true if successful parse, false otherwise
+    */
+    public function getGIDFromNonce($nonce = null) {
+      $gid = null;
+      $idLookup = $this->_idLookup;
+      if ($nonce && array_key_exists(str_replace(":","_",$nonce),$idLookup)) {
+        $prefix = substr($nonce,0,3);
+        $gid = $prefix.":".$idLookup[str_replace(":","_",$nonce)];
+      }
+      return $gid;
+    }
 
     /**
     * saveParseResults - saves parse entities fixing up any links need
@@ -141,12 +182,12 @@ class Parser {
       }
       if ($isAddInLine && !$ignoreSeqTypeIDs) { //converting freetext and no ignore ids so default to ignore all
         $ignoreSeqTypeIDs = array(
-          $this->_termLookups['analysis-sequencetype'],//warning!!! term dependency
-          $this->_termLookups['chapter-analysis'],//warning!!! term dependency
-          $this->_termLookups['rootref-textreference'],//warning!!! term dependency
-          $this->_termLookups['textreference-sequencetype'],//warning!!! term dependency
-          $this->_termLookups['textphysical-sequencetype'],//warning!!! term dependency
-          $this->_termLookups['text-sequencetype']//warning!!! term dependency
+          $this->_analysisID,
+          $this->_chapterID,
+          $this->_rootrefID,
+          $this->_textreferenceID,
+          $this->_textphysicalID,
+          $this->_textID
         );
       }
       //      $dbMgr->startTransaction();
@@ -313,7 +354,7 @@ class Parser {
         }
         $idLookup[mb_strstr($nonce,"#",true)] = $compound->getID();
       }
-      // save each sequence without Entity IDs since a sequence can contain other sequences where temp IDs need to be translated
+      // save each sequence with temp Entity IDs since a sequence can contain other sequences where temp IDs need to be translated
       foreach ($this->_sequences as $sequence){
         //if converting freetext then we ignore structural markers as the calling service will implement
         if ($isAddInLine && (in_array($sequence->getTypeID(), $ignoreSeqTypeIDs))) {
@@ -383,7 +424,8 @@ class Parser {
         }
       }
 //      $dbMgr->commit();
-   }
+      $this->_idLookup = $idLookup;
+    }
     /**
     * parseGraphemes - parses a stream of characters into graphemes
     *
@@ -415,7 +457,7 @@ class Parser {
           $cnt = mb_strlen($lnCfg["transliteration"]);
         }
         if (!@$cnt) {
-          array_push($this->_errors,"no line information to parse for row ".$lnCfg["AzesTRID"]);
+          array_push($this->_errors,"no line information to parse for row ".array_key_exists("AzesTRID",$lnCfg)?$lnCfg["AzesTRID"]:'with unknown id');
           continue;
         }else{
           $script = $lnCfg["transliteration"];
@@ -436,7 +478,7 @@ class Parser {
         $curTokLineSequence = new Sequence();
         $curTokLineSequence->setVisibilityIDs($vis);
         $curTokLineSequence->setOwnerID($ownerID);
-        $curTokLineSequence->setTypeID($this->_termLookups['textdivision-text']);//term dependency
+        $curTokLineSequence->setTypeID($this->_textdivisionID);
         if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
           foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
             $curTokLineSequence->storeScratchProperty($key,$value);
@@ -453,7 +495,7 @@ class Parser {
         $curPhysLineSequence = new Sequence();
         $curPhysLineSequence->setVisibilityIDs($vis);
         $curPhysLineSequence->setOwnerID($ownerID);
-        $curPhysLineSequence->setTypeID($this->_termLookups['linephysical-textphysical']);//term dependency
+        $curPhysLineSequence->setTypeID($this->_linephysicalID);
         if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
           foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
             $curPhysLineSequence->storeScratchProperty($key,$value);
@@ -469,13 +511,15 @@ class Parser {
         //handle adding tokLineSeq to textEdTokSeq
         if($ckn != $prevCKN) {
           $analysisSequence = null;//new text so end previous struct sequence
+          $prevHeading = null;
+          $structSeqLookup = array();
           //start a new text sequence to capture tokenized lines - NOTE: assumes that config is ordered
           $txtEdTokSequence = new Sequence();
           $txtEdTokSequence->setVisibilityIDs($vis);
           $txtEdTokSequence->setOwnerID($ownerID);
           $txtEdTokSequence->setEntityIDs(array("seq:".$tokLineSeqTempID));
           $txtEdTokSequence->setLabel("Tokenisation for $ckn");
-          $txtEdTokSequence->setTypeID($this->_termLookups['text-sequencetype']);//term dependency
+          $txtEdTokSequence->setTypeID($this->_textID);
           if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
             foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
               $txtEdTokSequence->storeScratchProperty($key,$value);
@@ -488,13 +532,14 @@ class Parser {
           $txtEdTokSeqIndex = count($this->_sequences);
           $txtEdTokSeqTempID = 0 - $txtEdTokSeqIndex;
           $txtEdTokSequence->storeScratchProperty("nonce","seq_".$txtEdTokSeqTempID.$parseGUID);
+
           //start a new text sequence to capture physical lines - NOTE: assumes that config is ordered
           $txtEdPhysSequence = new Sequence();
           $txtEdPhysSequence->setVisibilityIDs($vis);
           $txtEdPhysSequence->setOwnerID($ownerID);
           $txtEdPhysSequence->setEntityIDs(array("seq:".$physLineSeqTempID));
           $txtEdPhysSequence->setLabel("text Physical Edition for $ckn");
-          $txtEdPhysSequence->setTypeID($this->_termLookups['textphysical-sequencetype']);//term dependency
+          $txtEdPhysSequence->setTypeID($this->_textphysicalID);
           if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
             foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
               $txtEdPhysSequence->storeScratchProperty($key,$value);
@@ -507,12 +552,51 @@ class Parser {
           $txtEdPhysSeqIndex = count($this->_sequences);
           $txtEdPhysSeqTempID = 0 - $txtEdPhysSeqIndex;
           $txtEdPhysSequence->storeScratchProperty("nonce","seq_".$txtEdPhysSeqTempID.$parseGUID);
+
+          //create section type structure sequence for this editions analysis
+          $curStructDivSequence = new Sequence();
+          $curStructDivSequence->setVisibilityIDs($vis);
+          $curStructDivSequence->setOwnerID($ownerID);
+          $curStructDivSequence->setTypeID($this->_sectionID);
+          if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
+            foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
+              $curStructDivSequence->storeScratchProperty($key,$value);
+            }
+          }
+          if (@$attr){
+            $curStructDivSequence->setAttributionIDs($attr);
+          }
+          array_push($this->_sequences,$curStructDivSequence);
+          $curStructDivSeqIndex = count($this->_sequences);
+          $curStructDivSeqTempID = 0 - $curStructDivSeqIndex;
+          $curStructDivSequence->storeScratchProperty("nonce","seq_".$curStructDivSeqTempID.$parseGUID);
+          $structSeqLookup['unknownSection'] = $curStructDivSeqIndex;
+
+          $analysisSequence = new Sequence();
+          $analysisSequence->setVisibilityIDs($vis);
+          $analysisSequence->setOwnerID($ownerID);
+          $analysisSequence->setEntityIDs(array("seq:".$curStructDivSeqTempID));
+          $analysisSequence->setLabel("text Structure for $ckn");
+          $analysisSequence->setTypeID($this->_analysisID);
+          if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
+            foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
+              $analysisSequence->storeScratchProperty($key,$value);
+            }
+          }
+          if (@$attr){
+            $analysisSequence->setAttributionIDs($attr);
+          }
+          array_push($this->_sequences,$analysisSequence);
+          $analysisSeqIndex = count($this->_sequences);
+          $analysisSeqTempID = 0 - $analysisSeqIndex;
+          $analysisSequence->storeScratchProperty("nonce","seq_".$analysisSeqTempID.$parseGUID);
+
           //create a new edition to hold the Tokenized sequence (text edition sequence)
           $curEdition = new Edition();
           $curEdition->setVisibilityIDs($vis);
           $curEdition->setOwnerID($ownerID);
-          $curEdition->setTypeID($this->_termLookups['published-editiontype']);//term dependency
-          $curEdition->setSequenceIDs(array($txtEdTokSeqTempID,$txtEdPhysSeqTempID));
+          $curEdition->setTypeID($this->_publishedID);
+          $curEdition->setSequenceIDs(array($txtEdTokSeqTempID,$txtEdPhysSeqTempID,$analysisSeqTempID));
           $description = (array_key_exists('editionDescription',$lnCfg)?$lnCfg['editionDescription']:"Edition for $ckn");
           $curEdition->setDescription($description);
           if(array_key_exists("Edition",$lnCfg) && array_key_exists("scratch",$lnCfg["Edition"])) {
@@ -542,7 +626,7 @@ class Parser {
         }
         $curBaseline = new Baseline();
         $curBaseline->setVisibilityIDs($vis);
-        $curBaseline->setType($this->_termLookups['transcription-baselinetype']);//term dependency
+        $curBaseline->setType($this->_termLookups['transcription-baselinetype']);// warning!!! term dependency
         $curBaseline->setOwnerID($ownerID);
         if (@$attr){
           $curBaseline->setAttributionIDs($attr);
@@ -651,7 +735,7 @@ class Parser {
                   $curQuoteSequence->setVisibilityIDs($vis);
                   $curQuoteSequence->setOwnerID($ownerID);
                   $curQuoteSequence->setLabel("quote in $ckn");
-                  $curQuoteSequence->setTypeID($this->_termLookups['rootref-textreference']);//term dependency
+                  $curQuoteSequence->setTypeID($this->_rootrefID);
                   if (@$attr){
                     $curQuoteSequence->setAttributionIDs($attr);
                   }
@@ -666,7 +750,7 @@ class Parser {
                     $txtRefSequence->setOwnerID($ownerID);
                     $txtRefSequence->setEntityIDs(array("seq:".$quoteSeqTempID));
                     $txtRefSequence->setLabel("text Reference Container for $ckn");
-                    $txtRefSequence->setTypeID($this->_termLookups['textreference-sequencetype']);//term dependency
+                    $txtRefSequence->setTypeID($this->_textreferenceID);
                     if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
                       foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
                         $txtRefSequence->storeScratchProperty($key,$value);
@@ -726,55 +810,64 @@ class Parser {
             case "«"://author heading
               //read tag until end marker "»"
               $heading = mb_strstr(mb_substr($script,$i+1),"»",true);
-              if (!@$heading) {
-              array_push($this->_errors,"heading indicator has empty label, at character $i of line ".$curLine->getOrder()." cfg line # $cfgLnCnt");
-              }else{//start the division sequence
-                $curStructDivSequence = new Sequence();
-                $curStructDivSequence->setVisibilityIDs($vis);
-                $curStructDivSequence->setOwnerID($ownerID);
-                $curStructDivSequence->setLabel($heading);
-                $curStructDivSequence->setTypeID($this->_termLookups['chapter-analysis']);//term dependency
-                if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
-                  foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
-                    $curStructDivSequence->storeScratchProperty($key,$value);
+              if (!@$heading) {// todo - consider empty as close of previous structure for flow around
+                array_push($this->_errors,"heading indicator has empty label, at character $i of line ".$curLine->getOrder()." cfg line # $cfgLnCnt");
+              }else{//start the structural division sequence
+                // default point to analysis as parent sequence for structure
+                $curParentStructSequence = $analysisSequence;
+                // decode heading to determine structure
+                $structLabelsAndTypes = $this->decodeHeading($heading);
+                echo print_r($structLabelsAndTypes,true)."<br/>";
+                if (count(array_keys($structSeqLookup) == 1) &&
+                      array_key_exists('unknownSection',$structSeqLookup)) { // first heading
+                  //first heading of text may require adjust of precreated section
+                  if (count($curStructDivSequence->getEntityIDs())==0) {
+                    list($structLabel,$structType) = array_shift($structLabelsAndTypes);
+                    //precreated is not used so repurpose it to the top level structure for heading
+                    $curStructDivSequence->setLabel($structLabel);
+                    $curStructDivSequence->setTypeID($structType);
+                    $structSeqLookup[$structLabel] = $curStructDivSeqIndex;
+                    $curParentStructSequence = $curStructDivSequence;
+                    unset($structSeqLookup['unknownSection']);
                   }
                 }
-                if (@$attr){
-                  $curStructDivSequence->setAttributionIDs($attr);
-                }
-                array_push($this->_sequences,$curStructDivSequence);
-                $curStructDivSeqIndex = count($this->_sequences);
-                $curStructDivSeqTempID = 0 - $curStructDivSeqIndex;
-                $curStructDivSequence->storeScratchProperty("nonce","seq_".$curStructDivSeqTempID.$parseGUID);
-                $curStructDivSequence->storeScratchProperty("cknLine",$ckn.".$lineMask");
-                if(!@$analysisSequence) { //start a new txtStruct sequence to capture divSeq
-                  $analysisSequence = new Sequence();
-                  $analysisSequence->setVisibilityIDs($vis);
-                  $analysisSequence->setOwnerID($ownerID);
-                  $analysisSequence->setEntityIDs(array("seq:".$curStructDivSeqTempID));
-                  $analysisSequence->setLabel("text Structure for $ckn");
-                  $analysisSequence->setTypeID($this->_termLookups['analysis-sequencetype']);//term dependency
+                while (count($structLabelsAndTypes)) {
+                  // get label and type from top to bottom
+                  list($structLabel,$structType) = array_shift($structLabelsAndTypes);
+                  // if struct already exist make it the curParentStructure and continue
+                  if (array_key_exists($structLabel,$structSeqLookup)) {
+                    $parentIndex = $structSeqLookup[$structLabel]-1;
+                    $curParentStructSequence = $this->_sequences[$parentIndex];
+                    continue;
+                  }
+                  // create a new structure according to heading label
+                  //echo "making new struct $structLabel of type $structType <br/>";
+                  $curStructDivSequence = new Sequence();
+                  $curStructDivSequence->setVisibilityIDs($vis);
+                  $curStructDivSequence->setOwnerID($ownerID);
+                  $curStructDivSequence->setLabel($structLabel);
+                  $curStructDivSequence->setTypeID($structType);
                   if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
                     foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
-                      $analysisSequence->storeScratchProperty($key,$value);
+                      $curStructDivSequence->storeScratchProperty($key,$value);
                     }
                   }
                   if (@$attr){
-                    $analysisSequence->setAttributionIDs($attr);
+                    $curStructDivSequence->setAttributionIDs($attr);
                   }
-                  array_push($this->_sequences,$analysisSequence);
-                  $analysisSeqIndex = count($this->_sequences);
-                  $analysisSeqTempID = 0 - $analysisSeqIndex;
-                  $analysisSequence->storeScratchProperty("nonce","seq_".$analysisSeqTempID.$parseGUID);
-                  //add analysisSeq to edition
-                  $edSeqIDs = $curEdition->getSequenceIDs();
-                  array_push($edSeqIDs,$analysisSeqTempID);
-                  $curEdition->setSequenceIDs($edSeqIDs);
-                }else{
-                  //add structDivSeq to existing analysisSeq
-                  $entityIDs = $analysisSequence->getEntityIDs();
+                  array_push($this->_sequences,$curStructDivSequence);
+                  $curStructDivSeqIndex = count($this->_sequences);
+                  $structSeqLookup[$structLabel] = $curStructDivSeqIndex;
+                  $curStructDivSeqTempID = 0 - $curStructDivSeqIndex;
+                  $curStructDivSequence->storeScratchProperty("nonce","seq_".$curStructDivSeqTempID.$parseGUID);
+                  $curStructDivSequence->storeScratchProperty("cknLine",$ckn.".$lineMask");
+                  //add new structDivSeq to existing parent
+                  $entityIDs = $curParentStructSequence->getEntityIDs();
                   array_push($entityIDs,"seq:".$curStructDivSeqTempID);
-                  $analysisSequence->setEntityIDs($entityIDs);
+                  $curParentStructSequence->setEntityIDs($entityIDs);
+                  if (count($structLabelsAndTypes)) {//creating a parent so move parent pointer
+                    $curParentStructSequence = $curStructDivSequence;
+                  }
                 }
               }
               $i += mb_strlen($heading) + 2;
@@ -792,17 +885,19 @@ class Parser {
               $replaceCmd = mb_strstr(mb_substr($script,$i+1),"~",true);
               //todo write test for posSep
               $posSep = mb_strpos($replaceCmd,",");
+              error_log("replacement = '$replaceCmd' and posSep = $posSep");
               $matchGrapheme = mb_substr($replaceCmd,0,$posSep);
               $replacementString = mb_substr($replaceCmd,$posSep+1);
+              error_log("matchGrapheme = $matchGrapheme and replacementString = '$replacementString'");
               if (@$matchGrapheme != $prevGrapheme) {//check marker is the same as previous grapheme
                 array_push($this->_errors,"replacement sequence at character $i of $ckn.$lineMask has marker grapheme $matchGrapheme that doesn't match previous grapheme $prevGrapheme"." cfg line # $cfgLnCnt");
               }
               //parse grapheme decomposition
-              if ($posSep = mb_strpos($replacementString," ")){
+              if (($posSep = mb_strpos($replacementString," ")) !== false){
                 $isCompSep = false;
-              } else if ($posSep = mb_strpos($replacementString,"-")){
+              } else if (($posSep = mb_strpos($replacementString,"-")) !== false){
                 $isCompSep = true;
-              } else if ($posSep = mb_strpos($replacementString,"‐")){
+              } else if (($posSep = mb_strpos($replacementString,"‐")) !== false){
                 $isCompSep = true;
               }else{
                 array_push($this->_errors,"sandhi replacement sequence at character $i of $ckn.$lineMask has no valid separator"." cfg line # $cfgLnCnt");
@@ -969,6 +1064,7 @@ class Parser {
                 }else{
                   array_push($this->_errors,"found no * for $char at character $i for TCM brackets for cknLine $ckn.$lineMask"." cfg line # $cfgLnCnt");
                   $i++;
+                  $tcm = $char;
                 }
               }else if ($char == "{" && mb_substr($script,$i+1,1)== '{'){//text critical scribal deletion start
                 $tcm = "{{";
@@ -1037,7 +1133,7 @@ class Parser {
                 array_push($this->_errors,"error - compound hyphen found character $i at start of line $lineMask of $ckn"." cfg line # $cfgLnCnt");
               } else if  (mb_substr($script,$i-1,1) == " "){//previous char is a space and is not allowed
                 array_push($this->_errors,"error - compound hyphen following space found at character $i on line $lineMask of $ckn "." cfg line # $cfgLnCnt");
-              } else if (!@$cmpIndex && $tokIndex){//must be first separator of this compound
+              } else if (!@$cmpIndex && @$tokIndex){//must be first separator of this compound
                 $curCompound = new Compound();
                 $curCompound->setComponentIDs(array('tok:'.$tokTempID));
                 $curCompound->setVisibilityIDs($vis);
@@ -1066,7 +1162,7 @@ class Parser {
                     array_push($this->_errors,"divison sequence - compound marker (line $lineMask character $i), last entity $lastentityGID does not match tok:$tokTempID"." cfg line # $cfgLnCnt");
                   }
                 }
-                if (@$curQuoteSeqIndex) { //there is a line seq so remove the previous token and add compound id
+                if (@$curQuoteSeqIndex) { //there is a quote seq so remove the previous token and add compound id
                   $entityIDs = $curQuoteSequence->getEntityIDs();
                   $lastentityGID = array_pop($entityIDs);
                   if ((!@$lastentityGID && $cmpTempID) || $lastentityGID == "tok:$tokTempID"){//we can replace the token with compound globalID
@@ -1098,14 +1194,14 @@ class Parser {
                 }
               }
               $graIndex = null;
-              $sclIndex = null;
-              $segIndex = null;
+//              $sclIndex = null;
+//              $segIndex = null;
               $tokIndex = null;
               $tokTempID = null;
               $graTempID = null;
-              $segTempID = null;
-              $sclTempID = null;
-              $segState = "S";//signal new syllable
+//              $segTempID = null;
+//              $sclTempID = null;
+//              $segState = "S";//signal new syllable
               $i++;
               $atCompoundSeparator = true; // use when changing lines to all compound to span lines.
               break;
@@ -1131,7 +1227,7 @@ class Parser {
                     if (array_key_exists($char4,$graphemeCharacterMap[$char][$char2][$char3])){ // another char for grapheme
                       $inc++;
                       if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4])){ // invalid sequence
-                        array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2$char3$char4 has no sort code"." cfg line # $cfgLnCnt");
+                        array_push($this->_errors,"incomplete transcription at character $i line $lineMask, grapheme $char$char2$char3$char4 has no sort code"." cfg line # $cfgLnCnt");
                         return false;
                       }else{//found valid grapheme, save it
                         $str = $char.$char2.$char3.$char4;
@@ -1144,7 +1240,7 @@ class Parser {
                         }
                       }
                     }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3])){ // invalid sequence
-                      array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2$char3 needs follow-on char and $char4 is not a valid follow-on"." cfg line # $cfgLnCnt");
+                      array_push($this->_errors,"incomplete transcription at character $i line $lineMask, grapheme $char$char2$char3 needs follow-on char and $char4 is not a valid follow-on"." cfg line # $cfgLnCnt");
                       return false;
                     }else{//found valid grapheme, save it
                       $str = $char.$char2.$char3;
@@ -1157,7 +1253,7 @@ class Parser {
                       }
                     }
                   }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2])){ // invalid sequence
-                    array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2 needs follow-on char and $char3 is not a valid follow-on"." cfg line # $cfgLnCnt");
+                    array_push($this->_errors,"incomplete transcription at character $i line $lineMask, grapheme $char$char2 needs follow-on char and $char3 is not a valid follow-on"." cfg line # $cfgLnCnt");
                     return false;
                   }else{//found valid grapheme, save it
                     $str = $char.$char2;
@@ -1174,7 +1270,7 @@ class Parser {
                     }
                   }
                 }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char])){ // invalid sequence
-                  array_push($this->_errors,"incomplete trascription at character $i, grapheme $char needs follow-on char and $char2 is not a valid follow-on"." cfg line # $cfgLnCnt");
+                  array_push($this->_errors,"incomplete transcription at character $i, grapheme $char needs follow-on char and $char2 is not a valid follow-on"." cfg line # $cfgLnCnt");
                   return false;
                 }else{//found valid grapheme, save it
                   $str = $char;
@@ -1222,7 +1318,7 @@ class Parser {
                   $numberToken = false;
                 }
                 //handle vowel carrier insert case
-                if (($segState == "S" || $segState == "V") && $typ == "V") {//Start new Syllable with Vowel Carrier
+                if (($segState == "S" || $segState == "V" || $segState == "I") && $typ == "V") {//Start new Syllable with Vowel Carrier
                   //insert vowel carrier
                   $curGrapheme = new Grapheme();
                   $curGrapheme->setGrapheme("ʔ");
@@ -1241,6 +1337,12 @@ class Parser {
                 }
                 //create grapheme
                 $curGrapheme = new Grapheme();
+                if ($str === "ï"){
+                  $str = "i";
+                }
+                if ($str === "ü"){
+                  $str = "u";
+                }
                 $curGrapheme->setGrapheme($str);
                 if ($graphemeIsUpper) {
                   $curGrapheme->setUppercase($ustr);
@@ -1476,20 +1578,27 @@ class Parser {
                     $tokTempID = 0 - $tokIndex;
                     $this->_tokens[$tokIndex-1]->storeScratchProperty("nonce","tok_".$tokTempID.$parseGUID);
                     $this->_tokens[$tokIndex-1]->storeScratchProperty("cknLine",$ckn.".$lineMask");
-                    if (@$curStructDivSeqIndex && !@$cmpIndex) { //there is a structural division marker and not in compound so add token to sequence
-                        $entityIDs = $this->_sequences[$curStructDivSeqIndex-1]->getEntityIDs();
-                        array_push($entityIDs,"tok:".$tokTempID);
-                        $this->_sequences[$curStructDivSeqIndex-1]->setEntityIDs($entityIDs);
-                    }
-                    if (@$curQuoteSeqIndex && !@$cmpIndex) { //there is a quote sequence and not in compound so add token to sequence
-                        $entityIDs = $curQuoteSequence->getEntityIDs();
-                        array_push($entityIDs,"tok:".$tokTempID);
-                        $curQuoteSequence->setEntityIDs($entityIDs);
-                    }
-                    if (@$tokLineSeqIndex && !@$cmpIndex) { //there is a tokenisation sequence and not in compound so add token to sequence
-                        $entityIDs = $curTokLineSequence->getEntityIDs();
-                        array_push($entityIDs,"tok:".$tokTempID);
-                        $curTokLineSequence->setEntityIDs($entityIDs);
+                    //if compound update with new token
+                    if (@$cmpIndex){
+                      $components = $this->_compounds[$cmpIndex-1]->getComponentIDs();
+                      array_push($components,"tok:".$tokTempID);
+                      $this->_compounds[$cmpIndex-1]->setComponentIDs($components);
+                    }else if (@$tokLineSeqIndex || @$curStructDivSeqIndex || $curQuoteSeqIndex) { //there is a division marker and not in compound so add token to sequence
+                      if (@$curStructDivSeqIndex) { //there is a structural division marker and not in compound so add token to sequence
+                          $entityIDs = $this->_sequences[$curStructDivSeqIndex-1]->getEntityIDs();
+                          array_push($entityIDs,"tok:".$tokTempID);
+                          $this->_sequences[$curStructDivSeqIndex-1]->setEntityIDs($entityIDs);
+                      }
+                      if (@$curQuoteSeqIndex) { //there is a quote sequence and not in compound so add token to sequence
+                          $entityIDs = $curQuoteSequence->getEntityIDs();
+                          array_push($entityIDs,"tok:".$tokTempID);
+                          $curQuoteSequence->setEntityIDs($entityIDs);
+                      }
+                      if (@$tokLineSeqIndex) { //there is a tokenisation sequence and not in compound so add token to sequence
+                          $entityIDs = $curTokLineSequence->getEntityIDs();
+                          array_push($entityIDs,"tok:".$tokTempID);
+                          $curTokLineSequence->setEntityIDs($entityIDs);
+                      }
                     }
                   }else{// update token with new grapheme
                     $graphemes = $this->_tokens[$tokIndex-1]->getGraphemeIDs();
@@ -1507,7 +1616,7 @@ class Parser {
                   }
                 }
               }else{
-                array_push($this->_errors,"found unknown trascription symbol $char at character $i in linemask $lineMask of $ckn not found in grapheme character map"." cfg line # $cfgLnCnt");
+                array_push($this->_errors,"found unknown transcription symbol $char at character $i in linemask $lineMask of $ckn not found in grapheme character map"." cfg line # $cfgLnCnt");
                 if ($this->_breakOnError) {
                   return;
                 }
@@ -1539,6 +1648,43 @@ class Parser {
           }
         }
       }//for each line
+    }
+
+    private function decodeHeading($heading){
+      if (!$heading || count($heading) == 0) {
+        return null;
+      }
+      $structLabelsAndTypes = array();
+      $parentLabel = "";
+      // separate by full stop where each label is a section except last
+      $labels = explode(".",$heading);
+      $lastLabel = array_pop($labels);
+      if (count($labels)){
+        foreach ($labels as $label) {
+          $structLabel = $parentLabel?$parentLabel.'.'.$label:$label;
+          array_push($structLabelsAndTypes,array($structLabel,$this->_sectionID));
+          $parentLabel = $structLabel;
+        }
+      }
+      //check last for a-f then split to stanza and pada
+      if (preg_match("/[a-f]$/",$lastLabel)) {//stanza + pada label
+        $verseLabel = substr($lastLabel,0,strlen($lastLabel)-1);
+        if (!$verseLabel) {
+          $verseLabel = "V1";
+          $padaLabel = $lastLabel;
+        } else {
+          $padaLabel = substr($lastLabel,-1);
+        }
+        if ($lastLabel != $heading) {
+          $verseLabel = $parentLabel.'.'.$verseLabel;
+        }
+        array_push($structLabelsAndTypes,array($verseLabel,$this->_stanzaID));
+        array_push($structLabelsAndTypes,array($padaLabel,$this->_padaID));
+      } else {
+        $structLabel = $parentLabel?$parentLabel.'.'.$lastLabel:$lastLabel;
+        array_push($structLabelsAndTypes,array($structLabel,$this->_sectionID));
+      }
+      return $structLabelsAndTypes;
     }
 
   //********GETTERS*********
@@ -1667,11 +1813,12 @@ class Parser {
     }
 
     /**
-    * Gets the termID for parentterm - term string
+    * Gets the termID for 'term-parentterm' string
+    * @param string $term_parentterm of the form 'term-parentterm'
     * @return int  trmID if found or null
     */
-    public function getTermID($parentterm_term) {
-      return (array_key_exists($parentterm_term,$this->_termLookups)?$this->_termLookups[$parentterm_term]:null);
+    public function getTermID($term_parentterm) {
+      return (array_key_exists($term_parentterm,$this->_termLookups)?$this->_termLookups[$term_parentterm]:null);
     }
 
   //********SETTERS*********

@@ -33,7 +33,7 @@
   *
   */
   function isLoggedIn() {
-    return getUserID() !=2; //WARNING!! this depends on the UserGroup table having a special setup
+    return getUserID() !=6; //WARNING!! this depends on the UserGroup table having a special setup
   }
 
   /**
@@ -42,7 +42,7 @@
   */
   function getUserID() {
     global $userID;
-    return (isset($_SESSION['ka_userid']) && count($_SESSION['ka_userid'])) ? intval($_SESSION['ka_userid']):(isset($userID)?$userID:2);
+    return (isset($_SESSION['ka_userid']) && count($_SESSION['ka_userid'])) ? intval($_SESSION['ka_userid']):(isset($userID)?$userID:6);
   }
 
   /**
@@ -103,7 +103,7 @@
   */
   function getUserMembership() {
     global $userID;
-    return (isset($_SESSION['ka_groups']) && count($_SESSION['ka_groups'])) ? array_keys($_SESSION['ka_groups']): (isLoggedIn()? ($userID?array($userID,2,3):array(2,3)): array(2));
+    return (isset($_SESSION['ka_groups']) && count($_SESSION['ka_groups'])) ? array_keys($_SESSION['ka_groups']): (isLoggedIn()? ($userID?array($userID,2,3,6):array(2,3,6)): array(2,6));
   }
 
   /**
@@ -133,7 +133,7 @@
     $_SESSION['ka_group'] = '';
   }
 
-  function set_session($id, $userID, $user, $name, $email, $edit, $groupIDs) {
+  function set_session($id, $userID, $user, $name, $email, $edit, $groupIDs, $userPrefs = null) {
     $_SESSION['ka_id'] = $id;
     $_SESSION['ka_userid'] = $userID;
     $_SESSION['ka_username'] = $user;
@@ -142,6 +142,11 @@
     $_SESSION['ka_status'] = "in";
     $_SESSION['ka_edit'] = $edit;
     $_SESSION['ka_groups'] = $groupIDs;
+    if ($userPrefs) {
+      $_SESSION['userPrefs'] = $userPrefs;
+    } else if (isset($_SESSION['userPrefs'])) {
+      unset($_SESSION['userPrefs']);
+    }
   }
 
   ?>

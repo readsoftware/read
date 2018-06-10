@@ -454,6 +454,9 @@ if (count($errors) == 0) {
           addNewEntityReturnData('scl',$syllableClone);
           $oldSclID = $syllable->getID();
           $newSclID = $syllableClone->getID();
+          foreach ($newGraIDs as $newGraID) {
+            addUpdateEntityReturnData('gra',$newGraID,'sclID',$newSclID);
+          }
           if ($syllableClone->hasError()) {
             array_push($errors,"error cloning syllable '".$syllableClone->getValue()."' - ".$syllableClone->getErrors(true));
           } else if ($physLineSeq == null){
@@ -535,7 +538,7 @@ if (count($errors) == 0) {
         }
 
         if (@$physLineSeq && $physLineSeq->getID()) {
-          invalidateCachedSeq($physLineSeq->getID());
+          invalidateCachedSeq($physLineSeq->getID(), $ednOwnerID);
         }
 
         //find syllable's location within the token(s) for split syllable case
@@ -884,7 +887,7 @@ if (count($errors) == 0) {
             }
           }
         }
-        invalidateCachedSeq($textDivSeq->getID());
+        invalidateCachedSeq($textDivSeq->getID(), $ednOwnerID);
         // update Text (Text Division Container) Sequence if needed
         if (count($errors) == 0 && $oldTxtDivSeqGID && $oldTxtDivSeqGID != $newTxtDivSeqGID){//cloned so update container
           //clone text sequence if not owned
@@ -932,6 +935,7 @@ if (count($errors) == 0) {
             $edition->setSequenceIDs($edSeqIds);
           }
           $edition->save();
+          invalidateCachedEdn($edition->getID(),$edition->getCatalogID());
           if ($edition->hasError()) {
             array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
           }else{
