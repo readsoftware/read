@@ -73,8 +73,8 @@
     }
     $nonReconBrackets = array('\[','\]','⟪','⟫','\{\{\{','\}\}\}','\{\{','\}\}');
     $nonReconBracketRplcs = array("","","","",'{','}',"","");
-    $nonDiploBrackets = array('\(\*','\)','⟨\*','⟩','([^\{])(\{)([^\{])','^(\{)([^\{])','\{\{\{','([^\}])(\})([^\}])','([^\}])(\})$','\}\}\}');
-    $nonDiploBracketRplcs = array("","","","",'$1$3','$2','{{','$1$3','$1','}}');
+    $nonDiploBrackets = array('\(\*','\)','⟨\*','⟩','([^\{])(\{)([^\{])','^(\{)([^\{])','\{\{\{','([^\}])(\})([^\}])','([^\}])(\})$','\}\}\}','\{','\}');
+    $nonDiploBracketRplcs = array("","","","",'$1$3','$2','{{','$1$3','$1','}}',"","");
     $srchStrings = ($style == "diplomatic" ? $nonDiploBrackets :
                     ($style == "reconstructed" ? $nonReconBrackets : null));
     $rplcStrings = ($style == "diplomatic" ? $nonDiploBracketRplcs :
@@ -96,8 +96,8 @@
             '{\*\cs02 \additive \sunhideused \spriority1 Default Paragraph Font;}'.
             '{\*\s04 \b\fs36\f38\sa200 \sqformat \spriority1 doctitle;}'.
             '{\*\cs05 \f38\fs24 \sqformat \spriority1 prose;}'.
-            '{\*\cs06 \additive \b\f38\fs36 \sqformat \spriority1 line header;}'.
-            '{\s20 \b0\f38\fs24\fi-3600\li360\sb50 \sqformat \spriority1 physical line;}'.
+            '{\*\cs06 \additive \b\f38\fs24 \sqformat \spriority1 line header;}'.
+            '{\s20 \b0\f38\fs24\fi-620\li620\sb50 \sqformat \spriority1 physical line;}'.
             '{\s21\ql \li0\ri0\widctlpar\wrapdefault\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\dbch\cgrid \sbasedon0 \snext21 \slink22 \sqformat \spriority1 footnote text;}'.
             '{\*\cs22 \additive \f38\fs20 \sbasedon3 \slink21 \slocked \ssemihidden Footnote Text Char;}'.
             '{\*\cs23 \additive \f38\fs20 \sqformat \spriority1 footnote number;}'.
@@ -115,7 +115,7 @@
     $titleStyle = '{\pard \s04\b\fs36\f38\sa200 ';
     $proseStyle = '{\cs05\f38\fs24 ';
     $lineHeaderStyle = '{\cs06\b\f38\fs24 ';
-    $lineStyle = '{\pard \s20\b0\f38\fs24\fi-360\li360\sb50 ';
+    $lineStyle = '{\pard \s20\b0\f38\fs24\fi-620\li620\sb50 ';
     $space = '{ }';
     $italicStyle = '{\cs26\i ';
     $commaRed = '{\f38\cf2 ,}';
@@ -202,7 +202,7 @@
           $label = "seq$seqID";
         }
         //********output line header
-        $rtf .= $lineStyle.$lineHeaderStyle.$label.$endStyle.$eol;
+        $rtf .= $lineStyle.$lineHeaderStyle.$label.$tab.$endStyle.$eol;
         $rtf .= getEntityFootnotesRTF($physicalLineSeq);
         //check for freetext and output as is
         if ($physicalLineSeq->getType() == "FreeText") {
@@ -226,6 +226,7 @@
         $prevTCMS = "S";
         $prevGraIsVowelCarrier = false;
         $prevGraIsAtBoundary = false;
+        $prevSylChangedToPlus = false;
         $prevGraIsA = false;
         $previousGraFootnotes = "";//need to delay to next grapheme to ensure placement outside TCM
         $atLineStart = true;
@@ -257,7 +258,10 @@
             $typ = Entity::getTermFromID($grapheme->getType());
             $isConsnt = ($typ == "Consonant");//warning!!! term dependency
             $tcms = $grapheme->getTextCriticalMark();
-            if (strpos($tcms,"A") !== false && $style == "diplomatic") { //don't process grapheme and adjust state
+            if ($tcms && strpos($tcms,"A") !== false && $style == "diplomatic") { //don't process grapheme and adjust state
+              if ((strpos($prevTCMS,"A") === false) && $prevGraIsAtBoundary) {
+                $sclRTF .= " "; // catch space for wordboundary just before start of Addition TCM
+              }
               if (array_key_exists($graID,$graID2BoundaryMap)) {
                 $prevGraIsAtBoundary = true;
               } else {
@@ -310,8 +314,10 @@
               $sclRTF .= $previousGraFootnotes;
               $previousGraFootnotes = "";
             }
-            if ($prevGraIsAtBoundary) {// since replace can return null
+            if ($prevGraIsAtBoundary || $prevSylChangedToPlus) {// since replace can return null
               $sclRTF .= " ";
+              $prevGraIsA = false;//doesn't count for a i or a u combination if a is on previous word.
+              $prevSylChangedToPlus = false;
             }
             if ($preTCMBrackets) {
               if ($srchStrings) {
@@ -327,14 +333,21 @@
                 $sclRTF .= ($j==0?" _":"_");
               }else if ($typ == "Vowel") {//term dependency
                 if ($prevGraIsVowelCarrier) {
-                  $sclRTF .= "+ ";
+                  $sclRTF .= " +";
                 } else {
-                  $sclRTF .= (array_key_exists($graID,$graID2BoundaryMap)?".":". ");
+                  $sclRTF .= (array_key_exists($graID,$graID2BoundaryMap)?".":".");
                   $sclRTF = preg_replace('/_+/',"_",$sclRTF);
-                  $sclRTF = preg_replace('/_\./',($hasNonReconConsnt?".. ":($j || $i?" ":"")."+"),$sclRTF);
+                  $sclRTF = preg_replace('/_\./',($hasNonReconConsnt?"..":($j || $i?"":"")."+"),$sclRTF);
                 }
+                $prevSylChangedToPlus = true;
               }else if ($typ != "VowelModifier"){
                 $sclRTF .= "+";
+              }
+            } else if ($grapheme->getValue()=="_") {
+              if ($style == "hybrid") {
+                $sclRTF .= "_";
+              } else {
+                $sclRTF .= ($j ==0)?" .":".";
               }
             } else if ($j==1 && $prevGraIsVowelCarrier && $prevGraIsA &&
                         ($prevTCMS == $tcms || (!$prevTCMS|| $prevTCMS == "S") && (!$tcms|| $tcms == "S"))) {
@@ -368,7 +381,7 @@
           }//end for graphIDs
           $previousGraFootnotes .= getEntityFootnotesRTF($syllable);
           $sclRTF = preg_replace('/_\./',"..",$sclRTF);
-          $rtf .= preg_replace('/\s\s/'," ",$sclRTF);
+          $rtf .= preg_replace('/\s\s+/'," ",$sclRTF);
         }//end for sclIDs
         if ($prevTCMS != "S") {//close off any TCM
           $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
