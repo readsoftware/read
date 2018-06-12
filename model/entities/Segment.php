@@ -197,8 +197,10 @@
     /**
     * Saves the segments' image(s) to the IMAGE_SEGMENT_CACHE dir
     */
-    public function cacheSegmentImages(){
-      $urls = $this->getURLs(true);
+    public function cacheSegmentImages($urls = null){
+      if (!$urls) {
+        $urls = $this->getURLs(true);
+      }
       if ($urls) {
         $segFilenameBase = SEGMENT_CACHE_BASE_PATH.DBNAME."seg".$this->getID();
         $urlCnt = 0;
@@ -377,6 +379,7 @@
           $segFilenameBase = SEGMENT_CACHE_BASE_PATH.DBNAME."seg".$this->getID();
           $segCacheBaseURL = SEGMENT_CACHE_BASE_URL."/".DBNAME."seg".$this->getID();
           $urlCnt = 0;
+          $reCalcCache = false;
           foreach ($boundary as $polygon){// this code assumes baseline IDs is a parallel array with polygons
             $urlCnt++;
             if ($getCached) { //try cached first
@@ -387,25 +390,31 @@
                 continue;
               }
             }
-            $baseline = $this->_baselines->current();
-            //get the baseline's image object
-            $image = $baseline->getImage(true);
-            // if baseline has a boundary then translate segment points to the origin of the bounding box
-            if($baseline->getImageBoundary()){
-              $bBox = new BoundingBox($baseline->getImageBoundary());
-              $polygon->translate($bBox->getXOffset(),$bBox->getYOffset());
+            if (count($urls) == 0){
+              $baseline = $this->_baselines->current();
+              //get the baseline's image object
+              $image = $baseline->getImage(true);
+              // if baseline has a boundary then translate segment points to the origin of the bounding box
+              if($baseline->getImageBoundary()){
+                $bBox = new BoundingBox($baseline->getImageBoundary());
+                $polygon->translate($bBox->getXOffset(),$bBox->getYOffset());
+              }
+              // if the image has a boundary then translate segment points to the origin of the bounding box
+              if($image->getBoundary()){
+                $bBox = new BoundingBox($image->getBoundary());
+                $polygon->translate($bBox->getXOffset(),$bBox->getYOffset());
+              }
+              array_push($urls,constructCroppedImageURL($image->getURL(),$polygon));
+              $this->_baselines->next();
+              $reCalcCache = true;
             }
-            // if the image has a boundary then translate segment points to the origin of the bounding box
-            if($image->getBoundary()){
-              $bBox = new BoundingBox($image->getBoundary());
-              $polygon->translate($bBox->getXOffset(),$bBox->getYOffset());
-            }
-            array_push($urls,constructCroppedImageURL($image->getURL(),$polygon));
-            $this->_baselines->next();
           }// end for boundary
         }
         if (count($urls) > 0) {
           $this->_urls = $urls;
+        }
+        if ($reCalcCache) {
+          $this->cacheSegmentImages();
         }
         $this->_baselines->rewind();
       }

@@ -255,6 +255,10 @@
               error_log("err,calculating word/syllable rtf, grapheme not available for graID $graID");
               continue;
             }
+            $graVal = $grapheme->getValue();
+            if ($graVal == "◈" && $style == "reconstructed") {
+              continue;
+            }
             $typ = Entity::getTermFromID($grapheme->getType());
             $isConsnt = ($typ == "Consonant");//warning!!! term dependency
             $tcms = $grapheme->getTextCriticalMark();
@@ -290,7 +294,6 @@
             if ($isConsnt && (!$tcms || (strpos($tcms,"A") === false))) {
               $hasNonAddedConsnt = true;
             }
-            $graVal = $grapheme->getValue();
             if ($graVal == "ʔ") {
               $prevGraIsVowelCarrier = true;
               continue;
@@ -330,7 +333,7 @@
             }
             if ($style == "diplomatic" && $tcms && (strpos($tcms,"R") !== false)) {
               if ($isConsnt){
-                $sclRTF .= ($j==0?" _":"_");
+                $sclRTF .= (($j==0 && $sclRTF != ' ')?" _":"_");
               }else if ($typ == "Vowel") {//term dependency
                 if ($prevGraIsVowelCarrier) {
                   $sclRTF .= " +";
@@ -381,6 +384,9 @@
           }//end for graphIDs
           $previousGraFootnotes .= getEntityFootnotesRTF($syllable);
           $sclRTF = preg_replace('/_\./',"..",$sclRTF);
+          if ( $style != 'hybrid') {
+            $sclRTF = preg_replace('/_/',".",$sclRTF);
+          }
           $rtf .= preg_replace('/\s\s+/'," ",$sclRTF);
         }//end for sclIDs
         if ($prevTCMS != "S") {//close off any TCM

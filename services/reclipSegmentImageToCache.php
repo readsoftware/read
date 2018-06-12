@@ -16,10 +16,9 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-* reorderSegments
+* reclipSegmentImageToCache
 *
-* take image segments that have been ordered and injects the baseline and polygons into segments link with syllables.
-* assumes transcription baselines are linked to all syllables and that ordered image segments count matches syllable count.
+* clips an image of each segment and stores in the system configured segment cache
 * @author      Stephen White  <stephenawhite57@gmail.com>
 * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
 * @link        https://github.com/readsoftware
@@ -45,6 +44,11 @@ $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true)
 if (!$data) {
   array_push($errors,"invalid json data - decode failed");
 } else {
+  if (isset($data['force'])) {
+    $forceReclip = true;
+  } else {
+    $forceReclip = false;
+  }
   if (isset($data['blnIDs'])) {
     $blnIDs = $data['blnIDs'];
   } else if (isset($data['blnID'])) {
@@ -52,9 +56,8 @@ if (!$data) {
   } else {
     $blnIDs = null;
   }
-  $retStruct = reorderSegments($blnIDs);
+  $retStruct = synchSegmentImageCache($blnIDs,$forceReclip);
 }
-
 
 if (array_key_exists("callback",$_REQUEST)) {
   $cb = $_REQUEST['callback'];

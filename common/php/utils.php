@@ -2616,6 +2616,94 @@ function checkGlossaryHealth($catID, $verbose = true) {
 
 
 /**
+* synchronise clip images for each segment of each baseline.
+*
+* @param int array $blnIDs of baseline ids to scope the set of segments to synch
+* @param boolean $reclipSegments indicating whether to resynch even existing cached images
+*
+* @return mixed array of $success, $errors strings, array warnings strings and $log string.
+*/
+
+function synchSegmentImageCache($blnIDs = null, $reclipSegments = false) {
+  $dbMgr = new DBManager();
+  $retVal = array();
+  $errors = array();
+  $warnings = array();
+  if (count($blnIDs) == 0) {
+    $log = "Segment Image Cache Synch process requires at least one baseline id  'blnID=123'.\n";
+  } else {
+    $imgBlnTypeID = Entity::getIDofTermParentLabel("image-baselinetype");
+    $log = "Start Segment Image Cache Synch process.\n";
+    foreach ($blnIDs as $blnID) {
+      $baseline = new Baseline($blnID);
+      if (!$baseline || $baseline->hasError() || $baseline->getType() != $imgBlnTypeID) {//no baseline or unavailable so warn
+        $log .= "Warning no valid baseline available for id $blnID .\n";
+      } else {
+        $image = $baseline->getImage(true);
+        // if baseline has a boundary then get bounding box to translate segment points to the origin of the bounding box
+        if($baseline->getImageBoundary()){
+          $blnBBox = new BoundingBox($baseline->getImageBoundary());
+        } else {
+          $blnBBox = null;
+        }
+        // if the image has a boundary then get bounding box to translate segment points to the origin of the bounding box
+        if($image && $image->getBoundary()){
+          $imgBBox = new BoundingBox($image->getBoundary());
+        } else {
+          $imgBBox = null;
+        }
+        foreach ($baseline->getSegments() as $segment) {
+          $boundary = $segment->getImageBoundary();
+          if ($boundary) {
+            $polyCnt = 0;
+            $segFilenameBase = SEGMENT_CACHE_BASE_PATH.DBNAME."seg".$segment->getID();
+            $urlCnt = 0;
+            foreach ($boundary as $polygon){// this code assumes baseline IDs is a parallel array with polygons
+              $urlCnt++;
+              if (!$reclipSegments) { //check cached first
+                $segFilename = $segFilenameBase.($urlCnt>1?"_part$urlCnt":"").".png";
+                if (file_exists($segFilename)) {
+                  $log .= "$segFilename exist skipping \n";
+                  continue;
+                }
+              }
+              if($blnBBox){
+                $polygon->translate($blnBBox->getXOffset(),$blnBBox->getYOffset());
+              }
+              if($imgBBox){
+                $polygon->translate($imgBBox->getXOffset(),$imgBBox->getYOffset());
+              }
+              $log .= "clipping image for ".$segment->getGlobalID()." \n";
+              $segment->cacheSegmentImages(array(constructCroppedImageURL($image->getURL(),$polygon)));
+            }
+          }// end for boundary
+        }
+      }
+    }
+  }
+  $retVal["success"] = false;
+  if (count($errors)) {
+    $retVal["errors"] = $errors;
+  } else {
+    $retVal["success"] = true;
+  }
+  if (count($warnings)) {
+    $retVal["warnings"] = $warnings;
+  }
+  $retVal["log"] = $log;
+  return $retVal;
+}
+
+/**
+* validate the structure of tokens or compounds
+*
+* @param mixed $tokCmpGID global ID of token or compound
+* @param mixed $ctxMessage context information to be used in error messages in recursive calls
+* @param mixed $topTokCmpGID global ID of the top level compound or token
+*/
+
+
+/**
 * merge data from ordinal tagged image segments of one or more baselines (order by baseline id then ordinal)
 * into the segments of the db starting in segment id order.
 *

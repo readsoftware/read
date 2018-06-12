@@ -58,6 +58,7 @@
       array_push($errors,"creating edition - ".join(",",$edition->getErrors()));
     } else {
       $ednOwnerID = $edition->getOwnerID();
+      invalidateCachedEditionViewerHtml($data['ednID']);
       if ( isset($data['lineSeqID'])) {//get line sequence
         $physLineSeqID = $data['lineSeqID'];
         invalidateCachedSeqEntities($physLineSeqID,$edition->getID());

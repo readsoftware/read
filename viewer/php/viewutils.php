@@ -2621,11 +2621,14 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
             }
             if ($lemmaCommentary) {
               $dDoc = new DOMDocument();
-              $dDoc->loadXML("<span>($lemmaCommentary)</span>",LIBXML_NOXMLDECL);
-              $commentLemma = $dDoc->getElementsByTagName("span")->item(0);
-              $commentLemma->setAttribute("class", "lemmaCommentary");
-              $commentLemmaNode = $htmlDomDoc->importNode($commentLemma,true);
-              $lemmaDefNode->appendChild($commentLemmaNode);
+              if ($dDoc->loadXML("<span>($lemmaCommentary)</span>",LIBXML_NOXMLDECL)) {
+                $commentLemma = $dDoc->getElementsByTagName("span")->item(0);
+                $commentLemma->setAttribute("class", "lemmaCommentary");
+                $commentLemmaNode = $htmlDomDoc->importNode($commentLemma,true);
+                $lemmaDefNode->appendChild($commentLemmaNode);
+              } else {
+                error_log("unable to add comment to $lemTag likely ill formatted html $lemmaCommentary");
+              }
             }
           }
         }
