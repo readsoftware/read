@@ -336,6 +336,10 @@
             $prevGraIsVowelCarrier = true;
             continue;
           }
+          if ($grapheme->getValue() == "◈") {
+            $prevGraIsVowelCarrier = false;
+            continue;
+          }
           $firstG = ($j==0 || $j==1 && $prevGraIsVowelCarrier);
           $lastG = (1+$j == $graCnt);
           //check for TCM transition brackets
