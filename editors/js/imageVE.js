@@ -2590,6 +2590,7 @@ EDITORS.ImageVE.prototype = {
   drawImage: function() {
     var width = this.image.width * this.vpSize.width / this.navCanvas.width,
         height = this.image.height * this.vpSize.height / this.navCanvas.height;//BUG index calcs < 0
+    this.imgContext.clearRect(0,0,this.imgCanvas.width,this.imgCanvas.height);
     this.imgContext.imageSmoothingEnabled = false;
     this.imgContext.drawImage(this.image,
       this.vpLoc.x * this.image.width / this.navCanvas.width,
