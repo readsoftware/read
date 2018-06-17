@@ -3339,7 +3339,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
             $compound = new Compound($entID);
             $tokenIDs = $compound->getTokenIDs();
             if (count($tokenIDs) == 0) {
-              error_log("warn, Warning irregular word $wordGID in sequence $seqGID skipped.");
+              error_log("warn, Warning irregular word $wordGID in sequence $txtDivSegID skipped.");
               continue;
             }
             $entID = $tokenIDs[0]; //first token of compound
@@ -3347,7 +3347,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
           $token = new Token($entID);
           $graIDs = $token->getGraphemeIDs();
           if (count($graIDs) == 0) {
-            error_log("warn, Warning irregular token tok$entID with no graphemes in $seqGID skipped.");
+            error_log("warn, Warning irregular token tok$entID with no graphemes in $txtDivSegID skipped.");
             continue;
           }
           $graID2WordGID[$graIDs[0]] = array('seq'.$txtDivSegID, $wordTag);

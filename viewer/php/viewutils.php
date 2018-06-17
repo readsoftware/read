@@ -2633,11 +2633,11 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
           }
         }
         $lemmaComponents = $lemma->getComponents(true);
+        $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/");
+        $replacement = array("aï","aü","","","","","");
         if ($lemmaComponents && $lemmaComponents->getCount() && !$lemmaComponents->getError()) {
           $hasAttestations = true; // signal see also
           $groupedForms = array();
-          $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/");
-          $replacement = array("aï","aü","","","","","");
           foreach ($lemmaComponents as $lemmaComponent) {
             $entPrefix = $lemmaComponent->getEntityTypeCode();
             $entID = $lemmaComponent->getID();
@@ -2769,6 +2769,8 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
                                               array('loc'=>
                                                      array())));
                 } else if (!array_key_exists($value,$node[$sc]['value'])) {
+
+
                   $node[$sc]['value'][$value] =  array('loc'=>
                                                         array());
                 }
