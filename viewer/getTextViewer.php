@@ -318,9 +318,13 @@
       $urlMap["tei"]["edn$ednID"] = $teiBaseURL.$ednID;
     }
   } else {
-    ob_flush();//hack for ob injected number during EditionStructural calc
-    $structHtml =getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
-    ob_clean();//hack for ob injected number during EditionStructural calc
+    if (!$isStaticView) {
+      ob_flush();//hack for ob injected number during EditionStructural calc
+      $structHtml = getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
+      ob_clean();//hack for ob injected number during EditionStructural calc
+    } else {
+      $structHtml = getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
+    }
 ?>
           multiEdition = false,
           edStructHtml = <?=$structHtml?>,
