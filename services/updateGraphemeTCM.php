@@ -628,6 +628,7 @@
   } else if (count($errors) == 0 ) {
     //touch edition for synch code
     $edition->storeScratchProperty("lastModified",$edition->getModified());
+    $edition->setStatus('changed');
     //get segIDs
     $edSeqIds = $edition->getSequenceIDs();
     //if phys changed update id

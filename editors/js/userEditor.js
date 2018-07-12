@@ -405,12 +405,17 @@ EDITORS.UserVE.prototype = {
     this.userInfoUI = $('<div id="userInfo">' +
                       '<div class="label-form">'+(this.username?this.username:'Unknown')+'</div>' +
                       '<div id="logoutLink">Logout</div>' +
+                      '<div id="logChangesLink">Change Log</div>'+
                       '<div id="chgPasswordLink">Change password</div>' +
                       '<div id="userPreferencesDiv">User Preferences</div>' +
                       '<div id="workspaceLabel">Workspaces</div>' +
                       '<div id="errorMsg"></div>' +
+                      '<a id="logChangesButton" visibility= "hidden" target="_blank" href="'+basepath+'/services/logChanges.php?db='+dbName+'"/>' +
                       '</div>');
     $('#logoutLink',this.userInfoUI).unbind('click').bind('click', function() {userVE.logout();});
+    $('#logChangesLink',this.userInfoUI).unbind('click').bind('click', function() {
+      $('#logChangesButton',userVE.userInfoUI).get(0).click();
+    });
     $('#chgPasswordLink',this.userInfoUI).unbind('click').bind('click', function() {userVE.loadChangePasswordUI();});
     this.prefUIDiv = $('#userPreferencesDiv',this.userInfoUI);
     this.prefUIDiv.unbind('click').bind('click', function() {

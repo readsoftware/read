@@ -101,6 +101,46 @@
       //otherwise treat as new edition to be initialized through setters
     }
 
+    /**
+    * Save Edition
+    *
+    * override entity save to set status to changed before saving
+    *
+    * @return boolean indicating success or failure
+    */
+    public function save($dbMgr = null) {
+      if ($this->_dirty && count($this->_data)) {
+        $status = $this->getStatus();
+        if (!$status) {
+          $this->setStatus("changed");
+        }
+      }
+      parent::save($dbMgr);
+    }
+
+    /**
+    * Set status
+    *
+    * set the status of this object where 'editing' and 'changed'
+    * have a reserved semantic
+    *
+    * @param string $status indicating current status
+    */
+    public function setStatus($status = null) {
+      $this->storeScratchProperty("status",$status);
+    }
+
+    /**
+    * Get status
+    *
+    * get the status of this object
+    *
+    * @return string $status indicating current status
+    */
+    public function getStatus() {
+      return $this->getScratchProperty("status");
+    }
+
     //*******************************PROTECTED FUNCTIONS************************************
 
     /**

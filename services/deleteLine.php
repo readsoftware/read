@@ -265,6 +265,7 @@
           if (count($errors) == 0 && $edition) {
             //touch edition for synch code
             $edition->storeScratchProperty("lastModified",$edition->getModified());
+            $edition->setStatus('changed');
             if ($oldPhysSeqID || $oldTextSeqID) {
               //get segIDs
               $edSeqIds = $edition->getSequenceIDs();

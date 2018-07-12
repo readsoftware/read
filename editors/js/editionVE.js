@@ -79,6 +79,7 @@ EDITORS.EditionVE.prototype = {
     this.curTagID = null;
     this.anchorTagID = null;
     this.parentTagID = null;
+    this.checkEditCollision = true;
     this.autoInsert = true;
     this.autoLink = false;
     this.selOrderGrpGraClasses = [];
@@ -1197,6 +1198,94 @@ EDITORS.EditionVE.prototype = {
 
 
 /**
+* check edition status entity with current tag id
+*
+* @param string entGID Entity global id (prefix:id)
+*/
+
+  checkEditionStatus: function (cb) {
+    var ednVE = this, msgWarning = '', savedata = {};
+    //setup data
+    savedata={
+      ednID: ednVE.edition.id,
+    };
+    if (DEBUG.healthLogOn) {
+      savedata['hlthLog'] = 1;
+    }
+    $.ajax({
+        type:"POST",
+        dataType: 'json',
+        url: basepath+'/services/getEditionStatus.php?db='+dbName,
+        data: savedata,
+        asynch: true,
+        success: function (data, status, xhr) {
+          if (typeof data == 'object' ) {
+            if (data.collisiondetection == 'off') {//if set off set editor to skip service call
+              ednVE.checkEditCollision = false;
+              if (cb && typeof cb == 'function') {
+                cb();
+              }
+            } else if (data.success && data.editUserName != ednVE.layoutMgr.userVE.username) {
+              msgWarning ="Warning user "+data.editUserName+" ("+data.editUserID+
+                          ") is editting edition ("+ednVE.edition.id+") with status: "+data.status +
+                          ". Are you sure that you would like to continue?";
+              if (confirm(msgWarning) && cb && typeof cb == 'function') {
+                cb();
+              }
+            } else if (cb && typeof cb == 'function') {
+              cb();
+            }
+          }
+          if (data.editionHealth) {
+            DEBUG.log("health","***Tag Entity***");
+            DEBUG.log("health","Params: "+JSON.stringify(savedata));
+            DEBUG.log("health",data.editionHealth);
+          }
+          if (data.errors) {
+            alert("An error occurred while trying to edition status. Error: " + data.errors.join());
+          }
+        },
+        error: function (xhr,status,error) {
+          // add record failed.
+          errStr = "Error while trying to checking Edition status. Error: " + error;
+          DEBUG.log("err",errStr);
+          alert(errStr);
+        }
+    });// end ajax
+  },
+
+
+/**
+* change edit mode to modify mode
+*
+* @param object e System event object
+* @param button editModeBtn Button element for mode change
+*/
+
+  changeToModify: function (e,editModeBtn) {
+    var ednVE = this;
+    this.editMode = "modify";
+    editModeBtn.html("Modify");
+    if (!this.sclEd) {
+      this.sclEd = new EDITORS.sclEditor(ednVE);//todo guard against syllableEditor.js not included
+    } else {
+      this.sclEd.reInit();
+    }
+    this.insertLineBtnDiv.show();
+    this.deleteLineBtnDiv.show();
+    this.addSyllableBtnDiv.show();
+    this.addSequenceBtnDiv.hide();
+    this.linkOrdBtnDiv.hide();
+    this.showSeqBtnDiv.hide();
+    this.showTagBtnDiv.hide();
+    this.objLevelBtn.attr('disabled','disabled');
+    this.edStyleBtn.attr('disabled','disabled');
+    this.linkSclBtn.attr('disabled','disabled');
+    this.formatBtn.attr('disabled','disabled');
+    $(ednVE.contentDiv).addClass("modify");
+  },
+
+/**
 * change edit mode of this edition editor
 *
 * @param object e System event object
@@ -1205,68 +1294,66 @@ EDITORS.EditionVE.prototype = {
 
   changeEditMode: function (e,editModeBtn) {
     var ednVE = this;
-      //modify
-      if (!this.editMode && !ednVE.edition.readonly) {
-//        $('sup',this.editDiv).remove();
-        this.editMode = "modify";
-        editModeBtn.html("Modify");
-        if (!this.sclEd) {
-          this.sclEd = new EDITORS.sclEditor(ednVE);//todo guard against syllableEditor.js not included
-        } else {
-          this.sclEd.reInit();
-        }
-        this.insertLineBtnDiv.show();
-        this.deleteLineBtnDiv.show();
-        this.addSyllableBtnDiv.show();
+    //modify
+    if (!this.editMode && !ednVE.edition.readonly) {
+      if (this.checkEditCollision) {
+        this.checkEditionStatus(function(){
+          ednVE.changeToModify(e,editModeBtn);
+        });
+      } else {
+        this.changeToModify(e,editModeBtn);
+      }
+/*      this.editMode = "modify";
+      editModeBtn.html("Modify");
+      if (!this.sclEd) {
+        this.sclEd = new EDITORS.sclEditor(ednVE);//todo guard against syllableEditor.js not included
+      } else {
+        this.sclEd.reInit();
+      }
+      this.insertLineBtnDiv.show();
+      this.deleteLineBtnDiv.show();
+      this.addSyllableBtnDiv.show();
+      this.addSequenceBtnDiv.hide();
+      this.linkOrdBtnDiv.hide();
+      this.showSeqBtnDiv.hide();
+      this.showTagBtnDiv.hide();
+      this.objLevelBtn.attr('disabled','disabled');
+      this.edStyleBtn.attr('disabled','disabled');
+      this.linkSclBtn.attr('disabled','disabled');
+      this.formatBtn.attr('disabled','disabled');
+      $(ednVE.contentDiv).addClass("modify");
+      */
+    //TCM mode
+    } else if (ednVE.editMode == "modify") {
+      ednVE.editMode = "tcm";
+      editModeBtn.html("Text Critical");
+      if (!ednVE.tcmEd) {
+        ednVE.tcmEd = new EDITORS.tcmEditor(ednVE);//todo guard against syllableEditor.js not included
+      }
+      if (ednVE.sclEd) {
+        $('.selected',ednVE.contentDiv).removeClass('selected');
+        ednVE.removeFreeTextLineUI();
+        delete(ednVE.sclEd);
+      }
+      $(ednVE.contentDiv).removeClass("modify").addClass('tcmodify');
+      this.propertyBtn.attr('disabled','disabled');
+      this.insertLineBtnDiv.hide();
+      this.deleteLineBtnDiv.hide();
+      this.addSyllableBtnDiv.hide();
+    //tagging mode
+    } else if (ednVE.editMode == "tcm" ||
+               (!ednVE.editMode && ednVE.edition.readonly)) {
+      if (!ednVE.editMode && ednVE.edition.readonly) {
         this.addSequenceBtnDiv.hide();
         this.linkOrdBtnDiv.hide();
-        this.showSeqBtnDiv.hide();
-        this.showTagBtnDiv.hide();
         this.objLevelBtn.attr('disabled','disabled');
         this.edStyleBtn.attr('disabled','disabled');
         this.linkSclBtn.attr('disabled','disabled');
-        this.formatBtn.attr('disabled','disabled');
-        $(ednVE.contentDiv).addClass("modify");
-      //TCM mode
-      } else if (ednVE.editMode == "modify") {
-        ednVE.editMode = "tcm";
-        editModeBtn.html("Text Critical");
-        if (!ednVE.tcmEd) {
-          ednVE.tcmEd = new EDITORS.tcmEditor(ednVE);//todo guard against syllableEditor.js not included
-        }
-        if (ednVE.sclEd) {
-          $('.selected',ednVE.contentDiv).removeClass('selected');
-          ednVE.removeFreeTextLineUI();
-          delete(ednVE.sclEd);
-        }
-        $(ednVE.contentDiv).removeClass("modify").addClass('tcmodify');
-        this.propertyBtn.attr('disabled','disabled');
-        this.insertLineBtnDiv.hide();
-        this.deleteLineBtnDiv.hide();
-        this.addSyllableBtnDiv.hide();
-      //tagging mode
-      } else if (ednVE.editMode == "tcm" ||
-                 (!ednVE.editMode && ednVE.edition.readonly)) {
-        if (!ednVE.editMode && ednVE.edition.readonly) {
-          this.addSequenceBtnDiv.hide();
-          this.linkOrdBtnDiv.hide();
-          this.objLevelBtn.attr('disabled','disabled');
-          this.edStyleBtn.attr('disabled','disabled');
-          this.linkSclBtn.attr('disabled','disabled');
-        }
-        if (ednVE.tcmEd) {
-          if (ednVE.tcmEd.exit(function() {
-                                  delete(ednVE.tcmEd);
-                                })) {
-            ednVE.editMode = "tag";
-            editModeBtn.html("Tagging");
-            $(ednVE.contentDiv).removeClass('tcmodify').addClass('tagging');
-            this.curTagBtnDiv.show();
-            this.showTagBtnDiv.show();
-            this.propertyBtn.removeAttr('disabled');
-            this.objLevelBtn.removeAttr('disabled');
-          }
-        } else {
+      }
+      if (ednVE.tcmEd) {
+        if (ednVE.tcmEd.exit(function() {
+                                delete(ednVE.tcmEd);
+                              })) {
           ednVE.editMode = "tag";
           editModeBtn.html("Tagging");
           $(ednVE.contentDiv).removeClass('tcmodify').addClass('tagging');
@@ -1275,22 +1362,31 @@ EDITORS.EditionVE.prototype = {
           this.propertyBtn.removeAttr('disabled');
           this.objLevelBtn.removeAttr('disabled');
         }
-      //view mode
-      } else if (ednVE.editMode == "tag") {
-          delete ednVE.editMode;
-          editModeBtn.html("View");
-          ednVE.refreshSeqMarkers();
-          $(ednVE.contentDiv).removeClass('tagging');
-          this.edStyleBtn.removeAttr('disabled');
-          this.linkSclBtn.removeAttr('disabled');
-          this.formatBtn.removeAttr('disabled');
-          this.curTagBtnDiv.hide();
-          this.addSequenceBtnDiv.show();
-          if (this.autoLinkOrdMode) {
-            this.linkOrdBtnDiv.show();
-          }
-          this.showSeqBtnDiv.show();
+      } else {
+        ednVE.editMode = "tag";
+        editModeBtn.html("Tagging");
+        $(ednVE.contentDiv).removeClass('tcmodify').addClass('tagging');
+        this.curTagBtnDiv.show();
+        this.showTagBtnDiv.show();
+        this.propertyBtn.removeAttr('disabled');
+        this.objLevelBtn.removeAttr('disabled');
       }
+    //view mode
+    } else if (ednVE.editMode == "tag") {
+        delete ednVE.editMode;
+        editModeBtn.html("View");
+        ednVE.refreshSeqMarkers();
+        $(ednVE.contentDiv).removeClass('tagging');
+        this.edStyleBtn.removeAttr('disabled');
+        this.linkSclBtn.removeAttr('disabled');
+        this.formatBtn.removeAttr('disabled');
+        this.curTagBtnDiv.hide();
+        this.addSequenceBtnDiv.show();
+        if (this.autoLinkOrdMode) {
+          this.linkOrdBtnDiv.show();
+        }
+        this.showSeqBtnDiv.show();
+    }
   },
 
 
@@ -2938,6 +3034,8 @@ mergeLine: function (direction,cbError) {
         syllable.addClass(linkSource);
         ednVE.refreshLineCache(syllable);
       }
+
+
       ednVE.linkMode = false;
     };
 

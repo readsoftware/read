@@ -480,7 +480,7 @@ sup{
   height: 40px;
   width: 200px;
 }
-#signinHelpLink, #logoutLink, #chgPasswordLink, #userPreferencesDiv {
+#signinHelpLink, #logoutLink, #logChangesLink, #chgPasswordLink, #userPreferencesDiv {
   margin-top: 10px;
   font-size: larger;
   color: white;
@@ -500,7 +500,7 @@ sup{
   color: white;
 }
 #newAccountLink:hover,#signinHelpLink:hover
-#workspaceLabel:hover, #logoutLink:hover,
+#workspaceLabel:hover, #logoutLink:hover, #logChangesLink:hover,
 #userPreferencesDiv.expanded .editorUI .propDisplayUI:hover,
 #userPreferencesDiv.expanded .defVisUI .propDisplayUI:hover,
 #chgPasswordLink:hover, #userPreferencesDiv:hover {

@@ -214,9 +214,10 @@
       }
     }
     // update edition if sequences cloned
-    if (count($errors) == 0 ) {
+    if (count($errors) == 0 && $edition) {
       //touch edition for synch code
       $edition->storeScratchProperty("lastModified",$edition->getModified());
+      $edition->setStatus('changed');
       if (@$oldPhysSeqID && $oldPhysSeqID != $newPhysSeqID) {
         //get segIDs
         $edSeqIds = $edition->getSequenceIDs();

@@ -130,7 +130,7 @@ if (!$data) {
       $rootLemma = null;
     } else {
       $rootLemID = $lemID;
-      invalidateLemma($$rootLemma);
+      invalidateLemma($rootLemma);
     }
   }
   $catID = null;

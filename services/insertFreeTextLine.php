@@ -196,6 +196,7 @@
   if (count($errors) == 0 && $edition) {
     //touch edition for synch code
     $edition->storeScratchProperty("lastModified",$edition->getModified());
+    $edition->setStatus('changed');
     // update edition if text physical sequence cloned
     if (count($errors) == 0 && isset($oldPhysSeqID)) {
       //get segIDs

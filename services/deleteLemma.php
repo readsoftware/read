@@ -267,60 +267,6 @@ if (count($errors) == 0) {
   }
 }
 
-/*
-addUpdateEntityReturnData('cmp',$compound->getID(),'entityIDs',$compound->getComponentIDs());
-addUpdateEntityReturnData('cmp',$compound->getID(),'tokenIDs',$compound->getTokenIDs());
-addUpdateEntityReturnData('cmp',$compound->getID(),'value',$compound->getValue());
-addUpdateEntityReturnData('cmp',$compound->getID(),'transcr',$compound->getTranscription());
-addUpdateEntityReturnData('cmp',$compound->getID(),'sort', $compound->getSortCode());
-addUpdateEntityReturnData('cmp',$compound->getID(),'sort2', $compound->getSortCode2());
-} else {
-addUpdateEntityReturnData('tok',$token->getID(),'graphemeIDs',$token->getGraphemeIDs());
-addUpdateEntityReturnData('tok',$token->getID(),'value',$token->getValue());
-addUpdateEntityReturnData('tok',$token->getID(),'transcr',$token->getTranscription());
-addUpdateEntityReturnData('tok',$token->getID(),'syllableClusterIDs',$token->getSyllableClusterIDs());
-addUpdateEntityReturnData('tok',$token->getID(),'sort', $token->getSortCode());
-addUpdateEntityReturnData('tok',$token->getID(),'sort2', $token->getSortCode2());
-}
-addNewEntityReturnData('tok',$newSplitToken);
-if (isset($newSplitToken2)) {
-addNewEntityReturnData('tok',$newSplitToken2);
-}
-
-//update compound heirarchy
-if (count($errors) == 0 && isset($compounds) && count($compounds) > 0) {//update compounds
-while (count($compounds)) {
-$compound = array_shift($compounds);
-$componentGIDs = $compound->getComponentIDs();
-$oldTokCmpIndex = array_search($oldTokCmpGID,$componentGIDs);
-array_splice($componentGIDs,$oldTokCmpIndex,1,$tokCmpReplaceGIDs);
-$tokCmpReplaceGIDs = $componentGIDs;
-$oldTokCmpGID = $compound->getGlobalID();
-if (!$compound->isReadonly()) {
-$compound->markForDelete();
-addRemoveEntityReturnData('cmp',$compound->getID());
-}
-if ($compound->hasError()) {
-array_push($errors,"error updating compound clone '".$compound->getValue()."' - ".$compound->getErrors(true));
-break;
-}
-}
-}
-$newTokCmpGID = $tokCmpReplaceGIDs;//ensure this gets altered in the text div
-}
-
-}else { // only updated
-addUpdateEntityReturnData('seq',$textDivSeq->getID(),'entityIDs',$textDivSeq->getEntityIDs());
-}
-//update edition seqIDs
-$edition->setSequenceIDs($edSeqIds);
-$edition->save();
-if ($edition->hasError()) {
-array_push($errors,"error updating edtion '".$edition->getDescription()."' - ".$edition->getErrors(true));
-}else{
-addUpdateEntityReturnData('edn',$edition->getID(),'seqIDs',$edition->getSequenceIDs());
-}
-*/
 
 $retVal["success"] = false;
 if (count($errors)) {
