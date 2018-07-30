@@ -1691,10 +1691,10 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
         $jsonCache = new JsonCache();
         $jsonCache->setLabel($cacheKey);
         if (!$edition) {
-          $edition = new Edition($ednID);
+          $edition = new Edition($ednIDs[0]);
         }
         if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
-          array_push($warnings,"Warning need valid accessible edition id $ednID. Skipping.".
+          array_push($warnings,"Warning need valid accessible edition id $ednIDs[0]. Skipping.".
             ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
           $jsonCache = null;
         } else {
@@ -2769,6 +2769,8 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
                                               array('loc'=>
                                                      array())));
                 } else if (!array_key_exists($value,$node[$sc]['value'])) {
+
+
 
 
                   $node[$sc]['value'][$value] =  array('loc'=>
