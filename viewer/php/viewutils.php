@@ -2623,9 +2623,13 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
               $dDoc = new DOMDocument();
               if ($dDoc->loadXML("<span>($lemmaCommentary)</span>",LIBXML_NOXMLDECL)) {
                 $commentLemma = $dDoc->getElementsByTagName("span")->item(0);
-                $commentLemma->setAttribute("class", "lemmaCommentary");
-                $commentLemmaNode = $htmlDomDoc->importNode($commentLemma,true);
-                $lemmaDefNode->appendChild($commentLemmaNode);
+                if ($commentLemma) {
+                  $commentLemma->setAttribute("class", "lemmaCommentary");
+                  $commentLemmaNode = $htmlDomDoc->importNode($commentLemma,true);
+                  $lemmaDefNode->appendChild($commentLemmaNode);
+                } else {
+                  error_log("unable to add comment to $lemTag likely ill formatted html $lemmaCommentary");
+                }
               } else {
                 error_log("unable to add comment to $lemTag likely ill formatted html $lemmaCommentary");
               }
@@ -2682,8 +2686,6 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
                 if (!array_key_exists($vper,$groupedForms[$vtensemood][$num])) {
                   $groupedForms[$vtensemood][$num][$vper] = array();
                 }
-                if ($num) {
-                }
                 if ($conj2 && is_numeric($conj2)) {
                   $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
                } else {
@@ -2717,8 +2719,6 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
                 }
                 if (!array_key_exists($case,$groupedForms[$gen][$num])) {
                   $groupedForms[$gen][$num][$case] = array();
-                }
-                if ($num) {
                 }
                 if ($conj2 && is_numeric($conj2)) {
                   $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
@@ -2769,10 +2769,6 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
                                               array('loc'=>
                                                      array())));
                 } else if (!array_key_exists($value,$node[$sc]['value'])) {
-
-
-
-
                   $node[$sc]['value'][$value] =  array('loc'=>
                                                         array());
                 }
