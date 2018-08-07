@@ -2355,7 +2355,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                               if (strpos(trim($locParts[0]),"sort") === 0) {
                                 $formLoc = $locParts[2];
                               } else {//if label separator is defined then prepend text label
-                                $formLoc = ($sepLabel?$locParts[0].$sepLabel:'').$locParts[2];
+                                $formLoc = ($sepLabel !== null?$locParts[0].$sepLabel:'').$locParts[2];
                               }
                             } else if (count($locParts) == 2) {
                               $formLoc = $locParts[1];
@@ -2929,7 +2929,7 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
                           if (strpos($locParts[0],"sort") === 0) {
                             $formLoc = $locParts[2];
                           } else {//if label separator is defined then prepend text label
-                            $formLoc = ($sepLabel?$locParts[0].$sepLabel:'').$locParts[2];
+                            $formLoc = ($sepLabel !== null?$locParts[0].$sepLabel:'').$locParts[2];
                           }
                         } else if (count($locParts) == 2) {
                           $formLoc = $locParts[1];

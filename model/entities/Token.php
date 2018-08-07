@@ -28,6 +28,7 @@
   */
   require_once (dirname(__FILE__) . '/../../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../utility/textCriticalMarks.php');//get TCM utilities
+  require_once (dirname(__FILE__) . '/../../common/php/utils.php');//get utils
   require_once (dirname(__FILE__) . '/Entity.php');
   require_once (dirname(__FILE__) . '/Graphemes.php');
 

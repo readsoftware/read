@@ -279,7 +279,7 @@
       $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
       $edFootnotesByEdn .= getEditionFootnoteTextLookup();
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
-        $edGlossaryLookupByEdn .= getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps,$glossaryUrlLookup);
+        $edGlossaryLookupByEdn .= getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps || $isStaticView,$glossaryUrlLookup);
       } else {
         $edGlossaryLookupByEdn .= '{}';
       }
@@ -307,7 +307,7 @@
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
 <?php
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
-        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps,$glossaryUrlLookup);
+        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps || $isStaticView,$glossaryUrlLookup);
       } else {
         $edGlossaryLookup = '{}';
       }
@@ -331,7 +331,7 @@
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,
 <?php
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
-        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps,$glossaryUrlLookup);
+        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps || $isStaticView,$glossaryUrlLookup);
       } else {
         $edGlossaryLookup = '{}';
       }
