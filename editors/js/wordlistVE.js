@@ -937,11 +937,18 @@ EDITORS.WordlistVE.prototype = {
                       }
                     }
                   }
-                  html += '<span class="linkedword'+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +
-                          '" srch="'+word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
-                          ((k>0 || j>0)?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                          ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
-                          (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                  if (word && word.value && word.transcr && word.locLabel) {
+                    html += '<span class="linkedword'+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +
+                            '" srch="'+word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                            ((k>0 || j>0)?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
+                            ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                            (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                  } else {
+                    DEBUG.log('err',"Genreating html for inflection found incomplete word data "+word.tag?word.tag+" ":""+
+                              (!word.value ? " missing word value":"")+
+                              (!word.transcr ? " missing word trascription":"")+
+                              (!word.locLabel ? " missing word location label":""));
+                  }
                 }
               }
             } else {
@@ -958,11 +965,18 @@ EDITORS.WordlistVE.prototype = {
                     }
                   }
                 }
-                html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
-                        word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
-                        (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                        ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
-                        (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                if (word && word.value && word.transcr && word.locLabel) {
+                  html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
+                          word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                          (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
+                          ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                          (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                } else {
+                  DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
+                            (!word.value ? " missing word value":"")+
+                            (!word.transcr ? " missing word trascription":"")+
+                            (!word.locLabel ? " missing word location label":""));
+                }
               }
             }
           }
@@ -982,11 +996,18 @@ EDITORS.WordlistVE.prototype = {
                   }
                 }
               }
-              html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
-                      word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
-                      (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                      ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
-                      (wordAnno?' ('+wordAnno+')':"") + '</span>';
+              if (word && word.value && word.transcr && word.locLabel) {
+                html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
+                        word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                        (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
+                        ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                        (wordAnno?' ('+wordAnno+')':"") + '</span>';
+              } else {
+                DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
+                          (!word.value ? " missing word value":"")+
+                          (!word.transcr ? " missing word trascription":"")+
+                          (!word.locLabel ? " missing word location label":""));
+              }
             }
           }
         }

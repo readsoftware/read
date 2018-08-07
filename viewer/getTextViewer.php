@@ -223,6 +223,7 @@
                             (isset($data['txtID'])?"&txtID=".$data['txtID']:($data['ednID']?"&ednID=".$data['ednID']:"")).
                             (isset($data['multiEd'])?"&multiEd=".$data['multiEd']:"").
                             (isset($data['catID'])?"&catID=".$data['catID']:"").
+                            (isset($data['refreshLookUps'])?"&refreshLookUps=".$data['refreshLookUps']:"").
                             (isset($ednIDs)?"&xednIDs=".join(',',$ednIDs):"&xednIDs=$ednID");
 ?>
     <script src="../editors/js/utility.js"></script>
