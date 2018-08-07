@@ -82,6 +82,8 @@
   if(!defined("VIEWER_EXPORT_PATH")) define("VIEWER_EXPORT_PATH",DOCUMENT_ROOT.VIEWER_EXPORT_SUBDIR);
   if(!defined("VIEWER_BASE_URL")) define("VIEWER_BASE_URL",SITE_ROOT.VIEWER_EXPORT_SUBDIR);
 
+  // READ Workbench
+  if(!defined("WORKBENCH_BASE_URL")) define("WORKBENCH_BASE_URL", REQSCHEMA . "://import-read-corpus.sydney.edu.au");
 
   $info = new SplFileInfo(SEGMENT_CACHE_BASE_PATH);
   if (!$info->isDir()) {

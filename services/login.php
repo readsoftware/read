@@ -33,13 +33,20 @@
   require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
 
+header("Access-Control-Allow-Origin: " . WORKBENCH_BASE_URL);
+header('Access-Control-Allow-Credentials: true');
+
 $username = isset($_POST['username'])?$_POST['username'] : (isset($_REQUEST['username'])?$_REQUEST['username']:null);
 $password = isset($_POST['password'])?$_POST['password'] : (isset($_REQUEST['password'])?$_REQUEST['password']:null);
+$hashed = (isset($_REQUEST['hashed']) && $_REQUEST['hashed']) ? TRUE : FALSE;
+if (!$hashed) {
+  $password = md5($password);
+}
 $expiry = (array_key_exists('persist',$_POST) || array_key_exists('persist',$_REQUEST))? (time ()+60*60*24*365) : 0;
 
 // CHECK USERS NAME AND PASSWORD
 $dbMgr = new DBManager();
-$dbMgr->query("SELECT * FROM usergroup WHERE ugr_name = '$username' AND ugr_password ='" . md5 ($password) . "'");
+$dbMgr->query("SELECT * FROM usergroup WHERE ugr_name = '$username' AND ugr_password ='" . $password . "'");
 
 if ($dbMgr->getRowCount() == 0) {
 //return error invalid login
