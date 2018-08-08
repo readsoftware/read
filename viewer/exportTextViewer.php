@@ -359,8 +359,13 @@
   $_REQUEST['staticView'] = 1; // tell getTextViewer code to generate static
   ob_start();
   include_once(dirname(__FILE__).'/getTextViewer.php');
-  $viewerHTML = ob_get_contents();
-  ob_end_clean();
+  $viewerHTML = ob_get_clean();
+  //hack for weird numeric insert
+  if (preg_match("/(\d*)(\s*multiEdition)/",$viewerHTML)) {
+    $viewerHTML = preg_replace("/(\d*)(\s*multiEdition)/","$2",$viewerHTML);
+  }
+  //end of hack
+
   $viewerFilename = "$basefilename.html";
   if (!$staticoverwrite && file_exists("$exportDir/$viewerFilename")) {
     logAddMsgExit("Viewer static export file '$viewerFilename' exist and overwrite not enabled, aborting export.\n".
