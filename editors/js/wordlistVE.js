@@ -652,7 +652,7 @@ EDITORS.WordlistVE.prototype = {
       }
     }
     if (ednLblByEntTag && Object.keys(ednLblByEntTag).length > 0) {
-      //for each token sequence
+      //for each token sequence=
       for (tag in ednLblByEntTag) {
         ednLabel = ednLblByEntTag[tag];
         if (ednLabel.match(/^sort\d+/)) {
@@ -668,6 +668,9 @@ EDITORS.WordlistVE.prototype = {
           wtag = wordGIDs[j].replace(":","");
           prefix = wtag.substr(0,3);
           id = wtag.substr(3);
+          if (!prefix || !id) { //guard against emtpt GIDs
+            continue;
+          }
           word = this.dataMgr.getEntity(prefix,id);
           if (word.sort && word.sort >= 0.7) {
             continue;
