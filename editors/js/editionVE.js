@@ -5931,6 +5931,13 @@ mergeLine: function (direction,cbError) {
             DEBUG.log("err","calculating graLookups and grapheme not available for graID "+graID);
             continue;
           }
+          if (this.repType == "reconstructed" && grapheme.value == "◈") {//knot symbol removed from reconstructed
+            hasNonReconConsnt = false;
+            hasNonAddedConsnt = false;
+            prevGraIsVowelCarrier = false;
+            previousA = false;
+            continue;
+          }
           typ = this.trmIDtoLabel[grapheme.type];
           isConsnt = (typ == "Consonant");//warning!!! term dependency
           if (isConsnt && (!grapheme.txtcrit || grapheme.txtcrit.indexOf("R") == -1)) {
@@ -6104,6 +6111,7 @@ mergeLine: function (direction,cbError) {
       if (this.repType == "reconstructed"){//remove any disallowed TCMs
         lineHTML = lineHTML.replace(/\[/g,"").replace(/\]/g,""); // remove uncertainty brackets
         lineHTML = lineHTML.replace(/⟪/g,"").replace(/⟫/g,""); // remove scribal insertion brackets
+//        lineHTML = lineHTML.replace(/\s◈/g,"").replace(/◈/g,""); // remove knot symbol
         lineHTML = lineHTML.replace(/\{\{[^}]*\}\}/g,""); // remove scribal deletion brackets and text
         lineHTML = lineHTML.replace(/\/\/\//g,""); // remove edge indicator
         lineHTML = lineHTML.replace(/_+/g,"_").replace(/(_)([^\.])/g,".$2");//.replace(/\.\./g,".");

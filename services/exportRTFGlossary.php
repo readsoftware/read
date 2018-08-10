@@ -190,8 +190,8 @@
             }
           }
         }
-        $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/");
-        $replacement = array("aï","aü","","","","","");
+        $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/","/◈/");
+        $replacement = array("aï","aü","","","","","","");
         $lemmaComponents = $lemma->getComponents(true);
         if ($lemmaComponents && $lemmaComponents->getCount()) {
           $rtf .= $softReturn.$eol;
@@ -781,7 +781,7 @@
                 }
                 if($label2 && $label2 != $label) {
                   $posColon = strpos($label2,':');
-                  $label .= "&ndash;" . ($posColon !== false?substr($label2, $posColon+1):$label2);
+                  $label .= "–" . ($posColon !== false?substr($label2, $posColon+1):$label2);
                 }
                 $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
               } else {

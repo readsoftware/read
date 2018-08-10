@@ -2074,6 +2074,9 @@ EDITORS.LemmaVE.prototype = {
             if (typeof data == 'object' && data.success && data.entities) {
               //update data
               lemmaVE.dataMgr.updateLocalCache(data,null);
+              if (lemmaVE.wordlistVE && lemmaVE.prefix=='lem') {
+                lemmaVE.wordlistVE.updateLemmaEntry(lemmaVE.entID);
+              }
               lemmaVE.propMgr.showVE();
               if (lemmaVE.propMgr.annoVE) {
                 lemmaVE.propMgr.annoVE.removeDirtyMarkers();
@@ -2387,7 +2390,9 @@ EDITORS.LemmaVE.prototype = {
                 case "updateLem":
                   //REPLACE WITH updateLemmaEntry
                   //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
-                  lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                  if (lemmaVE.wordlistVE) {
+                    lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                  }
                   lemmaVE.showLemma('lem',oldLemID);
                   break;
                 case "linkTok":
@@ -2402,14 +2407,18 @@ EDITORS.LemmaVE.prototype = {
                 case "unlinkTok":
                   //REPLACE WITH updateLemmaEntry
                   //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
-                  lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                  if (lemmaVE.wordlistVE) {
+                    lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                  }
                   lemmaVE.showLemma('lem',oldLemID);
                   lemmaVE.wordlistVE.insertWordEntry(tokGID,'lem'+oldLemID);
                   break;
                 case "inflectTok":
                   //REPLACE WITH updateLemmaEntry
                   //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
-                  lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                  if (lemmaVE.wordlistVE) {
+                    lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                  }
                   lemmaVE.showLemma('lem',oldLemID);
                   break;
               }
@@ -2487,7 +2496,9 @@ EDITORS.LemmaVE.prototype = {
               if (typeof data == 'object' && data.success && data.entities) {
                 //update data
                 lemmaVE.dataMgr.updateLocalCache(data,null);
-                lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                if (lemmaVE.wordlistVE) {
+                  lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                }
                 lemmaVE.showLemma();
               }
               if (data.editionHealth) {
@@ -2542,7 +2553,9 @@ EDITORS.LemmaVE.prototype = {
               if (typeof data == 'object' && data.success && data.entities) {
                 //update data
                 lemmaVE.dataMgr.updateLocalCache(data,null);
-                lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                if (lemmaVE.wordlistVE) {
+                  lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+                }
                 lemmaVE.showLemma();
               }
               if (data.editionHealth) {
