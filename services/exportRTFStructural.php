@@ -338,6 +338,7 @@
           }
           if ($grapheme->getValue() == "◈") {
             $prevGraIsVowelCarrier = false;
+            $previousA = false;
             continue;
           }
           $firstG = ($j==0 || $j==1 && $prevGraIsVowelCarrier);

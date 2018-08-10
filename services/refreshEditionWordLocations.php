@@ -64,7 +64,7 @@
   $warnings = array();
   //find catalogs
   if ($ednID) {
-    $edition = new Catalog($ednID);
+    $edition = new Edition($ednID);
   }else{
     $edition = null;
   }
