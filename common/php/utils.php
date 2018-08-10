@@ -3465,7 +3465,7 @@ function getWordLocation($wordTag) {
     $label2 = $labels[$cntLabels - 1];
     if ($label1 != $label2) {
       $label2 = explode(':',$label2);
-      $label1 .= '&ndash;'.(count($label2)>1?$label2[1]:$label2[0]);
+      $label1 .= '–'.(count($label2)>1?$label2[1]:$label2[0]);
     }
     return ($txtLabel?$txtLabel.':':"").$lineord.':'.$label1;
   }

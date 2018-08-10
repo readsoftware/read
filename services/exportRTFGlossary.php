@@ -506,6 +506,9 @@
                         } else if (count($locParts) == 2) {
                           $formLoc = $locParts[1];
                         }
+                        if (strpos($formLoc,"–")) {//replace en dash with \'96
+                          $formLoc = preg_replace("/–/","\\\'96",$formLoc);
+                        }
                         $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
                       }
                       $rtf .= $endStyle.$eol;
