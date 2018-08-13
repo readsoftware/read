@@ -1742,6 +1742,7 @@ EDITORS.WordlistVE.prototype = {
 */
 
     function lemClickHandler(e) {
+      //check wordlistVE has focus
       if ( wordlistVE.id != wordlistVE.layoutMgr.focusPaneID) {
         wordlistVE.layoutMgr.focusHandler(e,wordlistVE.id);
       }
@@ -1749,9 +1750,11 @@ EDITORS.WordlistVE.prototype = {
       if (!wordlistVE.relatedLinkMode || !wordlistVE.lemmaVE) {
         return;
       }
+      //extract GID
       var classes = $(this).attr('class'), entTag, entGID;
       entTag = classes.match(/lem\d+/)[0];
       entGID = entTag.substring(0,3)+":"+entTag.substring(3);
+      //call lemmaVE link API
       if (wordlistVE.lemmaVE.linkRelatedEntity) {
         wordlistVE.lemmaVE.linkRelatedEntity(entGID);
         wordlistVE.relatedLinkMode = false;

@@ -1391,6 +1391,22 @@ EDITORS.EditionVE.prototype = {
 
 
 /**
+* set syntatic dependency link mode
+*
+* @param bLinkMode boolean to set syntatic mode flag
+* @returns boolean indicating success
+*/
+
+  setLinkSfDependencyFlag: function(bLinkMode) {
+    if (this.LinkMode || this.editMode) {
+      return false;
+    } else {
+      this.setLinkSfDependencyMode = bLinkMode;
+      return true;
+    }
+  },
+
+/**
 * split token at current location
 *
 * @param function cbError Error callback function\n*/
@@ -2971,7 +2987,7 @@ mergeLine: function (direction,cbError) {
       if (senderID == ednVE.id) {
         return;
       }
-      DEBUG.log("event","link complete recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource+" linkEditionID of "+linkEditionID);
+      DEBUG.log("event","auto link complete recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource+" linkEditionID of "+linkEditionID);
       if (ednVE.autoLinkOrdMode && linkEditionID == ednVE.edition.id) {
         //in link mode and linking has been completed so cleanup and update display
         delete ednVE.autoLinkOrdMode;
@@ -3359,6 +3375,44 @@ mergeLine: function (direction,cbError) {
 
     //assign handler for all grapheme group elements
     $(".grpGra", this.editDiv).unbind('dblclick').bind('dblclick',grpGraDblClickHandler);
+
+
+/**
+* handle 'click' event for grapheme group elements
+*
+* @param object e System event object
+*
+* @returns true|false
+*/
+
+    function grpGraClickHandler(e) {
+      var classes = $(this).attr('class'), entTag, entGID,
+          objLevel = ednVE.layoutMgr.getEditionObjectLevel();
+
+      if (ednVE.setLinkSfDependencyMode) {
+        if (objLevel == 'token' && ednVE.editMode != "modify") {
+          entTag = classes.match(/tok\d+/)[0];
+        } else if (objLevel == 'compound' && ednVE.editMode != "modify") {
+          if (classes.match(/cmp\d+/)) {
+            entTag = classes.match(/cmp\d+/)[0];
+          } else {
+            entTag = classes.match(/tok\d+/)[0];
+          }
+        }
+        if (entTag &&  ednVE.propMgr.propVEType == 'entPropVE' &&
+            ednVE.propMgr.currentVE.linkDependencyEntity) {
+          entGID = entTag.substring(0,3)+":"+entTag.substring(3);
+          ednVE.propMgr.currentVE.linkDependencyEntity(entGID);
+        } else {
+          UTILITY.beep();
+        }
+        e.stopImmediatePropagation();
+        return false;
+      }
+    };
+
+    //assign handler for all grapheme group elements
+    $(".grpGra", this.editDiv).unbind('click').bind('click',grpGraClickHandler);
 
 
 /**
@@ -5996,6 +6050,7 @@ mergeLine: function (direction,cbError) {
                   grpHTML += (j==0?" _":"_");
                 }else if (typ == "Vowel") {//term dependency
                   if (prevGraIsVowelCarrier) {
+
                     grpHTML += plusSign;
                   } else {
                     grpHTML += (graLU.boundary?". ":". ");

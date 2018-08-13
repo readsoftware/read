@@ -2174,6 +2174,8 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                     $entTag2GlossaryHtml[$entTag] = array('lemTag' => $lemTag,// word link to inflection data and lemma - popup shows inflection for clicked word only
                       'infTag'=> $infTag,
                       'infHtml'=> $infString);
+                    //TODO:Syntax   add code here to check inflectionComponent has syntaxt info and add to glossary info
+                    //this will cache the information for the popup html calc code
                     $attested2LemmaInfoMap[$entTag] = $entTag2GlossaryHtml[$entTag];
                     $attestedCommentary = "";
                     if ( $linkedAnoIDsByType = $inflectionComponent->getLinkedAnnotationsByType()) {
@@ -2226,6 +2228,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                   $sc = $lemmaComponent->getSortCode();
                   $entTag = preg_replace("/:/","",$lemmaComponent->getGlobalID());
                   $entTag2GlossaryHtml[$entTag] = array('lemTag' => $lemTag);//word link to lemma
+                  //TODO:Syntax   add code here to check lemmaComponent has syntaxt info and add to glossary info
                   $attested2LemmaInfoMap[$entTag] = $entTag2GlossaryHtml[$entTag];
                   $attestedCommentary = "";
                   if ( $linkedAnoIDsByType = $lemmaComponent->getLinkedAnnotationsByType()) {

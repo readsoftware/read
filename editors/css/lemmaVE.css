@@ -196,6 +196,18 @@ div.typeUI .propEditUI {
 div.typeUI.edit .propEditUI {
   display:block;
 }
+div.sfLinkTypeUI .propDisplayUI {
+  display:block;
+}
+div.sfLinkTypeUI.edit .propDisplayUI {
+  display:none;
+}
+div.sfLinkTypeUI .propEditUI {
+  display:none;
+}
+div.sfLinkTypeUI.edit .propEditUI {
+  display:block;
+}
 div.linkTypeUI .propDisplayUI {
   display:block;
 }

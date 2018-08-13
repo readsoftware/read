@@ -182,7 +182,7 @@ EDITORS.EntityPropVE.prototype = {
 
   showEntity: function(prefix,id) {
     DEBUG.traceEntry("showEntity");
-    var entPropVE = this;
+    var entPropVE = this,relTermID;
     if (prefix && id && this.dataMgr.getEntity(prefix,id)) {
       this.prefix = prefix;
       this.entID = id;
@@ -195,8 +195,8 @@ EDITORS.EntityPropVE.prototype = {
       this.createValueDisplay();
       if (this.prefix == "cat" && this.entity ) {
        if (this.dataMgr && !this.catTypeIDs){//default to list of dict or gloss
-        this.catTypeIDs = [this.dataMgr.termInfo.idByTerm_ParentLabel["dictionary-catalogtype"],//term dependency
-                        this.dataMgr.termInfo.idByTerm_ParentLabel["glossary-catalogtype"]];//term dependency
+        this.catTypeIDs = [this.dataMgr.termInfo.idByTerm_ParentLabel["dictionary-catalogtype"],//warning! term dependency
+                        this.dataMgr.termInfo.idByTerm_ParentLabel["glossary-catalogtype"]];//warning! term dependency
        }
 //        this.createDescriptionUI();
         this.createTypeUI(this.catTypeIDs);
@@ -204,6 +204,25 @@ EDITORS.EntityPropVE.prototype = {
       if (this.prefix == "seq" && this.entity ) {
         this.createSuperScriptDisplay();
         this.createSeqTypeUI();
+      }
+      if ((this.prefix == "tok" || this.prefix == "cmp") && this.entity ) {
+        //find current syntax dependency link info
+        this.sfLinkTypeID = null;
+        this.sfOldLinkTypeID = null;
+        this.sfLinkToEntGID = null;
+        if (this.entity.relatedEntGIDsByType && Object.keys(this.entity.relatedEntGIDsByType).length > 0) {
+          var synfuncTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["syntaticfunction-linkagetype"];//warning! term dependency
+          for (relTermID in this.entity.relatedEntGIDsByType) {
+            if (this.dataMgr.termInfo.termByID[relTermID].trm_parent_id == synfuncTypeID) {//caution only checks immediate parent
+              if (this.entity.relatedEntGIDsByType[relTermID].length) {
+                this.sfLinkTypeID = relTermID;
+                this.sfLinkToEntGID = this.entity.relatedEntGIDsByType[relTermID][0]; // should only be one
+                break;
+              }
+            }
+          }
+        }
+        this.createSynFuncUI();
       }
       if (this.prefix == "txt" && this.entity ) {
         this.createTextInvDisplay();
@@ -805,6 +824,194 @@ EDITORS.EntityPropVE.prototype = {
     DEBUG.traceExit("createTypeUI");
   },
 
+
+/**
+* put your comment there...
+*
+*/
+
+  createSynFuncUI: function() {//syntatic function link ui for word
+    var entPropVE = this,
+        sfValue = "Select syntatic function", sfLinkTypeID = this.sfLinkTypeID, sfLinkToEntGID = this.sfLinkToEntGID,
+        sfLinkToEntValue, valueEditable = this.controlVE.type == "EditionVE",
+        treeSfLinkTypeName = this.id+'sflinktypetree';
+    DEBUG.traceEntry("createSynFuncUI");
+    if (sfLinkToEntGID) {
+      sfLinkToEntValue = this.dataMgr.getEntityFromGID(sfLinkToEntGID).value;
+    }
+    if (sfLinkTypeID) {
+      sfValue = this.dataMgr.getTermFromID(sfLinkTypeID);
+    }
+    //create UI container
+    this.sfLinkTypeUI = $('<div class="sfLinkTypeUI"></div>');
+    this.contentDiv.append(this.sfLinkTypeUI);
+    //create label with Add new button
+    this.sfLinkTypeUI.append($('<div class="propDisplayUI">'+
+                          '<div class="valueLabelDiv propDisplayElement'+(sfLinkToEntGID?" linked":"")+(valueEditable?"":" readonly")+'">'+
+                          sfValue+(sfLinkToEntValue?' → '+sfLinkToEntValue:"")+'</div>'+
+                          '<span class="addButton"><u>'+(sfLinkToEntGID?'Change':'Select')+' dependency</u></span></div>'+
+                          '</div>'));
+    //create input with selection tree
+    this.sfLinkTypeUI.append($('<div class="propEditUI" style="border:none; background-color: inherit;">'+
+                    '<div class="propEditElement"><div id="'+ treeSfLinkTypeName+'"></div></div>'+
+                    '</div>'));
+    this.linkTypeTree = $('#'+treeSfLinkTypeName,this.sfLinkTypeUI);
+    this.linkTypeTree.jqxTree({
+           source: this.dataMgr.sfLinkTypes,
+           width: 150,
+           hasThreeStates: false, checkboxes: false,
+           theme:'energyblue'
+    });
+    $('.propEditElement',this.sfLinkTypeUI).addClass('sfLinkTypeUI');
+    //attach event handlers
+    if (valueEditable) {
+      //click to edit
+      $('div.valueLabelDiv',this.sfLinkTypeUI).unbind("click").bind("click",function(e) {
+        $('div.edit',entPropVE.contentDiv).removeClass("edit");
+        entPropVE.sfLinkTypeUI.addClass("edit");
+        //init tree to current type
+        var curItem,
+            offset = 0;
+        if (entPropVE.sfLinkTypeID){
+          curItem = $('#trm'+entPropVE.sfLinkTypeID, entPropVE.linkTypeTree);
+          if (curItem && curItem.length) {
+            curItem = curItem.get(0);
+            entPropVE.suppressSubSelect = true;
+            entPropVE.linkTypeTree.jqxTree('selectItem',curItem);
+            //expand selected item sub tree if needed
+            curItem = entPropVE.linkTypeTree.jqxTree('getSelectedItem');
+            while (curItem && curItem.parentElement) {//walk the tree expanding as we go
+              entPropVE.linkTypeTree.jqxTree('expandItem',curItem.parentElement);
+              curItem = entPropVE.linkTypeTree.jqxTree('getItem',curItem.parentElement);
+            }
+            curItem = entPropVE.linkTypeTree.jqxTree('getItem',$('li:first',entPropVE.linkTypeTree).get(0));
+            while (curItem && !curItem.selected) {
+              offset += 25;
+              if (curItem.isExpanded) {
+                offset += 2;
+              }
+              curItem = entPropVE.linkTypeTree.jqxTree('getNextItem',curItem.element);
+            }
+            delete entPropVE.suppressSubSelect;
+          }
+        }
+        setTimeout(function(){
+            $('.sfLinkTypeUI',entPropVE.sfLinkTypeUI).scrollTop(offset);
+          },50);
+        e.stopImmediatePropagation();
+        return false;
+      });
+      //blur to cancel
+      this.linkTypeTree.unbind("blur").bind("blur",function(e) {
+        var sfLinkType = entPropVE.dataMgr.getTermFromID(entPropVE.sfLinkTypeID),
+            sfLinkToEntValue;
+        if (entPropVE.sfLinkToEntGID) {
+          sfLinkToEntValue = entPropVE.dataMgr.getEntityFromGID(sfLinkToEntGID).value;
+        }
+        $('div.valueLabelDiv',entPropVE.sfLinkTypeUI).html(sfLinkType+' → '+(sfLinkToEntValue?sfLinkToEntValue:""));
+        $('span.addButton',entPropVE.sfLinkTypeUI).html("<u>"+(entPropVE.sfLinkToEntGID?'Change':'Select')+" dependency</u>");
+        entPropVE.sfLinkTypeUI.removeClass("edit");
+      });
+      //change sequence type
+      this.linkTypeTree.on('select', function (event) {
+          if (entPropVE.suppressSubSelect) {
+            return;
+          }
+          var args = event.args,
+              sfLinkType,sfLinkToEntValue,
+              item =  entPropVE.linkTypeTree.jqxTree('getItem', args.element);
+          if (item.value && item.value != entPropVE.sfLinkTypeID) {//user selected to change sequence type
+            //save old type
+            if (entPropVE.sfLinkTypeID) {
+              entPropVE.sfOldLinkTypeID = entPropVE.sfLinkTypeID;
+            }
+            entPropVE.sfLinkTypeID = item.value;
+            entPropVE.linkDependencyEntity();
+//            sfLinkType = entPropVE.dataMgr.getTermFromID(entPropVE.sfLinkTypeID);
+//            if (entPropVE.sfLinkToEntGID) {
+//              sfLinkToEntValue = entPropVE.dataMgr.getEntityFromGID(sfLinkToEntGID).value;
+//            }
+//            $('div.valueLabelDiv',entPropVE.sfLinkTypeUI).html(sfLinkType+' → '+(sfLinkToEntValue?sfLinkToEntValue:""));
+//            $('span.addButton',entPropVE.sfLinkTypeUI).html("<u>"+(entPropVE.sfLinkToEntGID?'Change':'Select')+" dependency</u>");
+          }
+          entPropVE.sfLinkTypeUI.removeClass("edit");
+      });
+      //attach event handlers
+      $('span.addButton',entPropVE.sfLinkTypeUI).unbind("click").bind("click",function(e) {
+          var sfLinkType;
+          entPropVE.sfLinkTypeID = entPropVE.sfLinkTypeID?entPropVE.sfLinkTypeID:predTypeID;
+          sfLinkType = entPropVE.dataMgr.getTermFromID(entPropVE.sfLinkTypeID);
+          if (entPropVE.controlVE && entPropVE.controlVE.setLinkSfDependencyFlag) {
+            if (entPropVE.controlVE.setLinkSfDependencyFlag(true)) {
+              $('span.addButton',entPropVE.sfLinkTypeUI).html("Click "+sfLinkType+" word");
+            } else {
+              alert("Unable to place "+entPropVE.controlVE.type+" into word select mode. Please ensure editor is in view mode.");
+            }
+          }
+          e.stopImmediatePropagation();
+          return false;
+        });
+      }
+    DEBUG.traceExit("createSynFuncUI");
+  },
+
+/**
+* put your comment there...
+*
+* @param toGID
+*/
+
+  linkDependencyEntity: function(toGID) {
+    var savedata ={},
+        entPropVE = this;
+    DEBUG.traceEntry("linkDependencyEntity");
+    if (this.sfLinkTypeID && this.entGID && (this.sfLinkToEntGID || toGID)) {//requires all params
+      savedata['fromGID'] = this.entGID;
+      savedata['linkTypeID'] = this.sfLinkTypeID;
+      savedata['toGID'] = toGID?toGID:this.sfLinkToEntGID;
+      if (this.sfOldLinkTypeID && this.sfOldLinkTypeID != this.sfLinkToEntGID) {
+        savedata['oldLinkTypeID'] = this.sfOldLinkTypeID;
+      }
+      savedata['unique'] = 1;
+      if (DEBUG.healthLogOn) {
+        savedata['hlthLog'] = 1;
+      }
+      //jqAjax async save
+      $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: basepath+'/services/saveLink.php?db='+dbName,//caution dependency on context having basepath and dbName
+          data: savedata,
+          async: true,
+          success: function (data, status, xhr) {
+              var oldLemID = entPropVE.entID;
+              if (typeof data == 'object' && data.success && data.entities) {
+                //update data
+                entPropVE.dataMgr.updateLocalCache(data,null);
+                if (entPropVE.controlVE && entPropVE.controlVE.setLinkSfDependencyFlag) {
+                  entPropVE.controlVE.setLinkSfDependencyFlag(false);
+                }
+                entPropVE.showEntity();
+              }
+              if (data.editionHealth) {
+                DEBUG.log("health","***Unlink Related***");
+                DEBUG.log("health","Params: "+JSON.stringify(savedata));
+                DEBUG.log("health",data.editionHealth);
+              }
+              if (data.errors) {
+                alert("An error occurred while trying to remove link. Error: " + data.errors.join());
+              }
+          },
+          error: function (xhr,status,error) {
+              // add record failed.
+              alert("An error occurred while trying to remove link. Error: " + error);
+          }
+      });
+    } else {
+      DEBUG.log("gen","invalid call to linkDependency (" + this.entGID + " - " + this.sfLinkTypeID + " - " + toGID + ")");
+    }
+    DEBUG.traceExit("linkDependencyEntity");
+  },
 
 /**
 * create sequence type property UI

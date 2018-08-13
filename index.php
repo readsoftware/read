@@ -153,6 +153,7 @@
                                                  seqTypeTagToLabel: ((seqTypeInfo && seqTypeInfo['seqTypeTagToLabel'])?seqTypeInfo['seqTypeTagToLabel']:""),
                                                  seqTypeTagToList: ((seqTypeInfo && seqTypeInfo['seqTypeTagToList'])?seqTypeInfo['seqTypeTagToList']:""),
                                                  linkTypes: ((linkTypeInfo && linkTypeInfo['types']) ?linkTypeInfo['types']:""),
+                                                 sfLinkTypes: ((linkTypeInfo && linkTypeInfo['sftypes']) ?linkTypeInfo['sftypes']:""),
                                                  linkTypeTagToLabel: ((linkTypeInfo && linkTypeInfo['linkTypeTagToLabel'])?linkTypeInfo['linkTypeTagToLabel']:""),
                                                  linkTypeTagToList: ((linkTypeInfo && linkTypeInfo['linkTypeTagToList'])?linkTypeInfo['linkTypeTagToList']:""),
                                                  tags: ((typeof tagInfo == "undefined")?"":tagInfo),

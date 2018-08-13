@@ -60,6 +60,8 @@ if (!$data) {
   $toGID = null;
   $linkType = null;
   $linkTypeID = null;
+  $oldLinkTypeID = null;
+  $unique = false;
   if ( isset($data['fromGID'])) {//get lemma id
     $fromGID = $data['fromGID'];
   }
@@ -68,6 +70,12 @@ if (!$data) {
   }
   if ( isset($data['linkTypeID'])) {
     $linkTypeID = $data['linkTypeID'];
+  }
+  if ( isset($data['oldLinkTypeID'])) {
+    $oldLinkTypeID = $data['oldLinkTypeID'];
+  }
+  if ( isset($data['unique'])) {
+    $unique = $data['unique'];
   }
   if ( isset($data['linkType'])) {//todo: this assumes direct decendent of linkagetype need a way to specify terms under linkage
     $linkType = $data['linkType'];
@@ -99,15 +107,59 @@ if (count($errors) == 0) {
       if ($sLink->isReadonly()) {
         continue;
       } else {
-        $originalLinkID = $sLink->getID();
-        $link = $sLink;
-        break;
+        if (!$link) {
+          $originalLinkID = $sLink->getID();
+          $link = $sLink;
+          if (!$unique) {
+            break;
+          }
+        } else if (count($sLink->getLinkFromIDs()) == 1){ //only linked with this entity and there are multiple for a linktype that needs to be unique
+          $sLink->markForDelete();
+          addRemoveEntityReturnData($sLink->getEntityTypeCode(),$sLink->getID());
+          //TODO determine if toGIDs need update
+          //TODO test if this erases other owner (group) current user is member of
+        }
+      }
+    }
+  }
+  if ($oldLinkTypeID) {//existing link
+    $links = new Annotations("ano_type_id = $oldLinkTypeID and '$fromGID' = ANY(ano_linkfrom_ids)");
+    if ($links->getCount() > 0) {//for now take first writable one later either combine or check for existing to GID
+      if (!$link) {// try and find existing
+        foreach ( $links as $sLink ) {
+          if ($sLink->isReadonly()) {
+            continue;
+          } else {
+            if (!$link) {
+              $originalLinkID = $sLink->getID();
+              $link = $sLink;
+              if (!$unique) {
+                break;
+              }
+            } else if (count($sLink->getLinkFromIDs()) == 1){ //only linked with this entity and there are multiple for a linktype that needs to be unique
+              $sLink->markForDelete();
+              addRemoveEntityReturnData($sLink->getEntityTypeCode(),$sLink->getID());
+              //TODO determine if toGIDs need update
+              //TODO test if this erases other owner (group) current user is member of
+            }
+          }
+        }
+      } else {//new link exist so remove old link
+        foreach ( $links as $sLink ) {
+          if ($sLink->isReadonly()) {
+            continue;
+          } else {
+            $sLink->markForDelete();
+            addRemoveEntityReturnData($sLink->getEntityTypeCode(),$sLink->getID());
+            //TODO determine if toGIDs need update
+            //TODO test if this erases other owner (group) current user is member of
+          }
+        }
       }
     }
   }
   if (!$link) {// no existing create a link annotation with linktype
     $link = new Annotation();
-    $link->setTypeID($linkTypeID);
     $link->setOwnerID($defOwnerID);
     $link->setVisibilityIDs($defVisIDs);
     if ($defAttrIDs){
@@ -115,21 +167,23 @@ if (count($errors) == 0) {
     }
   }
   $toLinkGIDs = $link->getLinkToIDs();
-  if (count($toLinkGIDs) > 0) {
+  if (count($toLinkGIDs) > 0 && !$unique) {
     if (!in_array($toGID,$toLinkGIDs)) {// no duplicates
       array_push($toLinkGIDs,$toGID);
     }
   } else {
     $toLinkGIDs = array($toGID);
   }
+  $link->setTypeID($linkTypeID);
   $link->setLinkToIDs($toLinkGIDs);
   $fromLinkGIDs = $link->getLinkFromIDs();
-  if (count($fromLinkGIDs) > 0) {
+  if (count($fromLinkGIDs) > 0 && !$unique) {
     if (!in_array($fromGID,$fromLinkGIDs)) {
       array_push($fromLinkGIDs,$fromGID);
     }
   } else {
     $fromLinkGIDs = array($fromGID);
+    array_push($warnings,"warning replacing(".join(',',$fromLinkGIDs).") $linkType links with $fromGID in".$link->getEntityTag());
   }
   $link->setLinkFromIDs($fromLinkGIDs);
   $link->save();

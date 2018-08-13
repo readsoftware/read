@@ -1404,5 +1404,27 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1443,'en=>"Item"',1442,778,'{742,744,745,972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1444,'en=>"LemmaLinkage"',278,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1445,'en=>"Alternate"',1444,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1446,'en=>"GVerbalVoice"',873,776,'{877}',NULL,'Verbal Voice',NULL,NULL,NULL,1,'{2}');
-ALTER SEQUENCE term_trm_id_seq RESTART WITH 1447;
+(1446,'en=>"GVerbalVoice"',873,776,'{877}',NULL,'Verbal Voice',NULL,NULL,NULL,1,'{2}'),
+(1447,'en=>"SyntaticFunction"',1,781,NULL,NULL,'Syntatic Function',NULL,NULL,NULL,1,'{2}'),
+(1448,'en=>"PRED"',1447,778,NULL,NULL,'predicate',NULL,NULL,NULL,1,'{2}'),
+(1449,'en=>"SBJ"',1447,778,NULL,NULL,'subject',NULL,NULL,NULL,1,'{2}'),
+(1450,'en=>"OBJ"',1447,778,NULL,NULL,'object',NULL,NULL,NULL,1,'{2}'),
+(1451,'en=>"ATR"',1447,778,NULL,NULL,'attributive',NULL,NULL,NULL,1,'{2}'),
+(1452,'en=>"ADV"',1447,778,NULL,NULL,'adverbial',NULL,NULL,NULL,1,'{2}'),
+(1453,'en=>"ATV/AtvV"',1447,778,NULL,NULL,'complement',NULL,NULL,NULL,1,'{2}'),
+(1454,'en=>"PNOM"',1447,778,NULL,NULL,'predicate nominal',NULL,NULL,NULL,1,'{2}'),
+(1455,'en=>"OCOMP"',1447,778,NULL,NULL,'object complement',NULL,NULL,NULL,1,'{2}'),
+(1456,'en=>"COORD"',1447,778,NULL,NULL,'coordinator',NULL,NULL,NULL,1,'{2}'),
+(1457,'en=>"APOS"',1447,778,NULL,NULL,'apposing element',NULL,NULL,NULL,1,'{2}'),
+(1458,'en=>"AuxP"',1447,778,NULL,NULL,'preposition',NULL,NULL,NULL,1,'{2}'),
+(1459,'en=>"AuxC"',1447,778,NULL,NULL,'conjunction',NULL,NULL,NULL,1,'{2}'),
+(1460,'en=>"AuxR"',1447,778,NULL,NULL,'reflexive passive',NULL,NULL,NULL,1,'{2}'),
+(1461,'en=>"AuxV"',1447,778,NULL,NULL,'auxiliary verb',NULL,NULL,NULL,1,'{2}'),
+(1462,'en=>"AuxX"',1447,778,NULL,NULL,'commas',NULL,NULL,NULL,1,'{2}'),
+(1463,'en=>"AuxG"',1447,778,NULL,NULL,'bracketing punctuation',NULL,NULL,NULL,1,'{2}'),
+(1464,'en=>"AuxK"',1447,778,NULL,NULL,'terminal punctuation',NULL,NULL,NULL,1,'{2}'),
+(1465,'en=>"AuxY"',1447,778,NULL,NULL,'sentence adverbials',NULL,NULL,NULL,1,'{2}'),
+(1466,'en=>"AuxZ"',1447,778,NULL,NULL,'emphasizing particles',NULL,NULL,NULL,1,'{2}'),
+(1467,'en=>"ExD"',1447,778,NULL,NULL,'ellipsis',NULL,NULL,NULL,1,'{2}');
+
+ALTER SEQUENCE term_trm_id_seq RESTART WITH 1468;

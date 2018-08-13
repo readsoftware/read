@@ -836,12 +836,30 @@ $linkTypeTagToList = array();
 function getLinkTypeInfo() {
   global $linkTypeTagToLabel,$linkTypeTagToList;
   $linkTypeInfo = null;
-  $linkTypeTerms = new Terms("trm_labels::hstore->'en' = 'LemmaLinkage'",null,null);
+  $linkTypeTerms = new Terms("trm_labels::hstore->'en' = 'LemmaLinkage'",null,null,null);
   if ($linkTypeTerms && $linkTypeTerms->getCount() > 0 ){
     $linkTypeID = $linkTypeTerms->current()->getID();
     $linkTypesStruct = getLinkSubTypeStructure($linkTypeID);
     if (count($linkTypesStruct) > 0) {
       $linkTypeInfo = array ("types"=>$linkTypesStruct);
+      if (count($linkTypeTagToLabel) > 0) {
+        $linkTypeInfo["linkTypeTagToLabel"]=$linkTypeTagToLabel;
+      }
+      if (count($linkTypeTagToList) > 0) {
+        $linkTypeInfo["linkTypeTagToList"]=$linkTypeTagToList;
+      }
+    }
+  }
+  $sfLinkTypeTerms = new Terms("trm_labels::hstore->'en' = 'SyntaticFunction'",'trm_id',null,null);
+  if ($sfLinkTypeTerms && $sfLinkTypeTerms->getCount() > 0 ){
+    $sfLinkTypeID = $sfLinkTypeTerms->current()->getID();
+    $sfLinkTypesStruct = getLinkSubTypeStructure($sfLinkTypeID);
+    if (count($sfLinkTypesStruct) > 0) {
+      if (!$linkTypeInfo) {
+        $linkTypeInfo = array ("sftypes"=>$sfLinkTypesStruct);
+      } else {
+        $linkTypeInfo["sftypes"] = $sfLinkTypesStruct;
+      }
       if (count($linkTypeTagToLabel) > 0) {
         $linkTypeInfo["linkTypeTagToLabel"]=$linkTypeTagToLabel;
       }

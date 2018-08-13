@@ -506,6 +506,10 @@
                     }
                   }
                 }
+                $related = $compound->getRelatedEntitiesByLinkType();
+                if (count($related) > 0) {
+                  $entities['cmp'][$cmpID]['relatedEntGIDsByType'] = $related;
+                }
                 $AnoIDs = $compound->getAnnotationIDs();
                 if (count($AnoIDs) > 0) {
                   $entities['cmp'][$cmpID]['annotationIDs'] = $AnoIDs;
@@ -557,6 +561,10 @@
                   foreach ($tGraIDs as $graID) {
 //                    array_push($entityIDs['gra'],$graID);
                   }
+                }
+                $related = $token->getRelatedEntitiesByLinkType();
+                if (count($related) > 0) {
+                  $entities['tok'][$tokID]['relatedEntGIDsByType'] = $related;
                 }
                 $AnoIDs = $token->getAnnotationIDs();
                 if (count($AnoIDs) > 0) {

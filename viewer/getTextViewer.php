@@ -997,6 +997,7 @@
                     if (entGlossInfo['infHtml']) {
                       popupHtml += entGlossInfo['infHtml'];
                     }
+                    //TODO syntax  add code here to construct syntax html and add dblclick and root-highlite code below
                     popupHtml += '</div>';
                     if (lemmaInfo['attestedHtml'] || lemmaInfo['relatedHtml']) {
 <?php
@@ -1024,6 +1025,7 @@
               }
               $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[entTag]]);
               closeAllPopups();
+              //TODO syntax add code to highlight root word in transcription
               if (popupHtml) {
                 $glossExtraInfoDiv = $(this).jqxTooltip({ content: '<div class="popupwrapperdiv">'+popupHtml+"</div>",
                                                            trigger: 'click',
@@ -1034,6 +1036,7 @@
                 });
                 $(this).jqxTooltip('open');
                 $('.grpTok.'+entTag,$textViewerContent).addClass('showing');
+                //TODO syntax add code for dblclick on popup root to change popup to root.
 <?php
   if (!USESCROLLLEMMAPOPUP) {
 ?>

@@ -47,7 +47,8 @@ var MANAGERS = MANAGERS || {};
 *  "seqTypes" reference to sequence type items hierarchical information structure
 *  "linkTypeTagToLabel" reference to lookup table for link type term entTag to label
 *  "linkTypeTagToList" reference to lookup table for link type term entTag to term list ids
-*  "linkTypes" reference to link type items hierarchical information structure
+*  "linkTypes" reference to linkage type items hierarchical information structure
+*  "sfLinkTypes" reference to Syntatic Function linkage type items hierarchical information structure
 *  "basepath" string for basepath of READ
 *  "dbname" string for database name of the current session
 *  "entityInfo" structure of information of entity types
@@ -69,6 +70,7 @@ MANAGERS.DataManager =  function(dataMgrCfg) {
   this.linkTypeTagToLabel = dataMgrCfg['linkTypeTagToLabel'] ? dataMgrCfg['linkTypeTagToLabel']:"";
   this.linkTypeTagToList = dataMgrCfg['linkTypeTagToList'] ? dataMgrCfg['linkTypeTagToList']:"";
   this.linkTypes = dataMgrCfg['linkTypes'] ? dataMgrCfg['linkTypes']:"";
+  this.sfLinkTypes = dataMgrCfg['sfLinkTypes'] ? dataMgrCfg['sfLinkTypes']:"";
   this.basepath = dataMgrCfg['basepath'] ? dataMgrCfg['basepath']:"";
   this.dbName = dataMgrCfg['dbname'] ? dataMgrCfg['dbname']:null;
   this.entityInfo = dataMgrCfg['entityInfo'] ? dataMgrCfg['entityInfo']:entityInfo;
