@@ -1449,6 +1449,9 @@ function invalidateLemma($lemma = null) { // setDirty flag
 */
 
 function invalidateCachedEditionEntities($ednID = null) { // setDirty flag
+  if (!$ednID) {
+    return;
+  }
   $cacheKey = "edn$ednID"."cachedEntities";
   invalidateCache($cacheKey);
 }

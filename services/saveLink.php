@@ -87,7 +87,7 @@ if (!$data) {
     array_push($errors,"saveLink must have a 'from' entity GID");
   }
   if (!$toGID || count($toGID) == 0) {
-    array_push($errors,"saveLink must have a 'to' entity GID");
+//    array_push($errors,"saveLink must have a 'to' entity GID");
   }
   if (!$linkTypeID) { // todo add check that this is a valid linktype
     array_push($errors,"saveLink must have a link type");
@@ -198,8 +198,30 @@ if (count($errors) == 0) {
       addUpdateEntityReturnData('ano',$linkID,'linkedFromIDs',$fromLinkGIDs);
     }
     //for link from GID update relatedEntGIDsByType field
-    $linkFromEntity = EntityFactory::createEntityFromGlobalID($fromGID);
+    $linkFromEntity = EntityFactory::createEntityFromGlobalID($fromGID);//assumed to be a tok or cmp  GID
     addUpdateEntityReturnData($linkFromEntity->getEntityTypeCode(),$linkFromEntity->getID(),'relatedEntGIDsByType', $linkFromEntity->getRelatedEntitiesByLinkType());
+    $txtDivTypeID = Entity::getIDofTermParentLabel("textdivision-text"); //warning!! term dependency
+    $txtTypeID = Entity::getIDofTermParentLabel("text-sequencetype"); //warning!! term dependency
+    // TODO mark cache dirty so updates text div seq and edition as a whole
+    $txtDivSeqs = new Sequences("'$fromGID' = ANY(seq_entity_ids) and seq_type_id = $txtDivTypeID",null,null,null);
+    if ($txtDivSeqs->getCount() > 0) {//
+      foreach ( $txtDivSeqs as $txtDivSeq ) {
+        $txtSeqs = new Sequences("'".$txtDivSeq->getGlobalID()."' = ANY(seq_entity_ids) and seq_type_id = $txtTypeID",null,null,null);
+        if ($txtSeqs->getCount() > 0) {//
+          foreach ( $txtSeqs as $txtSeq ) {
+            $editions = new Editions("'".$txtSeq->getID()."' = ANY(edn_sequence_ids)",null,null,null);
+            if ($editions->getCount() > 0) {//
+              foreach ($editions as $edition) {
+                $ednID = $edition->getID();
+                $ednSeqIDs = $edition->getSequenceIDs();
+                invalidateCachedEditionEntities($ednID);
+                invalidateCachedSeqEntities($txtDivSeq->getID(),$ednID);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
 

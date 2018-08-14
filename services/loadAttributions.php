@@ -118,7 +118,7 @@
     }
   }
   $retVal = array("entities" => $entities,
-                  "termInfo" => $termInfo,
+//                  "termInfo" => $termInfo,
                   "attrs" => $attrs);
   $jsonRetVal = json_encode($retVal);
   if (count($warnings) > 0) {
@@ -135,9 +135,9 @@
       $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
       $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
     } else {
-      $jsonCache->clearDirtyBit();
       $jsonCache->setJsonString($jsonRetVal);
     }
+    $jsonCache->clearDirtyBit();
     $jsonCache->save();
   }
   if (array_key_exists("callback",$_REQUEST)) {

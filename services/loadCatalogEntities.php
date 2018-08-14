@@ -183,8 +183,8 @@
         unset($entities['update'][$prefix]);
       }
     }
-    $retVal = array("entities" => $entities,
-                    "termInfo" => $termInfo);
+    $retVal = array("entities" => $entities);
+//                    "termInfo" => $termInfo)
     $retString = json_encode($retVal);
   }
   if ($saveCatalogToCache) {

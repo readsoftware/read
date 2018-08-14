@@ -214,11 +214,11 @@ EDITORS.EntityPropVE.prototype = {
           var synfuncTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["syntaticfunction-linkagetype"];//warning! term dependency
           for (relTermID in this.entity.relatedEntGIDsByType) {
             if (this.dataMgr.termInfo.termByID[relTermID].trm_parent_id == synfuncTypeID) {//caution only checks immediate parent
-              if (this.entity.relatedEntGIDsByType[relTermID].length) {
-                this.sfLinkTypeID = relTermID;
+              this.sfLinkTypeID = relTermID;
+              if (this.entity.relatedEntGIDsByType[relTermID] && this.entity.relatedEntGIDsByType[relTermID].length) {
                 this.sfLinkToEntGID = this.entity.relatedEntGIDsByType[relTermID][0]; // should only be one
-                break;
               }
+              break;
             }
           }
         }
@@ -848,7 +848,7 @@ EDITORS.EntityPropVE.prototype = {
     //create label with Add new button
     this.sfLinkTypeUI.append($('<div class="propDisplayUI">'+
                           '<div class="valueLabelDiv propDisplayElement'+(sfLinkToEntGID?" linked":"")+(valueEditable?"":" readonly")+'">'+
-                          sfValue+(sfLinkToEntValue?' → '+sfLinkToEntValue:"")+'</div>'+
+                          sfValue+' → '+(sfLinkToEntValue?sfLinkToEntValue:"")+'</div>'+
                           '<span class="addButton"><u>'+(sfLinkToEntGID?'Change':'Select')+' dependency</u></span></div>'+
                           '</div>'));
     //create input with selection tree
@@ -938,9 +938,10 @@ EDITORS.EntityPropVE.prototype = {
       });
       //attach event handlers
       $('span.addButton',entPropVE.sfLinkTypeUI).unbind("click").bind("click",function(e) {
-          var sfLinkType;
-          entPropVE.sfLinkTypeID = entPropVE.sfLinkTypeID?entPropVE.sfLinkTypeID:predTypeID;
-          sfLinkType = entPropVE.dataMgr.getTermFromID(entPropVE.sfLinkTypeID);
+          var sfLinkType = 'unknown';
+          if (entPropVE.sfLinkTypeID){
+            sfLinkType = entPropVE.dataMgr.getTermFromID(entPropVE.sfLinkTypeID);
+          }
           if (entPropVE.controlVE && entPropVE.controlVE.setLinkSfDependencyFlag) {
             if (entPropVE.controlVE.setLinkSfDependencyFlag(true)) {
               $('span.addButton',entPropVE.sfLinkTypeUI).html("Click "+sfLinkType+" word");
@@ -965,7 +966,7 @@ EDITORS.EntityPropVE.prototype = {
     var savedata ={},
         entPropVE = this;
     DEBUG.traceEntry("linkDependencyEntity");
-    if (this.sfLinkTypeID && this.entGID && (this.sfLinkToEntGID || toGID)) {//requires all params
+    if (this.sfLinkTypeID && this.entGID ) {//&& (this.sfLinkToEntGID || toGID)) {//requires all params
       savedata['fromGID'] = this.entGID;
       savedata['linkTypeID'] = this.sfLinkTypeID;
       savedata['toGID'] = toGID?toGID:this.sfLinkToEntGID;

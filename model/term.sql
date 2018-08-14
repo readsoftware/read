@@ -1405,7 +1405,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1444,'en=>"LemmaLinkage"',278,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1445,'en=>"Alternate"',1444,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1446,'en=>"GVerbalVoice"',873,776,'{877}',NULL,'Verbal Voice',NULL,NULL,NULL,1,'{2}'),
-(1447,'en=>"SyntaticFunction"',1,781,NULL,NULL,'Syntatic Function',NULL,NULL,NULL,1,'{2}'),
+(1447,'en=>"SyntaticFunction"',278,781,NULL,NULL,'Syntatic Function',NULL,NULL,NULL,1,'{2}'),
 (1448,'en=>"PRED"',1447,778,NULL,NULL,'predicate',NULL,NULL,NULL,1,'{2}'),
 (1449,'en=>"SBJ"',1447,778,NULL,NULL,'subject',NULL,NULL,NULL,1,'{2}'),
 (1450,'en=>"OBJ"',1447,778,NULL,NULL,'object',NULL,NULL,NULL,1,'{2}'),

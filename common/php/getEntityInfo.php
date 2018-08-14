@@ -16,6 +16,7 @@
   $termInfo = array();
   $termIDToEnLabel = array();
   $termIDToCode = array();
+  $termIDToTerm = array();
   $term_parentLabelToID = array();
   $termIDToParentID = array();
   $enumTermIDs = array();
@@ -60,6 +61,7 @@
   $dbMgr->query("SELECT trm_id, trm_labels::hstore->'en' as trm_label, trm_code, trm_list_ids, trm_parent_id FROM term;");
   while($row = $dbMgr->fetchResultRow()){
     $termIDToEnLabel[$row['trm_id']] = $row['trm_label'];
+    $termIDToTerm[$row['trm_id']] = $row;
     if ($row['trm_parent_id']) {
      $termIDToParentID[$row['trm_id']] = $row['trm_parent_id'];
     }
@@ -100,6 +102,7 @@
   }
   $termInfo['idByTerm_ParentLabel'] = $term_parentLabelToID;
   $termInfo['labelByID'] = $termIDToEnLabel;
+  $termInfo['termByID'] = $termIDToTerm;
   $termInfo['codeByID'] = $termIDToCode;
   $termInfo['enumTypeIDs'] = $enumTypeIDs;
   $termInfo['fkTypeIDs'] = $fkFieldTermIDs;

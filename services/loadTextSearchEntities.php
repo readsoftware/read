@@ -281,9 +281,9 @@
     if (count($warnings)) {
       $retVal["warnings"] = $warnings;
     }
-    if (count($termInfo)) {
-      $retVal["termInfo"] = $termInfo;
-    }
+//    if (count($termInfo)) {
+//      $retVal["termInfo"] = $termInfo;
+//    }
     if (count($cknLookup)) {
       $retVal["cknToTextID"] = $cknLookup;
     }
