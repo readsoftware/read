@@ -528,6 +528,8 @@ function getMultiEditionHeaderHtml($ednIDs) {
   $pubSortKeys = array();
   $researchEditionsHTML = array();
   $researchSortKeys = array();
+  $defaultEditionFound = false;
+  $defaultEditionHTML = null;
   foreach ($ednIDs as $ednID) {//accumulate in order all subsequence for text, text physical and analysis
     $edition = new Edition($ednID);
     if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
@@ -535,7 +537,12 @@ function getMultiEditionHeaderHtml($ednIDs) {
         ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
       continue;
     } else {
-      $ord = $edition->getScratchProperty('ordinal');
+      if (!$defaultEditionFound && $edition->getScratchProperty('default')) {//if the edition is default show first
+        $defaultEditionFound = true;
+        $ord = "default";
+      } else {
+        $ord = $edition->getScratchProperty('ordinal');
+      }
       $date = "";
       $descr = $edition->getDescription();
       $hdrText = $descr;
@@ -554,24 +561,31 @@ function getMultiEditionHeaderHtml($ednIDs) {
           }
         }
       }
-      if ($ord && is_numeric($ord)) {
-        $sort = $ord;
-      } else if ($date) {
-        $sort = $date;
+      if ($ord == "default") {
+        $defaultEditionHTML = "<button id=\"edn$ednID\" class=\"textEdnButton research defaultedition\" title=\"$descr\">$hdrText</button>";
       } else {
-        $sort = intval($ednID)*10000;
-      }
-      if ($edition->isResearchEdition()) {
-        $researchEditionsHTML[$ednID] = "<button id=\"edn$ednID\" class=\"textEdnButton research\" title=\"$descr\">$hdrText</button>";
-        $researchSortKeys[$sort] = $ednID;
-      } else { // published ??
-        $publishedEditionsHTML[$ednID] = "<button id=\"edn$ednID\" class=\"textEdnButton published\" title=\"$descr\">$hdrText</button>";
-        $pubSortKeys[$sort] = $ednID;
+        if ($ord && is_numeric($ord)) {
+          $sort = intval($ord);
+        } else if ($date) {
+          $sort = $date;
+        } else {
+          $sort = intval($ednID)*10000;
+        }
+        if ($edition->isResearchEdition()) {
+          $researchEditionsHTML[$ednID] = "<button id=\"edn$ednID\" class=\"textEdnButton research\" title=\"$descr\">$hdrText</button>";
+          $researchSortKeys[$sort] = $ednID;
+        } else { // published ??
+          $publishedEditionsHTML[$ednID] = "<button id=\"edn$ednID\" class=\"textEdnButton published\" title=\"$descr\">$hdrText</button>";
+          $pubSortKeys[$sort] = $ednID;
+        }
       }
     }
   }
   //create headerDiv Html
   $html = "<div id=\"multiEditionHeaderMenu\">";
+  if ($defaultEditionHTML) {
+    $html .= $defaultEditionHTML;
+  }
   if (count($pubSortKeys)) {
     ksort($pubSortKeys,SORT_NUMERIC);
     foreach ($pubSortKeys as $sort=>$ednID) {
