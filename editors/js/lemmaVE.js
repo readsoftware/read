@@ -2711,9 +2711,12 @@ DEBUG.traceEntry("createPhonologicalUI");
                 }
                 if (lemmaVE.wordlistVE) {
                   //REPLACE WITH insertLemmaEntry and give tokGID as hint (we don't know if user changed spelling)
-                  //lemmaVE.wordlistVE.refreshDisplay((newCatID?newCatID:null), newLemID);
-                      lemmaVE.wordlistVE.insertLemmaEntry(newLemID,tokGID);
-                  lemmaVE.wordlistVE.removeWordEntry(tokGID);
+                  if (newCatID) {
+                    lemmaVE.wordlistVE.refreshDisplay(newCatID, newLemID);
+                  } else {
+                    lemmaVE.wordlistVE.insertLemmaEntry(newLemID,tokGID);
+                    lemmaVE.wordlistVE.removeWordEntry(tokGID);
+                  }
                 }
                     lemmaVE.showLemma('lem',newLemID);
               }

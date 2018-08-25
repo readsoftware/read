@@ -97,7 +97,7 @@ if (!$cmd && !$dbname && !$sqlfilename) {
       break;
 
     case "snapshot":
-      $command = $psqlPath."pg_dump -U '.$psqlUser.' --no-privileges --no-owner $dbname > $sqlFilePath"."snapshot$sqlfilename";
+      $command = $psqlPath."pg_dump -U $psqlUser --no-privileges --no-owner $dbname > $sqlFilePath"."snapshot$sqlfilename";
       if (runShellCommand($command, "Dump $dbname database to $sqlFilePath"."snapshot$sqlfilename", "Aborting - failed to dump database $dbname to $sqlFilePath"."snapshot$sqlfilename")) {
         $info = new SplFileInfo("$sqlFilePath"."snapshot$sqlfilename");
         if ($info && $info->isFile()) {

@@ -210,6 +210,8 @@ if (count($errors) == 0) {
             array_push($errors,"error creating catalog '".$catalog->getDescription()."' - ".$catalog->getErrors(true));
           }else{
             addNewEntityReturnData('cat',$catalog);
+            //flag allresourses as dirty
+            invalidateAllTextResources();
             $catID = $catalog->getID();
             //need to update the editions calculate catIDs field
             $catalogs = new Catalogs($ednID." = ANY (\"cat_edition_ids\")",null,null,null);
@@ -559,7 +561,8 @@ if (count($errors) == 0) {
     $lemma->storeScratchProperty("entry",'');
     $lemma->save();
   }
-
+  invalidateCachedCatalogEntities($catalog->getID());
+  invalidateCachedViewerLemmaHtmlLookup($catalog->getID(),null);
 }
 
 /*

@@ -98,6 +98,7 @@ if (!$data) {
         invalidateCachedEditionEntities($edition->getID());
         invalidateCachedEditionViewerHtml($edition->getID());
         invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
+        invalidateAllTextResources();
         if ($edition->hasError()) {
           array_push($errors,"error updating edition '".$edition->getDescription()."' - ".$edition->getErrors(true));
         }else {

@@ -1,4 +1,4 @@
-<?php
+ <?php
 /**
 * This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
 * and copyright holders of READ, please refer to the file AUTHORS in this distribution or
@@ -224,10 +224,12 @@
       $str = $this->replaceClassNasals($str);
       $cnt = mb_strlen($str);
       $sort = $sort2 = "0.";
+      $prevTyp = "V"; //setup for leading vowel to get carrier sort code
       $errors = array();
       for ($i =0; $i<$cnt;) {
         $inc=1;
         $char = mb_substr($str,$i,1);
+        $srt = $typ = null;
         $testChar = $char;
         $char = mb_strtolower($char);
         // convert multi-byte to grapheme - using greedy lookup
@@ -287,14 +289,21 @@
             }
           }
         }
-        if ($typ == "V" && $i==0) {
+        if ($srt && $typ && $typ == "V" && $prevTyp=="V") {
           $sort .= "19";
           $sort2 .= "5";
+          $prevTyp = $typ;
+        } else if (!$typ) {
+          array_push($errors, "No grapheme type found for char pos $i of $str");
         }
-        $sort .= substr($srt,0,2);
-        $sort2 .= substr($srt,2,1);
+        if ($srt) {
+          $sort .= substr($srt, 0, 2);
+          $sort2 .= substr($srt, 2, 1);
+        } else {
+          array_push($errors, "No grapheme sort code found for char pos $i of $str");
+        }
         $i += $inc;//adjust read pointer
-        $char = $char2 = $char3 = $char4 = null;
+        $typ = $srt = $char = $char2 = $char3 = $char4 = null;
       }
       $this->setSortCode($sort);
       $this->setSortCode2($sort2);

@@ -97,7 +97,7 @@
 //  $entities["update"] = array( 'txt' => array());
   $txtIDs = (array_key_exists('ids',$_REQUEST)? $_REQUEST['ids']:null);
   $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
-                  (defined('DEFAULTSEARCHREFRESH')?DEFAULTSEARCHREFRESH:0));
+                  (defined('DEFAULTSEARCHREFRESH')?DEFAULTSEARCHREFRESH:1));
   $jsonRetVal = "";
   $jsonCache = null;
   $isLoadAll = false;

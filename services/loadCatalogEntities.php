@@ -87,7 +87,7 @@
     $catID = $catalog->getID();
     $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
                  ($catalog->getScratchProperty('refresh')?$catalog->getScratchProperty('refresh'):
-                   (defined('DEFAULTCATALOGREFRESH')?DEFAULTCATALOGREFRESH:0)));
+                   (defined('DEFAULTCATALOGREFRESH')?DEFAULTCATALOGREFRESH:1)));
     if (USECACHE  && !$refresh) {
       $retString = getCachedCatalog($catID);//get user or public cached edition if there is one.
     }
@@ -601,7 +601,7 @@
         return "";
       }
     } else {
-      error_log("warning!!! edition $ednID cached info not used because caching is off");
+      error_log("warning!!! catalog $catID cached info not used because caching is off");
       return "";
     }
   }

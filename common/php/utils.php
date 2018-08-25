@@ -1442,10 +1442,23 @@ function invalidateLemma($lemma = null) { // setDirty flag
 }
 
 /**
+* invalidate cache catalog entities
+*
+* @param int $catID Catalog id
+*/
+
+function invalidateCachedCatalogEntities($catID = null) { // setDirty flag
+  if (!$catID) {
+    return;
+  }
+  $cacheKey = "cat$catID"."cachedEntities";
+  invalidateCache($cacheKey);
+}
+
+/**
 * invalidate cache edition entities
 *
 * @param int $ednID Sequence id
-* @param int $catID Catalog id
 */
 
 function invalidateCachedEditionEntities($ednID = null) { // setDirty flag
@@ -1469,6 +1482,26 @@ function invalidateCachedEditionViewerInfo($edition = null) { // setDirty flag
     $edition->storeScratchProperty('lookupInfo',null);
     $edition->save();
   }
+}
+
+/**
+* invalidate cached all text resources
+*
+*/
+
+function invalidateAllTextResources() { // setDirty flag
+  $cacheKey = 'AllTextResources';
+  invalidateCache($cacheKey);
+}
+
+/**
+* invalidate cached all text search results
+*
+*/
+
+function invalidateSearchAllResults() { // setDirty flag
+  $cacheKey = 'SearchAllResults';
+  invalidateCache($cacheKey);
 }
 
 /**
