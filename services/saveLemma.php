@@ -331,9 +331,13 @@ if (count($errors) == 0) {
             addUpdateEntityReturnData('lem',$lemma->getID(),'certainty',$lemma->getCertainty());
             break;
           default:
-            $lemma->storeScratchProperty($propname,$propval);
-            addUpdateEntityReturnData('lem',$lemma->getID(),$propname,$lemma->getScratchProperty($propname));
-        }
+            $lemma->storeScratchProperty($propname, $propval);
+            if (!$propval) {
+                addRemovePropertyReturnData('lem', $lemma->getID(), $propname);
+            } else {
+                addUpdateEntityReturnData('lem', $lemma->getID(), $propname, $lemma->getScratchProperty($propname));
+            }
+    }
       }
       $lemma->save();
       if ($lemma->hasError()) {

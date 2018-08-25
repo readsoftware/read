@@ -64,6 +64,18 @@ div.phonUI .propEditUI {
 div.phonUI.edit .propEditUI {
   display:table;
 }
+div.phonoUI .propDisplayUI {
+  display:block;
+}
+div.phonoUI.edit .propDisplayUI {
+  display:none;
+}
+div.phonoUI .propEditUI {
+  display:none;
+}
+div.phonoUI.edit .propEditUI {
+  display:table;
+}
 div.compUI .propDisplayUI {
   display:block;
 }
@@ -312,7 +324,7 @@ div.custTagUI.edit .propEditUI {
 div.descrUI .valueLabelDiv, div.posUI .valueLabelDiv, div.custTagUI .valueLabelDiv,
 div.transUI .valueLabelDiv, div.visUI .valueLabelDiv, div.typeUI .valueLabelDiv,
 div.phonUI .valueLabelDiv, div.compUI .valueLabelDiv, div.subTypeUI .valueLabelDiv,
-div.declUI .valueLabelDiv, div.linkTypeUI .valueLabelDiv{
+div.phonoUI .valueLabelDiv, div.declUI .valueLabelDiv, div.linkTypeUI .valueLabelDiv{
   color: blue;
 }
 .propFlipNavDiv{
@@ -335,6 +347,23 @@ div.declUI .valueLabelDiv, div.linkTypeUI .valueLabelDiv{
   display: table-cell;
   width: 100%;
   background-color: inherit;
+}
+.phonology .valueInputDiv{
+  display: block;
+  min-width: 50px;
+  background-color: inherit;
+  margin-top: 7px;
+}
+.phonology .valueInputDiv.lemmaphono{
+  margin-top: 0px;
+}
+.phonology .valueInput{
+  min-width: 50px;
+  width: auto;
+  height:20px;
+  font-size: small;
+  background-color: white;
+  border: black solid 1px;
 }
 .valueInput{
   width: 100%;
@@ -366,6 +395,14 @@ div.declUI .valueLabelDiv, div.linkTypeUI .valueLabelDiv{
   margin-left: 5px;
   text-align: center;
   background-color: rgb(242,242,242);
+}
+.propEditUI.phonology {
+  border: none;
+  height: auto;
+  min-width:50px;
+  margin-left: 5px;
+  text-align: left;
+  background-color: inherit;
 }
 .annoText{
   padding-left: 4px;
@@ -715,3 +752,61 @@ img.thumb100 {
 .propertyVEContainer {
   font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode"!important;
 }
+.commitButton {
+  display: none;
+}
+.phonology .validateButton,
+.phonology  .genButton {
+  display: inline-block;
+}
+.phonology.valid .validateButton {
+  display: none;
+}
+.phonology.valid .commitButton {
+    display: inline-block;
+}
+.phonology .validateButton, .phonology .commitButton,
+.phonology .genButton {
+  background-color: rgb(217,217,217);
+  width: 70px;
+  height: 23px;
+  border: 1px solid darkgrey;
+  cursor: pointer;
+  vertical-align: top;
+}
+.lemmaphonoDisplay,
+.etymphonoDisplay {
+  display:inline;
+  background-color: inherit!important;
+  width: auto;
+  min-width: 150px;
+  margin-right: 20px;
+}
+div.lemmaphono.editing .lemmaphonoDisplay,
+div.etymphono.editing .etymphonoDisplay {
+    display:none;
+}
+div.lemmaphono .valueInput,
+div.etymphono .valueInput {
+  display:none;
+}
+div.lemmaphono.editing .valueInput,
+div.etymphono.editing .valueInput {
+  display:inline;
+}
+.phonoCompare {
+  display:inline;
+  background-color: inherit!important;
+}
+.phonoPartsCount {
+  background-color: inherit!important;
+  padding-left: 10px;
+  font-weight: bolder;
+}
+.phPart {
+  background-color: inherit!important;
+}
+.phPart.misMatch {
+  font-weight: bold;
+}
+

@@ -101,6 +101,7 @@
           EDITORS.config = {};
         }
         EDITORS.config.showLemmaVEPhoneticUI = ('<?=defined("SHOWLEMMAPHONETIC")?SHOWLEMMAPHONETIC:"0"?>' == "0" || !'<?=defined("SHOWLEMMAPHONETIC")?SHOWLEMMAPHONETIC:"0"?>')?false:true;
+        EDITORS.config.showLemmaVEPhonologicalUI = ('<?=defined("SHOWLEMMAPHONOLOGY")?SHOWLEMMAPHONOLOGY:""?>' == "" || !'<?=defined("SHOWLEMMAPHONOLOGY")?SHOWLEMMAPHONOLOGY:""?>')?false:'<?=SHOWLEMMAPHONOLOGY?>';
         EDITORS.config.showLemmaDeclensionUI = ('<?=defined("SHOWLEMMADECLENSION")?SHOWLEMMADECLENSION:"0"?>' == "0" || !'<?=defined("SHOWLEMMADECLENSION")?SHOWLEMMADECLENSION:"0"?>')?false:true;
         EDITORS.config.declensionListName = '<?=defined("DECLENSIONLIST")?DECLENSIONLIST:"OIADeclension"?>';
     </script>

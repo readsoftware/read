@@ -562,7 +562,7 @@
         return;
       }
       if (!array_key_exists($key,$this->_scratchProperties) || $this->_scratchProperties[$key] != $value) {
-        if (isset($value)) {
+        if (isset($value) && $value != '') {
           $this->_scratchProperties[$key] = $value;
         } else {
           unset($this->_scratchProperties[$key]);

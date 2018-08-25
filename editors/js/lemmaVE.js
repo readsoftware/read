@@ -168,9 +168,14 @@ EDITORS.LemmaVE.prototype = {
       this.editDiv.html('');
       this.createValueUI();
       if (EDITORS.config.showLemmaVEPhoneticUI) {
-        this.createPhoneticUI();
+//        this.createPhoneticUI();
       }
       this.createDescriptionUI();
+      if (EDITORS.config.showLemmaVEPhonologicalUI && 
+          this.entity.gloss && 
+          this.entity.gloss.indexOf(EDITORS.config.showLemmaVEPhonologicalUI) > -1) {
+        this.createPhonologicalUI();
+      }
       if (EDITORS.config.showLemmaDeclensionUI) {
         this.createDeclensionUI();
       }
@@ -350,30 +355,356 @@ EDITORS.LemmaVE.prototype = {
           if (!$(this).parent().parent().hasClass("dirty")) {
             $(this).parent().parent().addClass("dirty");
           }
-        } else if ($(this).parent().parent().hasClass("dirty")) {
-          $(this).parent().parent().removeClass("dirty");
-        }
-        if (!curInput && btnText == "Save") {
+      } else if ($(this).parent().parent().hasClass("dirty")) {
+        $(this).parent().parent().removeClass("dirty");
+      }
+      if (!curInput && btnText == "Save") {
           $('.saveDiv',lemmaVE.phonUI).html("Delete").css('color','red');
-        } else if (curInput && btnText != "Save") {
+      } else if (curInput && btnText != "Save") {
           $('.saveDiv',lemmaVE.phonUI).html("Save").css('color','white');
-        }
-      });
-      //save data
+      }
+    });
+    //save data
       $('.saveDiv',this.phonUI).unbind("click").bind("click",function(e) {
-        var lemProp = {};
+      var lemProp = {};
         if ($('.propEditUI',lemmaVE.phonUI).hasClass('dirty')) {
           val = $('div.valueInputDiv input',lemmaVE.phonUI).val();
-          lemProp["phonetics"] = val;
+        lemProp["phonetics"] = val;
           $('div.valueLabelDiv',lemmaVE.phonUI).html(val);
           $('.propEditUI',lemmaVE.phonUI).removeClass('dirty');
-          lemmaVE.saveLemma(lemProp);
-        }
+        lemmaVE.saveLemma(lemProp);
+      }
         lemmaVE.phonUI.removeClass("edit");
-        e.stopImmediatePropagation();
-        return false;
-      });
+      e.stopImmediatePropagation();
+      return false;
+    });
     DEBUG.traceExit("createPhoneticUI");
+  },
+
+  /**
+   * put your comment there...
+   *
+   */
+
+  generatePhonologyStrings: function () {
+    var lemma = this.entity, trimmedGloss, glossParts, etymParts,
+        etymIndex, lemmaPhono, etymPhono;
+    lemmaPhono = this.getPhonologyString(lemma.value);
+    //parse etymology to get first form following the configured Language tag
+    etymIndex = lemma.gloss.indexOf(EDITORS.config.showLemmaVEPhonologicalUI);
+    if (etymIndex == -1) {
+      DEBUG.log('err',EDITORS.config.showLemmaVEPhonologicalUI+
+                      ' etymology language tag not found unable to generate phonolgy');
+      return false;
+    }
+    trimmedGloss = lemma.gloss.substring(etymIndex);
+    glossParts = trimmedGloss.split(',');
+    etymParts = glossParts[0].split(/\s+/); //separator is one or more spaces
+    if (etymParts.length < 2) {
+      DEBUG.log('err',EDITORS.config.showLemmaVEPhonologicalUI+
+                      ' etymology format is not recognized.'+
+                       ' Use space character to separate language code from word form');
+      return false;
+    } else {
+      etymPhono = etymParts[1].trim();
+    }
+    //parse it into clusters CC-V-CCH-VM
+    etymPhono = this.getPhonologyString(etymPhono);
+    return [etymPhono, lemmaPhono];
+  },
+
+  /**
+   * put your comment there...
+   *
+   */
+
+  getPhonoComparisonHtml: function (etymPhono, lemmaPhono) {
+    var lemmaVE = this, lemma = this.entity, i, lPart, ePart, cnt, 
+        lemmaParts, etymParts, lemmaPhonoHtml, etymPhonoHtml;
+    if (lemmaPhono && (typeof lemmaPhono) == 'string' && 
+        etymPhono && (typeof etymPhono) == 'string') {
+      lemmaParts = lemmaPhono.split('-');
+      etymParts = etymPhono.split('-');
+    }
+    cnt = Math.max(lemmaParts.length, etymParts.length);
+    if (cnt) {
+      lemmaPhonoHtml = '<div class="phonoCompare">';
+      etymPhonoHtml = '<div class="phonoCompare">';
+      for (i=0; i < cnt; i++) {
+        lPart = ePart = '';
+        if (i < lemmaParts.length){
+          lPart = lemmaParts[i];
+        }
+        if (i < etymParts.length){
+          ePart = etymParts[i];
+        }
+        if (lPart && !ePart){
+          lemmaPhonoHtml += '<span class="phPart misMatch">'+ (i?"-":'') + lPart +'</span>';
+        } else if (!lPart && ePart){
+          etymPhonoHtml += '<span class="phPart misMatch">'+ (i?"-":'') + ePart +'</span>';
+        } else if (lPart == ePart ||  lemmaVE._equivalanceCharMap[ePart] && 
+                    lemmaVE._equivalanceCharMap[ePart] == lPart) {
+          lemmaPhonoHtml += '<span class="phPart">'+ (i?"-":'') + lPart +'</span>';
+          etymPhonoHtml += '<span class="phPart">'+ (i?"-":'') + ePart +'</span>';
+        } else {
+          lemmaPhonoHtml += '<span class="phPart misMatch">'+ (i?"-":'') + lPart +'</span>';
+          etymPhonoHtml += '<span class="phPart misMatch">'+ (i?"-":'') + ePart +'</span>';
+        }
+      }
+    }
+    lemmaPhonoHtml += '<span class="phonoPartsCount">('+lemmaParts.length+')</span></div>';
+    etymPhonoHtml += '<span class="phonoPartsCount">('+etymParts.length+')</span></div>';
+    return [etymPhonoHtml, lemmaPhonoHtml];
+  },
+
+  /**
+   * put your comment there...
+   *
+   */
+
+  createPhonologicalUI: function () {
+    var lemmaVE = this, lemma = this.entity, trimmedGloss, 
+        glossParts, etymParts, etymIndex,
+        etymPhono = (lemma.phonology ? lemma.phonology[0] :
+                  (lemma.wipPhonology ? lemma.wipPhonology[0] : '')),
+        ePhonoCnt = "",
+        lemmaPhono = (lemma.phonology ? lemma.phonology[1] :
+                  (lemma.wipPhonology ? lemma.wipPhonology[1] : '')),
+        lPhonoCnt = "",
+        labelValue = (lemma.phonology? lemma.phonology[0] + ' → '+ lemma.phonology[1]:
+                    "Phonological Analysis");
+DEBUG.traceEntry("createPhonologicalUI");
+    if (!lemmaPhono) {
+      lemmaPhono = this.getPhonologyString(lemma.value);
+    }
+    if (!etymPhono) {
+      etymIndex = lemma.gloss.indexOf(EDITORS.config.showLemmaVEPhonologicalUI);
+      trimmedGloss = lemma.gloss.substring(etymIndex);
+      glossParts = trimmedGloss.split(',');
+      etymParts = glossParts[0].split(/\s+/); //separator is one or more spaces
+      if (etymParts.length < 2) {
+        DEBUG.log('err',EDITORS.config.showLemmaVEPhonologicalUI+
+                        ' etymology format is not recognized.'+
+                         ' Use space character to separate language code from word form');
+        etymPhono = 'Not Found';
+      } else {
+        etymPhono = etymParts[1].trim();
+        etymPhono = this.getPhonologyString(etymPhono);
+      }
+    }
+    if (!lemma.phonology) {
+      ePhonoCnt = " (" + etymPhono.split('-').length + ")";
+      lPhonoCnt = " (" + lemmaPhono.split('-').length + ")";
+    }
+    //create UI container
+    this.phonoUI = $('<div class="phonoUI"></div>');
+    this.editDiv.append(this.phonoUI);
+    //create label
+    this.phonoUI.append($('<div class="propDisplayUI">' +
+      '<div class="valueLabelDiv propDisplayElement">' + labelValue + '</div>' +
+      '</div>'));
+    //create input with save button
+    this.phonoUI.append($(
+      '<div class="propEditUI phonology">' +
+        '<div class="valueInputDiv propEditElement etymphono">'+
+          '<span class="etymphonoDisplay">' + etymPhono + ePhonoCnt + '</span>' +
+          '<input class="valueInput" value="' + etymPhono + '"/>' +
+          '<span><button class="genButton">Generate</button><button class="validateButton">Validate</button>' +
+          '<button class="commitButton">Commit</button></span>'+
+        '</div>' +
+        '<div class="valueInputDiv propEditElement lemmaphono">'+
+          '<span class="lemmaphonoDisplay">' + lemmaPhono + lPhonoCnt + '</span>' +
+          '<input class="valueInput" value="' + lemmaPhono + '"/>' +
+        '</div>' +
+      '</div>'
+    ));
+    $phonoDisplay = $('div.valueLabelDiv', this.phonoUI);
+    $lemmaphonoDisplay = $('.lemmaphonoDisplay', this.phonoUI);
+    $lemmaphonoInput = $('.lemmaphono input', this.phonoUI);
+    $etymphonoDisplay = $('.etymphonoDisplay', this.phonoUI);
+    $etymphonoInput = $('.etymphono input', this.phonoUI);
+    $generateBtn = $('.genButton', this.phonoUI);
+    $validateBtn = $('.validateButton', this.phonoUI);
+    $commitBtn = $('.commitButton', this.phonoUI);
+    //attach event handlers
+    //click to edit
+    $phonoDisplay.unbind("click").bind("click", function (e) {
+      $('div.edit', lemmaVE.editDiv).removeClass("edit");
+      lemmaVE.phonoUI.addClass("edit");
+      $('div.valueInputDiv input', lemmaVE.phonoUI).focus();
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $lemmaphonoDisplay.unbind("click").bind("click", function (e) {
+      $lemmaphonoDisplay.parent().addClass("editing");
+      $lemmaphonoInput.focus();
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $etymphonoDisplay.unbind("click").bind("click", function (e) {
+      $etymphonoDisplay.parent().addClass("editing");
+      $etymphonoInput.focus();
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $commitBtn.unbind('mousedown').bind('mousedown', function (e) {
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $commitBtn.unbind('mouseup').bind('mouseup', function (e) {
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $commitBtn.unbind('click').bind('click', function (e) {
+      if (lemma.wipPhonology && lemma.wipPhonology.length == 2) {
+        //save phonology
+        lemma.phonology = lemma.wipPhonology;
+        delete lemma.wipPhonology
+        //update server model
+        var lemProp = {};
+        lemProp["phonology"] = lemma.phonology;
+        lemProp["wipPhonology"] = '';
+        lemmaVE.saveLemma(lemProp);
+          //update UI
+        $etymphonoDisplay.html(lemma.phonology[0]);
+        $lemmaphonoDisplay.html(lemma.phonology[1]);
+        $etymphonoDisplay.parent().removeClass("editing");
+        $lemmaphonoDisplay.parent().removeClass("editing");
+        $phonoDisplay.html(lemma.phonology[0] + ' → '+ lemma.phonology[1]);
+        $lemmaphonoInput.parent().parent().removeClass("valid");
+      } else {
+        UTILITY.beep();
+        DEBUG.log('err','WIP Phonology not found, please validate work again');
+      }
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $validateBtn.unbind('mousedown').bind('mousedown', function (e) {
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $validateBtn.unbind('mouseup').bind('mouseup', function (e) {
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $validateBtn.unbind('click').bind('click', function (e) {
+      var lemmaPhono = $lemmaphonoInput.val(),
+          etymPhono = $etymphonoInput.val();
+      if (lemma.phonology) {
+        delete lemma.phonology;
+      }
+      //save wip
+      lemma.wipPhonology = [etymPhono, lemmaPhono];
+      //update server model
+      var lemProp = {};
+      lemProp["wipPhonology"] = lemma.wipPhonology;
+      lemProp["phonology"] = '';
+      lemmaVE.saveLemma(lemProp);
+    //update UI
+      phonologyHtml = lemmaVE.getPhonoComparisonHtml(etymPhono, lemmaPhono);
+      $etymphonoDisplay.html(phonologyHtml[0]);
+      $lemmaphonoDisplay.html(phonologyHtml[1]);
+      $etymphonoDisplay.parent().removeClass("editing");
+      $lemmaphonoDisplay.parent().removeClass("editing");
+      $phonoDisplay.html('Phonological Analysis')
+      if (etymPhono.split('-').length == lemmaPhono.split('-').length){
+        $lemmaphonoInput.parent().parent().addClass("valid");
+      }
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $generateBtn.unbind('mousedown').bind('mousedown', function (e) {
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $generateBtn.unbind('mouseup').bind('mouseup', function (e) {
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $generateBtn.unbind('click').bind('click', function (e) {
+      var lemmaPhono, etymPhono, phonology;
+      //regenerate phonology values from lemma and gloss
+      phonology = lemmaVE.generatePhonologyStrings();
+      if (phonology) {
+        var lemProp = {};
+        if (lemma.phonology) {
+          delete lemma.phonology;
+        }
+        if (lemma.wipPhonology) {
+          delete lemma.wipPhonology;
+        }
+        //update server model
+        lemProp["wipPhonology"] = '';
+        lemProp["phonology"] = '';
+        lemmaVE.saveLemma(lemProp);
+        etymPhono = phonology[0];
+        lemmaPhono = phonology[1];
+        $lemmaphonoInput.parent().parent().removeClass("valid");
+        $lemmaphonoDisplay.parent().removeClass("editing");
+        $etymphonoDisplay.parent().removeClass("editing");
+        $phonoDisplay.html('Phonological Analysis')
+        $lemmaphonoInput.val(lemmaPhono);
+        $lemmaphonoDisplay.html(lemmaPhono + " ("+lemmaPhono.split('-').length + ")");
+        $etymphonoInput.val(etymPhono);
+        $etymphonoDisplay.html(etymPhono + " ("+etymPhono.split('-').length + ")");
+      } else {
+        alert('unable to generate phonology, please check console for more information on error')
+      }
+      e.stopImmediatePropagation();
+      return false;
+    });
+    $lemmaphonoInput.unbind('keydown').bind('keydown', function (e) {
+      if ((e.keyCode || e.which) == '13') {
+        var curInput = $lemmaphonoInput.val(),
+            oldInput = $lemmaphonoDisplay.text();
+        if (curInput != oldInput) {
+          if (!$lemmaphonoInput.parent().parent().hasClass("dirty")) {
+            $lemmaphonoInput.parent().parent().addClass("dirty");
+          }
+          if ($lemmaphonoInput.parent().parent().hasClass("valid")) {
+            $lemmaphonoInput.parent().parent().removeClass("valid");
+          }
+          curInput = $lemmaphonoInput.val();
+          curInput = curInput + " (" + curInput.split("-").length + ")";
+          $lemmaphonoDisplay.html(curInput);
+        }
+        //stop editing the user pressed enter
+        $lemmaphonoDisplay.parent().removeClass("editing");
+      }
+    });
+    $lemmaphonoInput.unbind('paste').bind('paste', function (e) {
+      e.stopImmediatePropagation();
+    });
+    $lemmaphonoInput.unbind('click').bind('click', function (e) {
+      e.stopPropagation();
+    });
+    $etymphonoInput.unbind('keydown').bind('keydown', function (e) {
+      if ((e.keyCode || e.which) == '13') {
+        var curInput = $etymphonoInput.val(),
+            oldInput = $etymphonoDisplay.text();
+        if (curInput != oldInput) {
+          if (!$etymphonoInput.parent().parent().hasClass("dirty")) {
+            $etymphonoInput.parent().parent().addClass("dirty");
+          }
+          if ($etymphonoInput.parent().parent().hasClass("valid")) {
+            $etymphonoInput.parent().parent().removeClass("valid");
+          }
+          curInput = $etymphonoInput.val();
+          curInput = curInput + " (" + curInput.split("-").length + ")";
+          $etymphonoDisplay.html(curInput);
+        }
+        //stop editing the user pressed enter
+        $etymphonoDisplay.parent().removeClass("editing");
+       }
+    });
+     $etymphonoInput.unbind('paste').bind('paste', function (e) {
+      e.stopImmediatePropagation();
+    });
+    $etymphonoInput.unbind('click').bind('click', function (e) {
+      e.stopPropagation();
+    });
+
+    DEBUG.traceExit("createPhonologicalUI");
   },
 
 
@@ -2349,93 +2680,96 @@ EDITORS.LemmaVE.prototype = {
     }
     //jqAjax synch save
     $.ajax({
-        type: 'POST',
-        dataType: 'json',
+      type: 'POST',
+      dataType: 'json',
         url: basepath+'/services/saveLemma.php?db='+dbName,//caution dependency on context having basepath and dbName
-        data: savedata,
-        async: true,
-        success: function (data, status, xhr) {
-            var newLemID, newCatID, oldLemID = savedata["lemID"],
+      data: savedata,
+      async: true,
+      success: function (data, status, xhr) {
+        var newLemID, newCatID, oldLemID = savedata["lemID"],
                 tokGID =savedata["tokGID"], cmd = savedata["cmd"];
-            if (typeof data == 'object' && data.success && data.entities) {
-              //update data
+        if (typeof data == 'object' && data.success && data.entities) {
+          //update data
               lemmaVE.dataMgr.updateLocalCache(data,null);
-              switch (cmd) {
-                case "createLem":
-                  if (data.entities.insert) {
-                    if (data.entities.insert.lem) {
-                      //find new lemma id
-                      for (entID in data.entities.insert.lem) {
-                        newLemID = entID;
-                        break;
-                      }
-                    }
-                    if (data.entities.insert.cat) {
-                      //find new cat id
-                      for (entID in data.entities.insert.cat) {
-                        newCatID = entID;
-                        lemmaVE.catID = newCatID;
-                        break;
-                      }
-                    }
-                    if (lemmaVE.wordlistVE) {
-                      //REPLACE WITH insertLemmaEntry and give tokGID as hint (we don't know if user changed spelling)
-                      //lemmaVE.wordlistVE.refreshDisplay((newCatID?newCatID:null), newLemID);
+          switch (cmd) {
+            case "createLem":
+              if (data.entities.insert) {
+                if (data.entities.insert.lem) {
+                  //find new lemma id
+                  for (entID in data.entities.insert.lem) {
+                    newLemID = entID;
+                    break;
+                  }
+                }
+                if (data.entities.insert.cat) {
+                  //find new cat id
+                  for (entID in data.entities.insert.cat) {
+                    newCatID = entID;
+                    lemmaVE.catID = newCatID;
+                    break;
+                  }
+                }
+                if (lemmaVE.wordlistVE) {
+                  //REPLACE WITH insertLemmaEntry and give tokGID as hint (we don't know if user changed spelling)
+                  //lemmaVE.wordlistVE.refreshDisplay((newCatID?newCatID:null), newLemID);
                       lemmaVE.wordlistVE.insertLemmaEntry(newLemID,tokGID);
-                      lemmaVE.wordlistVE.removeWordEntry(tokGID);
-                    }
+                  lemmaVE.wordlistVE.removeWordEntry(tokGID);
+                }
                     lemmaVE.showLemma('lem',newLemID);
-                  }
-                  break;
-                case "updateLem":
-                  //REPLACE WITH updateLemmaEntry
-                  //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
-                  if (lemmaVE.wordlistVE) {
-                    lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
-                  }
-                  lemmaVE.showLemma('lem',oldLemID);
-                  break;
-                case "linkTok":
-                  //REPLACE WITH updateLemmaEntry
-                  //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
-                  lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+              }
+              break;
+            case "updateLem":
+              //REPLACE WITH updateLemmaEntry
+              //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
+              if (lemmaVE.wordlistVE) {
+                lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+              }
+              if (Object.keys(savedata.lemProps).indexOf('phonology') == -1 ||
+                  savedata.lemProps['phonology']) {
+                lemmaVE.showLemma('lem', oldLemID);
+              }
+              break;
+            case "linkTok":
+              //REPLACE WITH updateLemmaEntry
+              //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
+              lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
                   if (!lemmaVE.linkToInfID) {//if linkTo then don't update lemmaVE display, still in link mode
                     lemmaVE.showLemma('lem',oldLemID);
-                  }
-                  lemmaVE.wordlistVE.removeWordEntry(tokGID);
-                  break;
-                case "unlinkTok":
-                  //REPLACE WITH updateLemmaEntry
-                  //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
-                  if (lemmaVE.wordlistVE) {
-                    lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
-                  }
+              }
+              lemmaVE.wordlistVE.removeWordEntry(tokGID);
+              break;
+            case "unlinkTok":
+              //REPLACE WITH updateLemmaEntry
+              //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
+              if (lemmaVE.wordlistVE) {
+                lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
+              }
                   lemmaVE.showLemma('lem',oldLemID);
                   lemmaVE.wordlistVE.insertWordEntry(tokGID,'lem'+oldLemID);
-                  break;
-                case "inflectTok":
-                  //REPLACE WITH updateLemmaEntry
-                  //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
-                  if (lemmaVE.wordlistVE) {
-                    lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
-                  }
-                  lemmaVE.showLemma('lem',oldLemID);
-                  break;
+              break;
+            case "inflectTok":
+              //REPLACE WITH updateLemmaEntry
+              //lemmaVE.wordlistVE.refreshDisplay(null, oldLemID);
+              if (lemmaVE.wordlistVE) {
+                lemmaVE.wordlistVE.updateLemmaEntry(oldLemID);
               }
-            }
-            if (data.editionHealth) {
+                  lemmaVE.showLemma('lem',oldLemID);
+              break;
+          }
+        }
+        if (data.editionHealth) {
               DEBUG.log("health","***Save Lemma cmd="+cmd+"***");
               DEBUG.log("health","Params: "+JSON.stringify(savedata));
               DEBUG.log("health",data.editionHealth);
-            }
-            if (data.errors) {
-              alert("An error occurred while trying to retrieve a record. Error: " + data.errors.join());
-            }
-        },
-        error: function (xhr,status,error) {
-            // add record failed.
-            alert("An error occurred while trying to retrieve a record. Error: " + error);
         }
+        if (data.errors) {
+          alert("An error occurred while trying to retrieve a record. Error: " + data.errors.join());
+        }
+      },
+        error: function (xhr,status,error) {
+        // add record failed.
+        alert("An error occurred while trying to retrieve a record. Error: " + error);
+      }
     });
     DEBUG.traceExit("saveLemma");
   },
@@ -2726,6 +3060,454 @@ EDITORS.LemmaVE.prototype = {
       });
     }
     DEBUG.traceExit("saveCompoundAnalysis");
+  },
+
+  /**
+  * get phonology string
+  *
+  */
+
+  getPhonologyString: function(strStart) {
+    //run through graphemes getting type information and interleave with cursor info
+    var i = 0, inc, chr, chr2, chr3, chr4, curtyp, typ, grapheme,
+        phonoPart, phonoParts = [], cnt = strStart.length;
+    while (i<cnt) {
+      chr = strStart[i].toLowerCase();
+      // convert multi-byte to grapheme - using greedy lookup
+      if (this._graphemeMap[chr]){
+        //check next character included
+        inc=1;
+        if (i+1 < cnt){
+          chr2 = strStart[i+1].toLowerCase();
+        }
+        if (this._graphemeMap[chr][chr2]){ // another char for grapheme
+          inc++;
+          if (i+2 < cnt){
+            chr3 = strStart[i+2].toLowerCase();
+          }
+          if (this._graphemeMap[chr][chr2][chr3]){ // another char for grapheme
+            inc++;
+            if (i+3 < cnt){
+              chr4 = strStart[i+3].toLowerCase();
+            }
+            if (this._graphemeMap[chr][chr2][chr3][chr4]){ // another char for grapheme
+              inc++;
+              if (!this._graphemeMap[chr][chr2][chr3][chr4]["srt"]){ // invalid sequence
+                DEBUG.log("warn","error '" + strPhono + "' has invalid sequence starting at character " + i+ " " +chr + chr2 + chr3 + chr4 +" has no sort code");
+                grapheme = chr + chr2 + chr3;
+                typ = this._graphemeMap[chr][chr2][chr3]['typ'];
+                break;
+              }else{//found valid grapheme, save it
+                grapheme = chr + chr2 + chr3 + chr4;
+                typ = this._graphemeMap[chr][chr2][chr3][chr4]['typ'];
+              }
+            }else if (!this._graphemeMap[chr][chr2][chr3]["srt"]){ // invalid sequence
+              DEBUG.log("warn","error '" + strPhono + "' has incomplete sequence starting at character " + i+ " " +chr + chr2 + chr3 +" has no sort code");
+              grapheme = chr + chr2;
+              typ = this._graphemeMap[chr][chr2]['typ'];
+              break;
+            }else{//found valid grapheme, save it
+              grapheme = chr + chr2 + chr3;
+              typ = this._graphemeMap[chr][chr2][chr3]['typ'];
+              }
+          }else if (!this._graphemeMap[chr][chr2]["srt"]){ // invalid sequence
+            DEBUG.log("warn","error '" + strPhono + "' has incomplete sequence starting at character " + i+ " " +chr + chr2 +" has no sort code");
+            grapheme = chr ;
+            typ = this._graphemeMap[chr]['typ'];
+            break;
+          }else{//found valid grapheme, save it
+              grapheme = chr + chr2;
+              typ = this._graphemeMap[chr][chr2]['typ'];
+            }
+        }else if (!this._graphemeMap[chr]["srt"]){ // invalid sequence
+          DEBUG.log("warn","error '" + strPhono + "' has incomplete sequence starting at character " + i+ " " +chr +" has no sort code");
+          grapheme = "";
+          typ = 'E';
+          break;
+        }else{//found valid grapheme, save it
+              grapheme = chr ;
+              typ = this._graphemeMap[chr]['typ'];
+        }
+      }
+      i += inc;
+      switch (typ) {
+        case 'C':
+        case 'CH':// aspirated case
+          if (curtyp == 'C' || curtyp == 'CH') {
+            //accumulate type cluster
+            phonoPart += grapheme;
+          } else {
+            //push cluster and start new cluster
+            if (phonoPart) {
+              phonoParts.push(phonoPart);
+            }
+            if (grapheme && grapheme == "Ê”") {
+              //vowel carrier gets ignored
+              phonoPart = '';
+            } else {
+              phonoPart = grapheme;
+            }
+          }
+          curtyp = typ;
+          break;
+        case 'V':
+        case 'VA':// aspirated case
+        case 'M'://modifier
+          if (curtyp == 'V' || curtyp == 'VA' || curtyp == 'M') {
+            //accumulate type cluster
+            phonoPart += grapheme;
+          } else {
+            //push cluster and start new cluster
+            if (phonoPart) {
+              phonoParts.push(phonoPart);
+            }
+            phonoPart = grapheme;
+          }
+          curtyp = typ;
+          break;
+        default:
+          //ingnore 
+      }
+    }//end while
+    if (phonoPart) {
+      phonoParts.push(phonoPart);
+    }
+    return phonoParts.join('-');
+  },
+
+  // specal table of equivalent characters.
+  _equivalanceCharMap : {
+    "a" :"Ä",
+    "Ä" :"a",
+    "e" :"Ä“",
+    "Ä“" :"e",
+    "i" :"Ä«",
+    "Ä«" :"i",
+    "o" :"Å",
+    "Å" :"o",
+    "rÌ¥" :"á¹›",
+    "á¹›" :"á¹",
+    "á¹" :"á¹›",
+    "u" :"Å«",
+    "Å«" :"u"
+  },
+
+  // valid grapheme multibyte sequences with sort codes and types
+  _graphemeMap : {
+    "0": { "srt": "700", "typ": "N" },
+    "Â½": { "srt": "705", "typ": "N" },
+    "1": {
+      "0": { "srt": "760", "typ": "N",
+        "0": { "srt": "780", "typ": "N",
+          "0": { "srt": "790", "typ": "N" }}},
+      "srt": "710", "typ": "N" },
+    "2": {"srt": "720", "typ": "N" ,
+      "0": { "srt": "770", "typ": "N" }},
+    "3": { "srt": "730", "typ": "N" ,
+      "0": { "srt": "773", "typ": "N" }},
+    "4": { "srt": "740", "typ": "N" ,
+      "0": { "srt": "774", "typ": "N" }},
+    "5": { "srt": "755", "typ": "N" ,
+      "0": { "srt": "775", "typ": "N" }},
+    "6": { "srt": "756", "typ": "N" ,
+      "0": { "srt": "776", "typ": "N" }},
+    "7": { "srt": "757", "typ": "N" ,
+      "0": { "srt": "777", "typ": "N" }},
+    "8": { "srt": "758", "typ": "N" ,
+      "0": { "srt": "778", "typ": "N" }},
+    "9": { "srt": "759", "typ": "N" ,
+      "0": { "srt": "779", "typ": "N" }},
+    "â€§": { "srt": "800", "typ": "P" },
+    "Ã—": { "srt": "801", "typ": "P" },
+    "âˆˆ": { "srt": "830", "typ": "P" },
+    "âŒ‡": { "srt": "880", "typ": "P" },
+    "â—Š": { "srt": "885", "typ": "I" },
+    "â—ˆ": { "srt": "885", "typ": "I" },
+    "â—‹": { "srt": "820", "typ": "P" },
+    "âŠ—": { "srt": "822", "typ": "P" },
+    "â—Ž": { "srt": "823", "typ": "P" },
+    "â—¦": { "srt": "810", "typ": "P" },
+    "Â°": { "srt": "810", "typ": "P" },
+    "âˆ™": { "srt": "804", "typ": "I" },
+    "â˜’": { "srt": "845", "typ": "P" },
+    "â˜¸": { "srt": "840", "typ": "P" },
+    "â€": { "srt": "851", "typ": "P" },
+    "â": { "srt": "806", "typ": "P" },
+    "â‘": { "srt": "807", "typ": "P" },
+    "âŽ¼": { "srt": "808", "typ": "P" },
+    "â‰": { "srt": "850", "typ": "P" },
+    "â€“": { "srt": "890", "typ": "P" },
+    "â€”": { "srt": "890", "typ": "P" },
+    "|": {
+      "|": { "srt": "870", "typ": "P" },
+      "srt": "860", "typ": "P" },
+    "â—¯": { "srt": "821", "typ": "I" },
+    ":": { "srt": "803", "typ": "P" },
+    "*": { "srt": "000", "typ": "V" },
+    ".": { "srt": "189", "typ": "V" },
+    "_": { "srt": "599", "typ": "C" },
+    "Ê”": { "srt": "195", "typ": "C" },
+    "?": { "srt": "990", "typ": "O" },
+    "+": { "srt": "953", "typ": "O" },
+    "\/": {
+      "\/": {
+        "\/": { "srt": "954", "typ": "O" }}},
+    "#": { "srt": "956", "typ": "O" },
+    "â€¦": { "srt": "955", "typ": "O" },
+    "a": {
+      "Íš": {
+        "i": { "srt": "208","ssrt":"218", "typ": "VA" },
+        "u": { "srt": "228","ssrt":"238", "typ": "VA" },
+        "srt": "108", "typ": "V" },
+      "Ì£": { "srt": "107", "typ": "V" },
+      "i": { "srt": "200","ssrt":"210", "typ": "VA" },
+      "u": { "srt": "220","ssrt":"230", "typ": "VA" },
+      "srt": "100", "typ": "V" },
+    "Ã¡": {
+      "i": { "srt": "202","ssrt":"212", "typ": "VA" },
+      "u": { "srt": "222","ssrt":"232", "typ": "VA" },
+      "srt": "102", "typ": "V" },
+    "Ã ": {
+      "i": { "srt": "203","ssrt":"213", "typ": "VA" },
+      "u": { "srt": "223","ssrt":"233", "typ": "VA" },
+      "srt": "103", "typ": "V" },
+    "È§": { "srt": "106", "typ": "V" },
+    "Ã¢": { "srt": "104", "typ": "V" },
+    "Ä": {
+      "Ì": { "srt": "102","ssrt":"112", "typ": "V" },
+      "Ì€": { "srt": "103","ssrt":"113", "typ": "V" },
+      "Ì†": { "srt": "101","ssrt":"111", "typ": "V" },
+      "srt": "101","ssrt":"110", "typ": "V" },
+    "Ã£": {
+      "i": { "srt": "204","ssrt":"214", "typ": "VA" },
+      "u": { "srt": "224","ssrt":"234", "typ": "VA" },
+      "srt": "104", "typ": "V" },
+    "ÇŽ": { "srt": "105", "typ": "V" },
+    "b": {
+      "ÍŸ": { "h": { "srt": "531", "typ": "C" }},
+      "Ì„": { "srt": "522", "typ": "C" },
+      "h": { "srt": "530", "typ": "CH" },
+      "srt": "520", "typ": "C" },
+    "á¸…": { "srt": "521", "typ": "C" },
+    "c": {
+      "Ì±": { "srt": "321", "typ": "C" },
+      "Ì„": { "srt": "322", "typ": "C" },
+      "Ì‚": { "srt": "329", "typ": "C" },
+      "h": { "srt": "330", "typ": "CH" },
+      "srt": "320", "typ": "C" },
+    "Ä‡": { "srt": "329", "typ": "C" },
+    "d": {
+      "h": { "srt": "480", "typ": "CH" },
+      "srt": "470", "typ": "C" },
+    "á¸": { "srt": "471", "typ": "C" },
+    "á¸": {
+      "Ì„": { "srt": "412", "typ": "C" },
+      "ÍŸ": { "h": { "srt": "421", "typ": "C" } },
+      "Ì±": { "srt": "411", "typ": "C" },
+      "Íž": { "h": { "srt": "422", "typ": "C" } },
+      "h": { "srt": "420", "typ": "CH" },
+      "srt": "410", "typ": "C" },
+    "e": {
+      "Íš": { "srt": "208", "typ": "V" },
+      "Ì£": { "srt": "207", "typ": "V" },
+      "srt": "200", "typ": "V" },
+    "Ã©": { "srt": "202", "typ": "V" },
+    "Ã¨": { "srt": "203", "typ": "V" },
+    "Ãª": { "srt": "204", "typ": "V" },
+    "Ä›": { "srt": "205", "typ": "V" },
+    "Ä•": { "srt": "200", "typ": "V" },
+    "Ä“": {
+      "Ì†": { "srt": "201", "typ": "V" },
+      "srt": "201", "typ": "V" },
+    "áº½": { "srt": "204", "typ": "V" },
+    "á¸—": { "srt": "202", "typ": "V" },
+    "á¸•": { "srt": "203", "typ": "V" },
+    "g": {
+      "Ì±": { "srt": "291", "typ": "C" },
+      "h": { "srt": "300", "typ": "C" },
+      "srt": "290", "typ": "C" },
+    "á¸¡": {
+      "Ì±": { "srt": "293", "typ": "C" },
+      "srt": "292", "typ": "C" },
+    "h": {
+      "Ì„": { "srt": "652", "typ": "C" },
+      "Ì®": { "srt": "252", "typ": "M" },
+      "srt": "650", "typ": "C" },
+    "á¸£": { "srt": "654", "typ": "C" },
+    "á¸¥": { "srt": "250", "typ": "M" },
+    "áº–": { "srt": "251", "typ": "M" },
+    "á¸«": { "srt": "252", "typ": "M" },
+    "i": {
+      "Íš": { "srt": "128", "typ": "V" },
+      "srt": "120", "typ": "V" },
+    "Ã¯": { "srt": "120", "typ": "V" },
+    "Ã­": { "srt": "122", "typ": "V" },
+    "Ã¬": { "srt": "123", "typ": "V" },
+    "Ã®": { "srt": "124", "typ": "V" },
+    "Ç": { "srt": "125", "typ": "V" },
+    "Ä«": {
+      "Ì": { "srt": "122","ssrt":"132", "typ": "V" },
+      "Ì€": { "srt": "123","ssrt":"133", "typ": "V" },
+      "Ì†": { "srt": "121","ssrt":"131", "typ": "V" },
+      "Ìƒ": { "srt": "124","ssrt":"134", "typ": "V" },
+      "srt": "121","ssrt":"130", "typ": "V" },
+    "Ä©": { "srt": "124", "typ": "V" },
+    "j": {
+      "Ì„": { "srt": "342", "typ": "C" },
+      "Ì±": {
+        "Ì„": { "srt": "343", "typ": "C" },
+        "srt": "341", "typ": "C" },
+      "h": { "srt": "350", "typ": "CH" },
+      "srt": "340", "typ": "C" },
+    "Äµ": { "srt": "349", "typ": "C" },
+    "k": { "Ì„": { "srt": "262", "typ": "C" },
+      "ÍŸ": { "h": { "srt": "281", "typ": "C" } },
+      "h": { "srt": "280", "typ": "CH" },
+      "srt": "260", "typ": "C" },
+    "á¸±": {
+      "h": { "srt": "289", "typ": "C" },
+      "srt": "270", "typ": "C" },
+    "á¸µ": { "srt": "261", "typ": "C" },
+    "l": {
+      "Ì¥": {
+        "Ì„": {
+          "Ì†": { "srt": "181","ssrt":"191", "typ": "V" },
+          "Ì": { "srt": "182","ssrt":"192", "typ": "V" },
+          "srt": "181","ssrt":"191", "typ": "V" },
+        "Ì": { "srt": "182", "typ": "V" },
+        "Ì‚": { "srt": "184", "typ": "V" },
+        "srt": "180", "typ": "V" },
+      "srt": "570", "typ": "C" },
+    "á¸»": {"srt": "661", "typ": "C" },
+    "á¸·": {"srt": "660", "typ": "C",
+  //      "Â·": { "srt": "247", "typ": "MT" },
+      "h": { "srt": "670", "typ": "CH" }},
+    "m": {
+      "Ì‚": { "srt": "546", "typ": "C" },
+      "Ì„": { "srt": "542", "typ": "C" },
+      "Ì": { "srt": "242", "typ": "M" },
+  //      "Â·": { "srt": "246", "typ": "MT" },
+      "Ì¥": { "srt": "549", "typ": "C" },
+      "Ì±": { "srt": "541", "typ": "C" },
+      "srt": "540", "typ": "C" },
+    "á¸¿": { "srt": "549", "typ": "C" },
+    "á¹": { "srt": "544","ssrt":"244", "typ": "M" },
+    "á¹ƒ": { "srt": "240", "typ": "M" },
+    "n": {
+  //      "Â·": { "srt": "245", "typ": "MT" },
+      "Ì‚": { "srt": "499", "typ": "C" },
+      "Ì„": { "srt": "492", "typ": "C" },
+      "Ì¥": { "srt": "499", "typ": "C" },
+      "srt": "490", "typ": "C" },
+    "á¹‰": {"srt":"493","typ":"C"},
+    "á¹…": { "srt": "310", "typ": "C" },
+    "Ã±": {
+      "Ì„": { "srt": "362", "typ": "C" },
+      "srt": "360", "typ": "C" },
+    "á¹‡": {
+      "Ì„": { "srt": "432", "typ": "C" },
+      "srt": "430", "typ": "C" },
+    "o": {
+      "Íš": { "srt": "228", "typ": "V" },
+      "srt": "220", "typ": "V" },
+    "Ã³": { "srt": "222", "typ": "V" },
+    "Ã²": { "srt": "223", "typ": "V" },
+    "Ã´": { "srt": "224", "typ": "V" },
+    "Ç’": { "srt": "225", "typ": "V" },
+    "Å": { "srt": "220", "typ": "V" },
+    "Å": {
+      "Ì†": { "srt": "221", "typ": "V" },
+      "srt": "221", "typ": "V" },
+    "Ãµ": { "srt": "224", "typ": "V" },
+    "á¹“": { "srt": "222", "typ": "V" },
+    "á¹‘": { "srt": "223", "typ": "V" },
+    "p": {
+      "Ì„": { "srt": "502", "typ": "C" },
+      "ÍŸ": {"h": { "srt": "511", "typ": "CH" }},
+      "Ì±": { "srt": "501", "typ": "C" },
+      "h": { "srt": "510", "typ": "CH" },
+      "srt": "500", "typ": "C" },
+    "á¹•": { "srt": "691", "typ": "C" },
+    "á¹›": { "srt": "160", "typ": "V" },
+    "á¹": { "ssrt": "170", "typ": "V" },
+    "á¹Ÿ": { "srt": "561", "typ": "C" },
+    "r": {
+      "Ì¥": {
+        "Ì": { "srt": "162", "typ": "V" },
+      "Ì€": { "srt": "163", "typ": "V" },
+      "Ìƒ": { "srt": "164", "typ": "V" },
+      "Íš": { "srt": "168", "typ": "V" },
+      "Ì„": {
+        "Ì†": { "srt": "161","ssrt":"171", "typ": "V" },
+        "Ì": { "srt": "162","ssrt":"172", "typ": "V" },
+        "Ìƒ": { "srt": "164","ssrt":"174", "typ": "V" },
+        "srt": "161","ssrt":"171", "typ": "V" },
+      "Ì‚": { "srt": "164", "typ": "V" },
+      "Í¡": {
+        "i": { "srt": "167", "typ": "V" }},
+      "srt": "160", "typ": "V" },
+      "Ì±": { "srt": "561", "typ": "C" },
+      "srt": "560", "typ": "C" },
+    "s": {
+      "Ì‚": { "srt": "629", "typ": "C" },
+      "Ì„": { "srt": "622", "typ": "C" },
+      "Ì±": { "srt": "621", "typ": "C" },
+      "srt": "620", "typ": "C" },
+    "Å›": {
+      "Ì±": { "srt": "601", "typ": "C" },
+      "Ì„": { "srt": "602", "typ": "C" },
+      "ÍŸ": { "srt": "608", "typ": "C" },
+      "Ì‚": { "srt": "609", "typ": "C" },
+      "srt": "600", "typ": "C" },
+    "á¹£": {
+      "Ì‚": { "srt": "619", "typ": "C" },
+      "Ì„": { "srt": "612", "typ": "C" },
+      "Ì±": {
+        "Ì„": { "srt": "613", "typ": "C" },
+        "srt": "611", "typ": "C" },
+      "srt": "610", "typ": "C" },
+    "t": {
+  //      "Â·": { "srt": "243", "typ": "MT" },
+      "Ì": { "srt": "449", "typ": "C" },
+      "h": {
+        "Ì": { "srt": "460", "typ": "C" },
+        "srt": "450", "typ": "CH" },
+      "srt": "440", "typ": "C" },
+    "á¹¯": { "srt": "441", "typ": "C" },
+    "á¹­": {
+      "Ì": {
+        "h": { "srt": "400", "typ": "CH" },
+      "srt": "380", "typ": "C" },
+      "h": { "srt": "390", "typ": "CH" },
+      "srt": "370", "typ": "C" },
+    "u": {
+      "Íš": { "srt": "148", "typ": "V" },
+      "srt": "140", "typ": "V" },
+    "Ã¼": { "srt": "140", "typ": "V" },
+    "Ãº": { "srt": "142", "typ": "V" },
+    "Ã¹": { "srt": "143", "typ": "V" },
+    "Ã»": { "srt": "144", "typ": "V" },
+    "Ç”": { "srt": "145", "typ": "V" },
+    "Å«": {
+      "Ì†": { "srt": "141","ssrt":"151", "typ": "V" },
+      "Ì": { "srt": "142","ssrt":"152", "typ": "V" },
+      "Ì€": { "srt": "143","ssrt":"153", "typ": "V" },
+      "Ìƒ": { "srt": "144","ssrt":"154", "typ": "V" },
+      "srt": "141","ssrt":"150", "typ": "V" },
+    "Å©": { "srt": "144", "typ": "V" },
+    "v": {
+      "Ì": { "srt": "589", "typ": "C" },
+      "ÍŸ": { "h": { "srt": "588", "typ": "C" } },
+      "Ì±": { "srt": "581", "typ": "C" },
+      "h": { "srt": "590", "typ": "CH" },
+      "srt": "580", "typ": "C" },
+    "y": {
+      "Ì±": { "srt": "551", "typ": "C" },
+      "srt": "550", "typ": "C" },
+    "Ã½": { "srt": "692", "typ": "C" },
+    "z": { "srt": "640", "typ": "C" },
+    "áº•": { "srt": "641", "typ": "C" },
+    "áº“": { "srt": "630", "typ": "C" }
   }
 
 }
