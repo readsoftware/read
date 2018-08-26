@@ -3567,6 +3567,44 @@ function compareWordLocations($locW1,$locW2) {
   }
 }
 
+
+function compareSortKeys($key1,$key2) {
+  if (!$key1 && $key2) {
+    return -1;
+  } else if ($key1 && !$key2) {
+    return 1;
+  } else if (!$key1 && !$key2) {
+    return 0;
+  }
+  $cnt1 = strlen($key1);
+  $cnt2 = strlen($key2);
+  $i = 0;
+  while ($i < $cnt1 && $i < $cnt2) {
+    if ($key1[$i] != $key2[$i]) {
+      break;
+    }
+    $i++;
+  }
+  //fall through case
+  if ($i == $cnt1 || $i == $cnt2) {
+    if ($cnt1 == $cnt2) {
+      return 0;
+    } else if ($cnt1 > $cnt2 ) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+  //break out case
+  if ($key1[$i] > $key2[$i]) {
+    return 1;
+  } else if ($key1[$i] < $key2[$i]) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
+
 function changeVisibility($prefix,$table,$ids,$vis,$owner) {
   $dbMgr = new DBManager();
   if ($table == 'usergroup') {

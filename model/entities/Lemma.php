@@ -226,10 +226,10 @@
       $sort = $sort2 = "0.";
       $prevTyp = "V"; //setup for leading vowel to get carrier sort code
       $errors = array();
+      $srt = $typ = null;
       for ($i =0; $i<$cnt;) {
         $inc=1;
         $char = mb_substr($str,$i,1);
-        $srt = $typ = null;
         $testChar = $char;
         $char = mb_strtolower($char);
         // convert multi-byte to grapheme - using greedy lookup
@@ -292,7 +292,7 @@
         if ($srt && $typ && $typ == "V" && $prevTyp=="V") {
           $sort .= "19";
           $sort2 .= "5";
-          $prevTyp = $typ;
+
         } else if (!$typ) {
           array_push($errors, "No grapheme type found for char pos $i of $str");
         }
@@ -303,6 +303,7 @@
           array_push($errors, "No grapheme sort code found for char pos $i of $str");
         }
         $i += $inc;//adjust read pointer
+        $prevTyp = $typ;
         $typ = $srt = $char = $char2 = $char3 = $char4 = null;
       }
       $this->setSortCode($sort);

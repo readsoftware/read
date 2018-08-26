@@ -2999,7 +2999,7 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
           }
           if (count($seeLinks)) {
             $relatedHtml .= "<div class=\"lemmaSeeLinks $lemTag\">";
-            ksort($seeLinks,SORT_NUMERIC);
+            uksort($seeLinks,"compareSortKeys");
             foreach ($seeLinks as $sort => $linkHtml) {
               if ($isFirst) {
                 $isFirst = false;
@@ -3034,7 +3034,7 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
           }
           if (count($cfLinks)) {
             $relatedHtml .= "<div class=\"lemmaCfLinks $lemTag\">";
-            ksort($cfLinks,SORT_NUMERIC);
+            uksort($cfLinks,"compareSortKeys");
             foreach ($cfLinks as $sort => $linkHtml) {
               if ($isFirst) {
                 $isFirst = false;
