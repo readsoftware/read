@@ -65,7 +65,7 @@ if (!$data) {
   if ( isset($data['fromGID'])) {//get lemma id
     $fromGID = $data['fromGID'];
   }
-  if ( isset($data['toGID'])) {
+  if ( isset($data['toGID']) && $data['toGID']) {
     $toGID = $data['toGID'];
   }
   if ( isset($data['linkTypeID'])) {
@@ -101,7 +101,7 @@ if (count($errors) == 0) {
   $link = null;
   $originalLinkID = null;
   //check for linkType links containing link from GID
-  $links = new Annotations("ano_type_id = $linkTypeID and '$fromGID' = ANY(ano_linkfrom_ids)");
+  $links = new Annotations("ano_type_id = $linkTypeID and '$fromGID' = ANY(ano_linkfrom_ids) and ano_owner_id != 1");
   if ($links->getCount() > 0) {//for now take first writable one later either combine or check for existing to GID
     foreach ( $links as $sLink ) {
       if ($sLink->isReadonly()) {
@@ -123,7 +123,7 @@ if (count($errors) == 0) {
     }
   }
   if ($oldLinkTypeID) {//existing link
-    $links = new Annotations("ano_type_id = $oldLinkTypeID and '$fromGID' = ANY(ano_linkfrom_ids)");
+    $links = new Annotations("ano_type_id = $oldLinkTypeID and '$fromGID' = ANY(ano_linkfrom_ids) and ano_owner_id != 1");
     if ($links->getCount() > 0) {//for now take first writable one later either combine or check for existing to GID
       if (!$link) {// try and find existing
         foreach ( $links as $sLink ) {
@@ -168,7 +168,7 @@ if (count($errors) == 0) {
   }
   $toLinkGIDs = $link->getLinkToIDs();
   if (count($toLinkGIDs) > 0 && !$unique) {
-    if (!in_array($toGID,$toLinkGIDs)) {// no duplicates
+    if ($toGID && !in_array($toGID,$toLinkGIDs)) {// no duplicates
       array_push($toLinkGIDs,$toGID);
     }
   } else {
@@ -182,8 +182,10 @@ if (count($errors) == 0) {
       array_push($fromLinkGIDs,$fromGID);
     }
   } else {
-    $fromLinkGIDs = array($fromGID);
+    if (count($fromLinkGIDs) > 0) {
     array_push($warnings,"warning replacing(".join(',',$fromLinkGIDs).") $linkType links with $fromGID in".$link->getEntityTag());
+    }
+    $fromLinkGIDs = array($fromGID);
   }
   $link->setLinkFromIDs($fromLinkGIDs);
   $link->save();
