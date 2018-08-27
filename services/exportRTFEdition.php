@@ -32,11 +32,10 @@
 
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
-  ob_start('ob_gzhandler');
+  ob_start();
 
 //  header("Content-type: text/rtf;  charset=utf-8");
-  header('Pragma: no-cache');
-
+  
   require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
@@ -85,8 +84,7 @@
     $prevTCMS = "";
     $curGraID = null;
     $lastGraphemeID = null;
-    $rtf =
-          '{\rtf1\adeflang1025\ansi\ansicpg10000\uc1\adeff0\deff0'.
+    $rtf ='{\rtf1\adeflang1025\ansi\ansicpg10000\uc1\adeff0\deff0'.
           '{\fonttbl'.
           '{\f0\fbidi \fnil\fcharset0\fprq2{\*\panose 02020603050405020304}Times New Roman;}'.
           '{\f38\fbidi \fnil\fcharset0\fprq2{\*\panose 02000503060000020004}Gandhari Unicode;}}'.
@@ -412,12 +410,15 @@
     }
   }
   if (count($errors)) {
-    header("Content-type: text/html;  charset=utf-8");
+    header("Content-type: text/html;  charset=UTF-8");
     echo "Errors encountered trying to export editions Structure in RTF. Errors: ".join(", ",$errors);
   } else {
     if ($isDownload) {
-      header("Content-type: text/rtf;  charset=utf-8");
-      header("Content-Disposition: attachment; filename=readStructuredEdition.rtf");
+      ob_clean();
+      header("Content-type: text/rtf;  charset=UTF-8");
+      //header("Content-Disposition: attachment; filename=readStructuredEdition.rtf");
+      header("Content-Disposition: attachment; filename=read$style"."Edition.rtf");
+      header('Pragma: no-cache');
       header("Expires: 0");
     }
     echo $rtf;
@@ -534,5 +535,4 @@
       $graID2BoundaryMap[$lastGraphemeID] = $entGID;
     }
   }
-
 ?>
