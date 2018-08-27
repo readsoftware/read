@@ -27,6 +27,7 @@
   * @subpackage  Entity Classes
   */
   require_once (dirname(__FILE__) . '/../../common/php/DBManager.php');//get database interface
+  require_once (dirname(__FILE__) . '/../../common/php/utils.php');//get database interface
   require_once (dirname(__FILE__) . '/Entity.php');
   require_once (dirname(__FILE__) . '/Tokens.php');
 
@@ -718,7 +719,7 @@
     * @param string $sort primary code for this lemma
     */
     public function setSortCode($sort) {
-      if($this->_sort_code != $sort) {
+      if(compareSortKeys($this->_sort_code, $sort) !== 0) {
         $this->_dirty = true;
         $this->setDataKeyValuePair("lem_sort_code",$sort);
       }

@@ -3567,7 +3567,13 @@ function compareWordLocations($locW1,$locW2) {
   }
 }
 
-
+/**
+ * compareSortKeys
+ * compare 2 numeric strings starting with "0." to order
+ * by numeric value
+ * @param string $key1 sort code of the form "0.#####*"
+ * @param string $key2 sort code of the form "0.#####*"
+ */
 function compareSortKeys($key1,$key2) {
   if (!$key1 && $key2) {
     return -1;
