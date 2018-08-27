@@ -125,6 +125,9 @@ MANAGERS.DataManager.prototype = {
 
   flushLocalCache: function () {
     DEBUG.traceEntry("flushLocalCache","");
+    this.annoLoaded = false;
+    this.annoLoadFailed = false;
+    this.loadingAnnotations = false;
     this.loadingCatalog = false;
     this.loadingText = false;
     this.loadingEdition = false;
