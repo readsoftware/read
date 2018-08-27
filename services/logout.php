@@ -39,15 +39,15 @@ $_SESSION = array();
 // Note: This will destroy the session, and not just the session data!
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
-    setcookie(session_name(), '', time() - 42000,
+    setcookie(session_name(), '', time() - 60*60*24*100,
         $params["path"], $params["domain"],
         $params["secure"], $params["httponly"]
     );
 }
 
 //remove kanishka cookies
-setcookie ('ka_username', '', time() - 42000);
-setcookie ('ka_code', '', time() - 42000);
+setcookie ('ka_username', '', time() - 60*60*24*100);
+setcookie ('ka_code', '', time() - 60*60*24*100);
 
 // Finally, destroy the session.
 session_unset();

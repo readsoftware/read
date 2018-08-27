@@ -129,7 +129,9 @@ MANAGERS.DataManager.prototype = {
     this.annoLoadFailed = false;
     this.loadingAnnotations = false;
     this.loadingCatalog = false;
+    this.loadingBaseline = false;
     this.loadingText = false;
+    this.loadingTextResources = false;
     this.loadingEdition = false;
     this.textResourcesLoaded = false;
     this.entities = {};
@@ -1692,8 +1694,8 @@ MANAGERS.DataManager.prototype = {
           },
           error: function (xhr,status,error) {
               // add record failed.
-              dataMgr.loadingBaseline = 0;
-              alert("An error occurred while trying to retrieve text baseline data records. Error: " + error);
+              dataMgr.loadingTextResources = 0;
+              alert("An error occurred while trying to retrieve text resource data records. Error: " + error);
           }
       });
     } else if (cb && typeof cb == "function") {

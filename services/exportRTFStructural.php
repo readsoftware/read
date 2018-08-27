@@ -29,7 +29,7 @@
 
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
-  ob_start('ob_gzhandler');
+  ob_start();
 
 //  header("Content-type: text/rtf;  charset=utf-8");
   header('Pragma: no-cache');
@@ -257,7 +257,8 @@
     echo "Errors encountered trying to export editions Structure in RTF. Errors: ".join(", ",$errors);
   } else {
     if ($isDownload) {
-      header("Content-type: text/rtf;  charset=utf-8");
+      ob_clean();
+      header("Content-type: text/rtf;  charset=UTF-8");
       header("Content-Disposition: attachment; filename=readStructuredEdition.rtf");
       header("Expires: 0");
     }
