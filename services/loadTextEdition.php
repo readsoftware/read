@@ -152,10 +152,11 @@
     $seqIDs = $edition->getSequenceIDs();
     if ($seqIDs && count($seqIDs) > 0) {
       $condition = "seq_id in (".join(",",$seqIDs).")";
-      if ($publicOnly){//get only public entities
+      if ($publicOnly){
+        //get only public entities
         $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
       } else if ($userOnly) {
-        $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+        $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && seq_visibility_ids';
       }
       $sequences = new Sequences($condition,null,null,null);
       $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -209,10 +210,11 @@
         }
         if ($linePhysSeqIDs && count($linePhysSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$linePhysSeqIDs).")";
-          if ($publicOnly){//get only public entities
+          if ($publicOnly){
+            //get only public entities
             $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
           } else if ($userOnly) {
-            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+            $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && seq_visibility_ids';
           }
           $sequences = new Sequences($condition,null,null,null);
           $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -258,10 +260,11 @@
         }
         if ($txtDivSeqIDs && count($txtDivSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$txtDivSeqIDs).")";
-          if ($publicOnly){//get only public entities
+          if ($publicOnly){
+            //get only public entities
             $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
           } else if ($userOnly) {
-            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+            $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && seq_visibility_ids';
           }
           $sequences = new Sequences($condition,null,null,null);
           $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -302,7 +305,7 @@
           if ($publicOnly){//get only public entities
             $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
           } else if ($userOnly) {
-            $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+            $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && seq_visibility_ids';
           }
           $sequences = new Sequences($condition,null,null,null);
           $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -422,7 +425,7 @@
             if ($publicOnly){//get only public entities
               $condition .= ' and (2 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
             } else if ($userOnly) {
-              $condition .= ' and (2 = ANY ("seq_visibility_ids") or 3 = ANY ("seq_visibility_ids") or 6 = ANY ("seq_visibility_ids"))';
+              $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && seq_visibility_ids';
             }
             $sequences = new Sequences($condition,null,null,null);
             $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -474,7 +477,7 @@
             if ($publicOnly){//get only public entities
               $condition .= ' and (2 = ANY ("cmp_visibility_ids") or 6 = ANY ("cmp_visibility_ids"))';
             } else if ($userOnly) {
-              $condition .= ' and (2 = ANY ("cmp_visibility_ids") or 3 = ANY ("cmp_visibility_ids") or 6 = ANY ("cmp_visibility_ids"))';
+              $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && cmp_visibility_ids';
             }
             $compounds = new Compounds($condition,null,null,null);
             $compounds->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -534,7 +537,7 @@
             if ($publicOnly){//get only public entities   TODO check if readonly should be a check for visibility on usrgroups for this user
               $condition .= ' and (2 = ANY ("tok_visibility_ids") or 6 = ANY ("tok_visibility_ids"))';
             } else if ($userOnly) {
-              $condition .= ' and (2 = ANY ("tok_visibility_ids") or 3 = ANY ("tok_visibility_ids") or 6 = ANY ("tok_visibility_ids"))';
+              $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && tok_visibility_ids';
             }
             $tokens = new Tokens($condition,null,null,null);
             $tokens->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -590,7 +593,7 @@
             if ($publicOnly){//get only public entities
                $condition .= ' and (2 = ANY ("gra_visibility_ids") or 6 = ANY ("gra_visibility_ids"))';
             } else if ($userOnly) {
-              $condition .= ' and (2 = ANY ("gra_visibility_ids") or 3 = ANY ("gra_visibility_ids") or 6 = ANY ("gra_visibility_ids"))';
+              $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && gra_visibility_ids';
             }
             $graphemes = new Graphemes($condition,null,null,null);
             $graphemes->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -628,7 +631,7 @@
             if ($publicOnly){//get only public entities
               $condition .= ' and (2 = ANY ("scl_visibility_ids") or 6 = ANY ("scl_visibility_ids"))';
             } else if ($userOnly) {
-              $condition .= ' and (2 = ANY ("scl_visibility_ids") or 3 = ANY ("scl_visibility_ids") or 6 = ANY ("scl_visibility_ids"))';
+              $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && scl_visibility_ids';
             }
             $syllables = new SyllableClusters($condition,null,null,null);
             $syllables->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -698,7 +701,7 @@
             if ($publicOnly){//get only public entities
               $condition .= ' and (2 = ANY ("seg_visibility_ids") or 6 = ANY ("seg_visibility_ids"))';
             } else if ($userOnly) {
-              $condition .= ' and (2 = ANY ("seg_visibility_ids") or 3 = ANY ("seg_visibility_ids") or 6 = ANY ("seg_visibility_ids"))';
+              $condition .= ' and ARRAY['.join(",",getUserMembership()).",".getUserID().'] && seg_visibility_ids';
             }
             $segments = new Segments($condition,null,null,null);
             $segments->setAutoAdvance(false); // make sure the iterator doesn't prefetch
