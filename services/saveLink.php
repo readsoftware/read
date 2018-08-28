@@ -70,6 +70,7 @@ if (!$data) {
   }
   if ( isset($data['linkTypeID'])) {
     $linkTypeID = $data['linkTypeID'];
+    $linkType = Entity::getTermFromID($linkTypeID);
   }
   if ( isset($data['oldLinkTypeID'])) {
     $oldLinkTypeID = $data['oldLinkTypeID'];
@@ -202,6 +203,19 @@ if (count($errors) == 0) {
     //for link from GID update relatedEntGIDsByType field
     $linkFromEntity = EntityFactory::createEntityFromGlobalID($fromGID);//assumed to be a tok or cmp  GID
     addUpdateEntityReturnData($linkFromEntity->getEntityTypeCode(),$linkFromEntity->getID(),'relatedEntGIDsByType', $linkFromEntity->getRelatedEntitiesByLinkType());
+    //check for syntactic function and store scratch information
+    if (Entity::getTermFromID(Entity::getParentIDFromID($linkTypeID)) == 'SyntacticFunction') {//warning!! term dependency
+      $dependecyWord = "";
+      if ($toGID) {
+        $linkToEntity = EntityFactory::createEntityFromGlobalID($toGID);
+        $prefix = $linkToEntity->getEntityTypeCode();
+        if ($prefix == 'tok' || $prefix == 'cmp') {
+          $dependecyWord = $linkToEntity->getValue();
+        }
+      }
+      $linkFromEntity->storeScratchProperty('syntacticRelation',$linkType.' → '.$dependecyWord);
+      $linkFromEntity->save();
+    }
     $txtDivTypeID = Entity::getIDofTermParentLabel("textdivision-text"); //warning!! term dependency
     $txtTypeID = Entity::getIDofTermParentLabel("text-sequencetype"); //warning!! term dependency
     // TODO mark cache dirty so updates text div seq and edition as a whole

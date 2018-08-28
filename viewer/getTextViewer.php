@@ -997,6 +997,9 @@
                     if (entGlossInfo['infHtml']) {
                       popupHtml += entGlossInfo['infHtml'];
                     }
+                    if (entGlossInfo['syntax']) {
+                      popupHtml += entGlossInfo['syntax'];
+                    }
                     //TODO syntax  add code here to construct syntax html and add dblclick and root-highlite code below
                     popupHtml += '</div>';
                     if (lemmaInfo['attestedHtml'] || lemmaInfo['relatedHtml']) {

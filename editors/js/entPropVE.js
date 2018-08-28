@@ -211,7 +211,7 @@ EDITORS.EntityPropVE.prototype = {
         this.sfOldLinkTypeID = null;
         this.sfLinkToEntGID = null;
         if (this.entity.relatedEntGIDsByType && Object.keys(this.entity.relatedEntGIDsByType).length > 0) {
-          var synfuncTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["syntaticfunction-linkagetype"];//warning! term dependency
+          var synfuncTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["syntacticfunction-linkagetype"];//warning! term dependency
           for (relTermID in this.entity.relatedEntGIDsByType) {
             if (this.dataMgr.termInfo.termByID[relTermID].trm_parent_id == synfuncTypeID) {//caution only checks immediate parent
               this.sfLinkTypeID = relTermID;
@@ -832,7 +832,8 @@ EDITORS.EntityPropVE.prototype = {
 
   createSynFuncUI: function() {//syntatic function link ui for word
     var entPropVE = this,
-        sfValue = "Select syntatic function", sfLinkTypeID = this.sfLinkTypeID, sfLinkToEntGID = this.sfLinkToEntGID,
+        sfValue = "Select syntatic function", sfLinkTypeID = this.sfLinkTypeID, 
+        sfLinkToEntGID = this.sfLinkToEntGID,
         sfLinkToEntValue, valueEditable = this.controlVE.type == "EditionVE",
         treeSfLinkTypeName = this.id+'sflinktypetree';
     DEBUG.traceEntry("createSynFuncUI");

@@ -2190,6 +2190,10 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                       'infHtml'=> $infString);
                     //TODO:Syntax   add code here to check inflectionComponent has syntaxt info and add to glossary info
                     //this will cache the information for the popup html calc code
+                    $syntacticDependency = $inflectionComponent->getScratchProperty('syntacticRelation');
+                    if ($syntacticDependency) {
+                      $entTag2GlossaryHtml[$entTag]['syntax'] = "<span class=\"syntaxDependency\">| $syntacticDependency</span>";
+                    }
                     $attested2LemmaInfoMap[$entTag] = $entTag2GlossaryHtml[$entTag];
                     $attestedCommentary = "";
                     if ( $linkedAnoIDsByType = $inflectionComponent->getLinkedAnnotationsByType()) {
@@ -2243,6 +2247,10 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                   $entTag = preg_replace("/:/","",$lemmaComponent->getGlobalID());
                   $entTag2GlossaryHtml[$entTag] = array('lemTag' => $lemTag);//word link to lemma
                   //TODO:Syntax   add code here to check lemmaComponent has syntaxt info and add to glossary info
+                  $syntacticDependency = $lemmaComponent->getScratchProperty('syntacticRelation');
+                  if ($syntacticDependency) {
+                    $entTag2GlossaryHtml[$entTag]['syntax'] = "<span class=\"syntaxDependency\">| $syntacticDependency</span>";
+                  }
                   $attested2LemmaInfoMap[$entTag] = $entTag2GlossaryHtml[$entTag];
                   $attestedCommentary = "";
                   if ( $linkedAnoIDsByType = $lemmaComponent->getLinkedAnnotationsByType()) {

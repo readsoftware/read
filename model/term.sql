@@ -1408,7 +1408,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1447,'en=>"LanguageForm"',1,780,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1448,'en=>"Prose"',1447,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1449,'en=>"Poetry"',1447,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1450,'en=>"SyntaticFunction"',278,781,NULL,NULL,'Syntatic Function',NULL,NULL,NULL,1,'{2}'),
+(1450,'en=>"SyntacticFunction"',278,781,NULL,NULL,'Syntactic Function',NULL,NULL,NULL,1,'{2}'),
 (1451,'en=>"PRED"',1450,778,NULL,NULL,'predicate',NULL,NULL,NULL,1,'{2}'),
 (1452,'en=>"SBJ"',1450,778,NULL,NULL,'subject',NULL,NULL,NULL,1,'{2}'),
 (1453,'en=>"OBJ"',1450,778,NULL,NULL,'object',NULL,NULL,NULL,1,'{2}'),

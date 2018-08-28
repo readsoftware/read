@@ -221,6 +221,9 @@
     * @todo write lookup code to get label for term id
     */
     public function getType($lang = "default") {
+      if ($this->_type_id) {
+        return Entity::getTermFromID($this->_type_id);
+      }
       return null;
     }
 

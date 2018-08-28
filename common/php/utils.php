@@ -850,7 +850,7 @@ function getLinkTypeInfo() {
       }
     }
   }
-  $sfLinkTypeTerms = new Terms("trm_labels::hstore->'en' = 'SyntaticFunction'",'trm_id',null,null);
+  $sfLinkTypeTerms = new Terms("trm_labels::hstore->'en' = 'SyntacticFunction'",'trm_id',null,null);
   if ($sfLinkTypeTerms && $sfLinkTypeTerms->getCount() > 0 ){
     $sfLinkTypeID = $sfLinkTypeTerms->current()->getID();
     $sfLinkTypesStruct = getLinkSubTypeStructure($sfLinkTypeID);
