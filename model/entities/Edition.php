@@ -115,7 +115,7 @@
           $this->setStatus("changed");
         }
       }
-      parent::save($dbMgr);
+      return parent::save($dbMgr);
     }
 
     /**
