@@ -390,7 +390,7 @@ class Parser {
         }
         $sequence->setEntityIDs($entityGIDs);
         if (!$sequence->save($dbMgr)){
-          array_push($this->_errors,"unable to update token".$sequence->getID()." error - ".join("||",$sequence->getErrors()));
+          array_push($this->_errors,"unable to update sequence".$sequence->getID()." error - ".join("||",$sequence->getErrors()));
           if ($dbMgr->rollback()){
             array_push($this->_errors,"rollback complete");
           }else{
@@ -413,7 +413,7 @@ class Parser {
           }
           $edition->setSequenceIDs($sequenceIDs);
           if (!$edition->save($dbMgr)){
-            array_push($this->_errors,"unable to update token".$edition->getID()." error - ".join("||",$edition->getErrors()));
+            array_push($this->_errors,"unable to update edition".$edition->getID()." error - ".join("||",$edition->getErrors()));
             if ($dbMgr->rollback()){
               array_push($this->_errors,"rollback complete");
             }else{
