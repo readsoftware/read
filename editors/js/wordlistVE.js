@@ -765,7 +765,7 @@ EDITORS.WordlistVE.prototype = {
 */
 
   calcLemmaHtml: function (lemID) {
-    var wordlistVE = this,i,j,k,cnt,html = "",tag, wtag, word, wordGIDs, inflection, infGIDs, val,
+    var wordlistVE = this,i,j,k,cnt,html = "",tag, wtag, word, wordGID, wordGIDs, inflection, infGIDs, val,
         isNoun, isPronoun, isAdjective, isNumeral, isVerb, isInflectable, cf, tempLabel, pos,
         displayValue = '', wordAnnoTag, wordAnno, lemma, lemmaAnnoTag, lemmaAnno;
     if (this.dataMgr.entities && this.dataMgr.entities.lem && this.dataMgr.entities.lem[lemID]) {
@@ -986,24 +986,34 @@ EDITORS.WordlistVE.prototype = {
         } else { //no inflections     ?? 2 part display unique spellings followed by attested form links ??
           wordGIDs = lemma.entityIDs;
           for (j=0; j<wordGIDs.length; j++) {
-            word = this.dataMgr.getEntityFromGID(wordGIDs[j]);
-            if (word) {
-              wordAnno = "";
-              if (word.linkedAnoIDsByType && word.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
-                wordAnnoTag = "ano"+word.linkedAnoIDsByType[this.glossAnnoType][0];
-                temp = this.dataMgr.getEntityFromGID(wordAnnoTag);
-                if (temp && temp.text && temp.text.length) {
-                  wordAnno = temp.text;
-                  if (wordAnno.length > 250) {
-                    wordAnno = wordAnno.substring(0,249) + "…";
+            wordGID = wordGIDs[j];
+            if (!wordGID || wordGID.indexOf('inf') > -1) {
+              DEBUG.log('err',lemma.tag+' is uninflectable and has inflection ' + wordGID);
+            } else {
+              word = this.dataMgr.getEntityFromGID(wordGID);
+              if (word) {
+                wordAnno = "";
+                if (word.linkedAnoIDsByType && word.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
+                  wordAnnoTag = "ano"+word.linkedAnoIDsByType[this.glossAnnoType][0];
+                  temp = this.dataMgr.getEntityFromGID(wordAnnoTag);
+                  if (temp && temp.text && temp.text.length) {
+                    wordAnno = temp.text;
+                    if (wordAnno.length > 250) {
+                      wordAnno = wordAnno.substring(0,249) + "â€¦";
+                    }
                   }
                 }
+                html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
+                        word.value.replace(/aÊ”i/g,'aÃ¯').replace(/aÊ”u/g,'aÃ¼').replace(/Ê”/g,'')+'">' +
+                        (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
+                        ' ' + word.transcr.replace(/aÊ”i/g,'aÃ¯').replace(/aÊ”u/g,'aÃ¼').replace(/Ê”/g,'') +
+                        (wordAnno?' ('+wordAnno+')':"") + '</span>';
               }
               if (word && word.value && word.transcr && word.locLabel) {
                 html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
-                        word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                        word.value.replace(/aÊ”i/g,'aÃ¯').replace(/aÊ”u/g,'aÃ¼').replace(/Ê”/g,'')+'">' +
                         (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                        ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                        ' ' + word.transcr.replace(/aÊ”i/g,'aÃ¯').replace(/aÊ”u/g,'aÃ¼').replace(/Ê”/g,'') +
                         (wordAnno?' ('+wordAnno+')':"") + '</span>';
               } else {
                 DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
