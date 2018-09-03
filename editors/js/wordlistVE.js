@@ -487,11 +487,7 @@ EDITORS.WordlistVE.prototype = {
     return false;
   },
 
-  lookupLemma: function (val) {
-    return this.lemLookup[val];
-  },
-
-
+  
 /**
 * scroll wordlist entry into view
 *
@@ -999,21 +995,21 @@ EDITORS.WordlistVE.prototype = {
                   if (temp && temp.text && temp.text.length) {
                     wordAnno = temp.text;
                     if (wordAnno.length > 250) {
-                      wordAnno = wordAnno.substring(0,249) + "â€¦";
+                      wordAnno = wordAnno.substring(0,249) + "…";
                     }
                   }
                 }
                 html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
-                        word.value.replace(/aÊ”i/g,'aÃ¯').replace(/aÊ”u/g,'aÃ¼').replace(/Ê”/g,'')+'">' +
+                        word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                         (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                        ' ' + word.transcr.replace(/aÊ”i/g,'aÃ¯').replace(/aÊ”u/g,'aÃ¼').replace(/Ê”/g,'') +
+                        ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                         (wordAnno?' ('+wordAnno+')':"") + '</span>';
               }
               if (word && word.value && word.transcr && word.locLabel) {
                 html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
-                        word.value.replace(/aÊ”i/g,'aÃ¯').replace(/aÊ”u/g,'aÃ¼').replace(/Ê”/g,'')+'">' +
+                        word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                         (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
-                        ' ' + word.transcr.replace(/aÊ”i/g,'aÃ¯').replace(/aÊ”u/g,'aÃ¼').replace(/Ê”/g,'') +
+                        ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                         (wordAnno?' ('+wordAnno+')':"") + '</span>';
               } else {
                 DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+

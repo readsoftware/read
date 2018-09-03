@@ -143,6 +143,12 @@
           if ($lemma->getScratchProperty('phonetics')) {
             $entities["update"]['lem'][$lemID]['phonetics'] = $lemma->getScratchProperty('phonetics');
           }
+          if ($lemma->getScratchProperty('phonology')) {
+            $entities["update"]['lem'][$lemID]['phonology'] = $lemma->getScratchProperty('phonology');
+          }
+          if ($lemma->getScratchProperty('wipPhonology')) {
+            $entities["update"]['lem'][$lemID]['wipPhonology'] = $lemma->getScratchProperty('wipPhonology');
+          }
           $lemCompIDs = $lemma->getComponentIDs();
           if (count($lemCompIDs) > 0) {
             foreach ($lemCompIDs as $gid) {
