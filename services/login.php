@@ -33,8 +33,10 @@
   require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
 
-header("Access-Control-Allow-Origin: " . WORKBENCH_BASE_URL);
-header('Access-Control-Allow-Credentials: true');
+if (defined("WORKBENCH_BASE_URL")) {
+  header("Access-Control-Allow-Origin: " . WORKBENCH_BASE_URL);
+  header('Access-Control-Allow-Credentials: true');
+}
 
 $username = isset($_POST['username'])?$_POST['username'] : (isset($_REQUEST['username'])?$_REQUEST['username']:null);
 $password = isset($_POST['password'])?$_POST['password'] : (isset($_REQUEST['password'])?$_REQUEST['password']:null);
