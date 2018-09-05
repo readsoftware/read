@@ -861,16 +861,40 @@ function getEntityBoundaryHtml($entity,$classList = "") {
 *
 * @param object $entity that can be annotated
 */
+function getSubEntityFootnotesHtml($entity, $refresh = false) {
+  global $fnRefTofnText, $typeIDs;
+  $fnHtml = "";
+  if (!method_exists($entity,"getComponents")) {
+    return "";
+  }
+  $subEntities = $entity->getComponents(true);
+  if ($subEntities->getCount() == 0) {
+    return "";
+  }
+  foreach ($subEntities as $subEntity){
+    $fnHtml .= getEntityFootnotesHtml($subEntity, $refresh);
+  }
+  return $fnHtml;
+}
+
+/**
+* returns footnotes of an entity as Html fragment
+*
+* @param object $entity that can be annotated
+*/
 function getEntityFootnotesHtml($entity, $refresh = false) {
   global $fnRefTofnText, $typeIDs;
   $fnInfo = getEntityFootnoteInfo($entity, $typeIDs, $refresh);
   if (is_null($fnInfo)) {
-    return "";
+    if ($entity->getEntityTypeCode() == "cmp" && method_exists($entity,"getComponents")) {
+      return getSubEntityFootnotesHtml($entity, $refresh);
+    }
+      return "";
   }
   foreach ($fnInfo['fnTextByAnoTag'] as $anoTag => $anoText){
     $fnRefTofnText[$anoTag] = $anoText;
   }
-  return $fnInfo['fnHtml'];;
+  return $fnInfo['fnHtml'];
 }
 
 /**

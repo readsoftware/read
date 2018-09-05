@@ -3184,7 +3184,7 @@ function getEntityFootnoteInfo($entity, $fnTypeIDs, $refresh = false) {
             $anoText = $annotation->getText();
             if ($anoText) {
               $anoTag = "ano".$anoID;
-              $fnHtml .= "<sup id=\"$anoTag\" class=\"$type $entTag $typeTag\" >n</sup>";
+              $fnHtml .= "<sup id=\"$anoTag\" class=\"$type $entTag $typeTag\" >".(defined("FOOTNOTEMARKER")?FOOTNOTEMARKER:"n")."</sup>";
               $fnTextByAnoTag[$anoTag] = $anoText;
             }
           }
