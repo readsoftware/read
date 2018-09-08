@@ -63,7 +63,7 @@
   $term_parentLabelToID = $termInfo['idByTerm_ParentLabel'];
   $anoIDs = array();
   $atbIDs = array();
-  $cmpTokTag2LocLabel = array();
+//  $cmpTokTag2LocLabel = array();
   $errors = array();
   $warnings = array();
   //find catalogs
@@ -71,7 +71,7 @@
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
     array_push($warnings,"Warning need valid catalog id $catID.");
   } else {
-    $cmpTokTag2LocLabel = getWordTagToLocationLabelMap($catalog,$refreshWordMap);
+//    $cmpTokTag2LocLabel = getWordTagToLocationLabelMap($catalog,$refreshWordMap);
     $tcmSrchStrings = array("⟨","⟩","⟪","⟫","\{","\}");
     $tcmRtfRplcStrings = array("\\u10216\\'3f","\\u10217\\'3f","\\u10218\\'3f","\\u10219\\'3f","\\'7b","\\'7d");
     $rtf ='{\rtf1\adeflang1025\ansi\ansicpg10000\uc1\adeff0\deff0'."\n".

@@ -48,7 +48,8 @@
   require_once dirname(__FILE__) . '/../model/entities/Images.php';
   require_once (dirname(__FILE__) . '/../viewer/php/viewutils.php');//get utilities for viewing
 //  $userID = array_key_exists('userID',$_REQUEST) ? $_REQUEST['userID']:12;
-
+//DEPRECATED
+die("this service has been deprecated!");
   $dbMgr = new DBManager();
   $retVal = array();
   $gra2SclMap = array();

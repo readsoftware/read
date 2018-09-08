@@ -65,7 +65,7 @@
   $termInfo = getTermInfoForLangCode('en');
   $termLookup = $termInfo['labelByID'];
   $term_parentLabelToID = $termInfo['idByTerm_ParentLabel'];
-  $getWrdTag2GlossaryPopupHtmlLookup = array();
+  $wrdTag2GlossaryPopupHtmlLookup = array();
   $errors = array();
   $warnings = array();
   //find catalogs
@@ -75,7 +75,7 @@
     $catalog = null;
   }
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
-    echo "Usage: updateWordLocationLabelMap.php?db=yourDBName&catID=###[&ednID=###]";
+    echo "Usage: updateLemmaEntryCache.php?db=yourDBName&catID=###[&ednID=###]";
   } else {
     if(USEVIEWERCACHING) {
       $cacheKey = "glosscat$catID"."edn".($ednID?$ednID:"all");
@@ -101,10 +101,10 @@
         $jsonCache = new JsonCache($cacheKey);
       }
     }
-    $getWrdTag2GlossaryPopupHtmlLookup = getWrdTag2GlossaryPopupHtmlLookup($catID,$ednID, $refresh);
-    echo print_r($getWrdTag2GlossaryPopupHtmlLookup,true);
+    $wrdTag2GlossaryPopupHtmlLookup = getWrdTag2GlossaryPopupHtmlLookup($catID,$ednID, $refresh);
+    echo print_r($wrdTag2GlossaryPopupHtmlLookup,true);
     if(USEVIEWERCACHING) {
-      $jsonCache->setJsonString(json_encode($getWrdTag2GlossaryPopupHtmlLookup));
+      $jsonCache->setJsonString(json_encode($wrdTag2GlossaryPopupHtmlLookup));
       $jsonCache->save();
       unset($jsonCache);
     }

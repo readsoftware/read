@@ -93,12 +93,12 @@
       returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
     } else if ($txtID) {
       $text = new Text($txtID);
-      if ($text->hasError()) {
+      if ($text->hasError() || $text->getID() != $txtID) {
         returnXMLErrorMsgPage("unable to load text $txtID - ".join(",",$text->getErrors()));
       }
       $editions = $text->getEditions();
       if ($editions->getError() || $editions->getCount() == 0) {
-        returnXMLErrorMsgPage("unable to load any text editions - ".$editions->getError());
+        returnXMLErrorMsgPage("unable to load any text $txtID editions - ".$editions->getError());
       }
       $cfgEntityTag = DBNAME."txt$txtID";
       $entityCfgStaticView = $text->getScratchProperty("cfgStaticView");
@@ -280,7 +280,7 @@
       $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
       $edFootnotesByEdn .= getEditionFootnoteTextLookup();
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
-        $edGlossaryLookupByEdn .= getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps || $isStaticView,$glossaryUrlLookup);
+        $edGlossaryLookupByEdn .= getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps?$refreshLookUps:$isStaticView,$glossaryUrlLookup);
       } else {
         $edGlossaryLookupByEdn .= '{}';
       }
@@ -308,7 +308,7 @@
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
 <?php
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
-        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps || $isStaticView,$glossaryUrlLookup);
+        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps?$refreshLookUps:$isStaticView,$glossaryUrlLookup);
       } else {
         $edGlossaryLookup = '{}';
       }
@@ -332,7 +332,7 @@
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,
 <?php
       if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
-        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps || $isStaticView,$glossaryUrlLookup);
+        $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps?$refreshLookUps:$isStaticView,$glossaryUrlLookup);
       } else {
         $edGlossaryLookup = '{}';
       }

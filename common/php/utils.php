@@ -2376,7 +2376,7 @@ function checkEditionHealth($ednID, $verbose = true) {
             }
             $seqEntityGIDs = $sequence->getEntityIDs();
             if (!$seqEntityGIDs || count($seqEntityGIDs) == 0) {
-              array_push($hltherrors,"Error Strucutral Sequence (seq:$seqID) has no entity ids.");
+              array_push($hltherrors,"Error Structural Sequence (seq:$seqID) has no entity ids.");
               continue;
             }
             foreach ($seqEntityGIDs as $seqEntityGID) {

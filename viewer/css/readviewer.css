@@ -323,6 +323,11 @@ body.showTOC .tocNavPanel {
 .lineHeader {
   font-weight: bold;
   padding-right: 15px;
+  display: table-cell;
+}
+
+.physicalLineWrapperDiv {
+  display: table-cell;
 }
 
 .textEdnButton {

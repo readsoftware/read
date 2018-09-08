@@ -16,7 +16,7 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
   /**
-  * loadCatalogEntities
+  * updateWordLocationLabelMap  -- deprecated used old algorithm for locations.
   *
   *  A service that returns a json structure of the catalog (unrestricted type) requested along with its
   *  lemma and the lemma's inflections, compounds, and tokens.
@@ -52,6 +52,8 @@
   require_once dirname(__FILE__) . '/../model/entities/Compounds.php';
   require_once dirname(__FILE__) . '/../model/entities/Images.php';
 //  $userID = array_key_exists('userID',$_REQUEST) ? $_REQUEST['userID']:12;
+//DEPRECATED
+die("this service has been deprecated!");
 
   $dbMgr = new DBManager();
   $retVal = array();
@@ -157,7 +159,7 @@
           $sequence = new Sequence(substr($ednSeqTag,3));
           $defLabel = $ednLabel . ($sequence->getSuperScript()?$sequence->getSuperScript():($sequence->getLabel()?$sequence->getLabel():$ednSeqTag));
           $words = $sequence->getEntities(true);
-          if ($words->getCount() == 0) {
+          if (!$words || $words->getCount() == 0) {
             error_log("no words for sequence $ednSeqTag having edition label $ednLabel");
             continue;
           }else{

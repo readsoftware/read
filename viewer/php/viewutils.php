@@ -1305,6 +1305,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                 } elseif (array_key_exists($graIDs[1],$graID2LineHtmlMarkerlMap)) { // case where glottal starts line
                   $physicalLineHtml .= $graID2LineHtmlMarkerlMap[$graIDs[1]];
                 }
+                $physicalLineHtml .= "<div class=\"physicalLineWrapperDiv\">";
               }
               //for each grapheme in syllable
               for($l=0; $l<$graCnt; $l++) {
@@ -1335,6 +1336,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                         $footnoteHtml = "";
                       }
                       $physicalLineHtml .= '</span>';
+                      $previousA = false;
                     }
                     list($tdSeqTag,$wordTag) = $graID2WordGID[$graID];
                     $physicalLineHtml .= '<span class="grpTok '.($tdSeqTag?$tdSeqTag.' ':'').$wordTag.'">';
@@ -1382,7 +1384,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
           if ($hasWrappingWord){
             $physicalLineHtml .= "-";
           }
-          $physicalLineHtml .= "</span></div>";
+          $physicalLineHtml .= "</span></div></div>";
           $physicalLineHtml = preg_replace('/_+/',"_",$physicalLineHtml); // multple missing consonants
           $physicalLineHtml = preg_replace('/_/',".",$physicalLineHtml); // multple missing consonants
           //store html to sequence for cache
@@ -1569,7 +1571,8 @@ function getPhysicalLinesHTML($textDivSeqIDs, $refresh = false, $addBoundaryHtml
                         //if in a compound output hyphen
                         //if not first physical line then close physical line div and start a new line
                         $physicalLineHtml .= ((!$fTxtDivSeq && $wordHtml && !($firstT && $firstG))?$wordHtml."-</span>":"").
-                                              (!$fTxtDivSeq?"</div>":"")."<div class=\"physicalLineDiv\">".$graID2LineHtmlMarkerlMap[$graID];
+                                              (!$fTxtDivSeq?"</div></div>":"")."<div class=\"physicalLineDiv\">".
+                                              $graID2LineHtmlMarkerlMap[$graID]."<div class=\"physicalLineWrapperDiv\">";
                         //open word span
                         $wordHtml = '<span class="grpTok '.($seqTag?$seqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
                         $prevTCMS = "S";//at a new physical line so reset TCM//???need to recalc previous brackets???
