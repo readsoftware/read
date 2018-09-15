@@ -2394,12 +2394,22 @@ EDITORS.EntityPropVE.prototype = {
       savedata["typeID"] = typeID;
     }
     if (entityIDs !== null) {
+      if (seqID && entityIDs.length && entityIDs.indexOf("seq:"+seqID) > -1) {
+        DEBUG.log("error","attemp to create cycle in seqID "+seqID);
+        DEBUG.traceExit("saveSequence");
+        return;
+      }
       savedata["entityIDs"] = entityIDs;
     }
     if (removeEntityGID) {
       savedata["removeEntityGID"] = removeEntityGID;
     }
     if (addEntityGID) {
+      if (seqID && ("seq:"+seqID) == addEntityGID) {
+        DEBUG.log("error","attemp to create cycle in seqID "+seqID);
+        DEBUG.traceExit("saveSequence");
+        return;
+      }
       savedata["addEntityGID"] = addEntityGID;
     }
     if (addSubSeqTypeID) {

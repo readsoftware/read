@@ -322,8 +322,10 @@ body.showTOC .tocNavPanel {
 
 .lineHeader {
   font-weight: bold;
-  padding-right: 15px;
+  padding-right: 10px;
   display: table-cell;
+  min-width: 20px;
+  text-align: right;
 }
 
 .physicalLineWrapperDiv {
@@ -381,8 +383,8 @@ body.showTOC .tocNavPanel {
 }
 
 .zoomUI {
-  height: 100%;
-  float: right;
+/*  height: 100%;
+  float: right;*/
   display: inline;
   margin-right: 25px;
   min-width: 70px;

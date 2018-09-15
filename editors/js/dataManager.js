@@ -93,9 +93,14 @@ MANAGERS.DataManager.prototype = {
   init: function() {
     DEBUG.traceEntry("dataMgr.init","");
     var dataMgr = this;
+    this.annoLoaded = false;
+    this.annoLoadFailed = false;
+    this.loadingAnnotations = false;
     this.loadingCatalog = false;
     this.loadingText = false;
     this.loadingEdition = false;
+    this.loadingBaseline = false;
+    this.loadingTextResources = false;
     this.textResourcesLoaded = false;
     this.entities = {};
     this.switchInfoByTextID = {};
@@ -1215,7 +1220,7 @@ MANAGERS.DataManager.prototype = {
     if (!this.textResourcesLoaded || dataMgr.loadingEdition || !dataMgr.annoLoaded) {
       if (dataMgr.loadingEdition && ednID == dataMgr.loadingEdition) {
         exitMsg = "skipping, already loading ednID = " + ednID;
-        DEBUG.log("warn"," call with same txtID to loadEdition which is not re-entrant, cancelling this request to load ednID "+ ednID);
+        DEBUG.log("warn"," call with same ednID to loadEdition which is not re-entrant, cancelling this request to load ednID "+ ednID);
       } else if (!this.textResourcesLoaded || !this.editionForIDUnavailable(ednID)|| !dataMgr.annoLoaded){
         DEBUG.trace('Queuing loadEdition Call','ednID = '+ednID + (cb?" with callback":""));
         this.stackLoadEdition(ednID,cb);
@@ -1385,7 +1390,7 @@ MANAGERS.DataManager.prototype = {
         i,temp;
     if (!this.textResourcesLoaded || dataMgr.loadingBaseline) {
       if (blnID == dataMgr.loadingBaseline) {
-        DEBUG.log("warn"," call with same txtID to loadBaseline which is not re-entrant, cancelling this request to load blnID "+ blnID);
+        DEBUG.log("warn"," call with same blnID to loadBaseline which is not re-entrant, cancelling this request to load blnID "+ blnID);
       } else if (!this.textResourcesLoaded || !this.baselineForIDUnavailable(blnID)){
         this.stackLoadBaseline(blnID,cb);
       }

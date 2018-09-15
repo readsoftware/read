@@ -665,15 +665,15 @@ EDITORS.SequenceVE.prototype = {
   },
 
 
-/**
-* put your comment there...
-*
-*/
-
-  addEventHandlers: function() {
-    var seqVE = this, entities = this.dataMgr.entities;
-
-
+  /**
+  * put your comment there...
+  *
+  */
+  
+    addEventHandlers: function() {
+      var seqVE = this, entities = this.dataMgr.entities;
+  
+  
 /**
 * put your comment there...
 *
@@ -719,7 +719,8 @@ EDITORS.SequenceVE.prototype = {
       var parentEntTag = seqVE.linkTargetTag,
           linkEntGID = entTag.substring(0,3)+":"+entTag.substring(3),
           $linkElement = $('.linktarget',seqVE.$structTree);
-      if (seqVE.entPropVE && seqVE.entPropVE.saveSequence) {
+      if (seqVE.entPropVE && seqVE.entPropVE.saveSequence &&
+        linkEntGID.replace(":","") != parentEntTag) {
         seqVE.entPropVE.saveSequence(parentEntTag.substring(3), null, null, null, null, null, linkEntGID, null, function(newSeqID) {
           var elem = $linkElement[0],
               newItem = seqVE.getSubItems([linkEntGID],0);
@@ -749,19 +750,22 @@ EDITORS.SequenceVE.prototype = {
       var parentEntTag = seqVE.linkTargetTag,
           $linkElement = $('.linktarget',seqVE.$structTree);
           $linkElement.removeClass('linktarget');
-      if (seqVE.entPropVE && seqVE.entPropVE.saveSequence) {
-        seqVE.entPropVE.saveSequence(parentEntTag.substring(3), null, null, null, selectionIDs, null, null, null, function(newSeqID) {
-          var elem = $linkElement[0], newItem, i,
-              newItems = seqVE.getSubItems(selectionIDs,0);
-          if (newItems && newItems.length){
-            for (i in newItems) {
-              newItem = newItems[i];
-              seqVE.$structTree.jqxTree('addTo',newItem,elem);
-              seqVE.attachMenuEventHandler($(elem));
-              seqVE.$structTree.jqxTree('expandItem', elem);
-            }
-          }
-        },null);
+      if (parentEntTag && selectionIDs.length && seqVE.entPropVE && seqVE.entPropVE.saveSequence) {
+        seqVE.entPropVE.saveSequence(parentEntTag.substring(3), null, null, null, selectionIDs, null, null, null, 
+            function(newSeqID){
+              var elem = $linkElement[0], newItem, i,
+                  newItems = seqVE.getSubItems(selectionIDs,0);
+              if (newItems && newItems.length){
+                for (i in newItems) {
+                  newItem = newItems[i];
+                  seqVE.$structTree.jqxTree('addTo',newItem,elem);
+                  seqVE.attachMenuEventHandler($(elem));
+                  seqVE.$structTree.jqxTree('expandItem', elem);
+                }
+              }
+              $('.editContainer').trigger('structureChange',[seqVE.id,seqVE.edition.id]);
+            },
+            null);
       }
     };
 
@@ -1073,7 +1077,10 @@ EDITORS.SequenceVE.prototype = {
                   entID = entTag.substring(3);
                   entGID = entTag.substring(0,3)+":"+entID;
                   if (seqVE.entPropVE && seqVE.entPropVE.saveSequence) {
-                    seqVE.entPropVE.saveSequence(entID, null, null, null, "",null, null, null, null,null);
+                    seqVE.entPropVE.saveSequence(entID, null, null, null, "",null, null, null,function(seqID) {
+                        seqVE.refreshNode(entGID);
+                        $('.editContainer').trigger('structureChange',[seqVE.id,seqVE.edition.id]);
+                      },null);
                   }
                 }
               }

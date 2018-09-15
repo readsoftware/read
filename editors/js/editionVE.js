@@ -2946,6 +2946,25 @@ mergeLine: function (direction,cbError) {
 
 
     /**
+    * handle 'structureChange' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string ednID Identifies the edition with the structural change
+    */
+
+   function structureChangeHandler(e,senderID, ednID) {
+    if (senderID == ednVE.id || ednVE.edition.id != ednID) {
+      return;
+    }
+    DEBUG.log("event","struct change recieved by editionVE in "+ednVE.id+" from "+senderID);
+    ednVE.refreshSeqMarkers();
+  };
+
+  $(this.editDiv).unbind('structureChange').bind('structureChange', structureChangeHandler);
+
+
+  /**
     * handle 'autoLinkOrdRequest' event
     *
     * @param object e System event object
@@ -4825,7 +4844,7 @@ mergeLine: function (direction,cbError) {
       } else if (ednVE.structLinkMode) {
         selectIDs = ednVE.getSelectionEntityGIDs();
         if (selectIDs && selectIDs.length){
-          $('.editContainer').trigger('structurelinkresponse',[this.id,ednVE.edition.id,ednVE.structLinkMode,selectIDs]);
+          $('.editContainer').trigger('structurelinkresponse',[ednVE.id,ednVE.edition.id,ednVE.structLinkMode,selectIDs]);
         }
         ednVE.structLinkMode = null;
       } else if (!e.ctrlKey && !(eTarget.id && eTarget.id.match(/textContent/) && sRange.commonAncestorContainer == sRange.startContainer)) {

@@ -155,55 +155,57 @@
         }
       }
     }
-
-    foreach ($baseline->getSegments(true) as $segment) {
-      if ($segment->isMarkedDelete()) {
-        continue;
-      }
-      $segID = $segment->getID();
-      if ($segID && !array_key_exists($segID, $entities["insert"]['seg'])) {
-        array_push($segIDs,$segID);
-        $entities["insert"]['seg'][$segID] = array( 'surfaceID'=> $srfID,
-                                          'id' => $segID,
-                                          'baselineIDs' => $segment->getBaselineIDs(),
-                                          'layer' => $segment->getLayer(),
-                                          'readonly' => $segment->isReadonly(),
-                                          'center' => $segment->getCenter(),
-                                          'value' => 'seg'.$segID);
-        $sclIDs = $segment->getSyllableIDs();
-        if ($sclIDs && count($sclIDs) > 0) {
-          $entities["insert"]['seg'][$segID]['sclIDs']= $sclIDs;
+    $segments = $baseline->getSegments(true);
+    if ($segments && $segments->getCount() > 0) {
+      foreach ($segments as $segment) {
+        if ($segment->isMarkedDelete()) {
+          continue;
         }
-        $boundary = $segment->getImageBoundary();
-        if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
-          $boundary = $boundary[0];
-          $entities["insert"]['seg'][$segID]['boundary']= array($boundary->getPoints());
-          $entities["insert"]['seg'][$segID]['urls']= $segment->getURLs();
-        }
-        $mappedSegIDs = $segment->getMappedSegmentIDs();
-        if (count($mappedSegIDs) > 0) {
-          $entities["insert"]['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
-        }
-        $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
-        if ($segBlnOrder) {
-          $entities["insert"]['seg'][$segID]['ordinal'] = $segBlnOrder;
-        }
-        $stringpos = $segment->getStringPos();
-        if ($stringpos && count($stringpos) > 0) {
-          $entities["insert"]['seg'][$segID]['stringpos']= $stringpos;
-        }
-        $AnoIDs = $segment->getAnnotationIDs();
-        if ($AnoIDs && count($AnoIDs) > 0) {
-          $entities["insert"]['seg'][$segID]['annotationIDs'] = $AnoIDs;
-          $anoIDs = array_unique(array_merge($anoIDs,$AnoIDs));
-        }
-        $AtbIDs = $segment->getAttributionIDs();
-        if ($AtbIDs && count($AtbIDs) > 0) {
-          $entities["insert"]['seg'][$segID]['attributionIDs'] = $AtbIDs;
-          $atbIDs = array_unique(array_merge($atbIDs,$AtbIDs));
-        }
-      }// if segID
-    } // for segment
+        $segID = $segment->getID();
+        if ($segID && !array_key_exists($segID, $entities["insert"]['seg'])) {
+          array_push($segIDs,$segID);
+          $entities["insert"]['seg'][$segID] = array( 'surfaceID'=> $srfID,
+                                            'id' => $segID,
+                                            'baselineIDs' => $segment->getBaselineIDs(),
+                                            'layer' => $segment->getLayer(),
+                                            'readonly' => $segment->isReadonly(),
+                                            'center' => $segment->getCenter(),
+                                            'value' => 'seg'.$segID);
+          $sclIDs = $segment->getSyllableIDs();
+          if ($sclIDs && count($sclIDs) > 0) {
+            $entities["insert"]['seg'][$segID]['sclIDs']= $sclIDs;
+          }
+          $boundary = $segment->getImageBoundary();
+          if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
+            $boundary = $boundary[0];
+            $entities["insert"]['seg'][$segID]['boundary']= array($boundary->getPoints());
+            $entities["insert"]['seg'][$segID]['urls']= $segment->getURLs();
+          }
+          $mappedSegIDs = $segment->getMappedSegmentIDs();
+          if (count($mappedSegIDs) > 0) {
+            $entities["insert"]['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
+          }
+          $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
+          if ($segBlnOrder) {
+            $entities["insert"]['seg'][$segID]['ordinal'] = $segBlnOrder;
+          }
+          $stringpos = $segment->getStringPos();
+          if ($stringpos && count($stringpos) > 0) {
+            $entities["insert"]['seg'][$segID]['stringpos']= $stringpos;
+          }
+          $AnoIDs = $segment->getAnnotationIDs();
+          if ($AnoIDs && count($AnoIDs) > 0) {
+            $entities["insert"]['seg'][$segID]['annotationIDs'] = $AnoIDs;
+            $anoIDs = array_unique(array_merge($anoIDs,$AnoIDs));
+          }
+          $AtbIDs = $segment->getAttributionIDs();
+          if ($AtbIDs && count($AtbIDs) > 0) {
+            $entities["insert"]['seg'][$segID]['attributionIDs'] = $AtbIDs;
+            $atbIDs = array_unique(array_merge($atbIDs,$AtbIDs));
+          }
+        }// if segID
+      } // for segment
+    }
   }
 
   $entities["update"]['bln'][$blnID]=array();

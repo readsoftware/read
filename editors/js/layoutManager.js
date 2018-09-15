@@ -948,6 +948,18 @@ MANAGERS.LayoutManager.prototype = {
 
 
 /**
+* get Editor object
+*
+* @param string paneID Identifying which pane oif the editor to return
+* @returns editor object
+*/
+
+  getEditorFromID: function(paneID){
+    return this.editors[paneID];
+  },
+
+
+/**
 * load pane content
 *
 * @param string tag Identifying the resource to load
@@ -955,7 +967,7 @@ MANAGERS.LayoutManager.prototype = {
 */
 
   loadPaneContent: function(tag,paneID){
-    DEBUG.traceEntry("layoutMgr.loadPaneContent"," entTag "+ tag + " for "+paneID);
+  DEBUG.traceEntry("layoutMgr.loadPaneContent"," entTag "+ tag + " for "+paneID);
     var layoutMgr = this,entID,entTag,contentType,rptID,rptLabel,prefix,entity,catalog,i,
         edition,text,ednID,ednIDs,blnID,blnIDs,entGID,config;
     if (tag && tag.indexOf('-')>-1) {//check for report type tag
