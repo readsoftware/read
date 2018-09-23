@@ -11,6 +11,7 @@
   $image = null;
 
   if (!$url) {
+    ob_clean();
     header('Location: /images/100x100-check.gif');
     return;
   }else {  //get image for any URL
@@ -18,6 +19,7 @@
   }
 
   if (!$image) {
+    ob_clean();
     header('Location: /images/100x100-check.gif');
     return;
   }
@@ -81,6 +83,7 @@
     $image = imagerotate($image,$rotate,0);
   }
 
+  ob_clean(); //hack to remove injected space from buffer
   header('Content-type: image/png');
   imagepng($image);
   imagedestroy($image);

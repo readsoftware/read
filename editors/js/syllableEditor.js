@@ -2402,6 +2402,7 @@ EDITORS.sclEditor.prototype = {
     "ṃ" :"M",
     "*" :"V",
     "." :"V",
+    "’": "V",
     "a" :"V",
     "á" :"V",
     "à" :"V",
@@ -2580,6 +2581,7 @@ EDITORS.sclEditor.prototype = {
         "\/": { "srt": "954", "typ": "O" }}},
     "#": { "srt": "956", "typ": "O" },
     "…": { "srt": "955", "typ": "O" },
+    "’": { "srt": "100", "typ": "V" },
     "a": {
       "͚": {
         "i": { "srt": "208","ssrt":"218", "typ": "VA" },
