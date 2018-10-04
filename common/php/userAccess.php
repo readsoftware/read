@@ -41,8 +41,10 @@
   *
   */
   function getUserID() {
-    global $userID;
-    return (isset($_SESSION['ka_userid']) && count($_SESSION['ka_userid'])) ? intval($_SESSION['ka_userid']):(isset($userID)?$userID:6);
+    global $userID, $dbn;
+    return (isset($_SESSION['readSessions']) && isset($_SESSION['readSessions'][$dbn]) &&
+            isset($_SESSION['readSessions'][$dbn]['ka_userid']) && 
+            count($_SESSION['readSessions'][$dbn]['ka_userid'])) ? intval($_SESSION['readSessions'][$dbn]['ka_userid']):(isset($userID)?$userID:6);
   }
 
   /**
@@ -50,23 +52,26 @@
   *
   */
   function impersonateUser($userID,$userName,$groups) {
-    if (isset($_SESSION['ka_userRestore'])) {
-      return false;
+    global $dbn;
+    if (isset($_SESSION['readSessions']) && isset($_SESSION['readSessions'][$dbn])) {
+      if (isset($_SESSION['readSessions'][$dbn]['ka_userRestore'])) {
+        return false;
+      }
+      $restore = array( isset($_SESSION['readSessions'][$dbn]['ka_userid'])?$_SESSION['readSessions'][$dbn]['ka_userid']:"",
+                        isset($_SESSION['readSessions'][$dbn]['ka_username'])?$_SESSION['readSessions'][$dbn]['ka_username']:"",
+                        isset($_SESSION['readSessions'][$dbn]['ka_groups'])?$_SESSION['readSessions'][$dbn]['ka_groups']:"");
+      $_SESSION['readSessions'][$dbn]['ka_userRestore'] = $restore;
+      if ($userID) {
+        $_SESSION['readSessions'][$dbn]['ka_userid']= $userID;
+      }
+      if ($userName) {
+        $_SESSION['readSessions'][$dbn]['ka_username'] = "impersonating(".$userName.")";
+      }
+      if ($groups) {
+        $_SESSION['readSessions'][$dbn]['ka_groups'] = $groups;
+      }
+      return true;
     }
-    $restore = array( isset($_SESSION['ka_userid'])?$_SESSION['ka_userid']:"",
-                      isset($_SESSION['ka_username'])?$_SESSION['ka_username']:"",
-                      isset($_SESSION['ka_groups'])?$_SESSION['ka_groups']:"");
-    $_SESSION['ka_userRestore'] = $restore;
-    if ($userID) {
-      $_SESSION['ka_userid']= $userID;
-    }
-    if ($userName) {
-      $_SESSION['ka_username'] = "impersonating(".$userName.")";
-    }
-    if ($groups) {
-      $_SESSION['ka_groups'] = $groups;
-    }
-    return true;
   }
 
   /**
@@ -74,27 +79,29 @@
   *
   */
   function restoreUser() {
-    if (!isset($_SESSION['ka_userRestore'])) {
-      return false;
+    if (isset($_SESSION['readSessions']) && isset($_SESSION['readSessions'][$dbn])) {
+      if (!isset($_SESSION['readSessions'][$dbn]['ka_userRestore'])) {
+        return false;
+      }
+      list($userID,$userName,$groups) = $_SESSION['readSessions'][$dbn]['ka_userRestore'];
+      unset($_SESSION['readSessions'][$dbn]['ka_userRestore']);
+      if ( $userID == "" ) {
+        unset($_SESSION['readSessions'][$dbn]['ka_userid']);
+      }else{
+        $_SESSION['readSessions'][$dbn]['ka_userid']= $userID;
+      }
+      if ( $userName == "" ) {
+        unset($_SESSION['readSessions'][$dbn]['ka_username']);
+      }else{
+        $_SESSION['readSessions'][$dbn]['ka_username']= $userName;
+      }
+      if ( $groups == "" ) {
+        unset($_SESSION['readSessions'][$dbn]['ka_groups']);
+      }else{
+        $_SESSION['readSessions'][$dbn]['ka_groups']= $groups;
+      }
+      return true;
     }
-    list($userID,$userName,$groups) = $_SESSION['ka_userRestore'];
-    unset($_SESSION['ka_userRestore']);
-    if ( $userID == "" ) {
-      unset($_SESSION['ka_userid']);
-    }else{
-      $_SESSION['ka_userid']= $userID;
-    }
-    if ( $userName == "" ) {
-      unset($_SESSION['ka_username']);
-    }else{
-      $_SESSION['ka_username']= $userName;
-    }
-    if ( $groups == "" ) {
-      unset($_SESSION['ka_groups']);
-    }else{
-      $_SESSION['ka_groups']= $groups;
-    }
-    return true;
   }
 
   /**
@@ -102,8 +109,11 @@
   *
   */
   function getUserMembership() {
-    global $userID;
-    return (isset($_SESSION['ka_groups']) && count($_SESSION['ka_groups'])) ? array_keys($_SESSION['ka_groups']): (isLoggedIn()? ($userID?array($userID,2,3,6):array(2,3,6)): array(2,6));
+    global $userID,$dbn;
+    return (isset($_SESSION['readSessions']) && isset($_SESSION['readSessions'][$dbn]) &&
+            isset($_SESSION['readSessions'][$dbn]['ka_groups']) && 
+            count($_SESSION['readSessions'][$dbn]['ka_groups'])) ? array_keys($_SESSION['readSessions'][$dbn]['ka_groups']): 
+                                                                  (isLoggedIn()? ($userID?array($userID,2,3,6):array(2,3,6)): array(2,6));
   }
 
   /**
@@ -111,7 +121,10 @@
   *
   */
   function getUserName() {
-    return (isset($_SESSION['ka_username']) && count($_SESSION['ka_username'])) ? $_SESSION['ka_username']:"Guest";
+    global $dbn;
+    return (isset($_SESSION['readSessions']) && isset($_SESSION['readSessions'][$dbn]) &&
+            isset($_SESSION['readSessions'][$dbn]['ka_username']) && 
+            count($_SESSION['readSessions'][$dbn]['ka_username'])) ? $_SESSION['readSessions'][$dbn]['ka_username']:"Guest";
   }
 
   /**
@@ -123,30 +136,13 @@
   }
 
   function session_defaults() {
-    $_SESSION['ka_id'] = NULL;
-    $_SESSION['ka_userid'] = NULL;
-    $_SESSION['ka_username'] = '';
-    $_SESSION['ka_name'] = '';
-    $_SESSION['ka_email'] = '';
-    $_SESSION['ka_last_url'] = '';
-    $_SESSION['ka_status'] = "out";
-    $_SESSION['ka_group'] = '';
+    global $dbn;
+    $_SESSION['readSessions'][$dbn]['ka_id'] = NULL;
+    $_SESSION['readSessions'][$dbn]['ka_userid'] = NULL;
+    $_SESSION['readSessions'][$dbn]['ka_username'] = '';
+    $_SESSION['readSessions'][$dbn]['ka_name'] = '';
+    $_SESSION['readSessions'][$dbn]['ka_email'] = '';
+    $_SESSION['readSessions'][$dbn]['ka_last_url'] = '';
+    $_SESSION['readSessions'][$dbn]['ka_status'] = "out";
+    $_SESSION['readSessions'][$dbn]['ka_group'] = '';
   }
-
-  function set_session($id, $userID, $user, $name, $email, $edit, $groupIDs, $userPrefs = null) {
-    $_SESSION['ka_id'] = $id;
-    $_SESSION['ka_userid'] = $userID;
-    $_SESSION['ka_username'] = $user;
-    $_SESSION['ka_name'] = $name;
-    $_SESSION['ka_email'] = $email;
-    $_SESSION['ka_status'] = "in";
-    $_SESSION['ka_edit'] = $edit;
-    $_SESSION['ka_groups'] = $groupIDs;
-    if ($userPrefs) {
-      $_SESSION['userPrefs'] = $userPrefs;
-    } else if (isset($_SESSION['userPrefs'])) {
-      unset($_SESSION['userPrefs']);
-    }
-  }
-
-  ?>

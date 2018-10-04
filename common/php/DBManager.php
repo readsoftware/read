@@ -55,6 +55,7 @@
     */
     private $_dbHandle,
             $_conn,
+            $_dbName,
             $_query,
             $_results,
             $_rowCount = 0,
@@ -67,7 +68,7 @@
      *
      * @var string|null
      */
-    private static $_dbName = null;
+    private static $_dbSharedName = null;
     private static $_dbSharedHandle = null;
     private static $_dbSharedConn = null;
 
@@ -82,16 +83,20 @@
       $this->_error = null;
       if (self::$_dbSharedHandle) { //code has set shared handle so use it
         $this->_conn = self::$_dbSharedConn;
+        $this->_dbName = self::$_dbSharedName;
         $this->_dbHandle = self::$_dbSharedHandle;
         return;
       }
       // Resolve DB name.
       if (empty($dbname)) {
-        if (empty(self::$_dbName)) {
+        if (empty(self::$_dbSharedName)) {
           $dbname = defined('DBNAME') ? DBNAME : "kanishka";
         } else {
-          $dbname = self::$_dbName;
+          $dbname = self::$_dbSharedName;
         }
+      }
+      if ($dbname) {
+        $this->_dbName = $dbname;
       }
       $this->_conn = "dbname='". $dbname . "'" .
                     " user='".($user?$user."'":(defined('USERNAME')?USERNAME."'":"white'")).
@@ -310,7 +315,16 @@
       return $this->_conn;
     }
 
-    /**
+        /**
+    * Get dbName
+    *
+    * @return string returns the db name
+    */
+    public function getDBName() {
+      return $this->_dbName;
+    }
+
+/**
     * Get affected row count
     *
     * @return int returns the number of affected rows
@@ -407,10 +421,10 @@
      * object will use this database unless the database name is specified in the
      * constructor.
      *
-     * @param string $dbName The database name.
+     * @param string $dbSharedName The database name.
      */
-    public static function setDefaultDBName($dbName) {
-      self::$_dbName = $dbName;
+    public static function setDefaultDBName($dbSharedName) {
+      self::$_dbSharedName = $dbSharedName;
     }
 
     //*******************************PRIVATE FUNCTIONS************************************

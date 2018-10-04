@@ -1779,12 +1779,15 @@ function getUserDefAttrIDs(){
 * @param int $ugrID UserGroup entity id used as owner id for newly created entities
 */
 
-function setUserDefEditorID($ugrID){
+function setUserDefEditorID($ugrID, $dbname = "default"){
   if ($_SESSION) {
     if (!isset($_SESSION['userPrefs'])) {
       $_SESSION['userPrefs'] = array();
     }
-    $_SESSION['userPrefs']['defaultEditUserID'] = $ugrID;
+    if (!isset($_SESSION['userPrefs'][$dbname])) {
+      $_SESSION['userPrefs'][$dbname] = array();
+    }
+    $_SESSION['userPrefs'][$dbname]['defaultEditUserID'] = $ugrID;
   } else {
     $user = new UserGroup(getUserID());
     if (!$user || !$user->getID() || $user->hasError()) {
@@ -1805,12 +1808,15 @@ function setUserDefEditorID($ugrID){
 * @param int array $visIDs of UserGroup entity ids
 */
 
-function setUserDefVisibilityIDs($visIDs){
+function setUserDefVisibilityIDs($visIDs, $dbname = "default"){
   if ($_SESSION) {
     if (!isset($_SESSION['userPrefs'])) {
       $_SESSION['userPrefs'] = array();
     }
-    $_SESSION['userPrefs']['defaultVisibilityIDs'] = $visIDs;
+    if (!isset($_SESSION['userPrefs'][$dbname])) {
+      $_SESSION['userPrefs'][$dbname] = array();
+    }
+    $_SESSION['userPrefs'][$dbname]['defaultVisibilityIDs'] = $visIDs;
   } else {
     $user = new UserGroup(getUserID());
     if (!$user || $user->hasError()) {
@@ -1831,12 +1837,15 @@ function setUserDefVisibilityIDs($visIDs){
 * @param int array $attrIDs of Attribution entity ids
 */
 
-function setUserDefAttrIDs($attrIDs){
+function setUserDefAttrIDs($attrIDs, $dbname = "default"){
   if ($_SESSION) {
     if (!isset($_SESSION['userPrefs'])) {
       $_SESSION['userPrefs'] = array();
     }
-    $_SESSION['userPrefs']['defaultAttributionIDs'] = $attrIDs;
+    if (!isset($_SESSION['userPrefs'][$dbname])) {
+      $_SESSION['userPrefs'][$dbname] = array();
+    }
+    $_SESSION['userPrefs'][$dbname]['defaultAttributionIDs'] = $attrIDs;
   } else {
     $user = new UserGroup(getUserID());
     if (!$user || $user->hasError()) {
@@ -1856,10 +1865,10 @@ function setUserDefAttrIDs($attrIDs){
 *
 */
 
-function getUserPreferences(){
+function getUserPreferences($dbname = "default"){
   // check session - prefer session over persisted
-  if ($_SESSION && isset($_SESSION['userPrefs'])) {
-    $userPreferences = $_SESSION['userPrefs'];
+  if ($_SESSION && isset($_SESSION['userPrefs']) && isset($_SESSION['userPrefs'][$dbname])) {
+    $userPreferences = $_SESSION['userPrefs'][$dbname];
   } else {
     $userPreferences = getUserPersistedPreferences();
   }
@@ -1885,7 +1894,10 @@ function getUserPreferences(){
   }
   //save to session if needed
   if ($_SESSION){
-    $_SESSION['userPrefs'] = $userPreferences;
+    if (!isset($_SESSION['userPrefs'])) {
+      $_SESSION['userPrefs'] = array();
+    }
+    $_SESSION['userPrefs'][$dbname] = $userPreferences;
   }
   return $userPreferences;
 }
@@ -1934,8 +1946,8 @@ function getUserDefaultAttributionID(){
 function getUserUGrpList(){
   //get user's usergroups (member or admin)
   $uGroups = new UserGroups("",'ugr_name',null,null);
+  $uGrpUIList = array();
   if ($uGroups && !$uGroups->getError()) {
-    $uGrpUIList = array();
     foreach($uGroups as $userGroup) {
       $ugrpName = $userGroup->getName();
       $ugrpDesc = $userGroup->getDescription();

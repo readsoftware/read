@@ -34,10 +34,11 @@
 */
 
   require_once (dirname(__FILE__) . '/common/php/sessionStartUp.php');//initialize the session
-  require_once (dirname(__FILE__) . '/common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/common/php/userAccess.php');//get user access control
+  require_once (dirname(__FILE__) . '/common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/model/entities/EntityFactory.php');//get user access control
   $dbMgr = new DBManager();
+  $username = getUserName();
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -46,6 +46,7 @@
   if (@$argv) {
     // handle command-line queries
     $cmdParams = array();
+    $cmdStr = "cmdline params:";
     for ($i=0; $i < count($argv); ++$i) {
       if ($argv[$i][0] === '-') {
         if (@$argv[$i+1] && $argv[$i+1][0] != '-') {
@@ -58,11 +59,29 @@
         array_push($cmdParams, $argv[$i]);
       }
     }
-    if(@$cmdParams['-d']) $_REQUEST["db"] = $cmdParams['-d'];
-    if (@$cmdParams['-e']) $_REQUEST['catID'] = $cmdParams['-e'];
+    if(@$cmdParams['-d']) {
+      $_REQUEST["db"] = $cmdParams['-d'];
+      $dbn = $_REQUEST["db"];
+      $cmdStr .= ' db = '.$_REQUEST['db'];
+    }
+    if (@$cmdParams['-e']) {
+      $_REQUEST['catID'] = $cmdParams['-e'];
+      $cmdStr .= ' catID = '.$_REQUEST['catID'];
+    }
     //commandline access for setting userid  TODO review after migration
-    if (@$cmdParams['-u'] && !isset($_SESSION['ka_userid'])) $_SESSION['ka_userid'] = $cmdParams['-u'];
-    echo 'db = '.$_REQUEST['db'].' catID = '.$_REQUEST['catID'].' uID = '.$_SESSION['ka_userid']."\n";
+    if (@$cmdParams['-u'] ) {
+      if ($dbn) {
+        if (!isset($_SESSION['readSessions'])) {
+          $_SESSION['readSessions'] = array();
+        }
+        if (!isset($_SESSION['readSessions'][$dbn])) {
+          $_SESSION['readSessions'][$dbn] = array();
+        }
+        $_SESSION['readSessions'][$dbn]['ka_userid'] = $cmdParams['-u'];
+        $cmdStr .= ' uID = '.$_SESSION['readSessions'][$dbn]['ka_userid'];
+      }
+    }
+    echo $cmdStr."\n";
   }
   require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies

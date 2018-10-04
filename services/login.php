@@ -30,8 +30,8 @@
 */
 //session_start ();
 //session_id ();
-  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
+  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
 
 if (defined("WORKBENCH_BASE_URL")) {
   header("Access-Control-Allow-Origin: " . WORKBENCH_BASE_URL);
@@ -44,7 +44,8 @@ $hashed = (isset($_REQUEST['hashed']) && $_REQUEST['hashed']) ? TRUE : FALSE;
 if (!$hashed) {
   $password = md5($password);
 }
-$expiry = (array_key_exists('persist',$_POST) || array_key_exists('persist',$_REQUEST))? (time ()+60*60*24*365) : 0;
+//$expiry = (array_key_exists('persist',$_POST) || array_key_exists('persist',$_REQUEST))? (time ()+60*60*24*365) : 0;
+$persist = (array_key_exists('persist',$_POST) || array_key_exists('persist',$_REQUEST))? true: false;
 
 // CHECK USERS NAME AND PASSWORD
 $dbMgr = new DBManager();
@@ -56,8 +57,17 @@ if ($dbMgr->getRowCount() == 0) {
 //  return false;
 } else {
   $user = $dbMgr->fetchResultRow();
+  $ret = setSessionUserLogin($dbMgr,$user["ugr_id"]);
+  $groups = array();
+  if (is_array($ret) && count($ret) == 2) {
+    $groups = $ret[1];
+  }
+  if ($persist){
+    setLoginCookie($dbMgr,"",$user["ugr_id"]);
+  }
 //  $dbMgr->query("SELECT * FROM usergroup WHERE ugr_id != ".$user['ugr_id']." AND ".$user['ugr_id']." = ANY(\"ugr_member_ids\") ");
-  $dbMgr->query("SELECT * FROM usergroup WHERE ".$user['ugr_id']." = ANY(\"ugr_member_ids\") OR ugr_id in (2,3,6)");
+
+/*$dbMgr->query("SELECT * FROM usergroup WHERE ".$user['ugr_id']." = ANY(\"ugr_member_ids\") OR ugr_id in (2,3,6)");
   if ($dbMgr->getRowCount() > 0) {
     $groups = array();
     while ($row = $dbMgr->fetchResultRow(null,false,PGSQL_ASSOC)) {
@@ -74,8 +84,10 @@ if ($dbMgr->getRowCount() == 0) {
 
 
   // set the cookie so that we can remember their username
-  setcookie ('ka_username', $username, $expiry);
-  setcookie ('ka_code', md5 ($user['ugr_given_name']." ".$user['ugr_family_name']),$expiry);
+  if ($expiry) {
+    setcookie ('ka_username_'.DBNAME, $username, $expiry);
+    setcookie ('ka_code_'.DBNAME, md5 ($user['ugr_given_name']." ".$user['ugr_family_name']),$expiry);
+  }
 
   //  $prefs = explode(";", $data['u_prefs']);
   //  $edit = $prefs[0];
@@ -83,6 +95,7 @@ if ($dbMgr->getRowCount() == 0) {
   //  $iscols = explode(",", $prefs[2]);
 
   set_session (session_id (), $user['ugr_id'], $username, $user['ugr_given_name']." ".$user['ugr_family_name'], null, null, (isset($groups)?$groups:null));
+*/
   $retVal = array("success" => 1,
                   "familyName" => $user['ugr_family_name'],
                   "givenName" => $user['ugr_given_name'],

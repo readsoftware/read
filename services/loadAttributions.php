@@ -37,8 +37,8 @@
   header('Pragma: no-cache');
 
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
-  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
+  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once dirname(__FILE__) . '/../model/entities/Attributions.php';
   require_once dirname(__FILE__) . '/../model/entities/Annotations.php';
   require_once dirname(__FILE__) . '/../model/entities/JsonCache.php';

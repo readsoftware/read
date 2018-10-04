@@ -50,8 +50,10 @@
 
   //configure viewer/editors for site
   define("SHOWLEMMAPHONETIC",0);
+  define("SHOWLEMMAPHONOLOGY",0);
   define("SHOWLEMMADECLENSION",0);
   define("DECLENSIONLIST",'OIADeclension');
+  define('EDITCOLLISIONDETECTION',1);
 
   //configure viewer defaults for site
   define("SHOWEXPORTBUTTON",false); // defaults to true so this is required to turn export off

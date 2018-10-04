@@ -44,6 +44,7 @@
   if (@$argv) {
     // handle command-line queries
     $cmdParams = array();
+    $cmdStr = "cmdline params:";
     for ($i=0; $i < count($argv); ++$i) {
       if ($argv[$i][0] === '-') {
         if (@$argv[$i+1] && $argv[$i+1][0] != '-') {
@@ -56,16 +57,35 @@
         array_push($cmdParams, $argv[$i]);
       }
     }
-    if(@$cmdParams['-db']) $_REQUEST["db"] = $cmdParams['-db'];
-    if (@$cmdParams['-ids']) $_REQUEST['ids'] = $cmdParams['-ids'];
+    if(@$cmdParams['-d']) {
+      $_REQUEST["db"] = $cmdParams['-d'];
+      $dbn = $_REQUEST["db"];
+      $cmdStr .= ' db = '.$_REQUEST['db'];
+    }
+    if (@$cmdParams['-ids']) {
+      $_REQUEST['ids'] = $cmdParams['-ids'];
+      $cmdStr .= ' ids = '.$_REQUEST['ids'];
+    }
     //commandline access for setting userid  TODO review after migration
-    if (@$cmdParams['-uid'] && !isset($_SESSION['ka_userid'])) $_SESSION['ka_userid'] = $cmdParams['-uid'];
+    if (@$cmdParams['-u'] ) {
+      if ($dbn) {
+        if (!isset($_SESSION['readSessions'])) {
+          $_SESSION['readSessions'] = array();
+        }
+        if (!isset($_SESSION['readSessions'][$dbn])) {
+          $_SESSION['readSessions'][$dbn] = array();
+        }
+        $_SESSION['readSessions'][$dbn]['ka_userid'] = $cmdParams['-u'];
+        $cmdStr .= ' uID = '.$_SESSION['readSessions'][$dbn]['ka_userid'];
+      }
+    }
+    echo $cmdStr."\n";
   }
 
 //  if(!defined("DBNAME")) define("DBNAME","kanishkatest");
-  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
-  require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
+  require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
+  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once dirname(__FILE__) . '/../model/entities/Catalogs.php';
   require_once dirname(__FILE__) . '/../model/entities/Texts.php';
   require_once dirname(__FILE__) . '/../model/entities/Surfaces.php';

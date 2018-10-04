@@ -71,7 +71,7 @@ EDITORS.UserVE.prototype = {
       alert(msg);
     }
     this.loadHeader();
-    if (this.username) {
+    if (this.username && this.username != "Guest") {
       this.loadUserInfoUI();
     } else {
       this.loadSigninUI();
@@ -234,7 +234,7 @@ EDITORS.UserVE.prototype = {
     //call logout service
     $.ajax({
         dataType: 'json',
-        url: basepath+'/services/logout.php',
+        url: basepath+'/services/logout.php?db='+dbName,
         asynch: false,
         success: function (data, status, xhr) {
                    delete userVE.username;
@@ -260,6 +260,40 @@ EDITORS.UserVE.prototype = {
 /**
 * put your comment there...
 *
+* @param userpwd
+* @param newpwd
+*/
+
+chngPwd: function(userpwd, newpwd){
+  var userVE = this;
+  DEBUG.traceEntry("userVE.login"," user editor");
+  //call change pwd service
+  $.ajax({
+      dataType: 'json',
+      url: basepath+'/services/changePwd.php?db='+dbName+
+                "&password1=" + userpwd + "&password2=" + newpwd,
+      asynch: true,
+      success: function (data, status, xhr) {
+                 if (data && data.error) {
+                   $('#errorMsg',userVE.chngPwdUI).html(data.error);
+                 } else {
+                   userVE.loadHeader();
+                   userVE.loadUserInfoUI();
+                   userVE.layoutMgr.closeUserPanel();
+                 }
+               },// end success cb
+      error: function (xhr,status,error) {
+               // show login error msg
+               $('#errorMsg',userVE.signInUI).html("Invalid Change Request!");
+             }
+  });// end ajax
+  DEBUG.traceExit("userVE.login"," user editor");
+},
+
+
+/**
+* put your comment there...
+*
 */
 
   getUsername: function(){
@@ -273,7 +307,7 @@ EDITORS.UserVE.prototype = {
 */
 
   isLoggedIn: function(){
-    return (this.username != null);
+    return (this.username != null && this.username != "Guest");
   },
 
 
@@ -292,9 +326,19 @@ EDITORS.UserVE.prototype = {
 *
 */
 
-  loadSettingsUI: function(){
-    alert(" Settings UI is underconstuction");
-  },
+loadSettingsUI: function(){
+  alert(" Settings UI is underconstuction");
+},
+
+
+/**
+* put your comment there...
+*
+*/
+
+loadforgotPwdUI: function(){
+  alert(" Forgot Password UI is underconstuction");
+},
 
 
 /**
@@ -303,8 +347,70 @@ EDITORS.UserVE.prototype = {
 */
 
   loadChangePasswordUI: function(){
-    alert("change Password UI is underconstuction");
+    DEBUG.traceEntry("userVE.loadChangePasswordUI"," user is "+this.username);
+    var userVE = this;
+    //create sign in UI
+    if (this.chngPwdUI) {
+      delete this.chngPwdUI;
+    }
+    this.chngPwdUI = $('<div id="chngPwdForm" class="chngPwdUI">' +
+                            '<div class="label-form">Change Password</div>' +
+                            '<div class="label-input">Current Password</div>' +
+                            '<div><input type="password" id="curPassword" class="text-input" /></div>' +
+                            '<div class="label-input">New Password</div>' +
+                            '<div><input type="password" id="newPassword" class="text-input" /></div>' +
+                            '<div class="label-input">Confirm New Password</div>' +
+                            '<div><input type="password" id="confPassword" class="text-input" />' +
+                            '<input type="button" value="Change Password" id="chngPwdButton" />' +
+                            '<input type="button" value="Cancel" id="cancelButton" />' +
+                            '<div id="signinHelpLink">Sign in help</div>' +
+                            '<div id="errorMsg"></div>' +
+                            '<div id="forgotPwdLink">Forgot Password</div>' +
+                            '</div>');
+    $('#chngPwdButton',this.chngPwdUI).bind('click', function() {userVE.validateChngPwdUI();});
+    $('#cancelButton',this.chngPwdUI).bind('click', function() {userVE.loadUserInfoUI();});
+    $('#signinHelpLink',this.chngPwdUI).bind('click', function() {userVE.showSignInHelp();});
+    $('#forgotPwdLink',this.chngPwdUI).bind('click', function() {userVE.loadforgotPwdUI();});
+    //display UI
+    $('#curPassword',this.chngPwdUI).html("");
+    $('#newPassword',this.chngPwdUI).html("");
+    $('#confPassword',this.chngPwdUI).html("");
+    $('#errorMsg',this.chngPwdUI).html("");
+    this.userDiv.html("");
+    this.userDiv.append(this.chngPwdUI);
+    DEBUG.traceExit("userVE.loadChangePasswordUI"," user is "+this.username);
   },
+
+
+/**
+* put your comment there...
+*
+*/
+
+validateChngPwdUI: function(){
+  DEBUG.traceEntry("userVE.validateChngPwdUI"," user editor");
+  var $userPassword = $('#curPassword',this.chngPwdUI),
+      userpwd = $userPassword.val(),
+      $newPassword = $('#newPassword',this.chngPwdUI),
+      newpwd = $newPassword.val(),
+      $confPassword = $('#confPassword',this.chngPwdUI),
+      confpwd = $confPassword.val(),
+      $errorMsg = $('#errorMsg',this.chngPwdUI);
+  if (!userpwd || userpwd.length <7 || userpwd.length > 20) {
+    $errorMsg.html("invalid Current Password!");
+    $userPassword.focus();
+  } else if (!newpwd || newpwd.length <7 || newpwd.length > 20) {
+    $errorMsg.html("Password is required and must be from 7 to 20 charaters!");
+    $newPassword.focus();
+  } else if (!confpwd || newpwd != confpwd) {
+    $errorMsg.html("New Password must match confirm Password!");
+    $confPassword.focus();
+  }else{
+    $errorMsg.html("");
+    this.chngPwd(userpwd,newpwd);
+  }
+  DEBUG.traceExit("userVE.validateChngPwdUI"," user editor");
+},
 
 
 /**

@@ -428,21 +428,26 @@ sup{
   width: 265px;
   height: 100%;
 }
-#signinForm .label-form,#userInfo .label-form{
+#signinForm .label-form,
+#chngPwdForm .label-form,
+#userInfo .label-form{
   font-size: 25px;
   color: white;
   margin-left: -25px;
   padding-bottom: 30px;
 }
-#signinForm .label-input{
+#signinForm .label-input,
+#chngPwdForm .label-input{
   font-size: medium;
   color: white;
 }
-#signinForm label{
+#signinForm label,
+#chngPwdForm label{
   font-size: medium;
   color: white;
 }
-#signinForm .text-input{
+#signinForm .text-input,
+#chngPwdForm .text-input{
   height: 30px;
   width: 200px;
 }
@@ -462,25 +467,25 @@ sup{
   line-height: 12pt;
 }
 
-#userName{
+#userName, #curPassword, #newPassword, #confPassword{
   margin-bottom: 30px;
 }
-#userPassword{
+#userPassword, {
   margin-bottom: 10px;
 }
-#signinForm, #userInfo {
+#signinForm, #chngPwdForm, #userInfo {
     background-color: #2F5597;
     text-align: left;
     padding-top: 5px;
     padding-left: 30px;
     min-height: 95%;
 }
-#signinButton,#logoutButton, #settingsButton, #chgPasswordButton {
+#signinButton, #logoutButton, #settingsButton, #chngPwdButton, #cancelButton {
   margin-top: 10px;
   height: 40px;
   width: 200px;
 }
-#signinHelpLink, #logoutLink, #logChangesLink, #chgPasswordLink, #userPreferencesDiv {
+#signinHelpLink, #logoutLink, #logChangesLink, #chgPasswordLink, #forgotPwdLink, #userPreferencesDiv {
   margin-top: 10px;
   font-size: larger;
   color: white;

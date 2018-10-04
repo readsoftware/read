@@ -45,13 +45,13 @@ header('Cache-Control: no-cache');
 header('Pragma: no-cache');
 
 require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
-require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
 require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
+require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
 require_once (dirname(__FILE__) . '/../services/clientDataUtils.php');//get utilies
 require_once (dirname(__FILE__) . '/../model/entities/Attribution.php');
 
 
-$retVal = array('userDefPrefs' => getUserPreferences(),
+$retVal = array('userDefPrefs' => getUserPreferences(DBNAME),
                 'userUIList' => getUserUGrpList());//get current UI set
 if ($retVal['userDefPrefs'] &&
     $retVal['userDefPrefs']['defaultAttributionIDs'] &&

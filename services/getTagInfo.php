@@ -26,9 +26,9 @@
 ini_set("zlib.output_compression_level", 5);
 ob_start('ob_gzhandler');
 
-require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
-require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
 require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
+require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
+require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
 require_once dirname(__FILE__) . '/../model/entities/Term.php';
 require_once dirname(__FILE__) . '/../model/entities/Terms.php';
 

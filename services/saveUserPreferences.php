@@ -69,14 +69,14 @@ if (isset($data['persist'])) {
   if (!$user || $user->hasError()) {
     return;
   } else {
-    $prefs = getUserPreferences();
+    $prefs = getUserPreferences(DBNAME);
     //store in user
     $user->setPreferences($prefs);
     $user->save();
   }
 }
 
-$retVal = array('userDefPrefs' => getUserPreferences(),
+$retVal = array('userDefPrefs' => getUserPreferences(DBNAME),
                 'userUIList' => getUserUGrpList());//get current UI set
   //return preferences strucuture
 print json_encode($retVal);

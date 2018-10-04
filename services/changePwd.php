@@ -17,9 +17,9 @@
 */
 
 /**
-* logout
+* changePwd
 *
-* destroys session and associated cookies
+* validates the username/password combination then updates password 
 * @author      Stephen White  <stephenawhite57@gmail.com>
 * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
 * @link        https://github.com/readsoftware
@@ -30,53 +30,42 @@
 */
 require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
 require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
-// Initialize the session.
-// If you are using session_name("something"), don't forget it now!
-if (!isset($_SESSION)) {
-  session_start();
+
+if (defined("WORKBENCH_BASE_URL")) {
+  header("Access-Control-Allow-Origin: " . WORKBENCH_BASE_URL);
+  header('Access-Control-Allow-Credentials: true');
 }
-if (!isset($dbn)) {
-  $dbn = DBNAME;
-}
-//clean up persistant login
-if ($_COOKIE && isset($_COOKIE['ka_username_'.$dbn])) {
-  //separate selector and validator
-  list($selector,$validator) = explode(':', $_COOKIE['ka_username_'.$dbn]);
+if (!isLoggedIn()) {
+  $retVal = array("error" => "Must be logged for request.");
+} else {
+  $username = getUserName();
+  $userpwd = isset($_POST['password1'])?$_POST['password1'] : (isset($_REQUEST['password1'])?$_REQUEST['password1']:null);
+  $newpassword = isset($_POST['password2'])?$_POST['password2'] : (isset($_REQUEST['password2'])?$_REQUEST['password2']:null);
+  $hashed = (isset($_REQUEST['hashed']) && $_REQUEST['hashed']) ? TRUE : FALSE;
+  if (!$hashed) {
+    $userpwd = md5($userpwd);
+  }
+  $hashednewpassword = md5($newpassword);
+
+  // CHECK USERS NAME AND PASSWORD
   $dbMgr = new DBManager();
-  //remove authtoken
-  if ($selector) {
-    $dbMgr->query("delete from authtoken where aut_selector=$selector");
+  $dbMgr->query("SELECT * FROM usergroup WHERE ugr_name = '$username' AND ugr_password ='" . $userpwd . "'");
+
+  if ($dbMgr->getRowCount() == 0) {
+  //return error invalid login
+    $retVal = array("error" => "Invalid request.");
+  } else {
+    $user = $dbMgr->fetchResultRow();
+    $ugrID = $user["ugr_id"];
+    $data = array("ugr_password"=>$hashednewpassword);
+    $dbMgr->update("usergroup",$data,"ugr_id=$ugrID");
+    if ($dbMgr->getError()) {
+      $retVal = array("error" => "Error during processing id $ugrID: ". $dbMgr->getError());
+    } else {
+      $retVal = array("success" => 1);
+    }
   }
-  //remove cookie
-  unsetLoginCookie($dbMgr);
 }
-//cleanup db specific session login info
-unsetSessionUserLogin($dbn);
-
-//last person out shut off the lights
-if (!isset($_SESSION["readSessions"]) || (count($_SESSION["readSessions"]) == 0)) {
-  // If it's desired to kill the session, also delete the session cookie.
-  // Note: This will destroy the session, and not just the session data!
-  if (ini_get("session.use_cookies")) {
-      $params = session_get_cookie_params();
-      setcookie(session_name(), '', time() - 60*60*24*100,
-          $params["path"], $params["domain"],
-          $params["secure"], $params["httponly"]
-      );
-  }
-/*
-  try {
-    session_gc();
-    session_destroy();
-  }
-  catch (Exception $e) {
-    error_log(print_r($e,true));
-  }
-  */
-}
-
-$retVal = array("success" => 1);
-
 if (array_key_exists("callback",$_REQUEST)) {
   $cb = $_REQUEST['callback'];
   if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap
@@ -85,4 +74,5 @@ if (array_key_exists("callback",$_REQUEST)) {
 } else {
   print json_encode($retVal);
 }
+
 ?>
