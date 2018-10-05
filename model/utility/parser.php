@@ -817,7 +817,7 @@ class Parser {
                 $curParentStructSequence = $analysisSequence;
                 // decode heading to determine structure
                 $structLabelsAndTypes = $this->decodeHeading($heading);
-                echo print_r($structLabelsAndTypes,true)."<br/>";
+                //echo print_r($structLabelsAndTypes,true)."<br/>";
                 if (count(array_keys($structSeqLookup) == 1) &&
                       array_key_exists('unknownSection',$structSeqLookup)) { // first heading
                   //first heading of text may require adjust of precreated section
