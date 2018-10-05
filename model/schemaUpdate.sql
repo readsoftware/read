@@ -2,8 +2,8 @@
 
 ALTER TABLE item ADD COLUMN itm_description text;
 ALTER TABLE item ADD COLUMN itm_idno text;
-COMMENT ON COLUMN item."item_description" IS 'Free text description of item.';
-COMMENT ON COLUMN item."item_idno" IS 'Free text identifier/reference number of item.';
+COMMENT ON COLUMN item."itm_description" IS 'Free text description of item.';
+COMMENT ON COLUMN item."itm_idno" IS 'Free text identifier/reference number of item.';
 ALTER TABLE part ADD COLUMN prt_description text;
 COMMENT ON COLUMN part."prt_description" IS 'Free text description of this part.';
 ALTER TABLE sequence ADD COLUMN seq_ord int;
