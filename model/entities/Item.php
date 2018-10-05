@@ -57,6 +57,8 @@
     */
     private   $_title,
               $_type_id,
+              $_description,
+              $_idno,
               $_measure,
               $_shape_id,
               $_collections,
@@ -90,6 +92,8 @@
         $this->initializeBaseEntity($arg);
         $this->_id=@$arg['itm_id'] ? $arg['itm_id']:NULL;
         $this->_title=@$arg['itm_title'] ? $arg['itm_title']:NULL;
+        $this->_title=@$arg['itm_description'] ? $arg['itm_description']:NULL;
+        $this->_title=@$arg['itm_idno'] ? $arg['itm_idno']:NULL;
         $this->_type_id=@$arg['itm_type_id'] ? $arg['itm_type_id']:NULL;
         $this->_measure=@$arg['itm_measure'] ? $arg['itm_measure']:NULL;
         $this->_shape_id=@$arg['itm_shape_id'] ? $arg['itm_shape_id']:NULL;
@@ -124,6 +128,12 @@
       if (count($this->_title)) {
         $this->_data['itm_title'] = $this->_title;
       }
+      if (count($this->_description)) {
+        $this->_data['itm_description'] = $this->_description;
+      }
+      if (count($this->_idno)) {
+        $this->_data['itm_idno'] = $this->_idno;
+      }
       if ($this->_type_id) {
         $this->_data['itm_type_id'] = $this->_type_id;
       }
@@ -148,6 +158,22 @@
     */
     public function getTitle() {
       return $this->_title;
+    }
+
+    /**
+    * Gets the description for this Item
+    * @return string $description
+    */
+    public function getDescription() {
+      return $this->_description;
+    }
+
+    /**
+    * Gets the id number for this Item
+    * @return string $idno
+    */
+    public function getIdNo() {
+      return $this->_idno;
     }
 
     /**
@@ -231,7 +257,7 @@
     }
 
     //********SETTERS*********
-    /**
+   /**
     * Sets the tilte for this Item
     * @param string $title
     */
@@ -241,6 +267,30 @@
         $this->setDataKeyValuePair("itm_title",$title);
       }
       $this->_title = $title;
+    }
+
+   /**
+    * Sets the description for this Item
+    * @param string $description
+    */
+    public function setDescription($description) {
+      if($this->_description != $description) {
+        $this->_dirty = true;
+        $this->setDataKeyValuePair("itm_description",$description);
+      }
+      $this->_description = $description;
+    }
+
+   /**
+    * Sets the id reference for this Item
+    * @param string $idno
+    */
+    public function setIdNo($idno) {
+      if($this->_idno != $idno) {
+        $this->_dirty = true;
+        $this->setDataKeyValuePair("itm_idno",$idno);
+      }
+      $this->_idno = $idno;
     }
 
     /**

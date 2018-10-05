@@ -57,6 +57,7 @@
     */
     private   $_type_id,
               $_label,
+              $_description,
               $_sequence,
               $_shape_id,
               $_mediums=array(),
@@ -95,6 +96,7 @@
         $this->_id=@$arg['prt_id'] ? $arg['prt_id']:NULL;
         $this->_type_id=@$arg['prt_type_id'] ? $arg['prt_type_id']:NULL;
         $this->_label=@$arg['prt_label'] ? $arg['prt_label']:NULL;
+        $this->_title=@$arg['prt_description'] ? $arg['prt_description']:NULL;
         $this->_sequence=@$arg['prt_sequence'] ? $arg['prt_sequence']:NULL;
         $this->_shape_id=@$arg['prt_shape_id'] ? $arg['prt_shape_id']:NULL;
         $this->_mediums=@$arg['prt_mediums'] ? $arg['prt_mediums']:NULL;
@@ -135,6 +137,9 @@
       }
       if (count($this->_label)) {
         $this->_data['prt_label'] = $this->_label;
+      }
+      if (count($this->_description)) {
+        $this->_data['prt_description'] = $this->_description;
       }
       if ($this->_sequence) {
         $this->_data['prt_sequence'] = $this->_sequence;
@@ -177,17 +182,26 @@
     /**
     * Get Type of the artefact part
     *
-    * @return string from a typology of terms for artefacts
+    * @return int term id from a typology of terms for artefacts
     */
     public function getType() {
       return $this->_type_id;
     }
+    
     /**
     * Gets the label of this Part of the item
-    * @return int label of part
+    * @return string label of part
     */
     public function getLabel() {
       return $this->_label;
+    }
+
+    /**
+    * Gets the description for this Part
+    * @return string $description
+    */
+    public function getDescription() {
+      return $this->_description;
     }
 
     /**
@@ -317,7 +331,7 @@
     /**
     * Set the label of this Part of the item
     *
-    * @param int $label to identify a part
+    * @param string $label to identify a part
     * @todo add code to check duplicates
     */
     public function setLabel($label) {
@@ -326,6 +340,18 @@
         $this->setDataKeyValuePair("prt_label",$label);
       }
       $this->_label = $label;
+    }
+
+   /**
+    * Sets the description for this Part
+    * @param string $description
+    */
+    public function setDescription($description) {
+      if($this->_description != $description) {
+        $this->_dirty = true;
+        $this->setDataKeyValuePair("prt_description",$description);
+      }
+      $this->_description = $description;
     }
 
     /**

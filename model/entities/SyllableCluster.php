@@ -93,6 +93,7 @@
         $this->_grapheme_ids=@$arg['scl_grapheme_ids'] ? $arg['scl_grapheme_ids']:NULL;
         $this->_text_critical_mark=@$arg['scl_text_critical_mark'] ? $arg['scl_text_critical_mark']:NULL;
         $this->_sort_code=@$arg['scl_sort_code'] ? $arg['scl_sort_code']:NULL;
+        $this->_sort_code2=@$arg['scl_sort_code2'] ? $arg['scl_sort_code2']:NULL;
         if (!array_key_exists('scl_id',$arg)) {// must be a new record
           //ensure everything is encoded for save
           if (array_key_exists('scl_grapheme_ids',$arg))$arg['scl_grapheme_ids'] = $this->idsToString($arg['scl_grapheme_ids']);
@@ -111,10 +112,11 @@
       } else if ($sclA->getSortCode() > $sclB->getSortCode()) {
         return 1;
       }
+      //todo add code here Phase 2 of model upgrade. sort 2 comparison
       return 0;
     }
 
-    //*******************************PROTECTED FUNCTIONS************************************
+    //***************PROTECTED FUNCTIONS************************************
 
     /**
     * Get global id prefix
@@ -142,6 +144,9 @@
       }
       if (count($this->_sort_code)) {
         $this->_data['scl_sort_code'] = $this->_sort_code;
+      }
+      if (count($this->_sort_code2)) {
+        $this->_data['scl_sort_code2'] = $this->_sort_code2;
       }
     }
 
@@ -359,6 +364,7 @@
     */
     public function setSortCode2($sc) {
       $this->_sort_code2 = $sc;
+      //todo add code here Phase 2 of model upgrade.
     }
 
     //*******************************PRIVATE FUNCTIONS************************************

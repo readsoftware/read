@@ -55,11 +55,12 @@
     * @access private
     */
     private   $_label,
-    $_entity_ids=array(),
-    $_entities,
-    $_type_id,
-    $_superscript,
-    $_theme_id;
+              $_ord,
+              $_entity_ids=array(),
+              $_entities,
+              $_type_id,
+              $_superscript,
+              $_theme_id;
 
 
     //****************************CONSTRUCTOR FUNCTION***************************************
@@ -87,6 +88,7 @@
         $this->initializeBaseEntity($arg);
         $this->_id=@$arg['seq_id'] ? $arg['seq_id']:NULL;
         $this->_label=@$arg['seq_label']|| @$arg['seq_label'] == 0 ? $arg['seq_label']:NULL;
+        $this->_type_id=@$arg['seq_ord'] ? $arg['seq_ord']:NULL;
         $this->_entity_ids=@$arg['seq_entity_ids'] ? $arg['seq_entity_ids']:NULL;
         $this->_type_id=@$arg['seq_type_id'] ? $arg['seq_type_id']:NULL;
         $this->_superscript=@$arg['seq_superscript'] ? $arg['seq_superscript']:NULL;
@@ -121,6 +123,9 @@
       if (count($this->_label)) {
         $this->_data['seq_label'] = $this->_label;
       }
+      if ($this->_ord) {
+        $this->_data['seq_ord'] = $this->_ord;
+      }
       if (count($this->_entity_ids)) {
         $this->_data['seq_entity_ids'] = $this->arraysOfIdsToString($this->_entity_ids);
       }
@@ -146,6 +151,15 @@
     */
     public function getLabel() {
       return $this->_label;
+    }
+
+    /**
+    * Get ordinal position of the sequence
+    *
+    * @return int indentifying the ordinal position of the sequence within containing context
+    */
+    public function getOrdinal() {
+      return $this->_ord;
     }
 
     /**
@@ -226,6 +240,19 @@
         $this->setDataKeyValuePair("seq_label",$label);
       }
       $this->_label = $label;
+    }
+
+    /**
+    * Get ordinal position of the sequence
+    *
+    * @param int $ord indentifying the ordinal position of the sequence within containing context
+    */
+    public function setOrdinal($ord) {
+      if($this->_ord != $ord) {
+        $this->_dirty = true;
+        $this->setDataKeyValuePair("seq_ord",$ord);
+      }
+      $this->_ord = $ord;
     }
 
     /**

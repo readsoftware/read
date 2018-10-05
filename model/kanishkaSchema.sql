@@ -637,6 +637,8 @@ CREATE TABLE item
 (
   "itm_id" serial NOT NULL PRIMARY KEY,
   "itm_title" text NOT NULL DEFAULT 'Need Title',
+  "itm_description" text NULL,
+  "itm_idno" text NULL,
   "itm_type_id" int NULL,
   "itm_shape_id" int NULL,
   "itm_measure" text NULL,
@@ -657,6 +659,8 @@ ALTER TABLE item OWNER TO postgres;
 COMMENT ON TABLE item IS 'Contains a record for each item.';
 COMMENT ON COLUMN item."itm_id" IS 'Uniquely identifies particular item.';
 COMMENT ON COLUMN item."itm_title" IS 'Title of ITEM in the current catalog.';
+COMMENT ON COLUMN item."item_description" IS 'Free text description of item.';
+COMMENT ON COLUMN item."item_idno" IS 'Free text identifier/reference number of item.';
 COMMENT ON COLUMN item."itm_type_id" IS 'Structured artefact typology.';
 COMMENT ON COLUMN item."itm_measure" IS 'Measurement in structured format.';
 COMMENT ON COLUMN item."itm_shape_id" IS 'Link to term defining the shape of this item.';
@@ -731,6 +735,7 @@ CREATE TABLE part
 (
   "prt_id" serial NOT NULL PRIMARY KEY,
   "prt_label" text NULL,
+  "prt_description" text NULL,
   "prt_type_id" int NULL,
   "prt_shape_id" int NULL,
   "prt_mediums" text[] NULL,
@@ -756,6 +761,7 @@ COMMENT ON TABLE part IS 'Contains a record for each part of an item.';
 COMMENT ON COLUMN part."prt_id" IS 'Uniquely identifies particular part.';
 COMMENT ON COLUMN part."prt_type_id" IS 'Structured artefact typology.';
 COMMENT ON COLUMN part."prt_label" IS 'Item Unique Label identifying particular part.';
+COMMENT ON COLUMN part."prt_description" IS 'Free text description of this part.';
 COMMENT ON COLUMN part."prt_sequence" IS 'Numbered order of a PART where there is a physical sequence of parts e.g numbered leaves in a folio.';
 COMMENT ON COLUMN part."prt_shape_id" IS 'Shape of part.';
 COMMENT ON COLUMN part."prt_mediums" IS 'Material from which part is constructed or composed.';
@@ -789,6 +795,7 @@ CREATE TABLE surface
 (
   "srf_id" serial NOT NULL PRIMARY KEY,
   "srf_description" text NULL,
+  "srf_label" text NULL,
   "srf_number" int NOT NULL DEFAULT 1,
   "srf_layer_number" int NOT NULL DEFAULT 1,
   "srf_scripts" text[] NULL,-- TODO  handle integrity with triggers and/or utilities  //note: append syntax update foo set a = a || newInt
@@ -811,6 +818,7 @@ ALTER TABLE surface OWNER TO postgres;
 COMMENT ON TABLE surface IS 'Contains a record for each surface of a fragment.';
 COMMENT ON COLUMN surface."srf_id" IS 'Uniquely identifies particular surface.';
 COMMENT ON COLUMN surface."srf_fragment_id" IS 'Link to fragment this surface lies on.';
+COMMENT ON COLUMN surface."srf_label" IS 'Free text label identifying this surface.';
 COMMENT ON COLUMN surface."srf_number" IS 'Fragment Unique Number identifying particular surface.';
 COMMENT ON COLUMN surface."srf_description" IS 'Free text description of surface.';
 COMMENT ON COLUMN surface."srf_layer_number" IS 'Fragment Unique Number identifying particular layer of the surface.';
@@ -1304,6 +1312,7 @@ CREATE TABLE syllablecluster
   "scl_grapheme_ids" int[] NULL,
   "scl_text_critical_mark" text NULL,
   "scl_sort_code" text NULL,
+  "scl_sort_code2" text NULL,
   "scl_attribution_ids" int[] NULL,
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "scl_owner_id" int NULL DEFAULT 2,
@@ -1324,7 +1333,8 @@ COMMENT ON COLUMN syllablecluster."scl_id" IS 'Uniquely identifies a particular 
 COMMENT ON COLUMN syllablecluster."scl_segment_id" IS 'Links to the segment records for this syllable cluster.';
 COMMENT ON COLUMN syllablecluster."scl_grapheme_ids" IS 'Array of grapheme ids that make up this syllable cluster.';
 COMMENT ON COLUMN syllablecluster."scl_text_critical_mark" IS 'Critical Marking used to identify aspects of the script critical to this interpretation.';
-COMMENT ON COLUMN syllablecluster."scl_sort_code" IS 'Code used to order clusters.';
+COMMENT ON COLUMN syllablecluster."scl_sort_code" IS 'Primary sort code used to order clusters.';
+COMMENT ON COLUMN syllablecluster."scl_sort_code2" IS 'Secondary sort code used to order clusters.';
 COMMENT ON COLUMN syllablecluster."scl_annotation_ids" IS 'Links to commentary on this segment.';
 COMMENT ON COLUMN syllablecluster."scl_attribution_ids" IS 'Links to attributions for this segment.';
 COMMENT ON COLUMN syllablecluster."scl_owner_id" IS 'Link to owner usergroup.';
@@ -1674,6 +1684,7 @@ CREATE TABLE sequence
   "seq_superscript" text NULL,
   "seq_entity_ids" varchar(30)[] NULL,
   "seq_theme_id" int NULL,
+  "seq_ord" int NULL,
   "seq_attribution_ids" int[] NULL,
   "modified" TIMESTAMP default CURRENT_TIMESTAMP,
   "seq_owner_id" int NULL DEFAULT 2,
@@ -1696,6 +1707,7 @@ COMMENT ON COLUMN sequence."seq_entity_ids" IS 'Ordered list of Entity GlobalIDs
 COMMENT ON COLUMN sequence."seq_type_id" IS 'Link to term identifying the type of this sequence.';
 COMMENT ON COLUMN sequence."seq_superscript" IS 'superscrit identifier for this sequence.';
 COMMENT ON COLUMN sequence."seq_theme_id" IS 'Link to display theme for this sequence.';
+COMMENT ON COLUMN sequence."seq_ord" IS 'ordinal number define order is a grouping of sibling sequences.';
 COMMENT ON COLUMN sequence."seq_annotation_ids" IS 'Links to commentary on this sequence.';
 COMMENT ON COLUMN sequence."seq_attribution_ids" IS 'Links to attributions for this sequence.';
 COMMENT ON COLUMN sequence."seq_owner_id" IS 'Link to owner usergroup.';

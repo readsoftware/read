@@ -60,6 +60,7 @@
     private   $_fragment_id,
               $_fragment,
               $_number,
+              $_label,
               $_description,
               $_layer_number,
               $_scripts=array(),
@@ -98,6 +99,7 @@
         $this->_id=@$arg['srf_id'] ? $arg['srf_id']:NULL;
         $this->_fragment_id=@$arg['srf_fragment_id'] ? $arg['srf_fragment_id']:NULL;
         $this->_number=@$arg['srf_number'] ? $arg['srf_number']:NULL;
+        $this->_label=@$arg['srf_label'] ? $arg['srf_label']:NULL;
         $this->_description=@$arg['srf_description'] ? $arg['srf_description']:NULL;
         $this->_layer_number=@$arg['srf_layer_number'] ? $arg['srf_layer_number']:NULL;
         $this->_scripts=@$arg['srf_scripts'] ? $arg['srf_scripts']:NULL;
@@ -137,6 +139,9 @@
       }
       if ($this->_number) {
         $this->_data['srf_number'] = $this->_number;
+      }
+      if (count($this->_label)) {
+        $this->_data['srf_label'] = $this->_label;
       }
       if (count($this->_description)) {
         $this->_data['srf_description'] = $this->_description;
@@ -204,6 +209,14 @@
     }
 
     /**
+    * Gets the label of the fragment's surface
+    * @return string label of surface
+    */
+    public function getLabel() {
+      return $this->_label;
+    }
+
+    /**
     * Get description of the fragment's surface
     *
     * @return string describing the surface
@@ -252,7 +265,7 @@
     /**
     * Get Surface's text
     *
-    * @return text object that contains this surface or NULL
+    * @return Text object that contains this surface or NULL
     */
     public function getText($autoExpand = false) {
       if (!$this->_text && $autoExpand && is_integer($this->_text_ids)) {
@@ -278,7 +291,7 @@
     /**
     * Get Surface's images
     *
-    * @return iterator that contains image objects of this surface or NULL
+    * @return Images iterator that contains image objects of this surface or NULL
     * @todo create images iterator object using IDs array
     */
     public function getImages($autoExpand = false) {
@@ -381,6 +394,19 @@
         $this->setDataKeyValuePair("srf_number",$number);
       }
       $this->_number = $number;
+    }
+
+    /**
+    * Set Label of the surface
+    *
+    * @param string $label uniquely identifying the surface relative to the fragment
+    */
+    public function setLabel($label) {
+      if($this->_label != $label) {
+        $this->_dirty = true;
+        $this->setDataKeyValuePair("srf_label",$label);
+      }
+      $this->_label = $label;
     }
 
     /**
