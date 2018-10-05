@@ -1779,8 +1779,8 @@ function getUserDefAttrIDs(){
 * @param int $ugrID UserGroup entity id used as owner id for newly created entities
 */
 
-function setUserDefEditorID($ugrID, $dbname = "default"){
-  if ($_SESSION) {
+function setUserDefEditorID($ugrID, $dbname = ""){
+  if ($dbname && $_SESSION) {
     if (!isset($_SESSION['userPrefs'])) {
       $_SESSION['userPrefs'] = array();
     }
@@ -1808,8 +1808,8 @@ function setUserDefEditorID($ugrID, $dbname = "default"){
 * @param int array $visIDs of UserGroup entity ids
 */
 
-function setUserDefVisibilityIDs($visIDs, $dbname = "default"){
-  if ($_SESSION) {
+function setUserDefVisibilityIDs($visIDs, $dbname = ""){
+  if ($dbname && $_SESSION) {
     if (!isset($_SESSION['userPrefs'])) {
       $_SESSION['userPrefs'] = array();
     }
@@ -1837,8 +1837,8 @@ function setUserDefVisibilityIDs($visIDs, $dbname = "default"){
 * @param int array $attrIDs of Attribution entity ids
 */
 
-function setUserDefAttrIDs($attrIDs, $dbname = "default"){
-  if ($_SESSION) {
+function setUserDefAttrIDs($attrIDs, $dbname = ""){
+  if ($dbname && $_SESSION) {
     if (!isset($_SESSION['userPrefs'])) {
       $_SESSION['userPrefs'] = array();
     }
@@ -1865,9 +1865,9 @@ function setUserDefAttrIDs($attrIDs, $dbname = "default"){
 *
 */
 
-function getUserPreferences($dbname = "default"){
+function getUserPreferences($dbname = ""){
   // check session - prefer session over persisted
-  if ($_SESSION && isset($_SESSION['userPrefs']) && isset($_SESSION['userPrefs'][$dbname])) {
+  if ($dbname && $_SESSION && isset($_SESSION['userPrefs']) && isset($_SESSION['userPrefs'][$dbname])) {
     $userPreferences = $_SESSION['userPrefs'][$dbname];
   } else {
     $userPreferences = getUserPersistedPreferences();
@@ -1893,7 +1893,7 @@ function getUserPreferences($dbname = "default"){
     }
   }
   //save to session if needed
-  if ($_SESSION){
+  if ($dbname && $_SESSION){
     if (!isset($_SESSION['userPrefs'])) {
       $_SESSION['userPrefs'] = array();
     }

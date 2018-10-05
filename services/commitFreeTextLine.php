@@ -38,8 +38,8 @@
   header('Cache-Control: no-cache');
   header('Pragma: no-cache');
 
-  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
+  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilities
   require_once (dirname(__FILE__) . '/../model/utility/parser.php');//get utilities
   require_once (dirname(__FILE__) . '/clientDataUtils.php');

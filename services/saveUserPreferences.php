@@ -53,15 +53,15 @@ if (!$data) {
   array_push($errors,"invalid json data - decode failed");
 } else { // process user preferences
   if (isset($data['editUserID'])) {
-    setUserDefEditorID($data['editUserID']);
+    setUserDefEditorID($data['editUserID'], DBNAME);
   }
 
   if (isset($data['defVisIDs'])) {
-    setUserDefVisibilityIDs($data['defVisIDs']);
+    setUserDefVisibilityIDs($data['defVisIDs'], DBNAME);
   }
 
   if (isset($data['defAttrIDs'])) {
-    setUserDefAttrIDs($data['defAttrIDs']);
+    setUserDefAttrIDs($data['defAttrIDs'], DBNAME);
   }
 }
 if (isset($data['persist'])) {
