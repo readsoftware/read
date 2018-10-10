@@ -2648,6 +2648,17 @@ EDITORS.ImageVE.prototype = {
         this.imgContext.strokeStyle = "blue";
         this.imgContext.lineWidth = 1 ;
       }
+      this.imgContext.lineWidth = 4 ;
+      this.imgContext.beginPath();
+      this.imgContext.moveTo((polygon.polygon[0][0] - offsetX)*scaleX,(polygon.polygon[0][1] - offsetY)*scaleY);
+      for (j=1; j < polygon.polygon.length; j++) {
+        this.imgContext.lineTo((polygon.polygon[j][0] - offsetX)*scaleX,(polygon.polygon[j][1] - offsetY)*scaleY);
+      }
+      this.imgContext.closePath();
+      this.imgContext.stroke();
+
+      this.imgContext.strokeStyle = "cyan";
+      this.imgContext.lineWidth = 1 ;
       this.imgContext.beginPath();
       this.imgContext.moveTo((polygon.polygon[0][0] - offsetX)*scaleX,(polygon.polygon[0][1] - offsetY)*scaleY);
       for (j=1; j < polygon.polygon.length; j++) {
