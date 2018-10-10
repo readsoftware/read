@@ -145,6 +145,10 @@
 .prose.Pāda{
   display: inline-flex;
 }
+.source {
+  margin-top: 20px;
+  font-style: italic;
+}
 .secHeader{
 margin-bottom: 1px;
 margin-top: 15px;
