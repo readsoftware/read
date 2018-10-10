@@ -1412,11 +1412,11 @@ DEBUG.traceEntry("createPhonologicalUI");
                        {label: "card.",trmID:682,showInfl:"showCase showGender showNumber"}],
         listSubNoun = [{label: "common",trmID:665,showInfl:"showCase showGender showNumber"},
                        {label: "proper",trmID:666,showInfl:"showCase showGender showNumber"}],
-        listSubPron = [{label: "dem.",trmID:669,showInfl:"showCase showGender showNumber"},
-                       {label: "indef.",trmID:670,showInfl:"showCase showGender showNumber"},
-                       {label: "interr.",trmID:671,showInfl:"showCase showGender showNumber"},
+        listSubPron = [{label: "dem.",trmID:669,showInfl:"showCase showAdjGender showNumber"},
+                       {label: "indef.",trmID:670,showInfl:"showCase showAdjGender showNumber"},
+                       {label: "interr.",trmID:671,showInfl:"showCase showAdjGender showNumber"},
                        {label: "pers.",trmID:668,showInfl:"showCase showNumber"},
-                       {label: "rel.",trmID:672,showInfl:"showCase showGender showNumber"},
+                       {label: "rel.",trmID:672,showInfl:"showCase showAdjGender showNumber"},
                        {label: "refl.",trmID:673,showInfl:"showCase showNumber"}],
         listGramGen = [{label: "m.",trmID:491},
                        {label: "mn.",trmID:494,showInfl:"showGender"},
@@ -1438,7 +1438,7 @@ DEBUG.traceEntry("createPhonologicalUI");
     posEdit.append(this.createRadioGroupUI("spos", "SubNumeralUI", listSubNum,spos, 683, cf[1]==2));
     posEdit.append(this.createRadioGroupUI("spos", "SubAdjectiveUI", listSubAdj,spos,675, cf[1]==2));
     posEdit.append(this.createRadioGroupUI("class", "ClassUI", listClass,vclass,null, cf[3]==2));
-    posEdit.append(this.createRadioGroupUI("spos", "SubPronUI", listSubPron,spos,null, cf[1]==2));
+    posEdit.append(this.createRadioGroupUI("spos", "SubPronUI", listSubPron,spos,669, cf[1]==2));
     posEdit.append(this.createRadioGroupUI(null, null, listCtrl));
     showSub = $('.PosUI button.buttonDiv.selected',posEdit).prop('showSub');
     if (showSub && showSub.length) {// ensure sub groups are shown
@@ -1494,6 +1494,9 @@ DEBUG.traceEntry("createPhonologicalUI");
           //if noun then use gender if set else use mnf. for display
           if (posID == nounID) {
             subPosButtonDiv = $('.SubNounUI button.buttonDiv.selected',posEdit);
+            if (!subPosButtonDiv || subPosButtonDiv.length == 0) {// subPOS for pronoun selected so calc all the rest
+              subPosButtonDiv = $('.SubNounUI button.buttonDiv.default',posEdit);
+            }
             if (subPosButtonDiv.length) {// subPOS for pronoun selected so calc all the rest
               //read selected values and uncertain values
               sposVal = subPosButtonDiv.text();
@@ -1501,6 +1504,9 @@ DEBUG.traceEntry("createPhonologicalUI");
               sposCF = subPosButtonDiv.hasClass('uncertain')?2:1;
             }
             genButtonDiv = $('.GramGenderUI button.buttonDiv.selected',posEdit);
+            if (!genButtonDiv || genButtonDiv.length == 0) {// subPOS for pronoun selected so calc all the rest
+              genButtonDiv = $('.GramGenderUI button.buttonDiv.default',posEdit);
+            }
             if (genButtonDiv.length) {// gender selected so calc all the rest
               //read selected values and uncertain values
               genVal = genButtonDiv.text();
@@ -1510,14 +1516,20 @@ DEBUG.traceEntry("createPhonologicalUI");
             }
           } else if (posID == pronID) {// if pronoun check for spos
             subPosButtonDiv = $('.SubPronUI button.buttonDiv.selected',posEdit);
+            if (!subPosButtonDiv || subPosButtonDiv.length == 0) {// subPOS for pronoun selected so calc all the rest
+              subPosButtonDiv = $('.SubPronUI button.buttonDiv.default',posEdit);
+            }
             if (subPosButtonDiv.length) {// subPOS for pronoun selected so calc all the rest
-              //read selected values and uncertain values
+                //read selected values and uncertain values
               sposVal = subPosButtonDiv.text();
               sposID = subPosButtonDiv.prop('trmID');
               sposCF = subPosButtonDiv.hasClass('uncertain')?2:1;
             }
           } else if (posID == numID) {// if numeral check for spos
             subPosButtonDiv = $('.SubNumeralUI button.buttonDiv.selected',posEdit);
+            if (!subPosButtonDiv || subPosButtonDiv.length == 0) {// subPOS for pronoun selected so calc all the rest
+              subPosButtonDiv = $('.SubNumeralUI button.buttonDiv.default',posEdit);
+            }
             if (subPosButtonDiv.length) {// subPOS for pronoun selected so calc all the rest
               //read selected values and uncertain values
               sposVal = subPosButtonDiv.text();
@@ -1526,6 +1538,9 @@ DEBUG.traceEntry("createPhonologicalUI");
             }
           } else if (posID == adjID) {// if numeral check for spos
             subPosButtonDiv = $('.SubAdjectiveUI button.buttonDiv.selected',posEdit);
+            if (!subPosButtonDiv || subPosButtonDiv.length == 0) {// subPOS for pronoun selected so calc all the rest
+              subPosButtonDiv = $('.SubAdjectiveUI button.buttonDiv.default',posEdit);
+            }
             if (subPosButtonDiv.length) {// subPOS for pronoun selected so calc all the rest
               //read selected values and uncertain values
               sposVal = subPosButtonDiv.text();
