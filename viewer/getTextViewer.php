@@ -44,7 +44,8 @@
     returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
   } else {
     //get parameters
-    $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:$data['refreshLookUps'];//default (parameter missing) not multi edition
+    $refreshLookUps = (isset($data['refreshLookUps']) && $data['refreshLookUps'])? $data['refreshLookUps']:
+                        ((isset($data['refresh']) && $data['refresh'])? $data['refresh']: false);//default (parameter missing) not multi edition
     $multiEdition = (!isset($data['multiEd']) || !$data['multiEd'])? false:true;//default (parameter missing) not multi edition
     $isStaticView = (!isset($data['staticView'])||$data['staticView']==0)?false:true;
     $txtID = null;

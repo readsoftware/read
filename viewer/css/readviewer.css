@@ -133,8 +133,17 @@
 .grpTok .linelabel{
   padding-right: 0px;
 }
-.secHeader.Paragraph, .secHeader.Pāda{
+.secHeader.Paragraph{
   color: rgb(100,210,210);
+}
+.secMarker.Pāda{
+  color: rgb(100,210,210);
+  display: inline-flex;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+.prose.Pāda{
+  display: inline-flex;
 }
 .secHeader{
 margin-bottom: 1px;

@@ -159,6 +159,10 @@ div.section {
   padding-left: 10px;
 }
 
+div.section.Stanza, div.section.Pāda {
+  display: block !important;
+}
+
 div.section.level2,
 div.section.level3,
 div.section.level4,

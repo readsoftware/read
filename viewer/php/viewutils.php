@@ -1122,83 +1122,107 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
       $label = (($seqSup && $seqType !== "Section")?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
     }
     if ($label) {//output header div and toc info
-      $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$level.' '.$seqType.' '.$seqTag.'">'.$label;
-      $structureHtml .= getEntityFootnotesHtml($sequence, $refresh);
-      $structureHtml .= '</div>';
-      if ($seqType == "Chapter") { //warning term dependency
+      if ($seqType != "Pāda" && $seqType != "Item") {//warning!!!! term dependency
+        $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$level.' '.$seqType.' '.$seqTag.'">'.$label;
+        $structureHtml .= getEntityFootnotesHtml($sequence, $refresh);
+        $structureHtml .= '</div>';
+      }
+      if ($seqType == "Chapter" || $seqType == "Section" || 
+          ($level == 1 && ($seqType == "Stanza" || $seqType == "List"))) {//warning term dependency
         $editionTOCHtml .= '<div id="toc'.$seqTag.'" class="tocEntry level'.$level.' '.$seqType.' '.$seqTag.'">'.$label.'</div>';
         $curStructHeaderbyLevel[$level] = array('sup'=>$seqSup,'label'=> $seqLabel);
       }
     }
     //open structure div
     $structureHtml .= '<div class="section level'.$level.' '.$seqTag.' '.$seqType.'">';
+    //output inline markers
+    if ($seqType == "Pāda") {//warning!!!! term dependency
+      if ($seqLabel || $seqSup) {
+        $structureHtml .= '<div class="secMarker level'.$level.' '.$seqTag.' '.$seqType.'">'.$label.'</div>';
+      }
+    } else if ($seqType == "Item") {//warning!!!! term dependency
+      if ($seqLabel || $seqSup) {
+        $structureHtml .= '<div class="itemBullet level'.$level.' '.$seqTag.' '.$seqType.'">'.$label.'</div>';
+      }
+    }
+
     $cntGID = count($seqEntGIDs);
-    for ($i = 0; $i < $cntGID; $i++) {
-      $entGID = $seqEntGIDs[$i];
-      $prefix = substr($entGID,0,3);
-      $entID = substr($entGID,4);
-      $nextEntGID = $i+1<$cntGID?$seqEntGIDs[$i+1]:null;
-      $nextToken = null;
-      if ( $nextEntGID ) {
-        switch (substr($nextEntGID,0,3)) {
-          case 'cmp':
-            $nextToken = new Compound(substr($nextEntGID,4));
-            if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
-              error_log("Warning inaccessible entity id $nextEntGID skipped.");
-              $nextToken = null;
-              break;
-            } else {
-              $nextEntGID = $nextToken->getTokenIDs();
-              if ($nextEntGID && count($nextEntGID)) {
-                $nextEntGID = "tok:".$nextEntGID[0];
+    if ($cntGID > 0) {
+      //wrapp prose for pada and item sequences
+      if ($seqType == "Pāda" || $seqType == "Item") {//warning!!!! term dependency
+        $structureHtml .= '<div class="prose level'.$level.' '.$seqTag.' '.$seqType.'">';
+      }
+      for ($i = 0; $i < $cntGID; $i++) {
+        $entGID = $seqEntGIDs[$i];
+        $prefix = substr($entGID,0,3);
+        $entID = substr($entGID,4);
+        $nextEntGID = $i+1<$cntGID?$seqEntGIDs[$i+1]:null;
+        $nextToken = null;
+        if ( $nextEntGID ) {
+          switch (substr($nextEntGID,0,3)) {
+            case 'cmp':
+              $nextToken = new Compound(substr($nextEntGID,4));
+              if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
+                error_log("Warning inaccessible entity id $nextEntGID skipped.");
+                $nextToken = null;
+                break;
               } else {
-                error_log("Warning inaccessible entity id ".$nextToken->getGlobalID()." skipped.");
+                $nextEntGID = $nextToken->getTokenIDs();
+                if ($nextEntGID && count($nextEntGID)) {
+                  $nextEntGID = "tok:".$nextEntGID[0];
+                } else {
+                  error_log("Warning inaccessible entity id ".$nextToken->getGlobalID()." skipped.");
+                  $nextToken = null;
+                  break;
+                }
+              }
+            case 'tok':
+              $nextToken = new Token(substr($nextEntGID,4));
+              if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
+                error_log("Warning inaccessible entity id $nextEntGID skipped.");
                 $nextToken = null;
                 break;
               }
-            }
-          case 'tok':
-            $nextToken = new Token(substr($nextEntGID,4));
-            if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
-              error_log("Warning inaccessible entity id $nextEntGID skipped.");
-              $nextToken = null;
-              break;
-            }
+          }
         }
-      }
-      $entTag = null;
-      if ($prefix == 'seq') {
-        $subSequence = new Sequence($entID);
-        if (!$subSequence || $subSequence->getID() != $entID || $subSequence->hasError()) {//no sequence or unavailable so warn
-          error_log("Warning inaccessible sub-sequence id $entID skipped.");
+        $entTag = null;
+        if ($prefix == 'seq') {
+          $subSequence = new Sequence($entID);
+          if (!$subSequence || $subSequence->getID() != $entID || $subSequence->hasError()) {//no sequence or unavailable so warn
+            error_log("Warning inaccessible sub-sequence id $entID skipped.");
+            continue;
+          } else {
+            $structureHtml .= getStructHTML($subSequence,$refresh);//todo verify if need to add boundary for sub structure
+            $entTag = $subSequence->getEntityTag();
+            $entType = 'construct';
+          }
+        } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
+          if ($prefix == 'cmp') {
+            $entity = new Compound($entID);
+          } else {
+            $entity = new Token($entID);
+          }
+          if (!$entity || $entity->hasError()) {//no word or unavailable so warn
+            error_log("Warning inaccessible word id $entGID skipped.");
+          } else {
+            $entTag = $entity->getEntityTag();
+            $entType = 'word';
+            addWordToEntityLookups($entity, $refresh);
+            $structureHtml .= getWordHtml($entity,$i+1 == $cntGID, $nextToken, $refresh);
+          }
+        }else{
+          error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
           continue;
-        } else {
-          $structureHtml .= getStructHTML($subSequence,$refresh);//todo verify if need to add boundary for sub structure
-          $entTag = $subSequence->getEntityTag();
-          $entType = 'construct';
         }
-      } else if ($prefix == 'cmp' || $prefix == 'tok' ) {
-        if ($prefix == 'cmp') {
-          $entity = new Compound($entID);
-        } else {
-          $entity = new Token($entID);
+        if ($i == 0 && array_key_exists($entTag,$blnPosByEntTag[$entType])) {// first contained entity so if baseline position then copy for sequence.
+          $blnPosByEntTag['construct'][$seqTag] = $blnPosByEntTag[$entType][$entTag];
         }
-        if (!$entity || $entity->hasError()) {//no word or unavailable so warn
-          error_log("Warning inaccessible word id $entGID skipped.");
-        } else {
-          $entTag = $entity->getEntityTag();
-          $entType = 'word';
-          addWordToEntityLookups($entity, $refresh);
-          $structureHtml .= getWordHtml($entity,$i+1 == $cntGID, $nextToken, $refresh);
-        }
-      }else{
-        error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
-        continue;
+      }//end for
+      //close prose wrapper
+      if ($seqType == "Pāda" || $seqType == "Item") {//warning!!!! term dependency
+        $structureHtml .= '</div>';
       }
-      if ($i == 0 && array_key_exists($entTag,$blnPosByEntTag[$entType])) {// first contained entity so if baseline position then copy for sequence.
-        $blnPosByEntTag['construct'][$seqTag] = $blnPosByEntTag[$entType][$entTag];
-      }
-    }//end for cntGID
+    }
     if (!$label) {//output header div
       $structureHtml .= getEntityFootnotesHtml($sequence, $refresh);
     }
