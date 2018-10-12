@@ -144,6 +144,7 @@
 }
 .prose.Pāda{
   display: inline-flex;
+  padding-bottom: 0px;
 }
 .source {
   margin-top: 20px;
@@ -166,6 +167,7 @@ font-weight: bold;
 }
 .grpTok:after{
   content: " ";
+  padding-right: 5px;
 }
 .grpTok{
   user-select: none;

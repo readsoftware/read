@@ -668,7 +668,7 @@ EDITORS.WordlistVE.prototype = {
             continue;
           }
           word = this.dataMgr.getEntity(prefix,id);
-          if (word.sort && word.sort >= 0.7) {
+          if (word.sort && word.sort >= 0.7) {//warning sort value dependency
             continue;
           }
           word.tag = wtag;
@@ -999,11 +999,12 @@ EDITORS.WordlistVE.prototype = {
                     }
                   }
                 }
-                html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
+/*                html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
                         word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                         (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
                         ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                         (wordAnno?' ('+wordAnno+')':"") + '</span>';
+*/
               }
               if (word && word.value && word.transcr && word.locLabel) {
                 html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
@@ -1479,7 +1480,7 @@ EDITORS.WordlistVE.prototype = {
         prefix = tag.substr(0,3);
         id = tag.substr(3);
         word = this.dataMgr.getEntity(prefix,id);
-        if (word.sort && word.sort >= 0.7) {
+        if (word.sort && word.sort >= 0.7) {//warning sort value dependency
           continue;
         }
         word.tag = tag;
