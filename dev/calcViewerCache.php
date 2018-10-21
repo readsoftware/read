@@ -138,6 +138,8 @@
 
       $(document).ready( function () {
         var txtIDs = [],
+            txtID = null,
+            lastCachedID = null,
             $textListDiv = $('#textListDiv'),
             $textListHdr = $('#textListHdr'),
             $textListTree = $('#textListTree'),
@@ -166,22 +168,26 @@
         }
         
         function calcCaching() {
-          var txtID = null;
+          txtID = null;
           if (cachingState == "Stopping") {
             cachingState = "Stopped";
+            $btnCancel.val("Cancel");
+            updateStatus("<div>Stopped READ Viewer Caching, last cached text ("+txtID+")</div>");
             return;
-          } else if (cachingState == "Paused") {
+          } else if (cachingState == "Paused" || cachingState == "PausePending") {
+            cachingState = "Paused";
+            $btnPause.val("Restart");
+            updateStatus("<div>Paused READ Viewer Caching, next text ("+txtIDs[0]+")</div>");
             return;
-          } else if (cachingState == "Calculating") {
+          } else if (cachingState == "Stopped") {
             return;
           } else if(!txtIDs || txtIDs.length == 0) {
             cachingState = "Stopped";
-            updateStatus("No txtIDs left, nothing left to cache");
+            updateStatus("<div>No txtIDs left, nothing left to cache</div>");
             return;
           }
           txtID = txtIDs.shift();
           if (txtID) {
-            $btnCalcViewerCache.html('Calculating');
             updateStatus("<div>Calculating READ Viewer Cache for text ("+txtID+")</div>");
             $.ajax({
                 type: 'POST',
@@ -189,17 +195,22 @@
                 url: calcViewerBaseURL+txtID,//caution dependency on context having basepath and dbName
                 async: true,
                 success: function (data, status, xhr) {
-                  $btnCalcViewerCache.html('Calculate');
-                  message = '<div class="success">Successfully cache viewer content for text txt:'+txtID+"</div>";
+                  lastCachedID = txtID
+                  message = '<div class="success">Successfully cache viewer content for text txt:'+lastCachedID+"</div>";
                   updateStatus(message);
                   addResultsMessage(message);
                   if (cachingState == "PausePending" || cachingState == "Paused") {
                     cachingState = "Paused";
+                    $btnPause.val("Restart");
+                    $btnCalcViewerCache.val('Paused');
+                    updateStatus("<div>Paused READ Viewer Caching, next text ("+txtIDs[0]+")</div>");
                   } else if (cachingState == "Stopping") {
                     cachingState = "Stopped";
+                    $btnCalcViewerCache.val('Calculate');
+                    $btnCancel.val("Cancel");
+                    updateStatus("<div>Stopped READ Viewer Caching, last cached text ("+lastCachedID+")</div>");
                     return;
                   } else {
-                    cachingState = "Stopped";
                     setTimeout(calcCaching,50);
                   }
                 },
@@ -208,7 +219,13 @@
                   var message = '<div class="error">An error occurred while trying to calculate cache for txt: '+txtID +". Error: " + error+"</div>";
                   updateStatus(message);
                   addResultsMessage(message);
-                  
+                  if (cachingState == "PausePending" || cachingState == "Paused") {
+                    $btnPause.val("Restart");
+                  }
+                  cachingState = "Stopped";
+                  $btnCalcViewerCache.val('Calculate');
+                  $btnCancel.val("Cancel");
+                  updateStatus("<div>Stopped READ Viewer Caching, last cached text ("+lastCachedID+")</div>");
                 }
             });
           }  
@@ -230,6 +247,8 @@
                 txtIDs.push(txtID);
               }
             }
+            $btnCalcViewerCache.val('Calculating');
+            cachingState = "Calculating";
             calcCaching();
           }
         });
@@ -237,25 +256,25 @@
         //Handle Pause button click
         $btnPause.unbind('click').bind('click', function (e) {
           //Check button state
-          if ($(this).html() == "Pause") {
+          if ($(this).val() == "Pause") {
             //In call to server so indicate pause wanted
-            if (cachingState == "calculating") {
+            if (cachingState == "Calculating") {
               cachingState = "PausePending"
-              $(this).html("PausePending");
+              $(this).val("PausePending");
             } else { // mark paused and change button state
               cachingState = "Paused";
-              $(this).html("Restart");
+              $btnCalcViewerCache.val('Paused');
+              updateStatus("<div>Paused READ Viewer Caching, next text ("+txtIDs[0]+")</div>");
+              $(this).val("Restart");
             }
           } else {
             //Change button to Pauseable state
-            $(this).html("Pause");
-            if (cachingState == "calculating") {
-              return;
-            } else if (cachingState == "PausePending" || cachingState == "Stopping") {
-              cachingState = "calculating";
+            $(this).val("Pause");
+            if (cachingState == "Calculating") {
               return;
             } else {
-              cachingState = "Stopped";
+              cachingState = "Calculating";
+              $btnCalcViewerCache.val('Calculating');
               calcCaching();
             }
           }
@@ -263,13 +282,16 @@
 
         //Handle Cancel button click
         $btnCancel.unbind('click').bind('click', function (e) {
-          if (cachingState == "calculating") {
-            cachingState = "PausePending"
-            $(this).html("PausePending");
+          if (cachingState == "Calculating" || cachingState == "PausePending") {
+            cachingState = "Stopping"
+            $(this).val("Stopping");
           } else { // mark paused and change button state
-            cachingState = "Paused";
-            $(this).html("Restart");
+            cachingState = "Stopped";
+            updateStatus("<div>Stopped READ Viewer Caching, last cached text ("+lastCachedID+")</div>");
+            $btnCalcViewerCache.val('Calculate');
+            $(this).val("Cancel");
           }
+          $btnPause.val("Pause");
         });
       });
 
