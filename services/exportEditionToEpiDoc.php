@@ -54,7 +54,14 @@
 
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
-  ob_start('ob_gzhandler');
+
+  if (substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
+    header('Content-Encoding: gzip');
+    ob_start('ob_gzhandler');
+  } else {
+    ob_start();
+  }
+
 //header('Content-type: text/xml; charset=utf-8');
   header('Pragma: no-cache');
 
@@ -80,15 +87,16 @@
   // set up common parameters for stylesheets.
   //$xslProc->setParameter('','transform',$styleFilename);
   $epiXML = $xslProc->transformToXML($textRMLDoc);
-
+//file_put_contents("./testrml.xml",$textRML)
   $epiXML = substr($epiXML,strpos($epiXML,">")+1);
   if (strpos($epiXML,'xmlns=""')) {//php XSLT parser is ouputting blank xmlns statements and fails validation
     $epiXML = str_replace('xmlns=""','',$epiXML);//remove any blank xmlns statements
   }
   $epiXML = str_replace('&lt;','<',$epiXML);//fixup angle brackets for ab element
   $epiXML = str_replace('&gt;','>',$epiXML);//remove any blank xmlns statements
+  $epiXML = str_replace('\n','',$epiXML);//remove any blank xmlns statements
   $testDoc = new DOMDocument('1.0','utf-8');
-  $testDoc->loadXML(str_replace('\n','',$epiXML));
+  $testDoc->loadXML($epiXML);
   set_error_handler("errorHandler");
   if (!isset($isCmdLineLaunch) && !$testDoc->relaxNGValidate("http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng")) {
     header("Content-type: text/javascript;  charset=utf-8");
@@ -101,15 +109,18 @@
             '<?xml-model'." ".'href="http://www.stoa.org/epidoc/schema/latest/tei-epidoc.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>'."\n".
             $epiXML;
 //  error_log(print_r($doc,true));
+  ob_clean();
   if ($isDownload) {
     header("Content-type: application/tei+xml;  charset=utf-8");
     header("Content-Disposition: attachment; filename=epidoc_".$_REQUEST['ckn'].".tei");
     header("Expires: 0");
   } else {
-    header('Content-type: text/xml; charset=utf-8');
+    header('Content-type: text/xml;  charset=utf-8');
     header('Cache-Control: no-cache');
   }
   echo $epiXML;
+
+  return;
 
 function returnXMLSuccessMsgPage($msg) {
 	global $verbose;
