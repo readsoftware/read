@@ -451,7 +451,7 @@ if ( count($errors) == 0 && $cmd == "remove" && $token1 && $token2) {
   $token1->setGraphemeIDs($tokGraIDs);
   $token1->getValue(true);
   $token1->save();
-  addRemoveEntityReturnData('tok',$token2);
+  addRemoveEntityReturnData('tok',$token2->getID());
   $removeTokGID = $token2->getGlobalID();
   if (!$token2->isReadonly()) {
     $token2->markForDelete();
@@ -491,7 +491,7 @@ if ( count($errors) == 0 && $cmd == "remove" && $token1 && $token2) {
         if (!$compound->isReadonly()) {
           $compound = $compound->markForDelete();
         }
-        addRemoveEntityReturnData('cmp',$compound);
+        addRemoveEntityReturnData('cmp',$compound->getID());
         $replaceTokCmpGID = "cmp:$cmpID";
         $newTokCmpGID = $componentGIDs[0];
         continue;

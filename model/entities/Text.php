@@ -333,7 +333,7 @@
       return $this->_editions;
     }
 
-     /**
+    /**
     * Get surfaces object which contains all surfaces attached to this text
     *
     * @return Surfaces iterator with all surfaces linked to this text
@@ -343,14 +343,55 @@
         // TODO correct this for getting intersection.
         //$condition = "srf_text_ids in (".join(",",$this->getReplacementIDs()).")";
       }else{
-        $condition = "".$this->_id." = ANY (srf_text_ids)";
+        $condition = "".$this->_id." = ANY (srf_text_ids) and not srf_owner_id = 1";
       }
       $this->_surfaces = new Surfaces($condition,null,null,null);
       $this->_surfaces->setAutoAdvance(false);
       return $this->_surfaces;
     }
 
-     /**
+   /**
+    * Get ids of all surfaces attached to this text
+    *
+    * @return int[] array of surface ids for all surfaces linked to this text
+    */
+    public function getSurfaceIDs() {
+      $dbMgr = new DBManager();
+      $dbMgr->query("select array_agg(srf_id) from surface ".
+                    "where ".$this->_id." = ANY (srf_text_ids) and not srf_owner_id = 1;");
+      if ($dbMgr->getRowCount()) {
+        $row = $dbMgr->fetchResultRow();
+        $srfIDs = explode(',',trim($row[0],"\"{}"));
+        if ($srfIDs[0] == "" ) {
+          return array();
+        } 
+        return $srfIDs;
+      }
+      return array();
+    }
+
+    /**
+    * Get Baseline ids of all baselines attached to this text
+    *
+    * @return int[] baseline ids of all baselines linked to this text
+    */
+    public function getBaselineIDs() {
+      $dbMgr = new DBManager();
+      $dbMgr->query("select array_agg(distinct bln_id) from baseline ".
+                      "left join surface on bln_surface_id = srf_id ".
+                      "where ".$this->_id." = ANY (srf_text_ids) and not bln_owner_id = 1 and srf_id is not null");
+      if ($dbMgr->getRowCount()) {
+        $row = $dbMgr->fetchResultRow();
+        $blnIDs = explode(',',trim($row[0],"\"{}"));
+        if ($blnIDs[0] == "" ) {
+          return array();
+        } 
+        return $blnIDs;
+      }
+      return array();
+    }
+
+    /**
     * Get Lines object which contains all lines attached to this text
     *
     * @return Lines iterator with all lines linked to this text
@@ -370,7 +411,7 @@
         while($row = $dbMgr->fetchResultRow()) {
           array_push($linIDs,$row[0]);
         }
-      $this->_lines = new Lines("lin_id in (".join(",",$linIDs).")","lin_order",0,count($linIDs));
+        $this->_lines = new Lines("lin_id in (".join(",",$linIDs).")","lin_order",0,count($linIDs));
       }
       return $this->_lines;
     }

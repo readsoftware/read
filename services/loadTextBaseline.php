@@ -229,6 +229,7 @@
   }
 
   $entities["update"]['bln'][$blnID]=array();
+  $entities["update"]['bln'][$blnID]['segCount'] = count($segIDs);
   if (count($segIDs) > 0) {
     $entities["update"]['bln'][$blnID]['segIDs'] = array_unique($segIDs);
   }

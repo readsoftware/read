@@ -139,18 +139,20 @@
             $blnID = $baseline->getID();
             array_push($entities['txt'][$txtID]['blnIDs'],$blnID);
             if ($blnID && !array_key_exists($blnID, $entities['bln'])) {
+              $segIDs = $baseline->getSegIDs();
               $entities['bln'][$blnID] = array( 'surfaceID'=> $srfID,
                                      'txtID' => $txtID,
                                      'url' => $baseline->getURL(),
                                      'type' => $baseline->getType(),
+                                     'segCount' => count($segIDs),
+                                     'segIDs' => $segIDs,
                                      'transcription' => $baseline->getTranscription(),
                                      'boundary' => $baseline->getImageBoundary(),
-                                     'segIDs' => array(),
                                      'imageID' => $baseline->getImageID());
             }// if blnID
             foreach ($baseline->getSegments(true) as $segment) {
               $segID = $segment->getID();
-              array_push($entities['bln'][$blnID]['segIDs'],$segID);
+//              array_push($entities['bln'][$blnID]['segIDs'],$segID);
               if ($segID && !array_key_exists($segID, $entities['seg'])) {
                 $entities['seg'][$segID] = array( 'surfaceID'=> $srfID,
                                         'baselineIDs' => $segment->getBaselineIDs(),

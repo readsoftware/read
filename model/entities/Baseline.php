@@ -155,7 +155,6 @@
     //********GETTERS*********
 
     /**
-    /**
     * Get Baseline's Images unique IDs
     *
     * @return int array for image object IDs for this baseline
@@ -254,8 +253,42 @@
       }
       return $this->_surface;
     }
+    
+    /**
+    * Get number of segment objects attached to this baseline
+    *
+    * @return int count all segments linked to this baseline
+    */
+    public function getSegmentCount() {
+      $dbMgr = new DBManager();
+      $dbMgr->query("select count(seg_id) from segment where ".$this->_id." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1");
+      if ($dbMgr->getRowCount()) {
+        $row = $dbMgr->fetchResultRow();
+        return $row[0];
+      }
+      return 0;
+    }
 
-     /**
+    /**
+    * Get number of segment objects attached to this baseline
+    *
+    * @return int[] array of segment ids for all segments linked to this baseline
+    */
+    public function getSegIDs() {
+      $dbMgr = new DBManager();
+      $dbMgr->query("select array_agg(seg_id) from segment where ".$this->_id." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1");
+      if ($dbMgr->getRowCount()) {
+        $row = $dbMgr->fetchResultRow();
+        $segIDs = explode(',',trim($row[0],"\"{}"));
+        if ($segIDs[0] == "" ) {
+          return array();
+        } 
+        return $segIDs;
+      }
+      return array();
+    }
+
+    /**
     * Get segments object which contains all segments attached to this baseline
     *
     * @return Segments iterator with all segments linked to this baseline

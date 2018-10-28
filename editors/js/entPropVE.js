@@ -228,6 +228,9 @@ EDITORS.EntityPropVE.prototype = {
         this.createTextInvDisplay();
         this.createTextRefDisplay();
         this.createImageUI();
+        if (this.entity.blnIDs && this.entity.blnIDs.length) {
+          this.createBaselineUI();
+        }
       }
       if (this.tag && this.controlVE.getEdnID &&
           this.dataMgr.getMatchEntities(this.tag,this.controlVE.getEdnID()).length) {
@@ -1666,6 +1669,106 @@ EDITORS.EntityPropVE.prototype = {
 
 
 /**
+* create baseline UI
+*/
+
+createBaselineUI: function() {
+  var entPropVE = this,i,j, blnID, displayUI, baseline;
+  DEBUG.traceEntry("createBaselineUI");
+  //create UI container
+  this.blnUI = $('<div class="blnUI"></div>');
+  this.contentDiv.append(this.blnUI);
+  displayUI = $('<div class="propDisplayUI"/>');
+  //create Header
+  displayUI.append($('<div class="blnUIHeader"><span>Baselines:</span></div>'));
+  //create a list of Images for entity
+  if (this.entity && this.entity.blnIDs && this.entity.blnIDs.length) {
+    for (i in this.entity.blnIDs) {
+      blnID = this.entity.blnIDs[i];
+      baseline = this.dataMgr.getEntity("bln",blnID);
+      if (baseline) {
+        baseline.tag = "bln" + blnID;
+        displayUI.append(this.createBaselineEntry(baseline));
+      }
+    }
+  }
+  this.blnUI.append(displayUI);
+  $('span.removebln',this.blnUI).unbind("click").bind("click",function(e) {
+    var classes = $(this).attr('class'),
+        blnTag = classes.match(/bln\d+/)[0];
+    entPropVE.removeBln(blnTag);
+  });
+  //create input with save button
+  DEBUG.traceExit("createBaselineUI");
+},
+
+
+/**
+* create baseline entry
+*
+* @param {baseline} bln baseline entity
+*/
+
+createBaselineEntry: function(bln) {
+  var entPropVE = this, img = this.dataMgr.getEntity('img',bln.imageID)
+      thumbUrl = (img && (img.thumbUrl || img.url))? (img.thumbUrl?img.thumbUrl:img.url):null,
+      blnType = this.dataMgr.getTermFromID(bln.type);//todo change this to typeID
+  DEBUG.trace("createBaselineEntry");
+  //create Annotation Entry
+  return($('<div class="baselineentry '+blnType+' '+bln.tag+'" title="Baseline has '+
+        (bln.segCount >0?bln.segCount:0) + ' segments defined">' +
+       '<span class="baseline">' +
+       (img.thumbUrl? '<img class="resImageIconBtn bln'+bln.id+'" src="'+img.thumbUrl+'" alt="Thumbnail not available"/>':'')+
+       img.title + '</span>'+
+       ((bln.readonly || bln.segCount > 0)?'':'<span class="removebln '+bln.tag+'" title="remove tag '+bln.tag+'">X</span>')+
+       '</div>'));
+  //create input with save button
+},
+
+
+/**
+* remove baseline
+*
+* @param string imgBln Baseline entity tag
+*/
+
+removeBln: function(blnTag) {
+  var entPropVE = this, savedata = {},blnID = blnTag.substring(3);
+  DEBUG.traceEntry("removeBln");
+  savedata["cmd"] = "removeBln";
+  savedata["entTag"] = this.tag;
+  savedata["blnID"] = blnID;
+  //jqAjax asynch save
+  $.ajax({
+      type: 'POST',
+      dataType: 'json',
+      url: basepath+'/services/deleteBaseline.php?db='+dbName,//caution dependency on context having basepath and dbName
+      data: savedata,
+      async: true,
+      success: function (data, status, xhr) {
+          if (typeof data == 'object' && data.success && data.entities) {
+            //update data
+            entPropVE.dataMgr.updateLocalCache(data,null);
+            entPropVE.showEntity();
+          }
+          if (entPropVE.controlVE &&
+              entPropVE.controlVE.type == "SearchVE"  && entPropVE.controlVE.updateCursorInfoBar) {
+            entPropVE.controlVE.updateCursorInfoBar();
+          }
+          if (data.errors) {
+            alert("An error occurred while trying to remove baseline record. Error: " + data.errors.join());
+          }
+      },
+      error: function (xhr,status,error) {
+          // add record failed.
+          alert("An error occurred while trying to remove baseline record. Error: " + error);
+      }
+  });
+  DEBUG.traceExit("removeBln");
+},
+
+
+/**
 * delete sequence
 *
 * @param string seqTag Sequence entity tag
@@ -1700,15 +1803,15 @@ EDITORS.EntityPropVE.prototype = {
             cb((data['deleted'] && data['deleted'].length)?data['deleted'][0]:'seq'+seqID);
           }
           if (data.errors) {
-            alert("An error occurred while trying to remove image record. Error: " + data.errors.join());
+            alert("An error occurred while trying to remove sequence record. Error: " + data.errors.join());
           }
         },
         error: function (xhr,status,error) {
             // add record failed.
-            alert("An error occurred while trying to remove image record. Error: " + error);
+            alert("An error occurred while trying to remove sequence record. Error: " + error);
         }
     });
-    DEBUG.traceExit("removeImg");
+    DEBUG.traceExit("deleteSeq");
   },
 
 

@@ -163,9 +163,12 @@ function addNewEntityReturnData($prefix,$entity) {
       break;
     case 'bln':
       $baseline = $entity;
+      $segIDs = $baseline->getSegIDs();
       $entities['insert']['bln'][$entID] = array(
         'id' => $entID,
         'surfaceID' => $baseline->getSurfaceID(),
+        'segCount' => count($segIDs),
+        'segIDs' => $segIDs,
         'type' => $baseline->getType(),
         'value' => ($baseline->getURL()?$baseline->getURL():$baseline->getTranscription()),
         'readonly' => $baseline->isReadonly(),

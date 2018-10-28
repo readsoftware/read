@@ -216,10 +216,13 @@
       $blnID = $baseline->getID();
       if ($blnID && !array_key_exists($blnID, $entities['update']['bln'])) {
         $url = $baseline->getURL();
+        $segIDs = $baseline->getSegIDs();
         $entities['update']['bln'][$blnID] = array('url' => $url,
                                                    'id' => $blnID,
                                                    'type' => $baseline->getType(),
                                                    'value' => ($url?$url:$baseline->getTranscription()),
+                                                   'segCount' => count($segIDs),
+                                                   'segIDs' => $segIDs,
                                                    'readonly' => $baseline->isReadonly(),
                                                    'transcription' => $baseline->getTranscription(),
                                                    'boundary' => $baseline->getImageBoundary());

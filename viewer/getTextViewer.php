@@ -302,7 +302,7 @@
           edStructHtml = edStructHtmlByEdn[<?=$defaultEdnID?>],//get first edition
           edGlossaryLookup = edGlossaryLookupByEdn[<?=$defaultEdnID?>]//get first edition
 <?php
-  } else if ($ednIDs && count($ednIDs) > 1){
+  } else if ($ednIDs && count($ednIDs) > 1) {
 ?>
           edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs,$refreshLookUps)?>,
           multiEdition = false,
@@ -410,10 +410,16 @@
           transStructHtml = edTransStructHtmlByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
           transFootnotes = edTransFootnotesByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
-    } else {
+    } else if ($ednIDs && count($ednIDs) > 0) {
 ?>
 ,
           transStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs,null,$refreshLookUps)?>,
+          transFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>//reset and calc'd in getEditionsStructuralTranslationHtml
+<?php
+    } else if ($ednID) {
+?>
+,
+          transStructHtml = <?=getEditionsStructuralTranslationHtml(array($ednID),null,$refreshLookUps)?>,
           transFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
     }
@@ -443,7 +449,13 @@
           chayaStructHtml = edChayaStructHtmlByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
           chayaFootnotes = edChayaFootnotesByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
-    } else {
+    } else if ($ednIDs && count($ednIDs) > 0) {
+?>
+,
+          chayaStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs, Entity::getIDofTermParentLabel('chaya-translation'),$refreshLookUps)?>,
+          chayaFootnotes = <?=getEditionTranslationFootnoteTextLookup()?>//reset and calc'd in getEditionsStructuralTranslationHtml
+<?php
+    } else if ($ednID) {
 ?>
 ,
           chayaStructHtml = <?=getEditionsStructuralTranslationHtml($ednIDs, Entity::getIDofTermParentLabel('chaya-translation'),$refreshLookUps)?>,

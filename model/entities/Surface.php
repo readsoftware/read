@@ -163,6 +163,23 @@
       }
     }
 
+    /**
+    * Build a single entity query with visibility checks
+    *
+    * @param int $id of entity
+    * @return string that represents a postgreSQL query for a single entity that checks access
+    */
+    protected function getSingleEntityAccessQuery($id){
+      $prefix = $this->getGlobalPrefix();
+      //select *,case when edn_owner_id = ANY(ARRAY[2,14,15,20]) then 1 else 0 end as editable from edition
+      //where edn_owner_id = ANY(ARRAY[2,3,14,15,20]) or ARRAY[2,3,14,15,20] && edn_visibility_ids;
+      $q = "SELECT * FROM surface WHERE srf_id = $id".
+            (isSysAdmin()?"":" AND (".$this->getOwnerID()." = ANY(ARRAY[".join(",",getUserMembership()).",".getUserID()."])  OR ".
+                              "ARRAY[".join(",",getUserMembership()).",".getUserID()."] && ".$prefix."_visibility_ids)").
+           " LIMIT 1";
+      return $q;
+    }
+
     //*******************************PUBLIC FUNCTIONS************************************
 
     /**
@@ -238,7 +255,7 @@
     * Get scripts existing on this surface of the fragment
     *
     * @param boolean $asString determines where to return as a string (default = false)
-    * @return string array|string of enum strings specifiying the location's reference number of the surface
+    * @return string array|string of coded strings specifiying the scripts on the surface
     */
     public function getScripts($asString = false) {
       if ($asString){
@@ -249,7 +266,7 @@
     }
 
     /**
-    * Gets the unigue IDs of the Text entities for this surface
+    * Gets the unique IDs of the Text entities for this surface
     *
     * @param boolean $asString determines where to return as a string (default = false)
     * @return int identifying the Text of this surface
@@ -262,7 +279,7 @@
       }
     }
 
-    /**
+    /** //todo  modify this for multiple texts on a surface
     * Get Surface's text
     *
     * @return Text object that contains this surface or NULL
@@ -302,21 +319,40 @@
       return $this->_images;
     }
 
-     /**
+   /**
     * Get baselines object which contains all baselines attached to this surface
     *
     * @return Baselines iterator with all baselines linked to this surface
     */
     public function getBaselines() {
       if (!$this->_baselines) {
-        $condition = "bln_surface_id = ".$this->_id;
+        $condition = "bln_surface_id = ".$this->_id." and not bln_owner_id = 1";
         $this->_baselines = new Baselines($condition,null,null,null);
         $this->_baselines->setAutoAdvance(false);
       }
       return $this->_baselines;
     }
 
-    /**
+   /**
+    * Get ids of all baselines attached to this surface
+    *
+    * @return int[] array of baseline ids for all baselines linked to this surface
+    */
+    public function getBaselineIDs() {
+      $dbMgr = new DBManager();
+      $dbMgr->query("select array_agg(bln_id) from baseline where ".$this->_id." = bln_surface_id and not bln_owner_id = 1");
+      if ($dbMgr->getRowCount()) {
+        $row = $dbMgr->fetchResultRow();
+        $blnIDs = explode(',',trim($row[0],"\"{}"));
+        if ($blnIDs[0] == "" ) {
+          return array();
+        } 
+        return $blnIDs;
+      }
+      return array();
+    }
+
+   /**
     * Get Surface's ReconstructedSurface unique ID
     *
     * @return int ReconstructedSurface object ID for this surface

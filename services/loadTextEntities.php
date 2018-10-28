@@ -509,6 +509,7 @@
     foreach ($baselines as $baseline) {
       $blnID = $baseline->getID();
       if ($blnID && !array_key_exists($blnID, $entities['bln'])) {
+        $segIDs = $baseline->getSegIDs();
         $entities['bln'][$blnID] = array( 'url' => $baseline->getURL(),
                                'id' => $blnID,
                                'type' => $baseline->getType(),
@@ -516,7 +517,8 @@
                                'readonly' => $baseline->isReadonly(),
                                'transcription' => $baseline->getTranscription(),
                                'boundary' => $baseline->getImageBoundary(),
-                               'segIDs' => array());
+                               'segCount' => count($segIDs),
+                               'segIDs' => $segIDs);
         array_push($blnIDs,$blnID);
         $srfID = $baseline->getSurfaceID();
         if ($srfID && array_key_exists($srfID,$entities['srf'])) {
