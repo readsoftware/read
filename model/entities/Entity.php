@@ -218,7 +218,7 @@
     */
     protected function initializeBaseEntity($args){
       $this->_scratchProperties=@$args[@$this->getGlobalPrefix().'_scratch'] ? (is_string($args[$this->getGlobalPrefix().'_scratch']) ? json_decode($args[$this->getGlobalPrefix().'_scratch'],true):$args[$this->getGlobalPrefix().'_scratch']):array();
-      $this->_annotation_ids=@$args[@$this->getGlobalPrefix().'_annotation_ids'] ? $args[$this->getGlobalPrefix().'_annotation_ids']:array();
+      $this->_annotation_ids=(array_key_exists($this->getGlobalPrefix().'_annotation_ids',$args)) ? $args[$this->getGlobalPrefix().'_annotation_ids']:array();
       $this->_attribution_ids= (array_key_exists($this->getGlobalPrefix().'_attribution_ids',$args)) ? $args[$this->getGlobalPrefix().'_attribution_ids']:array();
       $this->_modified=(array_key_exists('modified',$args)) ? $args['modified']:null;
       $this->_owner_id=(array_key_exists($this->getGlobalPrefix().'_owner_id',$args)) ? $args[$this->getGlobalPrefix().'_owner_id']:null;

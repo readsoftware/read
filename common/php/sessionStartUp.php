@@ -62,6 +62,10 @@ if (isset($_SESSION['readSessions']) && $dbn && isset($_SESSION['readSessions'][
   $ugrID = isValidLoginCookie($dbMgr);
   if ($ugrID) {
     setSessionUserLogin($dbMgr,$ugrID);
+    $logged = $_SESSION['readSessions'][$dbn]['ka_status'];
+    $username = $_SESSION['readSessions'][$dbn]['ka_username'];
+    $userID = $_SESSION['readSessions'][$dbn]['ka_userid'];
+    $membershipIDs = array_keys($_SESSION['readSessions'][$dbn]['ka_groups']);
   }
 }
 //falling through set access functions to use guest account values as a pseudo login

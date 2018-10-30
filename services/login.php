@@ -104,6 +104,7 @@ if ($dbMgr->getRowCount() == 0) {
                   "groups" => $groups
                   );
 }
+// cleanup any cache that might be user specific
 if (isset($_SESSION['ka_searchAllResults_'.DBNAME])) {
   unset($_SESSION['ka_searchAllResults_'.DBNAME]);
 }
