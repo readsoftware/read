@@ -208,8 +208,11 @@ EDITORS.AttrVE.prototype = {
             dataAdapter = new $.jqx.dataAdapter(source,
                 {
                   formatData: function (data) {
-                      data.titleContains = attrVE.searchInput.val();
-                      return data;
+                    srchString = userVE.attrSearchInput.val();
+                    if (srchString) {
+                      data.titleContains = userVE.attrSearchInput.val();
+                    }
+                    return data;
                   }
                 }
             );

@@ -86,7 +86,7 @@
       $isBlended = true;
       unset($qstruct['blended']);
     }
-    if (array_key_exists('showGID',$qstruct) or @$isBlended) {
+    if (array_key_exists('showGID',$qstruct) or isset($isBlended)) {
       $showGID = true;
       unset($qstruct['showGID']);
     }

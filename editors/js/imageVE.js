@@ -144,13 +144,13 @@ EDITORS.ImageVE =  function(imgVECfg) {
               DEBUG.log("gen","resize for " + imgVE.imgEditContainer.id + " called");
     });
     $(this.splitterDiv).on('resizePane',function(e,w,h) {
-            if (that.initHeight != h || that.initWidth != w) {
-              $(that.imgEditContainer).height(h);
-              $(that.imgEditContainer).width(w);
-              DEBUG.log("gen","resizePane for " + that.imgEditContainer.id + " with w-" + w + " h-"+h+ " initw-" + that.initWidth + " inith-"+that.initHeight);
-              that.init();
+            if (imgVE.initHeight != h || imgVE.initWidth != w) {
+              $(imgVE.imgEditContainer).height(h);
+              $(imgVE.imgEditContainer).width(w);
+              DEBUG.log("gen","resizePane for " + imgVE.imgEditContainer.id + " with w-" + w + " h-"+h+ " initw-" + imgVE.initWidth + " inith-"+imgVE.initHeight);
+              imgVE.init();
             } else {
-              DEBUG.log("gen","resizePane for " + that.imgEditContainer.id + " image editor skipped - same size initw-" + that.initWidth + " inith-"+that.initHeight);
+              DEBUG.log("gen","resizePane for " + imgVE.imgEditContainer.id + " image editor skipped - same size initw-" + imgVE.initWidth + " inith-"+imgVE.initHeight);
             }
             return false;
     });
@@ -224,8 +224,8 @@ EDITORS.ImageVE.prototype = {
     this.addEventHandlers();
     this.navCanvas.width = width;
     this.navCanvas.height = height;
-    this.navDIV.style.width = width + 'px';
-    this.navDIV.style.height = (height + 35) + 'px';
+    this.navDIV.style.width = (width + 10) + 'px';
+    this.navDIV.style.height =  Math.min((height + 35),this.initHeight-15) + 'px'; // include room for UI and source label
     this.navDIV.className = 'navDiv';
     this.navDIV.style.left =  this.navPositionLeft + 'px';;
     this.navDIV.style.top =  this.navPositionTop + 'px';
@@ -1250,6 +1250,42 @@ EDITORS.ImageVE.prototype = {
     this.vpLastLoc.y = this.vpLoc.y;
   },
 
+/**
+* put your comment there...
+*
+*/
+
+  adjustViewportForScroll: function() {
+    var imgVE = this, navDivViewBottom = imgVE.navDIV.offsetHeight + imgVE.navDIV.scrollTop,
+        vpBottom = imgVE.vpSize.height + imgVE.vpLoc.y;
+    if (vpBottom > navDivViewBottom) {
+      //vpBottom below navDiv bottom move vp up by relative amount
+      imgVE.moveViewportRelative(0, -(vpBottom - navDivViewBottom + 2)); // 2 pixel needed to clear border
+      imgVE.draw();
+    } else if (imgVE.vpLoc.y <  imgVE.navDIV.scrollTop) {
+      //vpTop above navDiv scrollTop move vpLoc down by relative amount
+      imgVE.moveViewportRelative(0,(imgVE.navDIV.scrollTop - imgVE.vpLoc.y)); 
+      imgVE.draw();
+     }
+  },
+
+/**
+* put your comment there...
+*
+*/
+
+  adjustScrollForViewport: function() {
+    var imgVE = this, navDivViewBottom = imgVE.navDIV.offsetHeight + imgVE.navDIV.scrollTop,
+        vpBottom = imgVE.vpSize.height + imgVE.vpLoc.y;
+        if (vpBottom > navDivViewBottom) {
+          //vpBottom below navDiv bottom move vp up by relative amount
+          imgVE.navDIV.scrollTop = Math.min(imgVE.navDIV.scrollTop + (vpBottom - navDivViewBottom + 2),imgVE.navDIV.scrollTopMax); // 2 pixel needed to clear border
+        } else if (imgVE.vpLoc.y <  imgVE.navDIV.scrollTop) {
+          //vpTop above navDiv scrollTop move vpLoc to scrollTop
+          imgVE.navDIV.scrollTop = Math.max(imgVE.vpLoc.y - 2,0); 
+        }
+      },
+
 
 /**
 * put your comment there...
@@ -1458,6 +1494,7 @@ EDITORS.ImageVE.prototype = {
         yNew = Math.round(yNavAllign - yScaleFactor * this.vpSize.height);
     this.eraseNavPanel();
     this.moveViewport([xNew,yNew], [0,0]);
+    this.adjustScrollForViewport();
     this.draw();
     DEBUG.log("gen", "delta="+delta+
                       "xScaleFactor="+xScaleFactor+
@@ -1487,6 +1524,7 @@ EDITORS.ImageVE.prototype = {
         yNew = Math.round(yNavAllign - this.vpSize.height/2);
     this.eraseNavPanel();
     this.moveViewport([xNew,yNew], [0,0]);
+    this.adjustScrollForViewport();
     this.draw();
 //    e.preventDefault();//stop window scroll, for dual purpose could use CTRL key to disallow default
   },
@@ -1520,7 +1558,7 @@ EDITORS.ImageVE.prototype = {
           imgVE.eraseNavPanel();
 
           imgVE.moveViewport(imgVE.eventToCanvas(e,imgVE.navCanvas), startPoint);
-
+          imgVE.adjustScrollForViewport();
           imgVE.draw();
         });
 
@@ -1548,6 +1586,24 @@ EDITORS.ImageVE.prototype = {
           //imgVE.navCanvas.onmouseup = undefined;
         };
 
+      }
+    });
+    $(imgVE.navDIV).unbind("scroll").bind("scroll", function(e) {
+      DEBUG.log("event", "type: "+e.type+(e.code?" code: "+e.code:"")+" in imageVE nav "+imgVE.id);
+      DEBUG.log("event", "imageVE navDIV scroll  top = "+imgVE.navDIV.scrollTop +" vpLoc.y = "+imgVE.vpLoc.y);
+      imgVE.adjustViewportForScroll();
+      imgVE.draw();
+      if ($('body').hasClass('synchScroll')) {
+        poly = imgVE.findNearestPoly('topleft',true);
+        if (!poly) {
+          poly = imgVE.findNearestPoly('topright',true);
+        }
+        if (!poly) {
+          poly = imgVE.findNearestPoly('topline',false);
+        }
+        if (poly) {
+          $('.editContainer').trigger('synchronize',[imgVE.id,poly.label,0]);
+        }
       }
     });
     imgVE.navCanvas.onwheel = function(e) {
@@ -1614,7 +1670,7 @@ EDITORS.ImageVE.prototype = {
         imgVE.draw();
         e.stopImmediatePropagation();
         return false;
-      }else if (keyCode == 77 && (e.ctrlKey || e.metaKey)) { //ctrl + m
+      } else if (keyCode == 77 && (e.ctrlKey || e.metaKey)) { //ctrl + m
         imgVE.navDIV.hidden = !imgVE.navDIV.hidden; //toggle navPanel
         e.stopImmediatePropagation();
         return false;
@@ -1840,7 +1896,7 @@ EDITORS.ImageVE.prototype = {
             imgVE.drawImagePolygons();
             $('.editContainer').trigger('updateselection',[imgVE.id,imgVE.getSelectedPolygonLabels()]);
           }
-      e.preventDefault();
+        e.preventDefault();
         e.stopImmediatePropagation();
         return false;
       }else if (e.altKey) { //user wants set start point for path
@@ -1906,7 +1962,7 @@ EDITORS.ImageVE.prototype = {
                                     (imgVE.drgStart[1] - newPos[1])*imgVE.vpSize.height/imgVE.imgCanvas.height);
         imgVE.drgStart = newPos;
         imgVE.draw()
-      e.preventDefault();
+        e.preventDefault();
         e.stopImmediatePropagation();
         return false;
       }else{
@@ -2483,6 +2539,7 @@ EDITORS.ImageVE.prototype = {
       if (top) {
         imgVE.eraseNavPanel();
         imgVE.moveViewportToImagePosY(top);
+        imgVE.adjustScrollForViewport();
         imgVE.draw();
       }
     };
@@ -2628,7 +2685,7 @@ EDITORS.ImageVE.prototype = {
         }
       }
       if ( this.orderSegMode != "on" ) {
-        this.imgContext.strokeStyle = polygon.hilite? "white" : (this.selectedPolygons[polygon.label]? "white" : polygon.color);
+        this.imgContext.strokeStyle = polygon.hilite? "#DDDDDD" : (this.selectedPolygons[polygon.label]? "#DDDDDD" : polygon.color);
         if (this.showPolygonNumbers && polygon.order) {// draw order numer if there is one
           this.imgContext.lineWidth = 1;
           this.imgContext.fillStyle = this.imgContext.strokeStyle;
@@ -2639,8 +2696,8 @@ EDITORS.ImageVE.prototype = {
       } else {
         if (this.showPolygonNumbers && polygon.order) {// draw order numer if there is one
           this.imgContext.lineWidth = 1;
-          this.imgContext.strokeStyle = "white";
-          this.imgContext.fillStyle = "white";
+          this.imgContext.strokeStyle = "#DDDDDD";
+          this.imgContext.fillStyle = "#DDDDDD";
           this.imgContext.fillText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
           this.imgContext.strokeText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
           this.imgContext.lineWidth = 3 ;
@@ -2648,7 +2705,7 @@ EDITORS.ImageVE.prototype = {
         this.imgContext.strokeStyle = "blue";
         this.imgContext.lineWidth = 1 ;
       }
-      this.imgContext.lineWidth = 4 ;
+/*      this.imgContext.lineWidth = 4 ;
       this.imgContext.beginPath();
       this.imgContext.moveTo((polygon.polygon[0][0] - offsetX)*scaleX,(polygon.polygon[0][1] - offsetY)*scaleY);
       for (j=1; j < polygon.polygon.length; j++) {
@@ -2659,7 +2716,7 @@ EDITORS.ImageVE.prototype = {
 
       this.imgContext.strokeStyle = "cyan";
       this.imgContext.lineWidth = 1 ;
-      this.imgContext.beginPath();
+*/      this.imgContext.beginPath();
       this.imgContext.moveTo((polygon.polygon[0][0] - offsetX)*scaleX,(polygon.polygon[0][1] - offsetY)*scaleY);
       for (j=1; j < polygon.polygon.length; j++) {
         this.imgContext.lineTo((polygon.polygon[j][0] - offsetX)*scaleX,(polygon.polygon[j][1] - offsetY)*scaleY);

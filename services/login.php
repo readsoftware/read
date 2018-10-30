@@ -49,7 +49,9 @@ $persist = (array_key_exists('persist',$_POST) || array_key_exists('persist',$_R
 
 // CHECK USERS NAME AND PASSWORD
 $dbMgr = new DBManager();
-$dbMgr->query("SELECT * FROM usergroup WHERE ugr_name = '$username' AND ugr_password ='" . $password . "'");
+$query = "SELECT * FROM usergroup WHERE ugr_name = '$username' AND ugr_password ='" . $password . "'";
+//error_log("query login: $query");
+$dbMgr->query($query);
 
 if ($dbMgr->getRowCount() == 0) {
 //return error invalid login

@@ -805,7 +805,10 @@ validateChngPwdUI: function(){
             dataAdapter = new $.jqx.dataAdapter(source,
                 {
                   formatData: function (data) {
-                      data.titleContains = userVE.attrSearchInput.val();
+                      srchString = userVE.attrSearchInput.val();
+                      if (srchString) {
+                        data.titleContains = userVE.attrSearchInput.val();
+                      }
                       return data;
                   }
                 }

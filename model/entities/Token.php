@@ -252,10 +252,10 @@
           $transcription .= getTCMTransitionBrackets($tcms,"");
         }
       }
-      if(@$sort) {
+      if(isset($sort)) {
         $this->setSortCode($sort);
       }
-      if(@$sort2) {
+      if(isset($sort2)) {
         $this->setSortCode2($sort2);
       }
       $this->setToken($value);
