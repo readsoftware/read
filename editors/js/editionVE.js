@@ -708,8 +708,10 @@ EDITORS.EditionVE.prototype = {
         treeShowSeqName = this.id+'showseqtree',
         ddbtnCurTagName = this.id+'curtagbutton',
         treeCurTagName = this.id+'curtagtree',
-        btnDownloadHTMLName = this.id+'downloadhtml',
-        btnDownloadRTFName = this.id+'downloadrtf';
+//        btnDownloadHTMLName = this.id+'downloadhtml',
+        btnDownloadRTFName = this.id+'downloadrtf',
+        btnLaunchViewerName = this.id+'launchviewer';
+    this.catIDs = this.dataMgr.getCatIDsFromEdnID(this.edition.id);
     this.viewToolbar = $('<div class="viewtoolbar"/>');
     this.editToolbar = $('<div class="edittoolbar"/>');
 
@@ -993,7 +995,7 @@ EDITORS.EditionVE.prototype = {
           //if stylesheet exist clear it to remove tagging
         }
     });
-    this.showSeqDdBtn.jqxDropDownButton({width:95, height:30 });
+    this.showSeqDdBtn.jqxDropDownButton({width:95, height:25 });
     this.showSeqDdBtn.jqxDropDownButton('setContent', '<div class="listDropdownButton">Off</div>');
 
     this.addSequenceBtnDiv = $('<div class="toolbuttondiv">' +
@@ -1149,6 +1151,16 @@ EDITORS.EditionVE.prototype = {
     this.downloadRTFBtn = $('#'+btnDownloadRTFName,this.downloadRTFBtnDiv);
     this.downloadRTFLink = this.downloadRTFBtn.parent();
 
+    this.launchViewerDiv = $('<div class="toolbuttondiv">' +
+                              '<a href="" target="_blank">'+
+                              '<button class="toolbutton iconbutton" id="'+btnLaunchViewerName+
+                                '" title="Launch READ Viewer">Launch</button></a>'+
+                              '<div class="toolbuttonlabel">Viewer</div>'+
+                            '</div>');
+    this.launchViewerBtn = $('#'+btnLaunchViewerName,this.launchViewerDiv);
+    this.launchViewerLink = this.launchViewerBtn.parent();
+
+
     this.viewToolbar.append(this.edStyleBtnDiv);
     this.viewToolbar.append(this.objLevelBtnDiv);
     this.viewToolbar.append(this.formatBtnDiv);
@@ -1157,6 +1169,7 @@ EDITORS.EditionVE.prototype = {
     this.viewToolbar.append(this.showSeqBtnDiv);
     this.viewToolbar.append(this.showSepBtnDiv);
     this.viewToolbar.append(this.downloadRTFBtnDiv);
+    this.viewToolbar.append(this.launchViewerDiv);
     this.layoutMgr.registerViewToolbar(this.id,this.viewToolbar);
     this.editToolbar.append(this.linkSclBtnDiv);
     this.editToolbar.append(this.editModeBtnDiv);
@@ -1173,7 +1186,11 @@ EDITORS.EditionVE.prototype = {
     this.linkOrdBtnDiv.hide();
     this.curTagBtnDiv.hide();
     this.repType = "hybrid";//default
-    this.downloadRTFLink.attr('href',basepath+"/services/exportRTFEdition.php?db="+dbName+"&ednID="+this.edition.id+"&style="+this.repType+"&download=1");
+    this.downloadRTFLink.attr('href',basepath+"/services/exportRTFEdition.php?db="+dbName+
+                                "&ednID="+this.edition.id+"&style="+this.repType+"&download=1");
+    this.launchViewerLink.attr('href',basepath+"/viewer/getTextViewer.php?db="+dbName+
+                                "&txtID="+this.edition.txtID+"&multiEd=1"+
+                                ((this.catIDs && this.catIDs.length)?"&catID="+this.catIDs[0]:""));
   },
 
 

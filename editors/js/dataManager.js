@@ -790,6 +790,31 @@ MANAGERS.DataManager.prototype = {
 
 
 /**
+* get text entity id from entity tag
+*
+* @param string tag Text entity tag
+*
+*  @returns int | null Text entity id
+*/
+
+  getCatIDsFromEdnID: function(ednID) {
+    var catIDs = [], catalogs;
+    if (this.entities && (Object.keys(this.entities).indexOf('cat') > -1) && Object.keys(this.entities['cat']).length) {
+      catalogs = this.entities['cat'];
+      for (const id in catalogs) {
+        if (catalogs.hasOwnProperty(id)) {
+          const catalog = catalogs[id];
+          if (catalog.ednIDs.indexOf(ednID)>-1) {
+            catIDs.push(id);
+          }
+        }
+      }
+    }
+    return catIDs;
+  },
+
+
+/**
 * get term label from term id
 *
 * @param int trmID Term entity id
