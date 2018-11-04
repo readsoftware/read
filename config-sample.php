@@ -75,6 +75,8 @@
   define("CKNREPLACEMENTEXP","'\\1\\2'");//replace is grp1 followed by grp2
   define("CKNREPLACEFLAGS","'i'");//ignore case during match
   define("CKNLINENUMSEPARATOR",":");//separate txt label from line label using a space
+  define("SUBIMGTITLEFORPARTSIDELABEL",true);//allow image title to be used when not part side label is defined
+  define("INCLUDEFRAGINPARTSIDELABEL",true);//include fragment label in the part side label is defined
 
   if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer");
 // to export with separation of project databases use the line below. Also consider

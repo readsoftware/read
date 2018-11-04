@@ -3217,25 +3217,33 @@ function getEntityFootnoteInfo($entity, $fnTypeIDs, $refresh = false) {
 function getEdnLpInfoQueryString($ednID){
   $textPhysicalTypeID = Entity::getIDofTermParentLabel('textphysical-sequencetype');// warning!!! term dependency
   return "select lp.seq_id, seg_baseline_ids[1] as bln_id, ".
-               "substring(lp.seq_entity_ids[1]::text from 5)::int as firstscl_id, lp.seq_label, ".
-               "case when gra_sort_code::text = '195' then scl_grapheme_ids[2] else scl_grapheme_ids[1] end as nl_gra_id, ".
-               "seg_image_pos, array_position(c.tpentids::text[],concat('seq:',lp.seq_id)::text) as lineOrd ".
-        "from (select tp.seq_id as tpid, tp.seq_entity_ids as tpentids ".
+               "fscl.scl_id as fscl_id, syl.scl_id as scl_id, ".
+               "array_position(lp.seq_entity_ids::text[],concat('scl:',syl.scl_id)::text) as sclord,lp.seq_label, ".
+               "case when gra_sort_code::text = '195' then syl.scl_grapheme_ids[2] else syl.scl_grapheme_ids[1] end as scl_gra_id, ".
+               "seg_image_pos, array_position(c.tpentids::text[],concat('seq:',lp.seq_id)::text) as lineOrd, img_title as ilabel, ".
+               "prt_label as plabel, frg_label as flabel, srf_label as slabel ".
+         "from (select tp.seq_id as tpid, tp.seq_entity_ids as tpentids ".
                 "from sequence tp left join edition on tp.seq_id = ANY(edn_sequence_ids) ".
                 "where tp.seq_type_id = $textPhysicalTypeID and edn_id = $ednID) c ".
               "left join sequence lp on concat('seq:',seq_id)::text = ANY(c.tpentids) ".
-              "left join syllablecluster on scl_id = substring(lp.seq_entity_ids[1]::text from 5)::int ".
-              "left join segment on scl_segment_id = seg_id ".
-              "left join grapheme on gra_id = scl_grapheme_ids[1] ".
+              "left join syllablecluster fscl on scl_id = substring(lp.seq_entity_ids[1]::text from 5)::int ".
+              "left join syllablecluster syl on concat('scl:',syl.scl_id)::text = ANY(lp.seq_entity_ids) ".
+              "left join segment on syl.scl_segment_id = seg_id ".
+              "left join baseline on bln_id = seg_baseline_ids[1] ".
+              "left join surface on srf_id = bln_surface_id ".
+              "left join fragment on frg_id = srf_fragment_id ".
+              "left join part on prt_id = frg_part_id ".
+              "left join image on img_id = bln_image_id ".
+              "left join grapheme on gra_id = syl.scl_grapheme_ids[1] ".
 //        "where seg_image_pos is not null ".
-        "order by lineOrd";
+        "order by lineOrd, sclord";
 }
 
 function getEdnLpNoSegInfoQueryString($ednID){
   $textPhysicalTypeID = Entity::getIDofTermParentLabel('textphysical-sequencetype');// warning!!! term dependency
   return "select lp.seq_id, ".
-               "substring(lp.seq_entity_ids[1]::text from 5)::int as firstscl_id, lp.seq_label, ".
-               "case when gra_sort_code::text = '195' then scl_grapheme_ids[2] else scl_grapheme_ids[1] end as nl_gra_id, ".
+               "substring(lp.seq_entity_ids[1]::text from 5)::int as fscl_id, lp.seq_label, scl_id".
+               "case when gra_sort_code::text = '195' then scl_grapheme_ids[2] else scl_grapheme_ids[1] end as scl_gra_id, ".
                "array_position(c.tpentids::text[],concat('seq:',lp.seq_id)::text) as lineOrd ".
         "from (select tp.seq_id as tpid, tp.seq_entity_ids as tpentids ".
                 "from sequence tp left join edition on tp.seq_id = ANY(edn_sequence_ids) ".
@@ -3258,6 +3266,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
       $fnTypeIDs = array(Entity::getIDofTermParentLabel('FootNote-FootNoteType'));//warning!!!! term dependency
     }
     $dbMgr = new DBManager();
+    $isFullQuery = true;
     if (!$dbMgr || $dbMgr->getError()) {
       error_log("error loading dataManager");
       return null;
@@ -3276,17 +3285,25 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
         error_log("error for querying non seg lp info for edn".$edition->getID()." row count is 0");
         return null;
       }
+      $isFullQuery = false;
     }
     $ednLookupInfo = array();
     $blnInfoBySort = array();
     $blnIDs = array();
     $blnID = null;
+    $lpSeqID = null;
+    $curSideLbl = null;
+    $sideLbl = null;
+    $curFrgLbl = null;
+    $frgLbl = null;
     $bRectPts = null;
     $fnTextByAnoIDs = array();
     $lineBlnScrollTops = array();
     $lineBlnScrollTop = null;
     $lineHtmlMarkerMap = array();
+    $PFSHtmlMarkerMap = array();
     $lineOrd = null;
+    //calc info per physical line
     while ($row = $dbMgr->fetchResultRow()) {//lp seq_id : bln_id : firstscl_id : seq_label : nl_gra_id : seg_image_pos : lineOrd
       $seqID = $row['seq_id'];
       $physicalLineSeq = new Sequence($seqID);
@@ -3295,44 +3312,81 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
                   ($physicalLineSeq->hasError()?" Error: ".join(",",$physicalLineSeq->getErrors()):""));
         continue;
       } else {
+        //check for lp change
+        if ($lpSeqID != $seqID) { // new physical line so init
+          $lineBlnScrollTop = null;
+          $seqTag = 'seq'.$seqID;
+          $seqLabel = $row['seq_label'];
+          $lineGraID = $row['scl_gra_id'];
+          $lineOrd = $row['lineord'];
+          $lpSeqID = $seqID;
+        }
+        $sclGraID = $row['scl_gra_id'];
+        $sclTag = 'scl'.$row["scl_id"];
+        // collect unique blnIDs for url lookup
         if (array_key_exists("bln_id",$row)&& $row["bln_id"] != $blnID && array_key_exists("seg_image_pos",$row) && $row["seg_image_pos"]) {// found another baseline need to capture the id
           $blnID = $row["bln_id"];
           $blnTag = 'bln'.$blnID;
-          // collect unique blnIDs for url lookup
           array_push($blnIDs,$blnID);
         }
-        $seqTag = 'seq'.$seqID;
-        $seqLabel = $row['seq_label'];
-        $lineGraID = $row['nl_gra_id'];
-        $lineOrd = $row['lineord'];
-        if (array_key_exists("seg_image_pos",$row) && $row["seg_image_pos"]) {
+        if ($isFullQuery && array_key_exists("seg_image_pos",$row) && $row["seg_image_pos"]) { //   **variable** need to find min y of all line syllables
           $bRectPts = (new Polygon($row['seg_image_pos']))->getBoundingRect();
-          // calculate baseline position by physical line seqID
-          $lineBlnScrollTop = array('blnTag'=>$blnTag,'x'=>$bRectPts[0],'y'=>$bRectPts[1],'h'=>($bRectPts[5]-$bRectPts[1]));
-          $lineBlnScrollTops[$seqTag] = $lineBlnScrollTop;
+          // calculate baseline position by physical line seqID minimum value
+          if (!$lineBlnScrollTop || $bRectPts[1] < $lineBlnScrollTop['y']) {
+            $lineBlnScrollTop = array('blnTag'=>$blnTag,'x'=>$bRectPts[0],'y'=>$bRectPts[1],'h'=>($bRectPts[5]-$bRectPts[1]));
+            $lineBlnScrollTops[$seqTag] = $lineBlnScrollTop;
+          }
         }
-        // create grapheme to line marker lookup for this physical line
-        if (!$seqLabel) {
-          $seqLabel = $lineOrd?$lineOrd:$seqTag;
+        if (!$isFullQuery || array_key_exists("sclord",$row) && $row["sclord"] == 1) {
+          // create grapheme to line marker lookup for this physical line
+          if (!$seqLabel && !$seqLabel == 0) {
+            $seqLabel = $lineOrd?$lineOrd:$seqTag;
+          }
+          // first syllable infomation
+          $fnInfo = getEntityFootnoteInfo($physicalLineSeq,$fnTypeIDs, $refresh);
+          $fnHtml = $fnInfo?$fnInfo['fnHtml']:"";
+          $fnTextByAnoIDs = $fnInfo?array_merge($fnTextByAnoIDs,$fnInfo['fnTextByAnoTag']):$fnTextByAnoIDs;
+          if ($useInlineLabel) {
+            $lineHtml = "<span class=\"linelabel $seqTag\">[$seqLabel]";
+            $lineHtml .= $fnHtml;//add any line footnotes to end of label
+            $lineHtml .= "</span>";
+          } else { //use header format
+            $lineHtml = "<span class=\"lineHeader $seqTag\">$seqLabel";
+            $lineHtml .= $fnHtml;//add any line footnotes to end of label
+            $lineHtml .= "</span>";
+          }
+          $lineHtmlMarkerMap[$lineGraID] = $lineHtml;
         }
-        $fnInfo = getEntityFootnoteInfo($physicalLineSeq,$fnTypeIDs, $refresh);
-        $fnHtml = $fnInfo?$fnInfo['fnHtml']:"";
-        $fnTextByAnoIDs = $fnInfo?array_merge($fnTextByAnoIDs,$fnInfo['fnTextByAnoTag']):$fnTextByAnoIDs;
-        if ($useInlineLabel) {
-          $lineHtml = "<span class=\"linelabel $seqTag\">[$seqLabel]";
-          $lineHtml .= $fnHtml;//add any line footnotes to end of label
-          $lineHtml .= "</span>";
-        } else { //use header format
-          $lineHtml = "<span class=\"lineHeader $seqTag\">$seqLabel";
-          $lineHtml .= $fnHtml;//add any line footnotes to end of label
-          $lineHtml .= "</span>";
+        if ($isFullQuery){
+          $imgLabel = $row["ilabel"];
+          $prtLabel = $row["plabel"];
+          $frgLbl = $row["flabel"];
+          $srfLabel = $row["slabel"];
+          $sideLbl = ($prtLabel || $frgLbl || $srfLabel)?($prtLabel?$prtLabel:"").
+                        ((INCLUDEFRAGINPARTSIDELABEL && $frgLbl)? $frgLbl:"").
+                        ($srfLabel?$srfLabel:""):
+                      ((SUBIMGTITLEFORPARTSIDELABEL && $imgLabel)? $imgLabel:"");
+          //on label changes save html for graphemeID to mark change logical location
+          if ($sideLbl && $curSideLbl != $sideLbl) {
+            $PFSHtmlMarkerMap[$sclGraID] = array(
+              "sideHeader"=>"<div class=\"sideHeader $seqTag\">$sideLbl</div>"
+            );
+            $curSideLbl = $sideLbl;
+          }
+          if (!INCLUDEFRAGINPARTSIDELABEL && $frgLbl && $curFrgLbl != $frgLbl) {
+            if (!array_key_exists($sclGraID,$PFSHtmlMarkerMap)) {
+              $PFSHtmlMarkerMap[$sclGraID] = array();
+            }
+            $PFSHtmlMarkerMap[$sclGraID]["fragLabel"] = "<span class=\"fraglabel $sclTag\">[$frgLbl]</span>";
+            $curFrgLbl = $frgLbl;
+          }
         }
-//          $physicalLineSeq->storeScratchProperty("marker",array('graID' =>$lineGraID,'html' => $lineHtml));
-        $lineHtmlMarkerMap[$lineGraID] = $lineHtml;
-//          $physicalLineSeq->save();
       }
     }
     $ednLookupInfo['htmlLineMarkerByGraID'] = $lineHtmlMarkerMap;
+    if (count($PFSHtmlMarkerMap) > 0) {
+      $ednLookupInfo['PFSHtmlMarkerMap'] = $PFSHtmlMarkerMap;
+    }
     if ($lineBlnScrollTops) {
       $ednLookupInfo['lineScrollTops'] = $lineBlnScrollTops;
     }
@@ -3353,7 +3407,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
             }
           }
           $blnTag = $segBaseline->getEntityTag();
-          $url = $segBaseline->getURL();
+          $url = $segBaseline->getURL(); //todo handle case where segment is defined across 2 or more baselines
           $ord = $segBaseline->getScratchProperty('ordinal');
           $blnImgTag = 'img'.$segBaseline->getImageID();
           if ($ord) {
@@ -3376,7 +3430,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
         $ednLookupInfo['blnInfoBySort'] = $blnInfoBySort;
       }
     }
-  $textSeqTypeID = Entity::getIDofTermParentLabel('text-sequencetype');// warning!!! term dependency
+    $textSeqTypeID = Entity::getIDofTermParentLabel('text-sequencetype');// warning!!! term dependency
 /*    $allTokCmpGIDsQuery = "select array_agg(c.comp) ".
                           "from (select unnest(td.seq_entity_ids::text[]) as comp ".
                                 "from sequence td ".
@@ -3396,8 +3450,8 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
     } else {
       $graID2WordGID = array();
       while ($row = $dbMgr->fetchResultRow()) {
-        $txtDivSegID = trim($row[0]);
-        $tdSeqTokCmpGIDs = explode(",",trim($row[1],"{}"));
+        $txtDivSeqID = trim($row['txtdiv_seqid']);
+        $tdSeqTokCmpGIDs = explode(",",trim($row['ent_ids'],"{}"));
         foreach ($tdSeqTokCmpGIDs as $wordGID) {
           list($prefix,$entID) = explode(':',$wordGID);
           $wordTag = $prefix.$entID;
@@ -3405,7 +3459,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
             $compound = new Compound($entID);
             $tokenIDs = $compound->getTokenIDs();
             if (count($tokenIDs) == 0) {
-              error_log("warn, Warning irregular word $wordGID in sequence $txtDivSegID skipped.");
+              error_log("warn, Warning irregular word $wordGID in sequence $txtDivSeqID skipped.");
               continue;
             }
             $entID = $tokenIDs[0]; //first token of compound
@@ -3413,10 +3467,10 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
           $token = new Token($entID);
           $graIDs = $token->getGraphemeIDs();
           if (count($graIDs) == 0) {
-            error_log("warn, Warning irregular token tok$entID with no graphemes in $txtDivSegID skipped.");
+            error_log("warn, Warning irregular token tok$entID with no graphemes in $txtDivSeqID skipped.");
             continue;
           }
-          $graID2WordGID[$graIDs[0]] = array('seq'.$txtDivSegID, $wordTag);
+          $graID2WordGID[$graIDs[0]] = array('seq'.$txtDivSeqID, $wordTag);
         }
         if (count($graID2WordGID) > 0){
           $ednLookupInfo['gra2WordGID'] = $graID2WordGID;

@@ -303,6 +303,12 @@ body.showTOC .tocNavPanel {
   cursor: pointer;
 }
 
+.blnBoundary {
+  font-weight: bold;
+  font-size: larger;
+  margin-left: -5px;
+  margin-top: 10px;
+}
 .partBoundary{
   background-color: transparent;
   color: rgb(148,138,84);

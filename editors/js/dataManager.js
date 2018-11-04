@@ -804,7 +804,7 @@ MANAGERS.DataManager.prototype = {
       for (const id in catalogs) {
         if (catalogs.hasOwnProperty(id)) {
           const catalog = catalogs[id];
-          if (catalog.ednIDs.indexOf(ednID)>-1) {
+          if (catalog.ednIDs && catalog.ednIDs.indexOf(ednID)>-1) {
             catIDs.push(id);
           }
         }

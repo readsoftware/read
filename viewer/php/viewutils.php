@@ -927,7 +927,7 @@ function addWordToEntityLookups($entity, $refresh = false) {
 * @return string Html representing the $entity
 */
 function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh = false, $ctxClass = '') {
-  global $prevTCMS, $graID2LineHtmlMarkerlMap, $wordCnt;
+  global $prevTCMS, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $wordCnt;
   $footnoteHtml = "";
   $entGID = $entity->getGlobalID();
   $prefix = substr($entGID,0,3);
@@ -1241,13 +1241,15 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
 * @param boolean $addBoundaryHtml determine whether to add boundary info for each edition in a multi edition calculation
 */
 function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false, $addBoundaryHtml = false) {
-  global $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
+  global $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $blnPosByEntTag, $blnInfobyBlnTag,
+         $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
 
   $wordCnt = 0;
   //start to calculate HTML using each text division container
   $cntLinePhysGID = count($linePhysSeqIDs);
   $wordTag = null;
   $tdSeqTag = null;
+  $preBlnTag = null;
   $nextLineSequence = null;
   $physicalLinesHtml = '';
   //**************process each physical line
@@ -1284,6 +1286,18 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
           $tcms = "";
           $prevGraIsVowelCarrier = false;
           $previousA = null;
+          // check for baseline change
+          if (defined('SHOWBLNBOUNDARIES') && SHOWBLNBOUNDARIES && 
+              isset($blnPosByEntTag) && isset($blnPosByEntTag['line']) &&
+              isset($blnPosByEntTag['line'][$seqTag]) && isset($blnPosByEntTag['line'][$seqTag]['blnTag'])) {
+            $blnTag = $blnPosByEntTag['line'][$seqTag]['blnTag'];
+            if ($blnTag && $blnTag != $preBlnTag && isset($blnInfobyBlnTag[$blnTag])
+                && isset($blnInfobyBlnTag[$blnTag]['title']) && $blnInfobyBlnTag[$blnTag]['title']) {
+              $blnTitle = $blnInfobyBlnTag[$blnTag]['title'];
+              $physicalLineHtml .= "<div class=\"blnBoundary $blnTag $seqTag\">$blnTitle</div>";
+              $preBlnTag = $blnTag;
+            }
+          } 
           //check for boundary entry for this seqTag
           if ($addBoundaryHtml && array_key_exists($seqTag,$seqBoundaryMarkerHtmlLookup)) {
             $physicalLineHtml .= $seqBoundaryMarkerHtmlLookup[$seqTag];
@@ -1323,10 +1337,15 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
               $graCnt = count($graIDs);
               //check for start of line header
               if ($j == 0 && $graCnt) {//start of physical line
+                if (array_key_exists($graIDs[0],$graID2PSnFMarkerMap) && array_key_exists('sideHeader',$graID2PSnFMarkerMap[$graIDs[0]])) {
+                  $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[0]]['sideHeader'];
+                } else  if ($graCnt > 1 && array_key_exists($graIDs[1],$graID2PSnFMarkerMap) && array_key_exists('sideHeader',$graID2PSnFMarkerMap[$graIDs[1]])) {// case where glottal starts line
+                  $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[1]]['sideHeader'];
+                }
                 $physicalLineHtml .= "<div class=\"physicalLineDiv\">";
                 if (array_key_exists($graIDs[0],$graID2LineHtmlMarkerlMap)) {
                   $physicalLineHtml .= $graID2LineHtmlMarkerlMap[$graIDs[0]];
-                } elseif (array_key_exists($graIDs[1],$graID2LineHtmlMarkerlMap)) { // case where glottal starts line
+                } else if (array_key_exists($graIDs[1],$graID2LineHtmlMarkerlMap)) { // case where glottal starts line
                   $physicalLineHtml .= $graID2LineHtmlMarkerlMap[$graIDs[1]];
                 }
                 $physicalLineHtml .= "<div class=\"physicalLineWrapperDiv\">";
@@ -1340,6 +1359,12 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   $prevGraIsVowelCarrier = false;
                   continue;
                 } else {
+                  if (array_key_exists($graID,$graID2PSnFMarkerMap) && array_key_exists('fragLabel',$graID2PSnFMarkerMap[$graID])) {
+                    $physicalLineHtml .= $graID2PSnFMarkerMap[$graID]['fragLabel'];
+                  } else  if ($grapheme->getSortCode() == "195" and array_key_exists($graIDs[$l + 1],$graID2PSnFMarkerMap) && 
+                      array_key_exists('fragLabel',$graID2PSnFMarkerMap[$graIDs[$l + 1]])) {// case where glottal starts line
+                    $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[$l+1]]['fragLabel'];
+                  }
                   //check for TCM transition brackets
                   $tcms = $grapheme->getTextCriticalMark();
                   $postTCMBrackets = "";
@@ -1708,8 +1733,8 @@ function getPhysicalLinesHTML($textDivSeqIDs, $refresh = false, $addBoundaryHtml
 * @returns mixed object with a string representing the html and a footnote lookup table
 */
 function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
-  global $edition, $prevTCMS, $graID2LineHtmlMarkerlMap,// $sclTag2BlnPolyMap,
-  $wordCnt, $fnRefTofnText, $typeIDs, $imgURLsbyBlnImgTag, $curBlnTag,
+  global $edition, $prevTCMS, $graID2LineHtmlMarkerlMap,$graID2PSnFMarkerMap,// $sclTag2BlnPolyMap,
+  $wordCnt, $fnRefTofnText, $typeIDs, $imgURLsbyBlnImgTag, $blnInfobyBlnTag, $curBlnTag,
 //  $sclTagLineStart,
   $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel,
   $editionTOCHtml, $polysByBlnTagTokCmpTag, $blnPosByEntTag;
@@ -1719,6 +1744,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   $seqBoundaryMarkerHtmlLookup = array();
   $curStructHeaderbyLevel = array();
   $graID2LineHtmlMarkerlMap = array();
+  $graID2PSnFMarkerMap = array();
   $prevTCMS = "";
   $editionTOCHtml = "";
   $warnings = array();
@@ -1735,6 +1761,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   $blnPosByEntTag = array('line'=>array(),'word'=>array(),'construct'=>array());
 //  $sclTag2BlnPolyMap = array();
 //  $sclTagLineStart = array();
+  $blnInfobyBlnTag = array();
   $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
   $isFirstEdn = true;
   $jsonCache = null;
@@ -1879,9 +1906,16 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
             $graID2LineHtmlMarkerlMap[$lineGraID] = $lineHtml;
           }
         }
+        if (array_key_exists("PFSHtmlMarkerMap",$ednLookupInfo) && count($ednLookupInfo['PFSHtmlMarkerMap'])) {
+          foreach ($ednLookupInfo['PFSHtmlMarkerMap'] as $sclGraID => $PSnFMarker) {
+            $graID2PSnFMarkerMap[$sclGraID] = $PSnFMarker;
+          }
+        }
         if (array_key_exists("blnInfoBySort",$ednLookupInfo) && count($ednLookupInfo['blnInfoBySort'])) {
           foreach ($ednLookupInfo['blnInfoBySort'] as $sort => $blnInfo) {
             $imgURLsbyBlnImgTag['bln'][$sort] = $blnInfo;
+            $blnInfo['sort'] = $sort;
+            $blnInfobyBlnTag[$blnInfo['tag']] = $blnInfo;
           }
         }
         if (array_key_exists("gra2WordGID",$ednLookupInfo) && count($ednLookupInfo['gra2WordGID'])) {
