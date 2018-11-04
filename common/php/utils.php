@@ -3369,7 +3369,8 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
           //on label changes save html for graphemeID to mark change logical location
           if ($sideLbl && $curSideLbl != $sideLbl) {
             $PFSHtmlMarkerMap[$sclGraID] = array(
-              "sideHeader"=>"<div class=\"sideHeader $seqTag\">$sideLbl</div>"
+              "sideMarker"=>($useInlineLabel?"<span class=\"sideMarker $seqTag\">[$sideLbl]</span>":
+                                             "<div class=\"sideHeader $seqTag\">$sideLbl</div>")
             );
             $curSideLbl = $sideLbl;
           }

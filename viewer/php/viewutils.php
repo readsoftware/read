@@ -992,11 +992,16 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
         if ($postTCMBrackets && !($i == 0 && $firstG)) {
           $wordHtml .= $postTCMBrackets;
         }
+        if (INLINEPARTSIDELABEL && array_key_exists($graID,$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graID])) {
+          $sideMarker = $graID2PSnFMarkerMap[$graID]['sideMarker'];
+        } else {
+          $sideMarker = '';
+        }
         if ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap)) {
           if ( $i == 0 && $firstG) {
-            $wordHtml = $graID2LineHtmlMarkerlMap[$graID].$wordHtml;
+            $wordHtml = $sideMarker.$graID2LineHtmlMarkerlMap[$graID].$wordHtml;
           } else {
-            $wordHtml .= $graID2LineHtmlMarkerlMap[$graID];
+            $wordHtml .= $sideMarker.$graID2LineHtmlMarkerlMap[$graID];
           }
           $prevTCMS = "";//at a new physical line so reset TCM
         }
@@ -1337,10 +1342,10 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
               $graCnt = count($graIDs);
               //check for start of line header
               if ($j == 0 && $graCnt) {//start of physical line
-                if (array_key_exists($graIDs[0],$graID2PSnFMarkerMap) && array_key_exists('sideHeader',$graID2PSnFMarkerMap[$graIDs[0]])) {
-                  $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[0]]['sideHeader'];
-                } else  if ($graCnt > 1 && array_key_exists($graIDs[1],$graID2PSnFMarkerMap) && array_key_exists('sideHeader',$graID2PSnFMarkerMap[$graIDs[1]])) {// case where glottal starts line
-                  $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[1]]['sideHeader'];
+                if (array_key_exists($graIDs[0],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[0]])) {
+                  $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[0]]['sideMarker'];
+                } else  if ($graCnt > 1 && array_key_exists($graIDs[1],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[1]])) {// case where glottal starts line
+                  $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[1]]['sideMarker'];
                 }
                 $physicalLineHtml .= "<div class=\"physicalLineDiv\">";
                 if (array_key_exists($graIDs[0],$graID2LineHtmlMarkerlMap)) {

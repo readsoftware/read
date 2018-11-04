@@ -257,6 +257,9 @@
     $edBlnPosLookupByEdn = "";
     $edPolysByBlnTagTokCmpTagByEdn = "";
     $isFirst = true;
+    if (!$isStaticView) {
+      ob_flush();//hack for ob injected number during EditionStructural calc
+    }
     foreach ($ednIDs as $ednID) {
       if (!$isFirst) {
         $edStructHtmlByEdn .= ", '$ednID':";
@@ -292,6 +295,9 @@
       if (!$isStaticView) {
         $urlMap["tei"]["edn$ednID"] = $teiBaseURL.$ednID;
       }
+    }
+    if (!$isStaticView) {
+      ob_clean();//hack for ob injected number during EditionStructural calc
     }
 ?>
           multiEdition = true,

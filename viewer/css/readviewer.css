@@ -125,12 +125,12 @@
   overflow-x: hidden;
   overflow-y: auto;
 }
-.linelabel{
+.linelabel, .sideMarker{
   color: rgb(160,160,160);
   padding-right: 5px;
 }
 
-.grpTok .linelabel{
+.grpTok .linelabel,.grpTok .sideMarker{
   padding-right: 0px;
 }
 .secHeader.Paragraph{
@@ -303,7 +303,7 @@ body.showTOC .tocNavPanel {
   cursor: pointer;
 }
 
-.blnBoundary {
+.blnBoundary, .sideHeader {
   font-weight: bold;
   font-size: larger;
   margin-left: -5px;
