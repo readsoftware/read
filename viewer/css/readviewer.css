@@ -125,12 +125,12 @@
   overflow-x: hidden;
   overflow-y: auto;
 }
-.linelabel, .sideMarker{
+.linelabel, .sideMarker, .structMarker{
   color: rgb(160,160,160);
   padding-right: 5px;
 }
 
-.grpTok .linelabel,.grpTok .sideMarker{
+.grpTok .linelabel,.grpTok .sideMarker, .grpTok .structMarker{
   padding-right: 0px;
 }
 .secHeader.Paragraph{

@@ -1246,8 +1246,9 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
 * @param boolean $addBoundaryHtml determine whether to add boundary info for each edition in a multi edition calculation
 */
 function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false, $addBoundaryHtml = false) {
-  global $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $blnPosByEntTag, $blnInfobyBlnTag,
-         $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
+  global  $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, 
+          $blnPosByEntTag, $blnInfobyBlnTag, $graID2StructureInlineLabels, 
+          $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
 
   $wordCnt = 0;
   //start to calculate HTML using each text division container
@@ -1340,7 +1341,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
             } else {
               $graIDs = $syllable->getGraphemeIDs();
               $graCnt = count($graIDs);
-              //check for start of line header
+              //check for start of line headers
               if ($j == 0 && $graCnt) {//start of physical line
                 if (array_key_exists($graIDs[0],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[0]])) {
                   $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[0]]['sideMarker'];
@@ -1364,6 +1365,8 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   $prevGraIsVowelCarrier = false;
                   continue;
                 } else {
+                  $structLookupGraID = ($grapheme->getSortCode() == "195" && ($graCnt > (1+$l))? $graIDs[1+$l] : $graID);
+                  // check for inline fragment marker
                   if (array_key_exists($graID,$graID2PSnFMarkerMap) && array_key_exists('fragLabel',$graID2PSnFMarkerMap[$graID])) {
                     $physicalLineHtml .= $graID2PSnFMarkerMap[$graID]['fragLabel'];
                   } else  if ($grapheme->getSortCode() == "195" and array_key_exists($graIDs[$l + 1],$graID2PSnFMarkerMap) && 
@@ -1393,8 +1396,31 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                       $previousA = false;
                     }
                     list($tdSeqTag,$wordTag) = $graID2WordGID[$graID];
+                    // check for inline structure marker
+                    if (isset($graID2StructureInlineLabels) && !$prevGraIsVowelCarrier && 
+                        array_key_exists($structLookupGraID,$graID2StructureInlineLabels)) {
+                      $inlineHtmlLabels = $graID2StructureInlineLabels[$structLookupGraID];
+                      if (count($inlineHtmlLabels)) {
+                        $structLabelsHtml = "";
+                        foreach($inlineHtmlLabels as $htmlLabel) {
+                          $structLabelsHtml = $htmlLabel.$structLabelsHtml;
+                        }
+                        $physicalLineHtml .= $structLabelsHtml;
+                      }
+                    }
                     $physicalLineHtml .= '<span class="grpTok '.($tdSeqTag?$tdSeqTag.' ':'').$wordTag.'">';
                   } else if ($j==0 && $l == 0) {//first grapheme of physical line need to start wordhtml with prevous infor
+                    // check for inline structure marker
+                    if (isset($graID2StructureInlineLabels) && array_key_exists($structLookupGraID,$graID2StructureInlineLabels)) {
+                      $inlineHtmlLabels = $graID2StructureInlineLabels[$structLookupGraID];
+                      if (count($inlineHtmlLabels)) {
+                        $structLabelsHtml = "";
+                        foreach($inlineHtmlLabels as $htmlLabel) {
+                          $structLabelsHtml = $htmlLabel.$structLabelsHtml;
+                        }
+                        $physicalLineHtml .= $structLabelsHtml;
+                      }
+                    }
                     $physicalLineHtml .= '<span class="grpTok '.($tdSeqTag?$tdSeqTag.' ':'').$wordTag.'">';
                   }
                   if ($preTCMBrackets) {
@@ -1738,7 +1764,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $refresh = false, $addBoundaryHtml
 * @returns mixed object with a string representing the html and a footnote lookup table
 */
 function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
-  global $edition, $prevTCMS, $graID2LineHtmlMarkerlMap,$graID2PSnFMarkerMap,// $sclTag2BlnPolyMap,
+  global $edition, $prevTCMS, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $graID2StructureInlineLabels,// $sclTag2BlnPolyMap,
   $wordCnt, $fnRefTofnText, $typeIDs, $imgURLsbyBlnImgTag, $blnInfobyBlnTag, $curBlnTag,
 //  $sclTagLineStart,
   $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel,
@@ -1922,6 +1948,9 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
             $blnInfo['sort'] = $sort;
             $blnInfobyBlnTag[$blnInfo['tag']] = $blnInfo;
           }
+        }
+        if (array_key_exists("graID2StructureInlineLabels",$ednLookupInfo) && count($ednLookupInfo['graID2StructureInlineLabels'])) {
+          $graID2StructureInlineLabels = $ednLookupInfo['graID2StructureInlineLabels'];
         }
         if (array_key_exists("gra2WordGID",$ednLookupInfo) && count($ednLookupInfo['gra2WordGID'])) {
           $graID2WordGID = $ednLookupInfo['gra2WordGID'];
