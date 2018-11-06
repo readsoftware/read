@@ -45,7 +45,7 @@ if ($_COOKIE && isset($_COOKIE['ka_username_'.$dbn])) {
   $dbMgr = new DBManager();
   //remove authtoken
   if ($selector) {
-    $dbMgr->query("delete from authtoken where aut_selector=$selector");
+    $dbMgr->query("delete from authtoken where aut_selector='$selector'");
   }
   //remove cookie
   unsetLoginCookie($dbMgr);

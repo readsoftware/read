@@ -16,9 +16,9 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-* saveTags
+* saveAttrs
 *
-* saves entity data for tag type annotation entities
+* saves entity data for attributions
 *
 *   data =
 *   {

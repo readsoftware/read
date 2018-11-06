@@ -151,8 +151,7 @@ function isValidLoginCookie($dbMgr) {
   //validate token
   //check for selector row in DB, ignore on not present
   if ($selector && $validator) {
-    $curTime = time();
-    $dbMgr->query("select * from authtoken where aut_selector='$selector' and aut_expire > $curTime;");
+    $dbMgr->query("select * from authtoken where aut_selector='$selector' and aut_expire > now()::abstime::int;");
     if ($dbMgr->getRowCount() == 1) {
       $autTokRow = $dbMgr->fetchResultRow(null,false,PGSQL_ASSOC);
       //compare hashed in db with hash of validator
@@ -183,7 +182,7 @@ function setLoginCookie($dbMgr, $selector = "", $ugrID = null) {
   }
   $validator = getRandomString(64);
   $hashedValidator = base64_encode(hash('sha384', $validator, true));
-  $expiry = time() + (defined("NONUSECOOKIELIFETIME")?NONUSECOOKIELIFETIME:60*60*24*30);
+  $expiry = time() + (defined("NONUSECOOKIELIFETIME")?NONUSECOOKIELIFETIME:60*60*24*30);//default 1 month
   if ($selector) {
     $dbMgr->query("select * from authtoken where aut_selector='$selector'");
     if ($dbMgr->getRowCount() > 0) {//update existing
@@ -211,7 +210,7 @@ function setLoginCookie($dbMgr, $selector = "", $ugrID = null) {
 
 function unsetLoginCookie($dbMgr) {
   if (isset($_COOKIE) && isset($_COOKIE['ka_username_'.$dbMgr->getDBName()])) {
-    setcookie('ka_username_'.$dbMgr->getDBName(),"",time()-360,"/");
+    setcookie('ka_username_'.$dbMgr->getDBName(),"",time()-3600000,"/");
     unset($_COOKIE['ka_username_'.$dbMgr->getDBName()]);
   }
 }

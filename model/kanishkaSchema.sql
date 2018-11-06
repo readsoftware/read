@@ -162,7 +162,7 @@ CREATE TABLE authtoken
   "aut_id" serial NOT NULL PRIMARY KEY,
   "aut_selector" varchar(32) NOT NULL UNIQUE,
   "aut_hashed_validator" varchar(64) NULL,
-  "atg_expire" timestamp default CURRENT_TIMESTAMP,
+  "aut_expire" int default  now(),
   "modified" timestamp default CURRENT_TIMESTAMP,
   "aut_user_id" int NOT NULL
 )
@@ -178,7 +178,7 @@ COMMENT ON TABLE authtoken IS 'Contains a record for each authtoken.';
 COMMENT ON COLUMN authtoken."aut_id" IS 'Uniquely identifies a authtoken object.';
 COMMENT ON COLUMN authtoken."aut_selector" IS 'ISO Language code : label pairs for this authtoken.';
 COMMENT ON COLUMN authtoken."aut_hashed_validator" IS 'hash of validator from cookie used to verify this authtoken.';
-COMMENT ON COLUMN authtoken."atg_expire" IS 'expiration of token';
+COMMENT ON COLUMN authtoken."aut_expire" IS 'expiration of token';
 COMMENT ON COLUMN authtoken."aut_user_id" IS 'Link to user usergroup.';
 
 
