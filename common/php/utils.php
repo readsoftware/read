@@ -1893,11 +1893,11 @@ function getUserPreferences($dbname = ""){
     }
   }
   //save to session if needed
-  if ($dbname && $_SESSION){
+  if (defined('DBNAME') && $_SESSION){
     if (!isset($_SESSION['userPrefs'])) {
       $_SESSION['userPrefs'] = array();
     }
-    $_SESSION['userPrefs'][$dbname] = $userPreferences;
+    $_SESSION['userPrefs'][DBNAME] = $userPreferences;
   }
   return $userPreferences;
 }
@@ -1908,35 +1908,51 @@ function getUserPreferences($dbname = ""){
 
 function getUserDefaultAttributionID(){
   //check scratch
+  $atbID = null;
   $user = new UserGroup(getUserID());
   if (!$user || $user->hasError()) {
     return null;
   } else if (! $user->getDefaultAttributionID() && getUserID() != 2 && getUserID() != 6) {
-    //create attribution group
-    $atg = new AttributionGroup();//todo  lookup ATG for user ??
-    $atg->setRealname($user->getRealname());
-    $atg->setName($user->getName());
-    $atg->setDescription(($user->getDescription()?$user->getDescription():$user->getFamilyName())."(Work in progress)");
-    $atg->setType($atg->getIDofTermParentLabel('individual-attributiongrouptype'));//term dependency
-    $atg->setMemberIDs(array($user->getID()));
-    $atg->setAdminIDs(array($user->getID()));
-    $atg->setVisibilityIDs(array($user->getID()));
-    $atg->setOwnerID($user->getID());
-    $atg->save();
-    //create atg attribute
-    $att = new Attribution();
-    $att->setTitle($user->getRealname());
-    $att->setDetail("Work in progress");
-    $att->setDescription($atg->getDescription());
-    $att->setVisibilityIDs(array($user->getID()));
-    $att->setOwnerID($user->getID());
-    $att->setGroupID($atg->getID());
-    $att->save();
+    $indivAtgTypeID = $user->getIDofTermParentLabel('individual-attributiongrouptype');
+    //check database for attribution with group id and 
+    $query = "select atb_id ".
+             "from attribution  ".
+               "left join attributiongroup on atb_group_id = atg_id ".
+             "where atg_id is not null and ".
+                   "atb_owner_id = ".$user->getID()." and not atg_owner_id = 1 and atg_type_id = $indivAtgTypeID;";
+    $dbMgr = new DBManager();
+    $dbMgr->query($query);
+    if ($dbMgr->getRowCount()>0){
+      $row = $dbMgr->fetchResultRow();
+      $atbID = $row[0];
+    } else {
+      //create attribution group
+      $atg = new AttributionGroup();//todo  lookup ATG for user ??
+      $atg->setRealname($user->getRealname());
+      $atg->setName($user->getName());
+      $atg->setDescription(($user->getDescription()?$user->getDescription():$user->getFamilyName())."(Work in progress)");
+      $atg->setType($indivAtgTypeID);//term dependency
+      $atg->setMemberIDs(array($user->getID()));
+      $atg->setAdminIDs(array($user->getID()));
+      $atg->setVisibilityIDs(array($user->getID()));
+      $atg->setOwnerID($user->getID());
+      $atg->save();
+      //create atg attribute
+      $att = new Attribution();
+      $att->setTitle($user->getRealname());
+      $att->setDetail("Work in progress");
+      $att->setDescription($atg->getDescription());
+      $att->setVisibilityIDs(array($user->getID()));
+      $att->setOwnerID($user->getID());
+      $att->setGroupID($atg->getID());
+      $att->save();
+      $atbID = $att->getID();
+    }
     //store in user
-    $user->setDefaultAttributionID($att->getID());
+    $user->setDefaultAttributionID($atbID);
     $user->save();
   }
-  return $user->getDefaultAttributionID();
+  return $atbID;
 }
 
 /**

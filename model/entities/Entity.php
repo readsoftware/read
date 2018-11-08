@@ -771,7 +771,7 @@
       if ($this->_visibility_ids && $this->getVisibilityIDs() && in_array(2,$this->getVisibilityIDs()) && !in_array(6,$this->getVisibilityIDs()) ||
            $this->getOwnerID() == 2 ||
           ($this->getOwnerID() &&
-            $this->getOwnerID()!= getUserDefEditorID() &&
+            $this->getOwnerID()!= getUserDefEditorID() &&//Todo: review for clone edition
             !in_array($this->getOwnerID(), getUserMembership()))) { // decision to require impersonation for members && !in_array($this->getOwnerID(), getUserMembership()))) {
        return true;
       }

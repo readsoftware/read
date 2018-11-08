@@ -225,7 +225,10 @@
     * @return string represents a long human readable label for this UserGroup
     */
     public function getRealname() {
-      return $this->_given_name.' '.$this->_family_name;
+      $realName = ($this->_given_name?$this->_given_name.
+                   ($this->_family_name?' '.$this->_family_name:""):
+                   ($this->_family_name?$this->_family_name:""));
+      return ($realName?$realName:$this->_name);
     }
 
    /**
