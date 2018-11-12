@@ -154,6 +154,7 @@
                                '"value":'.json_encode($edition->getDescription()).','.
                                '"readonly":'.($edition->isReadonly()?'true':'false').','.
                                '"typeID":"'.$edition->getTypeID().'",'.
+                               '"editibility":"'.$edition->getOwnerID().'",'.
                                '"txtID":"'.$edition->getTextID().'",'.
                                '"seqIDs":["'.join('","',$edition->getSequenceIDs()).'"]';
 //    $saveToCache = $edition->isReadonly();
@@ -863,7 +864,7 @@
           foreach($tokGraIDs as $tokGraID) {
             $graSclID = null;
 //            if ($tokGraID && array_key_exists($tokGraID,$gra2SclMap)){
-              @$graSclID = $gra2SclMap[@$tokGraID];
+              @$graSclID = array_key_exists($tokGraID,$gra2SclMap)? $gra2SclMap[@$tokGraID]:null;
 //            }
             if (!$graSclID) {
               array_push($warnings,"grapheme id  $tokGraID for token id $newTokID is not in syllable map.");

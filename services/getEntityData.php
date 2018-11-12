@@ -98,7 +98,7 @@
       unset($qstruct['aggprefix']);
       unset($qstruct['aggcol']);
     }
-    if (@$isBlended && array_key_exists('ids', $qstruct)) {
+    if (isset($isBlended) && $isBlended && array_key_exists('ids', $qstruct)) {
       // create a loop to query for each gid's record in order
       $ids = $qstruct['ids'];
       if (is_string($ids)) {
@@ -106,7 +106,7 @@
         $ids = $matches[0];
       }
       $columnNames = array('bld_id','bld_properties');
-      if (@$isOrdered) {
+      if (isset($isOrdered) && $isOrdered) {
         array_push($columnNames,'order');
       }
       $records = array();
@@ -125,7 +125,7 @@
           }
         }
         $record = array($gid,$kvcontents);
-        if (@$isOrdered) {
+        if (isset($isOrdered) && $isOrdered) {
           array_push($record,$order++);
         }
         array_push($records,$record);
@@ -141,7 +141,7 @@
         $labelsToColNames[$row[0]] = $row[0];
         array_push($columnNames, $row[0]);
       }
-      if (@$isOrdered) {
+      if (isset($isOrdered) && $isOrdered) {
         array_push($columnNames,'order');
       }
       $conditions = array();
@@ -208,7 +208,7 @@
       } else {// case pf all
         $conditions = "";
       }
-      if (@$aggrColIDs) {//find parent record fkey set for aggregate column
+      if (isset($aggrColIDs) && $aggrColIDs) {//find parent record fkey set for aggregate column
         $dbMgr->query("select $aggrColName from $table $conditions");
         $fKeys = array();
         while($row = $dbMgr->fetchResultRow(null,null,PGSQL_NUM)){
@@ -278,14 +278,14 @@
         //find the field position of the pkey field
         $pkIndex = array_search($prefix."_id",$columnNames);
         while($row = $dbMgr->fetchResultRow(null,null,PGSQL_NUM)){
-          if (@$isOrdered) {
+          if (isset($isOrdered) && $isOrdered) {
             if ($noRanges) {
               array_push($row,$idsOrderLookup[$row[$pkIndex]]);
             } else {
               array_push($row,$order++);
             }
           }
-          if (@$showGID) {// change ID into global ID
+          if (isset($showGID) && $showGID) {// change ID into global ID
             $row[$indexPKey] = $prefix.$row[$indexPKey];
           }
           array_push($records,$row);

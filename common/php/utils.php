@@ -1867,6 +1867,9 @@ function setUserDefAttrIDs($attrIDs, $dbname = ""){
 
 function getUserPreferences($dbname = ""){
   // check session - prefer session over persisted
+  if (!$dbname && defined('DBNAME')) {
+    $dbname = DBNAME;
+  }
   if ($dbname && $_SESSION && isset($_SESSION['userPrefs']) && isset($_SESSION['userPrefs'][$dbname])) {
     $userPreferences = $_SESSION['userPrefs'][$dbname];
   } else {

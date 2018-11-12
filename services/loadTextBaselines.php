@@ -234,6 +234,7 @@
                                  'id' => $ednID,
                                  'value'=> $edition->getDescription(),
                                  'typeID' => $edition->getTypeID(),
+                                 'editibility' => $edition->getOwnerID(),
                                  'txtID' => $edition->getTextID(),
                                  'seqIDs' => $edition->getSequenceIDs());
           array_push($entities['txt'][$txtID]['ednIDs'],$ednID);

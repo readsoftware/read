@@ -334,6 +334,7 @@
                                                    'id' => $ednID,
                                                    'value'=> $edition->getDescription(),
                                                    'readonly' => $edition->isReadonly(),
+                                                   'editibility' => $edition->getOwnerID(),
                                                    'typeID' => $edition->getTypeID(),
                                                    'txtID' => $edition->getTextID(),
                                                    'seqIDs' => $edition->getSequenceIDs());

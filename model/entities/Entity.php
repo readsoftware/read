@@ -217,7 +217,7 @@
     * @param array $args of columnName/value pairs
     */
     protected function initializeBaseEntity($args){
-      $this->_scratchProperties=@$args[@$this->getGlobalPrefix().'_scratch'] ? (is_string($args[$this->getGlobalPrefix().'_scratch']) ? json_decode($args[$this->getGlobalPrefix().'_scratch'],true):$args[$this->getGlobalPrefix().'_scratch']):array();
+      $this->_scratchProperties=array_key_exists($this->getGlobalPrefix().'_scratch', $args) ? (is_string($args[$this->getGlobalPrefix().'_scratch']) ? json_decode($args[$this->getGlobalPrefix().'_scratch'],true):$args[$this->getGlobalPrefix().'_scratch']):array();
       $this->_annotation_ids=(array_key_exists($this->getGlobalPrefix().'_annotation_ids',$args)) ? $args[$this->getGlobalPrefix().'_annotation_ids']:array();
       $this->_attribution_ids= (array_key_exists($this->getGlobalPrefix().'_attribution_ids',$args)) ? $args[$this->getGlobalPrefix().'_attribution_ids']:array();
       $this->_modified=(array_key_exists('modified',$args)) ? $args['modified']:null;
@@ -771,8 +771,8 @@
       if ($this->_visibility_ids && $this->getVisibilityIDs() && in_array(2,$this->getVisibilityIDs()) && !in_array(6,$this->getVisibilityIDs()) ||
            $this->getOwnerID() == 2 ||
           ($this->getOwnerID() &&
-            $this->getOwnerID()!= getUserDefEditorID() &&//Todo: review for clone edition
-            !in_array($this->getOwnerID(), getUserMembership()))) { // decision to require impersonation for members && !in_array($this->getOwnerID(), getUserMembership()))) {
+            $this->getOwnerID()!= getUserDefEditorID())) {  //&&//Todo: review for clone edition
+//            !in_array($this->getOwnerID(), getUserMembership()))) { // decision to require impersonation for members && !in_array($this->getOwnerID(), getUserMembership()))) {
        return true;
       }
       return false;
@@ -895,7 +895,7 @@
           $dbMgr = new DBManager();
         }
         if ($this->_id){ // update
-          if ((isset($this->_owner_id) && $this->_owner_id != getUserID() && !in_array($this->_owner_id, getUserMembership()) ||
+          if ((isset($this->_owner_id) && $this->_owner_id != getUserID() && $this->_owner_id != getUserDefEditorID() && !in_array($this->_owner_id, getUserMembership()) ||
               (in_array($this->getGlobalPrefix(),array('ugr','atg')) && !in_array(getUserID(),$this->getAdminIDs())))
               && !isSysAdmin()) {//owner/admin not equal user current user id
             array_push($this->_errors,"User with ID= ".getUserID()." attemping to edit unowned record ".$this->getGlobalPrefix()."_id=".$this->_id);

@@ -985,6 +985,8 @@ EDITORS.SearchVE.prototype = {
                   }
                 }
                 srchVE.updateCursorInfoBar();
+              } else if (data.errors) {
+                alert("An error occurred while trying to clone edition. Error: " + data.errors.join());                    
               }
         },// end success cb
         error: function (xhr,status,error) {
