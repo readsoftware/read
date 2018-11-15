@@ -25,26 +25,26 @@
 */
 
 /**
-* calc viewer caching
+* calc word locations
 *
-* creates a framework for selecting the text to refresh/calculate cached information
+* creates a framework for selecting the edition to refresh/calculate cached information
 * it support opening with a parameter set that how the calculation will proceed.
 *
-* The caching app will bring up a check box tree of selected text or all text in the database 
+* The caching app will bring up a check box tree of selected edition or all edition in the database 
 * depending on how it is called
 * 
-* localhost:81/readDev/dev/calcViewerCache.php?db=gandhari&catID=1&txtIDs=1,2,3,4,5
+* localhost:81/readDev/dev/WordLocations.php?db=gandhari&catID=1&ednIDs=1,2,3,4,5
 * or
-* localhost:81/readDev/dev/calcViewerCache.php?db=gandhari&catID=1
+* localhost:81/readDev/dev/WordLocations.php?db=gandhari&catID=1
 * 
 * the glossary catID needs to be supplied in the current version
 * &refresh=n where n is 0,1 or 2 can be added to the url (default is refresh=0)
 * the rest of the parameters for the site configuration of the READ Viewer will be used
-* when the app calls getTextViewer.php
+* when the app calls geteditionViewer.php
 * 
-* the app has a pause and cancel button which are asynch and take effect on the next text cycle
-* cancel - will stop the cache calculation and empty the text id list as if the app just started
-* pause - will pause the cache calculation at the next text and can be restarted at teh paused text
+* the app has a pause and cancel button which are asynch and take effect on the next edition cycle
+* cancel - will stop the cache calculation and empty the edition id list as if the app just started
+* pause - will pause the cache calculation at the next edition and can be restarted at teh paused edition
 * 
 */
 
@@ -57,52 +57,46 @@
   
   //check and validate parameters
   $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):$_REQUEST);
-
-  $refresh = (isset($data['refresh']) && $data['refresh'])? $data['refresh']: 0;
-  $multiEd = (!isset($data['multiEd']) || !$data['multiEd'])? 0: 1;
-  $catID = (isset($data['catID']) && $data['catID'])? $data['catID']: null;
-  $txtIDs = null;
-  if ( isset($data['txtIDs'])) {
-    $txtIDs = $data['txtIDs'];
-    $txtIDs = explode(",",$txtIDs);
-    $txtID = intval($txtIDs[0]); //first id is primary
-    if (!is_int($txtID)) {
-      $txtIDs = $txtID = null;
+  $ednIDs = null;
+  if ( isset($data['ednIDs'])) {
+    $ednIDs = $data['ednIDs'];
+    $ednIDs = explode(",",$ednIDs);
+    $ednID = intval($ednIDs[0]); //first id is primary
+    if (!is_int($ednID)) {
+      $ednIDs = $ednID = null;
     }
   }
-  if ($txtIDs && count($txtIDs) > 0) {
-    $texts = new Texts("txt_id in (".join(",",$txtIDs).") and not txt_owner_id = 1","txt_id",null,null);
-    $groupLabel = "Selected texts from ".DBNAME." database";
+  if ($ednIDs && count($ednIDs) > 0) {
+    $editions = new Editions("edn_id in (".join(",",$ednIDs).") and not edn_owner_id = 1","edn_id",null,null);
+    $groupLabel = "Selected editions from ".DBNAME." database";
   } else {
-    $texts = new Texts("not txt_owner_id = 1","txt_id",null,null);
-    $groupLabel = "All texts from ".DBNAME." database";
+    $editions = new editions("not edn_owner_id = 1","edn_id",null,null);
+    $groupLabel = "All editions from ".DBNAME." database";
   }
-  if (!$texts || $texts->getCount() == 0 ) {
+  if (!$editions || $editions->getCount() == 0 ) {
     //exit with error
   } else {
-    $textList = array();
-    foreach($texts as $text) {
-      $txtGID = $text->getGlobalID();
-      $txtTag = str_replace(":","",$txtGID);
-      $txtTitle= $text->getTitle();
-      $textInfo = array( "label" => $txtTitle." ($txtGID)",
-        "id" => $txtTag,
-        "value" => $text->getID());
-      array_push($textList,$textInfo);
+    $editionList = array();
+    foreach($editions as $edition) {
+      $ednGID = $edition->getGlobalID();
+      $ednTag = str_replace(":","",$ednGID);
+      $ednTitle= $edition->getDescription();
+      $editionInfo = array( "label" => $ednTitle." ($ednGID)",
+        "id" => $ednTag,
+        "value" => $edition->getID());
+      array_push($editionList,$editionInfo);
     }
-    $textSelect = array(
+    $editionSelect = array(
       "label" => $groupLabel,
       "value" => "all",
       "id" => "alltxt",
-      "items" => $textList,
+      "items" => $editionList,
       "checked" => true,
       "expanded" => true
     );
   }
 
-  $calcViewerBaseURL = SITE_BASE_PATH."/viewer/getTextViewer.php?db=".DBNAME."&refresh=$refresh".
-                        ($catID?"&catID=$catID" : "").
-                        ($multiEd?"&multiEd=$multiEd" : "")."&txtID=";
+  $calcEdnWordLocationsURL = SITE_BASE_PATH."/services/refreshEditionWordLocations.php?db=".DBNAME."&ednID=";
 
 ?>
 
@@ -113,7 +107,7 @@
     <meta http-equiv="Cache-Control" content="no-cache">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="Lang" content="en">
-    <title>Calculate Text Edition Caching</title>
+    <title>Calculate Edition Word Locations</title>
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.base.css" type="text/css" />
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.energyblue.css" type="text/css" />
     <link rel="stylesheet" href="./css/readviewer.css" type="text/css" />
@@ -131,26 +125,26 @@
     <script src="../editors/js/debug.js"></script>
     <script type="text/javascript">
       var dbName = '<?=DBNAME?>', imgViewer,
-          cachingState = "Stopped",
+          calcState = "Stopped",
           srvbasepath="<?=SITE_ROOT?>",
           basepath="<?=SITE_BASE_PATH?>",
-          textSource = [<?=json_encode($textSelect)?>],
-          calcViewerBaseURL ="<?=$calcViewerBaseURL?>";
+          editionSource = [<?=json_encode($editionSelect)?>],
+          calcEdnWordLocationsURL ="<?=$calcEdnWordLocationsURL?>";
 
       $(document).ready( function () {
-        var txtIDs = [],
-            txtID = null,
+        var ednIDs = [],
+            ednID = null,
             lastCachedID = null,
-            $textListDiv = $('#textListDiv'),
-            $textListHdr = $('#textListHdr'),
-            $textListTree = $('#textListTree'),
+            $editionListDiv = $('#editionListDiv'),
+            $editionListHdr = $('#editionListHdr'),
+            $editionListTree = $('#editionListTree'),
             $resultsDiv = $('#resultsDiv'),
             $statusDiv = $('#statusDiv'),
-            $btnCalcViewerCache = $('#btnCalcViewerCache'),
+            $btnWordLocations = $('#btnWordLocations'),
             $btnPause = $('#btnPause'),
             $btnCancel = $('#btnCancel');
-        $textListTree.jqxTree({
-             source: textSource,
+        $editionListTree.jqxTree({
+             source: editionSource,
              hasThreeStates: true, 
              checkboxes: true,
              width: '500px',
@@ -168,94 +162,94 @@
           $statusDiv.html(docHtmlFragment);
         }
         
-        function calcCaching() {
-          txtID = null;
-          if (cachingState == "Stopping") {
-            cachingState = "Stopped";
+        function calcLocation() {
+          ednID = null;
+          if (calcState == "Stopping") {
+            calcState = "Stopped";
             $btnCancel.val("Cancel");
-            updateStatus("<div>Stopped READ Viewer Caching, last cached text ("+txtID+")</div>");
+            updateStatus("<div>Stopped READ location calculation, last calculated edition ("+ednID+")</div>");
             return;
-          } else if (cachingState == "Paused" || cachingState == "PausePending") {
-            cachingState = "Paused";
+          } else if (calcState == "Paused" || calcState == "PausePending") {
+            calcState = "Paused";
             $btnPause.val("Restart");
-            updateStatus("<div>Paused READ Viewer Caching, next text ("+txtIDs[0]+")</div>");
+            updateStatus("<div>Paused READ Location Calculation, next edition ("+ednIDs[0]+")</div>");
             return;
-          } else if (cachingState == "Stopped") {
+          } else if (calcState == "Stopped") {
             return;
-          } else if(!txtIDs || txtIDs.length == 0) {
-            cachingState = "Stopped";
-            updateStatus("<div>No txtIDs left, nothing left to cache</div>");
+          } else if(!ednIDs || ednIDs.length == 0) {
+            calcState = "Stopped";
+            updateStatus("<div>No ednIDs left, nothing left to cache</div>");
             return;
           }
-          txtID = txtIDs.shift();
-          if (txtID) {
-            updateStatus("<div>Calculating READ Viewer Cache for text ("+txtID+")</div>");
+          ednID = ednIDs.shift();
+          if (ednID) {
+            updateStatus("<div>Calculating READ Word Locations for edition ("+ednID+")</div>");
             d = new Date();
             stime = d.getTime();
             $.ajax({
                 type: 'POST',
                 dataType: 'html',
-                url: calcViewerBaseURL+txtID,//caution dependency on context having basepath and dbName
+                url: calcEdnWordLocationsURL+ednID,//caution dependency on conedition having basepath and dbName
                 async: true,
                 success: function (data, status, xhr) {
-                  lastCachedID = txtID
+                  lastCachedID = ednID;
                   d = new Date();
                   etime = d.getTime();
                   sec = Math.round((etime-stime)/1000);
-                  message = '<div class="success">Successfully cache viewer content for text txt:'+lastCachedID+" in "+sec+" seconds</div>";
+                  message = '<div class="success">Successfully calculated locations for edition edn:'+lastCachedID+" in "+sec+"seconds</div>";
                   updateStatus(message);
                   addResultsMessage(message);
-                  if (cachingState == "PausePending" || cachingState == "Paused") {
-                    cachingState = "Paused";
+                  if (calcState == "PausePending" || calcState == "Paused") {
+                    calcState = "Paused";
                     $btnPause.val("Restart");
-                    $btnCalcViewerCache.val('Paused');
-                    updateStatus("<div>Paused READ Viewer Caching, next text ("+txtIDs[0]+")</div>");
-                  } else if (cachingState == "Stopping") {
-                    cachingState = "Stopped";
-                    $btnCalcViewerCache.val('Calculate');
+                    $btnWordLocations.val('Paused');
+                    updateStatus("<div>Paused READ Location Calculation, next edition ("+ednIDs[0]+")</div>");
+                  } else if (calcState == "Stopping") {
+                    calcState = "Stopped";
+                    $btnWordLocations.val('Calculate');
                     $btnCancel.val("Cancel");
-                    updateStatus("<div>Stopped READ Viewer Caching, last cached text ("+lastCachedID+")</div>");
+                    updateStatus("<div>Stopped READ Location Calculation, last calculated edition ("+lastCachedID+")</div>");
                     return;
                   } else {
-                    setTimeout(calcCaching,50);
+                    setTimeout(calcLocation,50);
                   }
                 },
                 error: function (xhr,status,error) {
                     // add record failed.
-                  var message = '<div class="error">An error occurred while trying to calculate cache for txt: '+txtID +". Error: " + error+"</div>";
+                  var message = '<div class="error">An error occurred while trying to calculate locations for edn: '+ednID +". Error: " + error+"</div>";
                   updateStatus(message);
                   addResultsMessage(message);
-                  if (cachingState == "PausePending" || cachingState == "Paused") {
+                  if (calcState == "PausePending" || calcState == "Paused") {
                     $btnPause.val("Restart");
                   }
-                  cachingState = "Stopped";
-                  $btnCalcViewerCache.val('Calculate');
+                  calcState = "Stopped";
+                  $btnWordLocations.val('Calculate');
                   $btnCancel.val("Cancel");
-                  updateStatus("<div>Stopped READ Viewer Caching, last cached text ("+lastCachedID+")</div>");
+                  updateStatus("<div>Stopped READ Location Calculation, last calculated edition ("+lastCachedID+")</div>");
                 }
             });
           }  
         }
 
-        //Handle Cache button click
-        $btnCalcViewerCache.unbind('click').bind('click', function (e) {
-          var checkedItems = $textListTree.jqxTree('getCheckedItems'), txtID;
-          txtIDs = [];
+        //Handle Calculation button click
+        $btnWordLocations.unbind('click').bind('click', function (e) {
+          var checkedItems = $editionListTree.jqxTree('getCheckedItems'), ednID;
+          ednIDs = [];
           if (checkedItems.length == 0) {
-            alert("No selected text found so nothing to cache");
-          } else if (cachingState !== "Stopped") {
-            alert("Caching must be stopped before starting cache. Try pressing cancel.");
+            alert("No selected edition found so nothing to calc");
+          } else if (calcState !== "Stopped") {
+            alert("Calculation must be stopped before starting new calculation. Try pressing cancel.");
             return;
           } else {
             for (i in checkedItems) {
-              txtID = checkedItems[i].value;
-              if (!isNaN(txtID)) {
-                txtIDs.push(txtID);
+              ednID = checkedItems[i].value;
+              if (!isNaN(ednID)) {
+                ednIDs.push(ednID);
               }
             }
-            $btnCalcViewerCache.val('Calculating');
-            cachingState = "Calculating";
-            calcCaching();
+            $btnWordLocations.val('Calculating');
+            calcState = "Calculating";
+            calcLocation();
           }
         });
 
@@ -264,37 +258,37 @@
           //Check button state
           if ($(this).val() == "Pause") {
             //In call to server so indicate pause wanted
-            if (cachingState == "Calculating") {
-              cachingState = "PausePending"
+            if (calcState == "Calculating") {
+              calcState = "PausePending"
               $(this).val("PausePending");
             } else { // mark paused and change button state
-              cachingState = "Paused";
-              $btnCalcViewerCache.val('Paused');
-              updateStatus("<div>Paused READ Viewer Caching, next text ("+txtIDs[0]+")</div>");
+              calcState = "Paused";
+              $btnWordLocations.val('Paused');
+              updateStatus("<div>Paused READ Location Calculation, next edition ("+ednIDs[0]+")</div>");
               $(this).val("Restart");
             }
           } else {
             //Change button to Pauseable state
             $(this).val("Pause");
-            if (cachingState == "Calculating") {
+            if (calcState == "Calculating") {
               return;
             } else {
-              cachingState = "Calculating";
-              $btnCalcViewerCache.val('Calculating');
-              calcCaching();
+              calcState = "Calculating";
+              $btnWordLocations.val('Calculating');
+              calcLocation();
             }
           }
         });
 
         //Handle Cancel button click
         $btnCancel.unbind('click').bind('click', function (e) {
-          if (cachingState == "Calculating" || cachingState == "PausePending") {
-            cachingState = "Stopping"
+          if (calcState == "Calculating" || calcState == "PausePending") {
+            calcState = "Stopping"
             $(this).val("Stopping");
           } else { // mark paused and change button state
-            cachingState = "Stopped";
-            updateStatus("<div>Stopped READ Viewer Caching, last cached text ("+lastCachedID+")</div>");
-            $btnCalcViewerCache.val('Calculate');
+            calcState = "Stopped";
+            updateStatus("<div>Stopped READ Location Calculation, last calculated edition ("+lastCachedID+")</div>");
+            $btnWordLocations.val('Calculate');
             $(this).val("Cancel");
           }
           $btnPause.val("Pause");
@@ -310,15 +304,15 @@
     <div style="display:table">
       <div style="display:table-row">
         <div style="padding: 15px">
-            <input type="button" class="dlgButton" value="Calculate" style="margin-bottom: 5px;" id="btnCalcViewerCache" />
+            <input type="button" class="dlgButton" value="Calculate" style="margin-bottom: 5px;" id="btnWordLocations" />
             <input type="button" class="dlgButton" value="Pause" id="btnPause" />
             <input type="button" class="dlgButton" value="Cancel" id="btnCancel" />
         </div>
-        <div id="textListHdr"> Text Caching List</div>
+        <div id="editionListHdr"> Edition Calculation List</div>
       </div>
       <div style="display:table-row">
-        <div id="textListDiv" style="display:table-cell">
-          <div id="textListTree"></div>
+        <div id="editionListDiv" style="display:table-cell">
+          <div id="editionListTree"></div>
         </div>
         <div style="display:table-cell; padding-left: 15px">
           <h3>Status:</h3>
