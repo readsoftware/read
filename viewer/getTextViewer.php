@@ -1023,16 +1023,17 @@
                     popupHtml += '</div>';
                     if (lemmaInfo['attestedHtml'] || lemmaInfo['relatedHtml']) {
 <?php
-  if (USESCROLLLEMMAPOPUP) {
+  if (!defined('USELEMMAEXTRAINFO') || USELEMMAEXTRAINFO) {
+    if (!defined('USESCROLLLEMMAPOPUP') || USESCROLLLEMMAPOPUP) {
 ?>
                       popupHtml += '<div class="glossExtraInfoDiv expanded">';
 <?php
-  } else {
+    } else {
 ?>
                       popupHtml += '<div class="glossExpanderDiv"><span class="glossaryExpander">+</span></div>';
                       popupHtml += '<div class="glossExtraInfoDiv">';
 <?php
-  }
+    }
 ?>
                       if (lemmaInfo['attestedHtml']) {
                         popupHtml += lemmaInfo['attestedHtml'];
@@ -1041,6 +1042,9 @@
                         popupHtml += lemmaInfo['relatedHtml'];
                       }
                       popupHtml += '</div>';
+<?php
+  }
+?>
                     }
                   }
                 }
@@ -1060,7 +1064,7 @@
                 $('.grpTok.'+entTag,$textViewerContent).addClass('showing');
                 //TODO syntax add code for dblclick on popup root to change popup to root.
 <?php
-  if (!USESCROLLLEMMAPOPUP) {
+  if (!USESCROLLLEMMAPOPUP && (!defined('USELEMMAEXTRAINFO') || USELEMMAEXTRAINFO)) {
 ?>
                 $('.glossaryExpander').unbind('click').bind('click', function(e) {
                       var $popupWrapperDiv = $(this).parent().parent(), $expander = $(this),

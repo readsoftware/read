@@ -196,7 +196,7 @@
                   d = new Date();
                   etime = d.getTime();
                   sec = Math.round((etime-stime)/1000);
-                  message = '<div class="success">Successfully calculated locations for edition edn:'+lastCachedID+" in "+sec+"seconds</div>";
+                  message = '<div class="success">Successfully calculated locations for edition edn:'+lastCachedID+" in "+sec+" seconds</div>";
                   updateStatus(message);
                   addResultsMessage(message);
                   if (calcState == "PausePending" || calcState == "Paused") {

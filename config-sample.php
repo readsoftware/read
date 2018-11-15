@@ -66,6 +66,7 @@
   define("ALLOWIMAGEDOWNLOAD",false);
   define("ALLOWTEIDOWNLOAD",true);
   define("USESCROLLLEMMAPOPUP",false);
+  define("USELEMMAEXTRAINFO",true);
   define("FORMATENCODEDETYM",true);
   define("SHOWETYMPARENS",false);
   define("LEMMALINKTEMPLATE",READ_DIR."/plugins/dictionary/?search=%lemval%");
