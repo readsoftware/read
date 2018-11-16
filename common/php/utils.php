@@ -1402,16 +1402,16 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
 
 function invalidateWordLemma($wordGID = null) { // setDirty flag
   // find lemma of this word and invalidate
-  $query = "select lem_id as lemID from lemma ".
+  $query = "select lem_id from lemma ".
            "where '$wordGID' = ANY(lem_component_ids) and lem_owner_id != 1 union all ".
-           "select lem_id as lemID ".
+           "select lem_id ".
            "from lemma left join inflection on concat('inf:',inf_id) = ANY(lem_component_ids) ".
-           "where 'tok:10' = ANY(inf_component_ids) and lem_owner_id != 1;";
+           "where '$wordGID' = ANY(inf_component_ids) and lem_owner_id != 1;";
   $dbMgr = new DBManager();
   $dbMgr->query($query);
   if ($dbMgr->getRowCount()>0){
     while ($row = $dbMgr->fetchResultRow()) {
-      $lemma = new Lemma($row['lemID']);
+      $lemma = new Lemma($row['lem_id']);
       if (!$lemma->hasError() && $lemma->getID()) {
         if ($lemma->getScratchProperty("entry")) { //clear cached entry html
           $lemma->storeScratchProperty("entry",null);
@@ -3730,6 +3730,15 @@ function getWordLocation($wordTag) {
 }
 
 function compareWordLocations($locW1,$locW2) {
+  if ($locW2 == 'zzz') {
+    if ($locW1 == 'zzz') {
+      return 0;
+    } else {
+      return 1;
+    }
+  } else if ($locW1 == 'zzz') {
+    return -1;
+  }
   if (strpos($locW1,':') == strrpos($locW1,':')) { //single colon so no tref
     list($ord1,$label1) = explode(':',$locW1);
     $tref1 = 0;
