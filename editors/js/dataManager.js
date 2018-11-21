@@ -1703,15 +1703,12 @@ MANAGERS.DataManager.prototype = {
           success: function (data, status, xhr) {
               DEBUG.traceEntry("dataMgr.loadTextResource.SuccessCB");
               dataMgr.loadingTextResources = 0;
-//              if (typeof data == 'object' && data.entities && data.entities.update &&
-//                    ((data.entities.update.bln && Object.keys(data.entities.update.bln).length > 0) ||
-//                    (data.entities.update.edn && Object.keys(data.entities.update.edn).length > 0))) {
               if (typeof data == 'object' && data.entities && data.entities.update) {
                 dataMgr.updateLocalCache(data, null);
                 dataMgr.textResourcesLoaded = true;
               }
               if (data.warnings) {
-                DEBUG.log("warn", "warnings during loadBaseline - " + data.warnings.join(" : "));
+                DEBUG.log("warn", "warnings during loadTextResource - " + data.warnings.join(" : "));
               }
               if (cb && typeof cb == "function") {
                 setTimeout(function() { cb();

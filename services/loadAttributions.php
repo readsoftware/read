@@ -49,8 +49,6 @@
   $txtCache = array();
   $anoIDs = array();
   $attrs = array();
-  $errors = array();
-  $warnings = array();
   $entityIDs = array();
   $entities = array('ano' => array(),
                     'atb' => array());
@@ -121,13 +119,7 @@
 //                  "termInfo" => $termInfo,
                   "attrs" => $attrs);
   $jsonRetVal = json_encode($retVal);
-  if (count($warnings) > 0) {
-    $retVal["warnings"] = $warnings;
-  }
-  if (count($errors) > 0) {
-    $retVal["errors"] = $errors;
-  }
-  if (count($errors) == 0 && USECACHE) {
+  if (USECACHE) {
     if (!$jsonCache) {
       $jsonCache = new JsonCache();
       $jsonCache->setLabel('Attributions');
@@ -150,7 +142,7 @@
   }
 
   function getRelatedEntities($entityIDs) {
-    global $entities,$anoIDs,$atbIDs,$gra2SclMap,$segID2sclIDs,$processedTokIDs,$errors,$warnings;
+    global $entities,$anoIDs,$atbIDs,$gra2SclMap,$segID2sclIDs,$processedTokIDs;
     static $prefixProcessOrder = array('lnk','seq','lem','inf','scl','gra','cmp','tok','seg','bln','atb','ano');//important attr before anno to terminate
     if (!$entityIDs) return;
     $prefix = null;

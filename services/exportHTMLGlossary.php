@@ -57,7 +57,7 @@
   $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
   $refresh = ((array_key_exists('refreshWordMap',$_REQUEST) ? $_REQUEST['refreshWordMap']:
                       (array_key_exists('refreshLookUps',$_REQUEST))? $_REQUEST['refreshLookUps']:
-                       (defined('DEFAULTHTMLGLOSSARTREFRESH')?DEFAULTHTMLGLOSSARTREFRESH:0)));
+                       (defined('DEFAULTHTMLGLOSSARYREFRESH')?DEFAULTHTMLGLOSSARYREFRESH:0)));
 
 
   list($result,$text) = getCatalogHTML($catID,$isStaticView,$refresh,$useTranscription,$hideHyphens);

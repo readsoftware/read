@@ -83,7 +83,6 @@
   }
 
 //  if(!defined("DBNAME")) define("DBNAME","kanishkatest");
-  require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
   require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once dirname(__FILE__) . '/../model/entities/Catalogs.php';
@@ -100,7 +99,7 @@
   $gra2SclMap = array();
   $segID2sclIDs = array();
   $cknLookup = array();
-  $errors = array();
+//  $errors = array();
   $warnings = array();
   $condition = "";
   $entities = array( 'insert' => array(),
@@ -125,9 +124,6 @@
     // check for cache
     $dbMgr = new DBManager();
     if (!$dbMgr->getError()) {
-      $userDefID = getUserDefEditorID();
- //     $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
- //     $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
       $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources'");
       if ($dbMgr->getRowCount() > 0 ) {
         $row = $dbMgr->fetchResultRow();
@@ -415,12 +411,12 @@
         unset($entities['update'][$prefix]);
       }
     }
-    $retVal["success"] = false;
-    if (count($errors)) {
-      $retVal["errors"] = $errors;
-    } else {
-      $retVal["success"] = true;
-    }
+//    $retVal["success"] = false;
+//    if (count($errors)) {
+//      $retVal["errors"] = $errors;
+//    } else {
+//      $retVal["success"] = true;
+//    }
     if (count($warnings)) {
       $retVal["warnings"] = $warnings;
     }
@@ -428,11 +424,8 @@
       $retVal["entities"] = $entities;
     }
     $jsonRetVal = json_encode($retVal);
-    if (count($errors) == 0 && USECACHE && $isLoadAll) {
+    if (USECACHE && $isLoadAll) {
       if (!$jsonCache) {
-        $userDefID = getUserDefEditorID();
-//        $cacheUserLabel = (($userDefID == 2 || $userDefID ==6)?"2a6":$userDefID);
-//        $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources$cacheUserLabel'");
         $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources'");
         if ($dbMgr->getRowCount() > 0 ) {
           $row = $dbMgr->fetchResultRow();
@@ -440,8 +433,8 @@
         } else {
           $jsonCache = new JsonCache();
           $jsonCache->setLabel('AllTextResources');
-          $jsonCache->setVisibilityIDs(DEFAULTCACHEVISID?array(DEFAULTCACHEVISID):array(6));
-          $jsonCache->setOwnerID(DEFAULTCACHEOWNERID?DEFAULTCACHEOWNERID:6);
+          $jsonCache->setVisibilityIDs((defined("DEFAULTCACHEVISID") && DEFAULTCACHEVISID)?array(DEFAULTCACHEVISID):array(6));
+          $jsonCache->setOwnerID((defined("DEFAULTCACHEOWNERID") && DEFAULTCACHEOWNERID)?DEFAULTCACHEOWNERID:6);
         }
       }
       $jsonCache->setJsonString($jsonRetVal);
@@ -463,7 +456,7 @@
   }
 
   function getRelatedEntities($entityIDs) {
-    global $entities,$anoIDs,$atbIDs,$errors,$warnings,$publicOnly;
+    global $entities,$anoIDs,$atbIDs,$publicOnly;
     static $prefixProcessOrder = array('atb','ano');//important attr before anno to terminate
     if (!$entityIDs || count($entityIDs) == 0) return '""';
     //collect entities by type
