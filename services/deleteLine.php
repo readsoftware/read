@@ -147,40 +147,52 @@
       $seqPhys = $seqPhys->cloneEntity($defAttrIDs,$defVisIDs);
     }
     $physSeqEntityIDs = $seqPhys->getEntityIDs();
-    //find index of $delLineSeqGID in physical sequence
-    $delSeqIndex = array_search($delLineSeqGID,$physSeqEntityIDs);
-    array_splice($physSeqEntityIDs,$delSeqIndex,1);//remove physLine seq from physical seq
-    $seqPhys->setEntityIDs($physSeqEntityIDs);
-    $seqPhys->save();
-    if ($seqPhys->hasError()) {
-      array_push($errors,"error updating physical sequence '".$seqPhys->getLabel()."' - ".$seqPhys->getErrors(true));
-    }else if ($oldPhysSeqID){// return insert data
-      addNewEntityReturnData('seq',$seqPhys);
-      //addRemoveEntityReturnData('seq',$oldPhysSeqID);
-    }else {
-      addUpdateEntityReturnData('seq',$seqPhys->getID(),'entityIDs',$seqPhys->getEntityIDs());
-    }
-    //get physical Line sequence
-    $physLineSeq = new Sequence(substr($delLineSeqGID,4));
-    $delGraIDs = array();
-    if ($physLineSeq->hasError()) {
-      array_push($errors,"error deleting physical Line sequence '".$physLineSeq->getLabel()."' - ".$physLineSeq->getErrors(true));
-    } else if (!$physLineSeq->isReadonly()) { //if delLine Sequence is owned
-      //delete delLine sequence
-      $physLineSeq->markForDelete();
-      addRemoveEntityReturnData('seq',substr($delLineSeqGID,4));
-      //delete all owned syllables
-      if (count($physLineSeq->getEntityIDs())) {//freetext will not have entities
-        foreach ($physLineSeq->getEntities(true) as $syllable) {
-          if (!$syllable->isReadonly()) {// owned so delete it
-            $syllable->markForDelete();
-            addRemoveEntityReturnData('scl',$syllable->getID());
-            //delete all syllable graphemes tracking graIDs
-            foreach ($syllable->getGraphemes(true) as $grapheme) {
-              if (!$grapheme->isReadonly()) {// owned so delete it
-                $grapheme->markForDelete();
-                addRemoveEntityReturnData('gra',$grapheme->getID());
-                array_push($delGraIDs,$grapheme->getID());
+    if (!$physSeqEntityIDs || count($physSeqEntityIDs) == 0) {
+      array_push($errors,"error deleting line from empty text physical sequence seq".$seqPhys->getID());
+    } else {
+      //find index of $delLineSeqGID in text physical sequence
+      $delSeqIndex = array_search($delLineSeqGID,$physSeqEntityIDs);
+      if ($delSeqIndex === false) {
+        array_push($errors,"error deleting line $delLineSeqGID not found in text physical sequence seq".$seqPhys->getID());
+      } else {
+        array_splice($physSeqEntityIDs,$delSeqIndex,1);//remove physLine seq from text physical seq
+        $seqPhys->setEntityIDs($physSeqEntityIDs);
+        $seqPhys->save();
+        if ($seqPhys->hasError()) {
+          array_push($errors,"error updating text physical sequence '".$seqPhys->getLabel()."' - ".$seqPhys->getErrors(true));
+        }else if ($oldPhysSeqID){// return insert data
+          addNewEntityReturnData('seq',$seqPhys);
+          //addRemoveEntityReturnData('seq',$oldPhysSeqID);
+        }else {
+          addUpdateEntityReturnData('seq',$seqPhys->getID(),'entityIDs',$seqPhys->getEntityIDs());
+        }
+        if ($delLineSeqGID) {
+          //get physical Line sequence
+          $physLineSeq = new Sequence(substr($delLineSeqGID,4));
+          $delGraIDs = array();
+          if (!$physLineSeq || $physLineSeq->hasError()) {
+            array_push($errors,"error deleting physical Line sequence '".$physLineSeq->getLabel()."' - ".$physLineSeq->getErrors(true));
+          } else if ($physLineSeq->isReadonly()) { //if delLine Sequence is not owned
+            array_push($errors,"error permission denied for deleting physical Line sequence '".$physLineSeq->getLabel()."' - ".$physLineSeq->getErrors(true));
+          } else {
+            //delete delLine sequence
+            $physLineSeq->markForDelete();
+            addRemoveEntityReturnData('seq',substr($delLineSeqGID,4));
+            //delete all owned syllables
+            if (count($physLineSeq->getEntityIDs())) {//freetext will not have entities
+              foreach ($physLineSeq->getEntities(true) as $syllable) {
+                if (!$syllable->isReadonly()) {// owned so delete it
+                  $syllable->markForDelete();
+                  addRemoveEntityReturnData('scl',$syllable->getID());
+                  //delete all syllable graphemes tracking graIDs
+                  foreach ($syllable->getGraphemes(true) as $grapheme) {
+                    if (!$grapheme->isReadonly()) {// owned so delete it
+                      $grapheme->markForDelete();
+                      addRemoveEntityReturnData('gra',$grapheme->getID());
+                      array_push($delGraIDs,$grapheme->getID());
+                    }
+                  }
+                }
               }
             }
           }

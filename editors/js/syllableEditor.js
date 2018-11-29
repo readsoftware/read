@@ -1467,8 +1467,9 @@ EDITORS.sclEditor.prototype = {
         case "O":
           if (posStart == 0 && posEnd == this.state.length - 1){
             if (keyType == 'N' ||
-               key == '+' ||
-               key == '?') {//selection select all
+                key == '…' ||
+                key == '+' ||
+                key == '?') {//selection select all
               this.replaceText(key,"selected","end");
               return false;
             } else if (key == '/') {

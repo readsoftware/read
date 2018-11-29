@@ -569,13 +569,18 @@
     * @param mixed $value of the property
     */
     public function storeScratchProperty($key,$value) {
-      if (!array_key_exists($key,$this->_scratchProperties) && !isset($value)) {
+      //property remove on none existant property case
+      if ((!is_array($this->_scratchProperties) || !array_key_exists($key,$this->_scratchProperties)) && !isset($value)) {
         return;
       }
-      if (!array_key_exists($key,$this->_scratchProperties) || $this->_scratchProperties[$key] != $value) {
+      // property save or sync cases
+      if (!is_array($this->_scratchProperties) || !array_key_exists($key,$this->_scratchProperties) || $this->_scratchProperties[$key] != $value) {
+        if (!is_array($this->_scratchProperties)) {
+          $this->_scratchProperties = array();
+        }
         if (isset($value) && $value !== '') {
           $this->_scratchProperties[$key] = $value;
-        } else {
+        } else if (array_key_exists($key,$this->_scratchProperties)){
           unset($this->_scratchProperties[$key]);
         }
         $this->setDataKeyValuePair($this->getGlobalPrefix()."_scratch",json_encode($this->_scratchProperties));

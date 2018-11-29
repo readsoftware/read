@@ -836,7 +836,10 @@ validateChngPwdUI: function(){
       //click to edit
       this.defAttrUI.unbind("click").bind("click",function(e) {
         if (userVE.defAttrUI.hasClass("edit")) {
-          userVE.defAttrUI.removeClass("edit");
+          //userVE.defAttrUI.removeClass("edit");
+          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('attrSearchInput')) {//all but save button
+            userVE.defAttrUI.removeClass("edit");
+          }
         } else {
           userVE.defAttrUI.addClass("edit");
         }
@@ -845,9 +848,11 @@ validateChngPwdUI: function(){
       });
       //blur to cancel
       this.defAttrUI.unbind("blur").bind("blur",function(e) {
+        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('attrSearchInput')) {//all but save button
           userVE.defAttrUI.removeClass("edit");
+        }
       });
-      this.attrList = $('div.attrListDiv',this.defAttrUI);
+    this.attrList = $('div.attrListDiv',this.defAttrUI);
       this.attrSearchInput = $('.attrSearchInput',this.defAttrUI);
       // Create jqxListBox
       this.attrList.jqxListBox({  source: dataAdapter,
