@@ -985,6 +985,9 @@ EDITORS.SearchVE.prototype = {
                   }
                 }
                 srchVE.updateCursorInfoBar();
+                if (srchVE.layoutMgr && srchVE.layoutMgr.userVE) {
+                  srchVE.layoutMgr.userVE.loadUserPreferences();
+                }
               } else if (data.errors) {
                 alert("An error occurred while trying to clone edition. Error: " + data.errors.join());                    
               }

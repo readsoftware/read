@@ -424,6 +424,7 @@ validateChngPwdUI: function(){
 //    DEBUG.log("gen""in login user editor username= " + username + " password= " + password + (stayLoggedIn?" with persistent session":""));
     //call login service
     $.ajax({
+        type:"POST",
         dataType: 'json',
         url: basepath+'/services/getUserPreferences.php?db='+dbName,
         asynch: true,
@@ -432,8 +433,7 @@ validateChngPwdUI: function(){
                      $('#errorMsg',userVE.signInUI).html(data.error);
                    } else {
                      userVE.userPreference = data;
-                     setTimeout(function () {userVE.loadUserInfoUI();
-                                             userVE.updateEditInfo();},50);
+                     userVE.loadUserInfoUI();
                    }
                  },// end success cb
         error: function (xhr,status,error) {
@@ -480,8 +480,7 @@ validateChngPwdUI: function(){
                      $('#errorMsg',userVE.signInUI).html(data.error);
                    } else {
                      userVE.userPreference = data;
-                     setTimeout(function () {userVE.loadUserInfoUI();
-                                             userVE.updateEditInfo();},50);
+                     userVE.loadUserInfoUI();
                    }
                  },// end success cb
         error: function (xhr,status,error) {
@@ -547,6 +546,9 @@ validateChngPwdUI: function(){
     this.createEditorUI();
     this.createVisibilityUI();
     this.createDefAttrUI();
+    this.attrList.on('bindingComplete', function (e) {
+      userVE.updateEditInfo();
+    });
     if (this.prefsExpanded) {
       this.prefUIDiv.addClass('expanded');
     }
@@ -793,29 +795,30 @@ validateChngPwdUI: function(){
   createDefAttrUI: function() {
     var userVE = this,
         value = this.userPreference.userDefPrefs.defaultAttributionIDs ? this.userPreference.userDefPrefs.defaultAttributionIDs[0]:"",
-        source =
-            {
-                datatype: "jsonp",
-                datafields: [
-                    { name: 'label' },
-                    { name: 'value' }
-                ],
-                url: basepath+"/services/searchAttributions.php?db="+dbName,
-            };
-            dataAdapter = new $.jqx.dataAdapter(source,
-                {
-                  formatData: function (data) {
-                      srchString = userVE.attrSearchInput.val();
-                      if (srchString) {
-                        data.titleContains = userVE.attrSearchInput.val();
-                      }
-                      return data;
-                  }
-                }
-            );
+        source, dataAdapter;
+    source =  {
+      datatype: "jsonp",
+      datafields: [
+          { name: 'label' },
+          { name: 'value' }
+      ],
+      url: basepath+"/services/searchAttributions.php?db="+dbName,
+    };
+    dataAdapter = new $.jqx.dataAdapter(source,
+        {
+          formatData: function (data) {
+              srchString = userVE.attrSearchInput.val();
+              if (srchString) {
+                data.titleContains = userVE.attrSearchInput.val();
+              }
+              return data;
+          }
+        }
+    );
     DEBUG.traceEntry("userVE.createDefAttrUI");
     //create UI container
     this.defAttrUI = $('<div class="defAttrUI"></div>');
+    this.defAttrDataAdapter = dataAdapter;
     this.prefUIDiv.append(this.defAttrUI);
     //create label
     this.defAttrUI.append($('<div class="propDisplayUI">'+
@@ -929,7 +932,7 @@ validateChngPwdUI: function(){
 */
 
   updateEditInfo: function(){
-    var editInfoHTML = "", editorName, visLabel, attribLabel, editInfoLabel;
+    var editInfoHTML = "", editorName, visLabel, attribLabel;
     $('.editinfolabel',this.hdrDiv).remove();
     editorName = this.getEditAsEditorName();
     visLabel = this.getVisibilityLabel();

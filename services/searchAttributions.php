@@ -44,9 +44,10 @@
   $dbMgr = new DBManager();
   $condition = "";
   $maxRows = null;
+  $refresh = null;
   $jsonRetVal = null;
   $attrs = array();
-  // check for cache
+  //setup query
   if ( array_key_exists('titleContains',$_REQUEST) && $_REQUEST['titleContains']) {
     $condition = "atb_title ilike '%".$_REQUEST['titleContains']."%'";
   }
@@ -56,9 +57,13 @@
   if ( array_key_exists('maxRows',$_REQUEST) && $_REQUEST['maxRows']) {
     $maxRows = $_REQUEST['maxRows'];
   }
+  if ( array_key_exists('refresh',$_REQUEST) && $_REQUEST['refresh']) {
+    $refresh = $_REQUEST['refresh'];
+  }
 
+  // check for cache
   $jsonCache = null;
-  if ($condition == "" && USECACHE) {// check cache for all
+  if ($condition == "" && USECACHE && !$refresh) {// check cache for all
     $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'SearchAllAttributions'");
     if ($dbMgr->getRowCount() > 0) {
       $row = $dbMgr->fetchResultRow();
