@@ -1083,7 +1083,7 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
   global $edition, $editionTOCHtml, $seqBoundaryMarkerHtmlLookup, $blnPosByEntTag, $curStructHeaderbyLevel;
   // check sequence for cached html by edition keying
   $structureHtml = $sequence->getScratchProperty("edn".$edition->getID()."structHtml");
-  if ($refresh || !$structureHtml ) {
+  if (defined("USEVIEWERCACHING") && !USEVIEWERCACHING || $refresh || !$structureHtml ) {
     $structureHtml = "";
     if ($sequence) {
       $seqEntGIDs = $sequence->getEntityIDs();
@@ -1233,8 +1233,10 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
     }
     $structureHtml .= '</div>';
     //cache html to sequence cache
-    $sequence->storeScratchProperty("edn".$edition->getID()."structHtml",$structureHtml);
-    $sequence->save();
+    if (defined("USEVIEWERCACHING") && USEVIEWERCACHING) {
+      $sequence->storeScratchProperty("edn".$edition->getID()."structHtml",$structureHtml);
+      $sequence->save();
+    }
   }
   return $structureHtml;
 }

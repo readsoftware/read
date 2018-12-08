@@ -3278,7 +3278,9 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
   if (!$edition || $edition->hasError()) {
     return null;
   }
-  $ednLookupInfo = $edition->getScratchProperty('lookupInfo');
+  if (defined("USEVIEWERCACHING") && USEVIEWERCACHING) {
+    $ednLookupInfo = $edition->getScratchProperty('lookupInfo');
+  }
   if (!$ednLookupInfo || $refresh) {
     $ednLookupInfo = null;
     $ednID = $edition->getID();
