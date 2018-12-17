@@ -29,9 +29,9 @@
 
 
 require_once (dirname(__FILE__) . '/../../config.php');//get defines
-require_once (dirname(__FILE__) . '/../../common/php/DBManager.php');//get database interface
 require_once (dirname(__FILE__) . '/../../common/php/utils.php');//get utilies
-require_once dirname(__FILE__) . '/../../model/entities/Terms.php';
+require_once (dirname(__FILE__) . '/../../common/php/DBManager.php');//get database interface
+require_once (dirname(__FILE__) . '/../../model/entities/Terms.php');
 // add required for switchInfo
 require_once dirname(__FILE__) . '/../../model/entities/Graphemes.php';
 require_once dirname(__FILE__) . '/../../model/entities/SyllableClusters.php';

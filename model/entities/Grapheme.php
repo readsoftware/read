@@ -90,15 +90,15 @@
       }
       if(is_array($arg)) {//initialize from resultRow
         $this->initializeBaseEntity($arg);
-        $this->_id=@$arg['gra_id'] ? $arg['gra_id']:NULL;
-        $this->_grapheme=(@$arg['gra_grapheme'] || @$arg['gra_grapheme'] ==="0") ? $arg['gra_grapheme']:NULL;
-        $this->_uppercase=@$arg['gra_uppercase'] ? $arg['gra_uppercase']:NULL;
-        $this->_type_id=@$arg['gra_type_id'] ? $arg['gra_type_id']:NULL;
-        $this->_text_critical_mark=@$arg['gra_text_critical_mark'] ? $arg['gra_text_critical_mark']:NULL;
-        $this->_alt=@$arg['gra_alt'] ? $arg['gra_alt']:NULL;
-        $this->_emmendation=@$arg['gra_emmendation'] ? $arg['gra_emmendation']:NULL;
-        $this->_decomposition=@$arg['gra_decomposition'] ? $arg['gra_decomposition']:NULL;
-        $this->_sort_code=@$arg['gra_sort_code'] ? $arg['gra_sort_code']:NULL;
+        $this->_id=isset($arg['gra_id']) ? $arg['gra_id']:NULL;
+        $this->_grapheme=(isset($arg['gra_grapheme']) || $arg['gra_grapheme'] ==="0") ? $arg['gra_grapheme']:NULL;
+        $this->_uppercase=isset($arg['gra_uppercase']) ? $arg['gra_uppercase']:NULL;
+        $this->_type_id=isset($arg['gra_type_id']) ? $arg['gra_type_id']:NULL;
+        $this->_text_critical_mark=isset($arg['gra_text_critical_mark']) ? $arg['gra_text_critical_mark']:NULL;
+        $this->_alt=isset($arg['gra_alt']) ? $arg['gra_alt']:NULL;
+        $this->_emmendation=isset($arg['gra_emmendation']) ? $arg['gra_emmendation']:NULL;
+        $this->_decomposition=isset($arg['gra_decomposition']) ? $arg['gra_decomposition']:NULL;
+        $this->_sort_code=isset($arg['gra_sort_code']) ? $arg['gra_sort_code']:NULL;
         if (!array_key_exists('gra_id',$arg)) {// must be a new record
           //ensure everything is encoded for save
           $this->_data = $this->prepBaseEntityData($arg);

@@ -3272,17 +3272,99 @@ function getEdnLpNoSegInfoQueryString($ednID){
               "left join grapheme on gra_id = scl_grapheme_ids[1] ".
         "order by lineOrd";
 }
+function addSequenceLabelToLookup($seqID) {
+  global $graID2StructureInlineLabels;
+  $structSequence = new Sequence($seqID);
+  if ($structSequence->hasError()) {
+    error_log("error retrieving structural analysis sequence ".$structSequence->getError());
+  } else {
+    $structGIDs = $structSequence->getEntityIDs();
+    $seqLabel = $structSequence->getLabel();
+    $seqType = $structSequence->getType();
+    $firstGraID = null;
+    $graIDs = null;
+    if (count($structGIDs) > 0) {
+      $cnt = 0;
+      foreach ($structGIDs as $structGID) {
+        list($prefix,$entID) = explode(':',$structGID);
+        $entTag = $prefix.$entID;
+        if ($cnt == 0) {
+          switch ($prefix) {
+            case 'seq':
+              $firstGraID = addSequenceLabelToLookup($entID);
+              break;
+            case 'cmp':
+              if ($firstGraID) {
+                continue;
+              }
+              $compound = new Compound($entID);
+              $tokenIDs = $compound->getTokenIDs();
+              if (count($tokenIDs) == 0) {
+                error_log("warn, Warning irregular compound $entTag in sequence - $structGID skipped.");
+                continue;
+              }
+              $entID = $tokenIDs[0]; //first token of compound
+            case 'tok':
+              if ($firstGraID) {
+                continue;
+              }
+              $token = new Token($entID);
+              $graIDs = $token->getGraphemeIDs();
+              if (count($graIDs) == 0) {
+                error_log("warn, Warning irregular token $entTag with no graphemes - $structGID skipped.");
+                continue;
+              }
+              break;
+            case 'scl':
+              if ($firstGraID) {
+                continue;
+              }
+              $syllable = new SyllableCluster($entID);
+              $graIDs = $syllable->getGraphemeIDs();
+              if (count($graIDs) == 0) {
+                error_log("warn, Warning irregular syllable $entTag with no graphemes - $structGID skipped.");
+                continue;
+              }
+              break;
+          }
+
+          if (!$firstGraID && $graIDs && count($graIDs)) {
+            $grapheme = new Grapheme($graIDs[0]);
+            if ($grapheme && !$grapheme->hasError()) {
+              if ($grapheme->getSortCode() != "195") {
+                $firstGraID = $graIDs[0];
+              } else if (count($graIDs) > 1) {
+                $firstGraID = $graIDs[1];
+              }
+            }
+          }
+          if ($firstGraID && $seqLabel) {
+            if (!array_key_exists($firstGraID,$graID2StructureInlineLabels)) {
+              $graID2StructureInlineLabels[$firstGraID] = array();
+            }
+            $inlineHtmlMarker = "<span class=\"structMarker $seqType seq$seqID\">[$seqLabel]</span>";
+            array_push($graID2StructureInlineLabels[$firstGraID], $inlineHtmlMarker);
+          }
+        } else if ($prefix == "seq") {
+          addSequenceLabelToLookup($entID);
+        }
+        $cnt++;
+      }
+    }
+  }
+  return $firstGraID;
+}
 
 function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $refresh = false) {
   global $graID2StructureInlineLabels;
   if (!$edition || $edition->hasError()) {
     return null;
   }
+  $ednLookupInfo = null;
   if (defined("USEVIEWERCACHING") && USEVIEWERCACHING) {
     $ednLookupInfo = $edition->getScratchProperty('lookupInfo');
   }
   if (!$ednLookupInfo || $refresh) {
-    $ednLookupInfo = null;
     $ednID = $edition->getID();
     if (!$fnTypeIDs){
       $fnTypeIDs = array(Entity::getIDofTermParentLabel('FootNote-FootNoteType'));//warning!!!! term dependency
@@ -3502,88 +3584,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
     }
 
     $graID2StructureInlineLabels = array();
-    function addSequenceLabelToLookup($seqID) {
-      global $graID2StructureInlineLabels;
-      $structSequence = new Sequence($seqID);
-      if ($structSequence->hasError()) {
-        error_log("error retrieving structural analysis sequence ".$structSequence->getError());
-      } else {
-        $structGIDs = $structSequence->getEntityIDs();
-        $seqLabel = $structSequence->getLabel();
-        $seqType = $structSequence->getType();
-        $firstGraID = null;
-        $graIDs = null;
-        if (count($structGIDs) > 0) {
-          $cnt = 0;
-          foreach ($structGIDs as $structGID) {
-            list($prefix,$entID) = explode(':',$structGID);
-            $entTag = $prefix.$entID;
-            if ($cnt == 0) {
-              switch ($prefix) {
-                case 'seq':
-                  $firstGraID = addSequenceLabelToLookup($entID);
-                  break;
-                case 'cmp':
-                  if ($firstGraID) {
-                    continue;
-                  }
-                  $compound = new Compound($entID);
-                  $tokenIDs = $compound->getTokenIDs();
-                  if (count($tokenIDs) == 0) {
-                    error_log("warn, Warning irregular compound $entTag in sequence - $structGID skipped.");
-                    continue;
-                  }
-                  $entID = $tokenIDs[0]; //first token of compound
-                case 'tok':
-                  if ($firstGraID) {
-                    continue;
-                  }
-                  $token = new Token($entID);
-                  $graIDs = $token->getGraphemeIDs();
-                  if (count($graIDs) == 0) {
-                    error_log("warn, Warning irregular token $entTag with no graphemes - $structGID skipped.");
-                    continue;
-                  }
-                  break;
-                case 'scl':
-                  if ($firstGraID) {
-                    continue;
-                  }
-                  $syllable = new SyllableCluster($entID);
-                  $graIDs = $syllable->getGraphemeIDs();
-                  if (count($graIDs) == 0) {
-                    error_log("warn, Warning irregular syllable $entTag with no graphemes - $structGID skipped.");
-                    continue;
-                  }
-                  break;
-              }
 
-              if (!$firstGraID && $graIDs && count($graIDs)) {
-                $grapheme = new Grapheme($graIDs[0]);
-                if ($grapheme && !$grapheme->hasError()) {
-                  if ($grapheme->getSortCode() != "195") {
-                    $firstGraID = $graIDs[0];
-                  } else if (count($graIDs) > 1) {
-                    $firstGraID = $graIDs[1];
-                  }
-                }
-              }
-              if ($firstGraID && $seqLabel) {
-                if (!array_key_exists($firstGraID,$graID2StructureInlineLabels)) {
-                  $graID2StructureInlineLabels[$firstGraID] = array();
-                }
-                $inlineHtmlMarker = "<span class=\"structMarker $seqType seq$seqID\">[$seqLabel]</span>";
-                array_push($graID2StructureInlineLabels[$firstGraID], $inlineHtmlMarker);
-              }
-            } else if ($prefix == "seq") {
-              addSequenceLabelToLookup($entID);
-            }
-            $cnt++;
-          }
-        }
-      }
-      return $firstGraID;
-    }
 
     $analysisSeqTypeID = Entity::getIDofTermParentLabel('analysis-sequencetype');// warning!!! term dependency
     $analSeqIDQuery = "select seq_id from sequence ".
