@@ -202,9 +202,9 @@
       $parsedGraData = array();
       $newSylGraIDs = array();
       if ($txtScl == '.') { //default syllable insert
-        array_push($parsedGraData,array( "gra_grapheme"=>"ʔ",
-                                         'gra_type_id'=>$graphemeTypeTermIDMap[$graphemeCharacterMap["ʔ"]['typ']],
-                                         'gra_sort_code'=>$graphemeCharacterMap["ʔ"]['srt']));
+//        array_push($parsedGraData,array( "gra_grapheme"=>"ʔ",
+//                                        'gra_type_id'=>$graphemeTypeTermIDMap[$graphemeCharacterMap["ʔ"]['typ']],
+//                                        'gra_sort_code'=>$graphemeCharacterMap["ʔ"]['srt']));
         array_push($parsedGraData,array( "gra_grapheme"=>".",
                                          'gra_type_id'=>$graphemeTypeTermIDMap[$graphemeCharacterMap["."]['typ']],
                                          'gra_sort_code'=>$graphemeCharacterMap["."]['srt']));
@@ -362,7 +362,7 @@
           if ($insPos == 'after') {// need to move to next GID for insert
             $refSclIndex++;
           }
-          if ($refSclIndex == count($physLineSclGIDs)) { //prepend
+          if ($refSclIndex == count($physLineSclGIDs)) { //append
             array_push($physLineSclGIDs,"scl:$newSclID");
           } else { //splice
             array_splice($physLineSclGIDs,$refSclIndex,0,"scl:$newSclID");
