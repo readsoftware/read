@@ -30,7 +30,7 @@
 * @subpackage  Services
 */
 
-  if (@$argv) {
+  if (isset($argv)) {
     $isCmdLineLaunch = true;
     // handle command-line queries
     $ARGV = array();

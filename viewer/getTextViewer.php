@@ -32,9 +32,9 @@
 */
 
   require_once (dirname(__FILE__) . '/../common/php/sessionStartUp.php');//initialize the session
-  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
+  require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../model/entities/EntityFactory.php');//get user access control
   require_once (dirname(__FILE__) . '/php/viewutils.php');//get utilities for viewing
   $dbMgr = new DBManager();

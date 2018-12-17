@@ -69,7 +69,7 @@
     $edition = null;
   }
   if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
-    echo "Usage: refreshEditionLocations.php?db=yourDBName&ednID=###";
+    echo "Usage: refreshEditionWordLocations.php?db=yourDBName&ednID=###";
   } else {
     $textSeqTypeID = Entity::getIDofTermParentLabel('Text-SequenceType');//warning!!!! term dependency
     $allTokCmpGIDsQuery = "select array_agg(c.comp) ".

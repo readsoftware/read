@@ -223,6 +223,7 @@
     }
 
   // get all fragments
+    $prtIDs = null;
     if (count($frgIDs)) {
       $fragments = new Fragments('frg_id in ('.join(",",$frgIDs).')','frg_id',null,null);//null offset and limit will get all in case of no condition
       $prtIDs = array();
@@ -238,7 +239,7 @@
     $parts = null;
     $items = null;
     // get all parts
-    if (count($prtIDs)) {
+    if (isset($prtIDs) && count($prtIDs)) {
       $parts = new Parts('prt_id in ('.join(",",$prtIDs).')','prt_id',null,null);//null offset and limit will get all in case of no condition
       foreach($parts as $part){
         if ($part->getItemID()) {
@@ -249,12 +250,12 @@
     }
 
   // get all items
-    if (count($itmIDs)) {
+    if (isset($itmIDs) && count($itmIDs)) {
       $items = new Items('itm_id in ('.join(",",$itmIDs).')','itm_id',null,null);//null offset and limit will get all in case of no condition
     }
 
     // get all baselines
-    if (count($srfIDs)) {
+    if (isset($srfIDs) && count($srfIDs)) {
       $baselines = new Baselines('bln_surface_id in ('.join(",",$srfIDs).')','bln_id',null,null);//null offset and limit will get all in case of no condition
     }
 
@@ -294,25 +295,25 @@
       }
     }
 
-    if ($fragments && $fragments->getCount() > 0) {
+    if (isset($fragments) && $fragments->getCount() > 0) {
       foreach($fragments as $fragment){
         $RML .= getFragmentRML($fragment);
       }
     }
 
-    if ($parts && $parts->getCount() > 0) {
+    if (isset($parts) && $parts->getCount() > 0) {
       foreach($parts as $part){
         $RML .= getPartRML($part);
       }
     }
 
-    if ($items && $items->getCount() > 0) {
+    if (isset($items) && $items->getCount() > 0) {
       foreach($items as $item){
         $RML .= getItemRML($item);
       }
     }
 
-    if ($baselines && $baselines->getCount() > 0) {
+    if (isset($baselines) && $baselines->getCount() > 0) {
       foreach($baselines as $baseline){
         $RML .= getBaselineRML($baseline);
       }
