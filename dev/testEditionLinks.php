@@ -43,7 +43,7 @@
   header('Pragma: no-cache');
 
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
-  if (@$argv) {
+  if (isset($argv)) {
     // handle command-line queries
     $cmdParams = array();
     for ($i=0; $i < count($argv); ++$i) {
