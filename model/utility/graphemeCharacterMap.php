@@ -98,6 +98,11 @@ $graphemeCharacterMap = array(
     "srt"=>"860","ssrt"=>"860","typ"=>"P"),
 "◯"=>array("srt"=>"821","ssrt"=>"821","typ"=>"I"),
 ":"=>array("srt"=>"803","ssrt"=>"803","typ"=>"P"),
+"⚀"=>array("srt"=>"900","ssrt"=>"900","typ"=>"P"),
+"⚁"=>array("srt"=>"910","ssrt"=>"910","typ"=>"P"),
+"⚂"=>array("srt"=>"920","ssrt"=>"920","typ"=>"P"),
+"⚃"=>array("srt"=>"930","ssrt"=>"930","typ"=>"P"),
+"⚄"=>array("srt"=>"940","ssrt"=>"940","typ"=>"P"),
 "*"=>array("srt"=>"099","ssrt"=>"099","typ"=>"V"), // for sanskrit
 "·"=>array("srt"=>"000","ssrt"=>"099","typ"=>"M"), // 00B7 virama {ASG: why both * and · for virama?
 "."=>array("srt"=>"189","ssrt"=>"189","typ"=>"V"),

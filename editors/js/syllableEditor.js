@@ -819,7 +819,7 @@ EDITORS.sclEditor.prototype = {
 //      DEBUG.log("warn","BEEP! VSE Replace text for syllable with embedded TCMs not implemented yet!");
       if (this.beforeSplitIndex >=0 && this.anchorPos == this.cursorPos && this.beforeSplitIndex == this.anchorIndex){
         startNodeIndex = this.anchorIndex;
-        startNodeOffset = this.anchorNodePos;
+        startNodeOffset = this.anchorPos;
       } else {
         startNodeIndex = this.charToNodeMap[this.anchorPos][0];
         startNodeOffset = this.charToNodeMap[this.anchorPos][1];
@@ -2391,6 +2391,11 @@ EDITORS.sclEditor.prototype = {
     "—" :"P",
     "|" :"P",
     ":" :"P",
+    "⚀" :"P",
+    "⚁" :"P",
+    "⚂" :"P",
+    "⚃" :"P",
+    "⚄" :"P",
     "?" :"O",
     "+" :"O",
     "#" :"O",
@@ -2571,6 +2576,11 @@ EDITORS.sclEditor.prototype = {
       "srt": "860", "typ": "P" },
     "◯": { "srt": "821", "typ": "I" },
     ":": { "srt": "803", "typ": "P" },
+    "⚀": {"srt": "900","ssrt": "900","typ": "P"},
+    "⚁": {"srt": "910","ssrt": "910","typ": "P"},
+    "⚂": {"srt": "920","ssrt": "920","typ": "P"},
+    "⚃": {"srt": "930","ssrt": "930","typ": "P"},
+    "⚄": {"srt": "940","ssrt": "940","typ": "P"},
     "*": { "srt": "000", "typ": "V" },
     ".": { "srt": "189", "typ": "V" },
     "_": { "srt": "599", "typ": "C" },
