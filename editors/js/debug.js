@@ -154,7 +154,7 @@ var DEBUG = DEBUG || {};
       for(i=0;i<DEBUG.level;i++) {
         indent += tab;
       }
-      DEBUG.log('trace',indent+"TRACE-"+codePointName+": "+msg);
+      DEBUG.log('trace',indent+"TRACE-"+codePointName+": "+(msg?msg:''));
     }
   };
 
