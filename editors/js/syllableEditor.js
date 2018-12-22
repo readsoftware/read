@@ -677,11 +677,22 @@ EDITORS.sclEditor.prototype = {
     posOldCur = this.cursorPos;
     this.cursorPos += isLeft?-1:1;
     pos = this.cursorPos;
+    // set screen range selection to match syllable position
     childNodes = this.textNodes;
+    //run through each node counting positions to id childnode and offset.
     for(i=0; i < childNodes.length; i++){
       if (childNodes[i].textContent.length < pos) {//pos is not in this childnode
         pos -= childNodes[i].textContent.length;
       } else {//found child and pos is offset
+        // if cursor at split
+        if (this.isSplitSyllable() && i == this.beforeSplitIndex && childNodes[i].textContent.length == pos) {
+          //if moving cursor to split, exclude split as split constitutes 2 locations for the same position.
+          if (isLeft) {
+            i++;
+            pos = 0;
+          }
+
+        }
         if (window.getSelection) {
           sel = window.getSelection();
           if (sel.getRangeAt && sel.rangeCount) {
@@ -696,7 +707,7 @@ EDITORS.sclEditor.prototype = {
         if (range) {
           if (!isSelect || this.anchorPos == this.cursorPos) {// move both anchor and cursor
             this.anchorPos = this.cursorPos;
-            DEBUG.trace("moveCurso","moving anchor to cursor of '"+this.curSyl+"' to end "+this.anchorPos);
+            DEBUG.trace("moveCurso","moving anchor and cursor of '"+this.curSyl+"' to "+this.anchorPos);
             range.setStart(childNodes[i],pos);
             range.setEnd(childNodes[i],pos);
             DEBUG.log("gen","changing range start and end of '"+childNodes[i].textContent+"' to "+pos);
@@ -717,7 +728,7 @@ EDITORS.sclEditor.prototype = {
       sel.addRange(range);
     }
     this.calculateState();
-    DEBUG.traceExit("moveCursor"," dir = "+ direction +" isSelect = "+ isSelect +" with origStr "+this.rawSyl+" and anchorPos"+this.anchorPos);
+    DEBUG.traceExit("moveCursor"," dir = "+ direction +" isSelect = "+ isSelect +" with origStr "+this.rawSyl+" and anchorPos"+this.anchorPos+"  "+this.state);
     return true;
   },
 
@@ -733,7 +744,7 @@ EDITORS.sclEditor.prototype = {
   replaceText: function(txt,mode,cursorMode) {
     DEBUG.traceEntry("replace text"," with '"+txt+"' mode "+mode+"' curmode "+cursorMode);
     var childNodes = this.textNodes, startNode, endNode,startNodeIndex,startNodeOffset,
-        i, tmp, sel, range, selectLen, revSelect = false, start,end, anchorOffset = 0;
+        i, tmp, sel, range, selectLen, start,end, anchorOffset = 0;
     if (childNodes.length == 1) {//single text node case
       if (mode == "all") {// replace all so just text change text
         this.firstTextNode.textContent = txt;
@@ -825,8 +836,7 @@ EDITORS.sclEditor.prototype = {
         startNodeOffset = this.charToNodeMap[this.anchorPos][1];
       }
       selectLen = this.cursorPos - this.anchorPos;
-      if (selectLen < 0) {
-        revSelect = true;
+      if (selectLen < 0) { //reverse selection
         startNodeOffset = startNodeOffset + selectLen;
         if (startNodeOffset < 0 ) {
           DEBUG.log('err',"startNodeOffset is smaller than select length on reverse select");
@@ -1191,6 +1201,12 @@ EDITORS.sclEditor.prototype = {
           this.replaceText("","selected","end");
           return false;
         } else if (posEnd < posV) {// consonants only since no vowel in selection
+          //selected all characters before split
+          if (this.isSplitSyllable() &&  posStart == posC-1 && posEnd == Math.max(posLastC,posLastH)+1 && posS == posEnd+1) {
+            DEBUG.log("warn","BEEP! Deleting of all characters before split on a split syllable is currently not allowed");
+            UTILITY.beep();
+            return "error";
+          }
           this.replaceText("","selected","before");
           return false;
         }
@@ -1239,7 +1255,7 @@ EDITORS.sclEditor.prototype = {
           this.replaceText(".","left","select");
           return false;
         } else if (key == "Del") {
-          if (false && this.isSplitSyllable()) {
+          if (this.isSplitSyllable() && posStart == 0 && posC == posLastC) { // split and single consonant so trying to backspace single consonant
             DEBUG.log("warn","BEEP! Deleting of characters on a split syllable is currently not allowed");
             return "error";
           }
@@ -1253,10 +1269,17 @@ EDITORS.sclEditor.prototype = {
           this.replaceText("","right","select");
           return false;
         } else if (key == "Backspace") {
-          if (this.isSplitSyllable() && posStart == 1 && posS == 2) {
-            DEBUG.log("warn","BEEP! Deleting of characters on a split syllable is currently not allowed");
-            UTILITY.beep();
-            return "error";
+          if (this.isSplitSyllable()) {
+            if ( posStart == 1 && posS == 2) {
+              DEBUG.log("warn","BEEP! Deleting of characters on a split syllable is currently not allowed");
+              UTILITY.beep();
+              return "error";
+            }
+            if (this.isCursorAtSplit("left") && posC == posLastC && posStart == posLastC + 1) { // split and single consonant so trying to backspace single consonant
+              DEBUG.log("warn","BEEP! Deleting of last consonant on a split syllable is currently not allowed");
+              UTILITY.beep();
+              return "error";
+            }
           }
           if ((posT > posM) && (posStart > posM) && (posStart <= posT+1)) {//modifier with virāma
             if (posStart == posT + 1) { // after virāma
@@ -1779,6 +1802,8 @@ EDITORS.sclEditor.prototype = {
     if (iSplit = this.getSylSplitIndex()) {
       this.beforeSplitIndex = iSplit-1;
       this.strPreSplit = this.getPreSplitText();
+      this.charToNodeMap[this.strPreSplit.length][0] = this.beforeSplitIndex;
+      this.charToNodeMap[this.strPreSplit.length][1] = this.textNodes[this.beforeSplitIndex].length;
     } else if (this.beforeSplitIndex || this.strPreSplit) {
       delete this.beforeSplitIndex;
       delete this.strPreSplit;
@@ -1800,7 +1825,7 @@ EDITORS.sclEditor.prototype = {
          cursorNode,cursorSclNode,cursorOffset,cursorOrd,cursorShift,caretOnly,nextNode,prevNode,
          calcAnchorPos = false,calcCursorPos = false,rangeChanged = false,
          childNodes,i,pos;
-    DEBUG.traceEntry('synchSelection',"Hint = "+ hint +"  for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
+    DEBUG.traceEntry('synchSelection',"Hint = "+ hint +"  for '"+this.curSyl+"' with state "+this.state+" with pos A,C "+this.anchorPos+","+this.cursorPos);
 
     //get the current browser selection
     if (window.getSelection) {
@@ -2116,10 +2141,10 @@ EDITORS.sclEditor.prototype = {
         sel.addRange(range);
       }
     }
-    DEBUG.trace('synchSelection',"Leaving synch selection for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
+    DEBUG.trace('synchSelection',"Leaving synch selection for '"+this.curSyl+"' with state "+this.state+" with pos A,C "+this.anchorPos+","+this.cursorPos);
     this.calculateState();
     DEBUG.log('gen',"Hint = "+ hint +"  for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
-    DEBUG.traceExit('synchSelection',"Hint = "+ hint +"  for '"+this.curSyl+"' with state "+this.state+" with pos "+this.anchorPos+","+this.cursorPos);
+    DEBUG.traceExit('synchSelection',"Hint = "+ hint +"  for '"+this.curSyl+"' with state "+this.state+" with pos A,C "+this.anchorPos+","+this.cursorPos);
   },
 
   /**************************  calculate state *******************************/
