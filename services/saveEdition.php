@@ -98,7 +98,7 @@ if (!$data) {
         invalidateCachedEditionEntities($edition->getID());
         invalidateCachedEditionViewerHtml($edition->getID());
         invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
-        invalidateAllTextResources();
+//        invalidateAllTextResources();
         if ($edition->hasError()) {
           array_push($errors,"error updating edition '".$edition->getDescription()."' - ".$edition->getErrors(true));
         }else {
@@ -125,7 +125,7 @@ if (count($errors)) {
 } else {
   $retVal["success"] = true;
 //  invalidateCache('AllTextResources'.getUserDefEditorID());
-  invalidateCache('AllTextResources');
+//  invalidateCache('AllTextResources');
 }
 if (count($warnings)) {
   $retVal["warnings"] = $warnings;

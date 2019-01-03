@@ -113,14 +113,16 @@
                                'srf' => array(),
                                'ano' => array(),
                                'atb' => array());
-//  $entities["update"] = array( 'txt' => array());
+
   $txtIDs = (array_key_exists('ids',$_REQUEST)? $_REQUEST['ids']:null);
+  $updateCache = (array_key_exists('update',$_REQUEST)? $_REQUEST['update']:null);
+  $removeTextFromCache = (array_key_exists('remove',$_REQUEST)? $_REQUEST['remove']:null);
   $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
                   (defined('DEFAULTSEARCHREFRESH')?DEFAULTSEARCHREFRESH:1));
   $jsonRetVal = "";
   $jsonCache = null;
   $isLoadAll = false;
-  if (!$txtIDs  && !$refresh && defined("USECACHE") && USECACHE) {
+  if (($removeTextFromCache || !$txtIDs)  && !$refresh && defined("USECACHE") && USECACHE) {
     // check for cache
     $dbMgr = new DBManager();
     if (!$dbMgr->getError()) {
@@ -133,6 +135,22 @@
         }
       }
     }
+  }
+
+  if ($removeTextFromCache && $txtIDs && $jsonRetVal) { // call to remove text from cache
+    $curCache = json_decode($jsonRetVal,true);
+    foreach ($txtIDs as $txtID) {
+      if (array_key_exists($txtID,$curCache['entities']['insert']['txt'])) {
+        unset($curCache['entities']['insert']['txt'][$txtID]);
+      }
+      if (array_key_exists($txtID,$curCache['entities']['update']['txt'])) {
+        unset($curCache['entities']['update']['txt'][$txtID]);
+      }
+    }
+    $jsonCache->setJsonString(json_encode($curCache));
+    $jsonCache->clearDirtyBit();
+    $jsonCache->save();
+    $jsonRetVal = json_encode(array("success"=>true));
   }
 
   if (!$jsonRetVal) {
@@ -324,6 +342,9 @@
     $editions = new Editions("edn_text_id in (".join(",",$txtIDs).")",null,null,null);
     $editions->setAutoAdvance(false); // make sure the iterator doesn't prefetch
     foreach ($editions as $edition) {
+      if ($edition->isMarkedDelete()) {
+        continue;
+      }
       $ednID = $edition->getID();
       if ($ednID && !array_key_exists($ednID, $entities['update']['edn'])) {
         $entities['update']['edn'][$ednID] = array('description'=> $edition->getDescription(),
@@ -424,7 +445,7 @@
       $retVal["entities"] = $entities;
     }
     $jsonRetVal = json_encode($retVal);
-    if (USECACHE && $isLoadAll) {
+    if (USECACHE && ($isLoadAll || $updateCache)) {
       if (!$jsonCache) {
         $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'AllTextResources'");
         if ($dbMgr->getRowCount() > 0 ) {
@@ -437,9 +458,49 @@
           $jsonCache->setOwnerID((defined("DEFAULTCACHEOWNERID") && DEFAULTCACHEOWNERID)?DEFAULTCACHEOWNERID:6);
         }
       }
-      $jsonCache->setJsonString($jsonRetVal);
-      $jsonCache->clearDirtyBit();
-      $jsonCache->save();
+      if ($isLoadAll) {
+        $jsonCache->setJsonString($jsonRetVal);
+        $jsonCache->clearDirtyBit();
+        $jsonCache->save();
+      } else if ($updateCache && (count($entities['insert']) > 0 || count($entities['update']) > 0 )) {
+        $curCache =  $jsonCache->getJsonString();
+        if ($curCache) {
+          $curCache = json_decode($curCache,true);
+          if (count($entities['insert']) > 0) {
+            if (!array_key_exists('insert',$curCache['entities'])) {
+              $curCache['entities']['insert'] = $entities['insert'];
+            } else {
+              foreach ($entities['insert'] as $prefix => $id2properties) {
+                if (!array_key_exists($prefix,$curCache['entities']['insert'])) {
+                  $curCache['entities']['insert'][$prefix] = $id2properties;
+                } else {
+                  foreach ($id2properties as $id => $properties) {
+                    $curCache['entities']['insert'][$prefix][$id] = $properties;
+                  }
+                }
+              }
+            }
+          }
+          if (count($entities['update']) > 0) {
+            if (!array_key_exists('update',$curCache['entities'])) {
+              $curCache['entities']['update'] = $entities['update'];
+            } else {
+              foreach ($entities['update'] as $prefix => $id2properties) {
+                if (!array_key_exists($prefix,$curCache['entities']['update'])) {
+                  $curCache['entities']['update'][$prefix] = $id2properties;
+                } else {
+                  foreach ($id2properties as $id => $properties) {
+                    $curCache['entities']['update'][$prefix][$id] = $properties;
+                  }
+                }
+              }
+            }
+          }
+          $jsonCache->setJsonString(json_encode($curCache));
+          $jsonCache->clearDirtyBit();
+          $jsonCache->save();
+        }
+      }
     }
   }
   if (!$jsonRetVal){

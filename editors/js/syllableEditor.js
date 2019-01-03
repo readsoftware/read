@@ -472,7 +472,6 @@ EDITORS.sclEditor.prototype = {
                 ednVE.calcEditionRenderMappings();//TODO optimize to redraw line or 2
                 ednVE.renderEdition();//TODO optimize to redraw line or 2
                 VSE.dirty = false;
-                VSE.dirty = false;
                 if (cbSuccess) {
                   cbSuccess(sclIDSaved);
                 } else {
@@ -504,7 +503,8 @@ EDITORS.sclEditor.prototype = {
                 alert(errStr);
               }
               DEBUG.trace("VSE.save errorHandler",errStr);
-              ednVE.sclEd.saving = false;
+              VSE.saving = false;
+              delete VSE.savingHash;
           }
       });// end ajax
     }

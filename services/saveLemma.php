@@ -211,7 +211,7 @@ if (count($errors) == 0) {
           }else{
             addNewEntityReturnData('cat',$catalog);
             //flag allresourses as dirty
-            invalidateAllTextResources();
+//            invalidateAllTextResources();
             $catID = $catalog->getID();
             //need to update the editions calculate catIDs field
             $catalogs = new Catalogs($ednID." = ANY (\"cat_edition_ids\")",null,null,null);
