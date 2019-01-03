@@ -155,7 +155,7 @@ if (count($errors) == 0) {
         addNewEntityReturnData('cat',$catalog);
       }
     }
-    invalidateAllTextResources();  
+    //invalidateAllTextResources();  
   }
 }
 $retVal["success"] = false;

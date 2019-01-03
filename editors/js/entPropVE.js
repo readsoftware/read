@@ -1611,16 +1611,15 @@ EDITORS.EntityPropVE.prototype = {
 */
 
   createImageEntry: function(img) {
-    var entPropVE = this,
-        thumbUrl = (img && (img.thumbUrl || img.url))? (img.thumbUrl?img.thumbUrl:img.url):null,
+    var thumbUrl = (img && (img.thumbUrl || img.url))? (img.thumbUrl?img.thumbUrl:img.url):null,
         imgType = this.dataMgr.getTermFromID(img.typeID);
     DEBUG.trace("createImageEntry");
     //create Annotation Entry
     return($('<div class="imageentry '+imgType+' '+img.tag+'">' +
          '<span class="image">' +
-         (img.thumbUrl? '<img class="resImageIconBtn img'+img.id+'" src="'+img.thumbUrl+'" alt="Thumbnail not available"/>':'')+
+         (thumbUrl? '<img class="resImageIconBtn img'+img.id+'" src="'+thumbUrl+'" alt="Thumbnail not available"/>':'')+
          img.title + '</span>'+
-         (img.readonly?'':'<span class="removeimg '+img.tag+'" title="remove tag '+img.tag+'">X</span>')+
+         ((!img || img.readonly)?'':'<span class="removeimg '+img.tag+'" title="remove tag '+img.tag+'">X</span>')+
          '</div>'));
     //create input with save button
   },
@@ -1673,31 +1672,36 @@ EDITORS.EntityPropVE.prototype = {
 */
 
 createBaselineUI: function() {
-  var entPropVE = this,i,j, blnID, displayUI, baseline;
+  var entPropVE = this, i, blnID, displayUI, baseline,
+      blnUI, blnImageTypeID, hasImageBaseline = false;
   DEBUG.traceEntry("createBaselineUI");
   //create UI container
-  this.blnUI = $('<div class="blnUI"></div>');
-  this.contentDiv.append(this.blnUI);
+  blnUI = $('<div class="blnUI"></div>');
   displayUI = $('<div class="propDisplayUI"/>');
   //create Header
   displayUI.append($('<div class="blnUIHeader"><span>Baselines:</span></div>'));
+  blnImageTypeID = this.dataMgr.getIDFromTermParentTerm('image','baselinetype');
   //create a list of Images for entity
   if (this.entity && this.entity.blnIDs && this.entity.blnIDs.length) {
     for (i in this.entity.blnIDs) {
       blnID = this.entity.blnIDs[i];
       baseline = this.dataMgr.getEntity("bln",blnID);
-      if (baseline) {
+      if (baseline && baseline.type == blnImageTypeID) {
+        hasImageBaseline = true;
         baseline.tag = "bln" + blnID;
         displayUI.append(this.createBaselineEntry(baseline));
       }
     }
   }
-  this.blnUI.append(displayUI);
-  $('span.removebln',this.blnUI).unbind("click").bind("click",function(e) {
-    var classes = $(this).attr('class'),
-        blnTag = classes.match(/bln\d+/)[0];
-    entPropVE.removeBln(blnTag);
-  });
+  if (hasImageBaseline) {
+    blnUI.append(displayUI);
+    this.contentDiv.append(blnUI);
+    $('span.removebln',this.blnUI).unbind("click").bind("click",function(e) {
+      var classes = $(this).attr('class'),
+          blnTag = classes.match(/bln\d+/)[0];
+      entPropVE.removeBln(blnTag);
+    });
+  }
   //create input with save button
   DEBUG.traceExit("createBaselineUI");
 },
@@ -1710,16 +1714,16 @@ createBaselineUI: function() {
 */
 
 createBaselineEntry: function(bln) {
-  var entPropVE = this, img = this.dataMgr.getEntity('img',bln.imageID)
+  var img = this.dataMgr.getEntity('img',bln.imageID)
       thumbUrl = (img && (img.thumbUrl || img.url))? (img.thumbUrl?img.thumbUrl:img.url):null,
       blnType = this.dataMgr.getTermFromID(bln.type);//todo change this to typeID
   DEBUG.trace("createBaselineEntry");
   //create Annotation Entry
   return($('<div class="baselineentry '+blnType+' '+bln.tag+'" title="Baseline has '+
-        (bln.segCount >0?bln.segCount:0) + ' segments defined">' +
-       '<span class="baseline">' +
-       (img.thumbUrl? '<img class="resImageIconBtn bln'+bln.id+'" src="'+img.thumbUrl+'" alt="Thumbnail not available"/>':'')+
-       img.title + '</span>'+
+       (bln.segCount >0?bln.segCount:0) + ' segments defined">' +
+       (img ? '<span class="baseline">' +
+              (img.thumbUrl ? '<img class="resImageIconBtn bln'+bln.id+'" src="'+img.thumbUrl+'" alt="Thumbnail not available"/>':'') +
+              (img.title ? img.title:'Untitled Image') + '</span>':'') +
        ((bln.readonly || bln.segCount > 0)?'':'<span class="removebln '+bln.tag+'" title="remove tag '+bln.tag+'">X</span>')+
        '</div>'));
   //create input with save button
@@ -1749,6 +1753,9 @@ removeBln: function(blnTag) {
           if (typeof data == 'object' && data.success && data.entities) {
             //update data
             entPropVE.dataMgr.updateLocalCache(data,null);
+            if (entPropVE.prefix == 'txt') { //removing baseline requires to update textResources cache
+              entPropVE.dataMgr.updateTextResourcesCache(entPropVE.entID);
+            }
             entPropVE.showEntity();
           }
           if (entPropVE.controlVE &&
@@ -2213,13 +2220,16 @@ removeBln: function(blnTag) {
         data: savedata,
         asynch: true,
         success: function (data, status, xhr) {
-          var controlVE =entPropVE.controlVE, txtID = entPropVE.entID;
+          var controlVE = entPropVE.controlVE, txtID = entPropVE.entID;
           if (typeof data == 'object' && data.success && data.entities) {
             entPropVE.dataMgr.updateLocalCache(data,null);
             entPropVE.clear();
             if (controlVE && controlVE.id == "searchVE" &&
                 controlVE.removeTextRow) {
               controlVE.removeTextRow(txtID);
+            }
+            if (txtID) { //deleting text requires to update textResources cache
+              entPropVE.dataMgr.removeTextResourcesCache(txtID);
             }
             if (data['errors']) {
               alert("Error(s) occurred while trying to delete Text . Error(s): " +
@@ -2242,7 +2252,7 @@ removeBln: function(blnTag) {
 */
 
   deleteEdition: function() {
-    var entPropVE = this, savedata = {};
+    var entPropVE = this, savedata = {}, updateTxtID = entPropVE.entity.txtID;
     DEBUG.traceEntry("deleteEdition");
       savedata = {ednID:entPropVE.entID};
       //save data
@@ -2257,6 +2267,10 @@ removeBln: function(blnTag) {
             if (entPropVE.controlVE && entPropVE.controlVE.layoutMgr) {
               entPropVE.controlVE.layoutMgr.clearPane(entPropVE.config.id);
               entPropVE.controlVE.layoutMgr.refreshCursor();
+              entPropVE.controlVE.layoutMgr.pushState();
+            }
+            if (updateTxtID) { //deleting edition requires to update textResources cache
+              entPropVE.dataMgr.updateTextResourcesCache(updateTxtID);
             }
             if (data['errors']) {
               alert("Error(s) occurred while trying to delete Edition . Error(s): " +
@@ -2294,6 +2308,9 @@ removeBln: function(blnTag) {
             entPropVE.dataMgr.updateLocalCache(data,null);
             if (entPropVE.controlVE && entPropVE.controlVE.refreshEditionHeader) {
               entPropVE.controlVE.refreshEditionHeader();
+            }
+            if (entPropVE.entity.txtID) { //updating edition requires to update textResources cache
+              entPropVE.dataMgr.updateTextResourcesCache(entPropVE.entity.txtID);
             }
             if (data['errors']) {
               alert("Error(s) occurred while trying to save to a Edition record. Error(s): " +
@@ -2910,11 +2927,15 @@ removeBln: function(blnTag) {
                         typeof entPropVE.controlVE.addTextRow == "function") {
                       entPropVE.controlVE.addTextRow(txtID, text.CKN, text.title);
                     }
+                    if (text) {
+                      entPropVE.dataMgr.updateTextResourcesCache(txtID);
+                    }
                   } else {
                     txtID = Object.keys(data.entities.update.txt)[0];
                     if (data.entities.update.txt[txtID]) {
                       needsRefresh = true;
                     }
+                    entPropVE.dataMgr.updateTextResourcesCache(txtID);
                   }
                   entPropVE.showEntity('txt',txtID);
                   if (entPropVE.controlVE && entPropVE.controlVE.refreshEntityDisplay &&

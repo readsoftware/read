@@ -170,7 +170,7 @@ if (count($errors)) {
 } else {
   $retVal["success"] = true;
 //  invalidateCache('AllTextResources'.getUserDefEditorID());
-  invalidateCache('AllTextResources');
+//  invalidateCache('AllTextResources');
 }
 if (count($warnings)) {
   $retVal["warnings"] = $warnings;

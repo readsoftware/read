@@ -101,6 +101,8 @@ MANAGERS.DataManager.prototype = {
     this.loadingEdition = false;
     this.loadingBaseline = false;
     this.loadingTextResources = false;
+    this.updatingTextResources = false;
+    this.removingTextResources = false;
     this.textResourcesLoaded = false;
     this.entities = {};
     this.switchInfoByTextID = {};
@@ -139,6 +141,8 @@ MANAGERS.DataManager.prototype = {
     this.loadingTextResources = false;
     this.loadingEdition = false;
     this.textResourcesLoaded = false;
+    this.updatingTextResources = false;
+    this.removingTextResources = false;
     this.entities = {};
     this.switchInfoByTextID = {};
     this.cknToTxtID = {};
@@ -1730,6 +1734,86 @@ MANAGERS.DataManager.prototype = {
     }
     DEBUG.traceExit("dataMgr.loadTextResource");
   },
+
+
+/**
+* update text resource cache
+*
+* @param int txtID text id
+*/
+
+updateTextResourcesCache: function(txtID) {
+  DEBUG.traceEntry("dataMgr.updateTextResourcesCache");
+  var dataMgr = this, dataQuery = "",
+      i,temp;
+  if (dataMgr.updatingTextResources) {
+    return;
+  }
+  dataQuery = {};
+  dataMgr.updatingTextResources = true;
+  $.ajax({
+      type:"POST",
+      dataType: 'json',
+      url: this.basepath+'/services/loadTextResources.php?db='+this.dbName+'&update=1&ids='+txtID,//caution dependency on context having basepath and dbName
+      data: dataQuery,
+      async: true,
+      success: function (data, status, xhr) {
+          DEBUG.traceEntry("dataMgr.updateTextResourcesCache.SuccessCB");
+          dataMgr.updatingTextResources = false;
+          if (data.warnings) {
+            DEBUG.log("warn", "warnings during updateTextResourcesCache - " + data.warnings.join(" : "));
+          }
+          DEBUG.traceExit("dataMgr.updateTextResourcesCache.SuccessCB");
+      },
+      error: function (xhr,status,error) {
+          // add record failed.
+          dataMgr.updatingTextResources = false;
+          alert("An error occurred while trying to update text resource cache. Error: " + error);
+      }
+  });
+  DEBUG.traceExit("dataMgr.updateTextResourcesCache");
+},
+
+
+/**
+* update text resource cache
+*
+* @param int txtID text id
+*/
+
+removeTextResourcesCache: function(txtID) {
+  DEBUG.traceEntry("dataMgr.removeTextResourcesCache");
+  var dataMgr = this, dataQuery = "",
+      i,temp;
+  if (dataMgr.removingTextResources || !txtID || 
+    !dataMgr.entities.txt || !dataMgr.entities.txt[txtID] ||
+    !dataMgr.entities.txt[txtID].readonly) {
+    return;
+  }
+  dataQuery = {};
+  dataMgr.removingTextResources = true;
+  $.ajax({
+      type:"POST",
+      dataType: 'json',
+      url: this.basepath+'/services/loadTextResources.php?db='+this.dbName+'&remove=1&ids='+txtID,//caution dependency on context having basepath and dbName
+      data: dataQuery,
+      async: true,
+      success: function (data, status, xhr) {
+          DEBUG.traceEntry("dataMgr.removeTextResourcesCache.SuccessCB");
+          dataMgr.removingTextResources = false;
+          if (data.warnings) {
+            DEBUG.log("warn", "warnings during removeTextResourcesCache - " + data.warnings.join(" : "));
+          }
+          DEBUG.traceExit("dataMgr.removeTextResourcesCache.SuccessCB");
+      },
+      error: function (xhr,status,error) {
+          // add record failed.
+          dataMgr.removingTextResources = false;
+          alert("An error occurred while trying to update text resource cache. Error: " + error);
+      }
+  });
+  DEBUG.traceExit("dataMgr.removeTextResourcesCache");
+},
 
 
 /**

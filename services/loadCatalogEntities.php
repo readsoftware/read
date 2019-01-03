@@ -83,7 +83,9 @@
   $catalog = new Catalog($catID);
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
     array_push($warnings,"Warning no catalog available for id $catID .");
-  } else if (!$catalog->isMarkedDelete()){
+  } else if ($catalog->isMarkedDelete()){
+    array_push($errors,"Error no catalog available for id $catID .");
+  } else {
     $catID = $catalog->getID();
     $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
                  ($catalog->getScratchProperty('refresh')?$catalog->getScratchProperty('refresh'):
@@ -91,11 +93,10 @@
     if (USECACHE  && !$refresh) {
       $retString = getCachedCatalog($catID);//get user or public cached edition if there is one.
     }
-  } else {
-    array_push($errors,"Error no catalog available for id $catID .");
   }
-  if (count($warnings) == 0 && !$retString) {// catalog found and no cache so process/load it
-    $saveCatalogToCache = true;
+
+  if (!$retString && count($warnings) == 0 && count($errors) == 0) {// catalog found and no cache so process/load it
+    $saveCatalogToCache = USECACHE?true:false;
     $entities['update']['cat'][$catID] = array('description'=> $catalog->getDescription(),
                                                'id' => $catID,
                                                'value'=> $catalog->getTitle(),

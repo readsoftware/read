@@ -929,13 +929,16 @@ EDITORS.SearchVE.prototype = {
                 srchVE.dataMgr.updateLocalCache(data,srchVE.getCursorTextID());
                 if (data && data.entities && data.entities.insert && data.entities.insert.edn) {
                   var ednID, text = srchVE.dataMgr.getEntity('txt',srchVE.getCursorTextID());
-                  if (text && !text.ednIDs) {
-                    text.ednIDs = [];
-                  }
-                  for (ednID in data.entities.insert.edn) {
-                    if (text.ednIDs.indexOf(ednID) == -1){
-                      text.ednIDs.push(ednID);
+                  if (text) {
+                    if (!text.ednIDs) {
+                      text.ednIDs = [];
                     }
+                    for (ednID in data.entities.insert.edn) {
+                      if (text.ednIDs.indexOf(ednID) == -1){
+                        text.ednIDs.push(ednID);
+                      }
+                    }
+                    srchVE.dataMgr.updateTextResourcesCache(text.id);
                   }
                 }
                 srchVE.updateCursorInfoBar();
@@ -975,13 +978,16 @@ EDITORS.SearchVE.prototype = {
                 srchVE.dataMgr.updateLocalCache(data,srchVE.getCursorTextID());
                 if (data && data.entities && data.entities.insert && data.entities.insert.edn) {
                   var ednID, text = srchVE.dataMgr.getEntity('txt',srchVE.getCursorTextID());
-                  if (text && !text.ednIDs) {
-                    text.ednIDs = [];
-                  }
-                  for (ednID in data.entities.insert.edn) {
-                    if (text.ednIDs.indexOf(ednID) == -1){
-                      text.ednIDs.push(ednID);
+                  if (text) {
+                    if (!text.ednIDs) {
+                      text.ednIDs = [];
                     }
+                    for (ednID in data.entities.insert.edn) {
+                      if (text.ednIDs.indexOf(ednID) == -1){
+                        text.ednIDs.push(ednID);
+                      }
+                    }
+                    srchVE.dataMgr.updateTextResourcesCache(text.id);
                   }
                 }
                 srchVE.updateCursorInfoBar();
@@ -1027,14 +1033,17 @@ EDITORS.SearchVE.prototype = {
                 srchVE.dataMgr.updateLocalCache(data,srchVE.getCursorTextID());
                 if (data && data.entities && data.entities.insert && data.entities.insert.edn) {
                   var ednID, text = srchVE.dataMgr.getEntity('txt',srchVE.getCursorTextID());
-                  if (text && !text.ednIDs) {
-                    text.ednIDs = [];
-                  }
-                  for (ednID in data.entities.insert.edn) {
-                    if (text.ednIDs.indexOf(ednID) == -1){
-                      text.ednIDs.push(ednID);
+                  if (text) {
+                    if (!text.ednIDs) {
+                      text.ednIDs = [];
                     }
-                    msg += data.entities.insert.edn[ednID].value + " ";
+                    for (ednID in data.entities.insert.edn) {
+                      if (text.ednIDs.indexOf(ednID) == -1){
+                        text.ednIDs.push(ednID);
+                      }
+                      msg += data.entities.insert.edn[ednID].value + " ";
+                    }
+                    srchVE.dataMgr.updateTextResourcesCache(text.id);
                   }
                 }
                 srchVE.updateCursorInfoBar();

@@ -196,8 +196,8 @@ if (count($errors)) {
   $retVal["success"] = true;
 //  invalidateCache('AllTextResources'.getUserDefEditorID());
 //  invalidateCache('SearchAllResults'.getUserDefEditorID());
-  invalidateCache('AllTextResources');
-  invalidateCache('SearchAllResults');
+//  invalidateCache('AllTextResources');
+//  invalidateCache('SearchAllResults');
 }
 if (count($warnings)) {
   $retVal["warnings"] = $warnings;

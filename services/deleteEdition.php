@@ -235,7 +235,9 @@ if (count($errors) == 0) {
   if ($text && !$text->hasError()){
     $txtEdnIDs = array();
     foreach($text->getEditions() as $txtEdition){
-      array_push($txtEdnIDs, $txtEdition->getID());
+      if (!$txtEdition->isMarkedDelete()) {
+        array_push($txtEdnIDs, $txtEdition->getID());
+      }
     }
     addUpdateEntityReturnData('txt',$ednTxtID,"ednIDs",$txtEdnIDs);
   }
