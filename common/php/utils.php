@@ -1122,13 +1122,13 @@ function getEntitySclIDs($prefix,$id) {
     $sclIDs = array($id);
   } else if ($prefix == 'tok') {
     $token = new Token($id);
-    $sclIDs = $token->getSyllableClusterIDs();
+    $sclIDs = $token->getSyllableClusterIDs(false,true);
   } else if ($prefix == 'cmp') {
     $compound = new Compound($id);
     $cmpTokens = $compound->getTokens();
     $sclIDs = array();
     foreach ($cmpTokens as $token) {
-      $sclIDs = array_merge($sclIDs,$token->getSyllableClusterIDs());
+      $sclIDs = array_merge($sclIDs,$token->getSyllableClusterIDs(false,true));
     }
   }
   return $sclIDs;
@@ -1145,10 +1145,11 @@ function getEntitySclIDs($prefix,$id) {
 
 function getEntitySwitchHash($prefix,$id) {
   $tag = $prefix.$id;
-  if ($prefix == 'scl') {
-    $syllable = new SyllableCluster($id);
-    $startID = $endID = $syllable->getSegmentID();
-  } else if ($prefix == 'tok') {
+//  if ($prefix == 'scl') {
+//    $syllable = new SyllableCluster($id);
+//    $startID = $endID = $syllable->getSegmentID();
+//  } else 
+  if ($prefix == 'tok') {
     $token = new Token($id);
     if (!$token) {
       return null;
@@ -1326,7 +1327,7 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
               $startID = $entities['scl'][$startSclID]['segID'];
               $split = checkForSplit($entObj,$startSclID,false);
               if ($split){
-                $startID = "scl".$startSclID."S".$split;
+                $startID = "scl".$startSclID."S".$startID."-".$split;
               }
             } else {
               array_push($warnings,"warning no segID for syllable ID $startSclID of $entGID skipping switch calculation");
@@ -1339,7 +1340,7 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
               $endID = $entities['scl'][$endSclID]['segID'];
               $split = checkForSplit($entObj,$endSclID,false);
               if ($split){
-                $endID = "scl".$endSclID."S".$split;
+                $endID = "scl".$endSclID."S".$endID."-".$split;
               }
             } else {
               array_push($warnings,"warning no segID for syllable ID $endSclID of $entGID skipping switch calculation");

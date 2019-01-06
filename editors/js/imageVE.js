@@ -732,7 +732,7 @@ EDITORS.ImageVE.prototype = {
       $('#'+btnAutoLinkOrdName,this.autoLinkOrdBtnDiv).unbind('click')
                                  .bind('click',function(e) {
         var blnID = imgVE.blnEntity.id, defaultMode;
-        if (imgVE.ordinalSetInput.val() && imgVE.ordinalSetInput.val() > 1) {
+        if (imgVE.ordinalSetInput.val() && imgVE.ordinalSetInput.val() >= 1) {
           mode = Object.keys(imgVE.selectedPolygons).length;
           imgVE.autoLinkOrdMode = true;
           $('.editContainer').trigger('autoLinkOrdRequest',[imgVE.id,blnID,mode]);

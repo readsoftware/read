@@ -251,9 +251,9 @@
     }
 
     /**
-    * Get SyllableCluster's baseline objects
+    * Get SyllableCluster's grapheme objects
     *
-    * @return baseline iterator for the baselines of this syllablecluster or NULL
+    * @return grapheme iterator for the graphemes of this syllablecluster or NULL
     */
     public function getGraphemes($autoExpand = false) {
       if ((!$this->_graphemes || $this->_graphemes_unsynched) && $autoExpand && count($this->getGraphemeIDs())>0) {
@@ -267,6 +267,30 @@
         }
       }
       return $this->_graphemes;
+    }
+
+    /**
+    * Get SyllableCluster's physical line sequence objects
+    *
+    * @return sequence iterator for the physical line sequence containers of this syllablecluster or NULL
+    */
+    public function getPhysLineSequences() {
+      $physLineSequences = null;
+      if ($this->_id) {
+        $seqTypeID = $this->getIDofTermParentLabel("linephysical-textphysical"); //warning!!! term dependency
+        if ($seqTypeID) {
+          $condition = "'scl:".$this->_id."' = ANY(seq_entity_ids) and ".
+                      "seq_owner_id != 1 and ".
+                      "seq_type_id = $seqTypeID";
+          $physLineSequences = new Sequences($condition,null,null,null);
+          if (!$physLineSequences->getError() && $physLineSequences->getCount() > 0) {
+            $physLineSequences->setAutoAdvance(false);
+          } else {
+            $physLineSequences = null;
+          }
+        }
+      }
+      return $physLineSequences;
     }
 
     /**

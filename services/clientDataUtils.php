@@ -457,7 +457,7 @@ function addLinkEntityReturnData($prefix,$entID,$key,$value) {
 
 function addUpdateSwitchHashReturnData($prefix,$entID) {
   global $entities;
-  if (!in_array($prefix,array('cmp','tok','scl'))) {
+  if (!in_array($prefix,array('cmp','tok'))) {
     return;
   }
   //calc hash
@@ -478,7 +478,7 @@ function addUpdateSwitchHashReturnData($prefix,$entID) {
 
 function addRemoveEntitySwitchHashReturnData($entTag) {
   global $entities;
-  if (!in_array(substr($entTag,0,3),array('cmp','tok','scl'))) {
+  if (!in_array(substr($entTag,0,3),array('cmp','tok'))) {
     return;
   }
   if (!array_key_exists('removeswitchhashes',$entities)) {

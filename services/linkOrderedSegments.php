@@ -178,7 +178,7 @@ if (!$data) {
     array_push($errors,"insufficient infomation - must specify at least one baseline");
   }
 
-  if (count($errors) == 0) {
+  if (count($errors) == 0) {//check if user specified a start and stop segmentID
     //start baseline-segment order id - (end baseline-segment order id)- segIDs if 1 then start if 2 then start stop if more set of selected segments
     $endSegOrd = $startSegOrd = $segIDs = null;
     if (isset($data['segIDs']) && $data['segIDs'] != "") {//get  SyllableIDs
@@ -243,7 +243,9 @@ if (!$data) {
   $segCnt = count($ordSegIDs);
   $log .= "segCnt = '$segCnt'\n";
   // verify syllable ownership
-  $orderedSyllables = array();;
+  $orderedSyllables = array();
+
+  //order syllables
   foreach ($sclIDs as $sclID) {
     $syllable = new SyllableCluster($sclID);
     if ($syllable->isReadonly()) {
@@ -273,6 +275,7 @@ if (!$data) {
     }
   }
   if (count($errors) == 0 && count($orderedSyllables)> 0) {
+    $cachePhysLineSeqIDs = array();
     while (count($orderedSyllables) && count($ordSegIDs)) {
       $segID = array_shift($ordSegIDs);
       $segment = new Segment($segID);
@@ -300,7 +303,39 @@ if (!$data) {
           } else {
             addUpdateEntityReturnData("seg",$segment->getID(),"sclIDs",$segment->getSyllableIDs(true));
             addUpdateEntityReturnData("scl",$syllable->getID(),"segID",$syllable->getSegmentID());
+            //if using cache then invalidate cache for syllable's physical line seq and for edition
+            if (defined('USECACHE') && USECACHE) {
+              $sclPLSeqs = $syllable->getPhysLineSequences();
+              if ($sclPLSeqs) {
+                foreach ($sclPLSeqs as $sequence) {
+                  array_push($cachePhysLineSeqIDs,$sequence->getID());
+                }
+              }
+            }
           }
+        }
+      }
+    }
+    if (count($cachePhysLineSeqIDs)>0) {
+      $cachePhysLineSeqIDs = array_unique($cachePhysLineSeqIDs);
+      $cacheEdnIDs = array();
+      foreach ($cachePhysLineSeqIDs as $physLineSeqID){
+        $cacheSelector = "seq$physLineSeqID"."edn";
+        $query = "select array_agg(replace(jsc_label,'$cacheSelector','')) as ednIDs from jsonCache where jsc_label like '$cacheSelector%'";
+        $dbMgr->query($query);
+        if ($dbMgr->getRowCount() > 0) {
+          $row = $dbMgr->fetchResultRow();
+          $ednIDs = explode(',',trim($row[0],"\"{}"));
+          if ($ednIDs[0] != "" ) {
+            $cacheEdnIDs = array_merge($cacheEdnIDs,$ednIDs);
+          } 
+        }
+        invalidateCachedSeqEntities($physLineSeqID);
+      }
+      if (count($cacheEdnIDs)>0) {
+        $cacheEdnIDs = array_unique($cacheEdnIDs);
+        foreach ($cacheEdnIDs as $ednID) {
+          invalidateCachedEditionEntities($ednID);
         }
       }
     }

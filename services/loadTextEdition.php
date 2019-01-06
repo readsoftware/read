@@ -181,6 +181,7 @@
       }
       $sequences = new Sequences($condition,null,null,null);
       $sequences->setAutoAdvance(false); // make sure the iterator doesn't prefetch
+      $seqRetString = null;
       if ($sequences && $sequences->getCount()>0) {
         $retString .= '"seq":{';
         $txtDivSeqIDs = array();
