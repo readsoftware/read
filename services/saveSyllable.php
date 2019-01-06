@@ -599,7 +599,8 @@ if (count($errors) == 0) {
             }
             $token->setGraphemeIDs($newTokGraIDs);
             $token->getValue(true);//cause recalc
-            $token->save();
+            $token->getSyllableClusterIDs(false,true); //force refresh will call token->save
+            //  $token->save();
             $newTokCmpGID = $token->getGlobalID();
             if ($token->hasError()) {
               array_push($errors,"error cloning token '".$token->getValue()."' - ".$token->getErrors(true));
@@ -619,7 +620,8 @@ if (count($errors) == 0) {
             }
             $token2->setGraphemeIDs($newTok2GraIDs);
             $token2->getValue(true);//cause recalc
-            $token2->save();
+            $token2->getSyllableClusterIDs(false,true); //force refresh will call token->save
+            //  $token2->save();
             $newTokCmp2GID = $token2->getGlobalID();
             if ($token2->hasError()) {
               array_push($errors,"error cloning token '".$token2->getValue()."' - ".$token2->getErrors(true));
@@ -663,14 +665,14 @@ if (count($errors) == 0) {
           }
 
           if (count($errors) == 0 && ($oldTokCmpGID && $oldTokCmpGID != $newTokCmpGID ||//we replaced token
-              $oldTokCmp2GID && $oldTokCmp2GID != $newTokCmp2GID && !$compound2)
+              $oldTokCmp2GID && $oldTokCmp2GID != $newTokCmp2GID && !$compounds2)
               && isset($compounds) && count($compounds) > 0) {// and it's contained in a compound so update compounds
             while (count($compounds) && $oldTokCmpGID != $newTokCmpGID) {
               $compound = array_shift($compounds);
               $componentIDs = $compound->getComponentIDs();
               $tokCmpIndex = array_search($oldTokCmpGID,$componentIDs);
               array_splice($componentIDs,$tokCmpIndex,1,$newTokCmpGID);
-              if ($oldTokCmp2GID && $oldTokCmp2GID != $newTokCmp2GID && !$compound2) {//split tokens in same compound
+              if ($oldTokCmp2GID && $oldTokCmp2GID != $newTokCmp2GID && !$compounds2) {//split tokens in same compound
                 $tokCmpIndex = array_search($oldTokCmp2GID,$componentIDs);
                 array_splice($componentIDs,$tokCmpIndex,1,$newTokCmp2GID);
                 $oldTokCmp2GID = null;//make sure that this is only replaced in the first level compound
@@ -777,28 +779,33 @@ if (count($errors) == 0) {
           if ($startTokIDs && count($startTokIDs) > 0) {//graphemes before split
             $token->setGraphemeIDs($startTokIDs);
             $token->getValue(true);//cause recalc
-            $token->save();
+            $token->getSyllableClusterIDs(false,true); //force refresh will call token->save
+          //  $token->save();
             $newTokGID = $token->getGlobalID();
             $newSplitToken->setGraphemeIDs($newGraIDs);
             $newSplitToken->getValue(true);//cause recalc
-            $newSplitToken->save();
+            $newSplitToken->getSyllableClusterIDs(false,true); //force refresh will call token->save
+          //  $newSplitToken->save();
             $newSplitTokGID = $newSplitToken->getGlobalID();
             $tokCmpReplaceGIDs = array($newTokGID,$newSplitTokGID);
             if ($endTokIDs && count($endTokIDs) > 0) {//some graphemes after split too
               $newSplitToken2 = new Token();
               $newSplitToken2->setGraphemeIDs($endTokIDs);
               $newSplitToken2->getValue(true);//cause recalc
-              $newSplitToken2->save();
+              $newSplitToken2->getSyllableClusterIDs(false,true); //force refresh will call token->save
+            //  $newSplitToken2->save();
               array_push($tokCmpReplaceGIDs,$newSplitToken2->getGlobalID());
             }
           } else {//replace first syllable case
             $token->setGraphemeIDs($newGraIDs);
             $token->getValue(true);//cause recalc
-            $token->save();
+            $token->getSyllableClusterIDs(false,true); //force refresh will call token->save
+          //  $token->save();
             $newTokGID = $token->getGlobalID();
             $newSplitToken->setGraphemeIDs($endTokIDs);
             $newSplitToken->getValue(true);//cause recalc
-            $newSplitToken->save();
+            $newSplitToken->getSyllableClusterIDs(false,true); //force refresh will call token->save
+          //  $newSplitToken->save();
             $newSplitTokGID = $newSplitToken->getGlobalID();
             $tokCmpReplaceGIDs = array($newTokGID,$newSplitTokGID);
           }
