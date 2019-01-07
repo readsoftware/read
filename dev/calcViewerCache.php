@@ -62,21 +62,25 @@
   $multiEd = (!isset($data['multiEd']) || !$data['multiEd'])? 0: 1;
   $catID = (isset($data['catID']) && $data['catID'])? $data['catID']: null;
   $txtIDs = null;
+  $condition = "not txt_owner_id = 1";
+  $groupLabel = "All texts from ".DBNAME." database";
   if ( isset($data['txtIDs'])) {
     $txtIDs = $data['txtIDs'];
-    $txtIDs = explode(",",$txtIDs);
-    $txtID = intval($txtIDs[0]); //first id is primary
-    if (!is_int($txtID)) {
-      $txtIDs = $txtID = null;
+    if (strpos($txtIDs,'-') !== false) {
+      list($startID,$endID) = explode("-",$txtIDs);
+      if ( $startID && is_numeric($startID) && $endID && is_numeric($endID) && $startID <= $endID) {
+        $condition = "txt_id >= $startID and txt_id <= $endID and not txt_owner_id = 1";
+        $groupLabel = "Selected texts from ".DBNAME." database";
+      }
+    } else if (strpos($txtIDs,',') !== false) {
+      $txtIDs = explode(",",$txtIDs);
+      if (is_int($txtIDs[0])) {
+        $condition = "txt_id in (".join(",",$txtIDs).") and not txt_owner_id = 1";
+        $groupLabel = "Selected texts from ".DBNAME." database";
+      }
     }
   }
-  if ($txtIDs && count($txtIDs) > 0) {
-    $texts = new Texts("txt_id in (".join(",",$txtIDs).") and not txt_owner_id = 1","txt_id",null,null);
-    $groupLabel = "Selected texts from ".DBNAME." database";
-  } else {
-    $texts = new Texts("not txt_owner_id = 1","txt_id",null,null);
-    $groupLabel = "All texts from ".DBNAME." database";
-  }
+  $texts = new Texts($condition,"txt_id",null,null);
   if (!$texts || $texts->getCount() == 0 ) {
     //exit with error
   } else {
