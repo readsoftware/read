@@ -644,18 +644,37 @@ validateChngPwdUI: function(){
 *
 */
 
-  getEditAsEditorName: function() {
-    var editorID, editorName = this.username, editAsEditor;
-    if (this.userPreference && this.userPreference.userDefPrefs &&
-         this.userPreference.userDefPrefs.defaultEditUserID && this.uGroupList) {
-     editorID = this.userPreference.userDefPrefs.defaultEditUserID;
-     editAsEditorItem = this.uGroupList.jqxListBox('getItemByValue', editorID);
-     if (editAsEditorItem && editAsEditorItem.label) {
-       editorName = editAsEditorItem.label;
-     }
-    }
-    return editorName;
-  },
+isEditAsEditibilityMatch: function(editibility) {
+  var editorID, editAsEditorItem;
+  if (this.userPreference && this.userPreference.userDefPrefs &&
+       this.userPreference.userDefPrefs.defaultEditUserID && this.uGroupList) {
+   editorID = this.userPreference.userDefPrefs.defaultEditUserID;
+   editAsEditorItem = this.uGroupList.jqxListBox('getItemByValue', editorID);
+   if (editAsEditorItem && editAsEditorItem.value && editibility == editAsEditorItem.value) {
+     return true;
+   }
+  }
+  return false;
+},
+
+
+/**
+* put your comment there...
+*
+*/
+
+getEditAsEditorName: function() {
+  var editorID, editorName = this.username, editAsEditorItem;
+  if (this.userPreference && this.userPreference.userDefPrefs &&
+       this.userPreference.userDefPrefs.defaultEditUserID && this.uGroupList) {
+   editorID = this.userPreference.userDefPrefs.defaultEditUserID;
+   editAsEditorItem = this.uGroupList.jqxListBox('getItemByValue', editorID);
+   if (editAsEditorItem && editAsEditorItem.label) {
+     editorName = editAsEditorItem.label;
+   }
+  }
+  return editorName;
+},
 
 
 /**

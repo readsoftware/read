@@ -1312,7 +1312,12 @@ EDITORS.EditionVE.prototype = {
   changeEditMode: function (e,editModeBtn) {
     var ednVE = this;
     //modify
-    if (!this.editMode && !ednVE.edition.readonly) {
+    if (!this.editMode && 
+         ednVE.layoutMgr &&
+         ednVE.layoutMgr.userVE &&
+         ednVE.edition &&
+         ednVE.edition.editibility &&
+         ednVE.layoutMgr.userVE.isEditAsEditibilityMatch(ednVE.edition.editibility)) {
       if (this.checkEditCollision) {
         this.checkEditionStatus(function(){
           ednVE.changeToModify(e,editModeBtn);
@@ -1359,9 +1364,19 @@ EDITORS.EditionVE.prototype = {
       this.addSyllableBtnDiv.hide();
     //tagging mode
     } else if (ednVE.editMode == "tcm" ||
-               (!ednVE.editMode && ednVE.edition.readonly)) {
-      if (!ednVE.editMode && ednVE.edition.readonly) {
-        this.addSequenceBtnDiv.hide();
+               (!ednVE.editMode && 
+                 ednVE.layoutMgr &&
+                 ednVE.layoutMgr.userVE &&
+                 ednVE.edition &&
+                 ednVE.edition.editibility &&
+                !ednVE.layoutMgr.userVE.isEditAsEditibilityMatch(ednVE.edition.editibility))) {
+      if (!ednVE.editMode && 
+           ednVE.layoutMgr &&
+           ednVE.layoutMgr.userVE &&
+           ednVE.edition &&
+           ednVE.edition.editibility &&
+          !ednVE.layoutMgr.userVE.isEditAsEditibilityMatch(ednVE.edition.editibility)) {
+ this.addSequenceBtnDiv.hide();
         this.linkOrdBtnDiv.hide();
         this.objLevelBtn.attr('disabled','disabled');
         this.edStyleBtn.attr('disabled','disabled');
