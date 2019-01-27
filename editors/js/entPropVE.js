@@ -265,7 +265,7 @@ EDITORS.EntityPropVE.prototype = {
 
   createAltTranscriptionUI: function() {
     var entPropVE = this, matchEntityTags,i, matchEntity, matchValue, matchAttr;
-        switchable = !(this.dataMgr.getEntity('edn',this.controlVE.getEdnID())).readonly;
+        switchable = this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.dataMgr.getEntity('edn',this.controlVE.getEdnID()).editibility);
 
     //check for sandhi and ignore UI
     if (this.dataMgr.checkForSandhi(this.tag)) {
@@ -369,7 +369,9 @@ EDITORS.EntityPropVE.prototype = {
 */
 
   createValueDisplay: function() {
-    var entPropVE = this, valueEditable = ((this.prefix == "cat" || this.prefix == "txt" || this.prefix == "seq" || this.prefix == "edn") && this.entity && !this.entity.readonly),
+    var entPropVE = this, 
+        valueEditable = (((this.prefix == "cat" || this.prefix == "txt" || this.prefix == "seq") && this.entity && !this.entity.readonly) ||
+                         (this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))),
         attrValue = null, value = this.entity.transcr ? this.entity.transcr : (this.entity.value ? this.entity.value : (this.entity.title ? this.entity.title : ""));
     DEBUG.traceEntry("createValueUI");
     value = value.replace("ʔ","");
@@ -525,7 +527,7 @@ EDITORS.EntityPropVE.prototype = {
                     '</div>'));
     //attach event handlers
       //click to edit
-      if (!this.entity.readonly) {
+      if (!this.entity.readonly || (this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))) {
         $('div.valueLabelDiv',this.supUI).unbind("click").bind("click",function(e) {
           $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.supUI.addClass("edit");
@@ -662,7 +664,7 @@ EDITORS.EntityPropVE.prototype = {
                     '</div>'));
     //attach event handlers
       //click to edit
-      if (!this.entity.readonly) {
+      if (!this.entity.readonly || (this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))) {
         $('div.valueLabelDiv',this.invUI).unbind("click").bind("click",function(e) {
           $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.invUI.addClass("edit");
@@ -837,7 +839,7 @@ EDITORS.EntityPropVE.prototype = {
     var entPropVE = this,
         sfValue = "Select syntatic function", sfLinkTypeID = this.sfLinkTypeID, 
         sfLinkToEntGID = this.sfLinkToEntGID,
-        sfLinkToEntValue, valueEditable = this.controlVE.type == "EditionVE",
+        sfLinkToEntValue, valueEditable = (this.controlVE.type == "EditionVE"),
         treeSfLinkTypeName = this.id+'sflinktypetree';
     DEBUG.traceEntry("createSynFuncUI");
     if (sfLinkToEntGID) {
@@ -1954,7 +1956,7 @@ removeBln: function(blnTag) {
         this.dataMgr.getEntity("atb",this.entity.attributionIDs[0])) {
       attrIDs = this.entity.attributionIDs;
       //create Header
-      if (this.entity.readonly) {
+      if (this.entity.readonly && !(this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))) {
         displayUI.append($('<div class="attrUIHeader"><span>Attributions:</span></div>'));
       } else {
         displayUI.append($('<div class="attrUIHeader"><span>Attributions:</span><span class="addButton"><u>Edit</u></span></div>'));
@@ -2001,7 +2003,8 @@ removeBln: function(blnTag) {
     //create Attribution Entry
     return($('<div class="attrentry '+atbTag+'">' +
          '<span class="attribution">' + attribution + '</span>'+
-         (this.entity.readonly?'':'<span class="removeattr '+atbTag+'" title="remove attribution '+attribution+'">X</span>')+
+         ((this.entity.readonly && !(this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility)))?'':
+           '<span class="removeattr '+atbTag+'" title="remove attribution '+attribution+'">X</span>')+
          '</div>'));
   },
 

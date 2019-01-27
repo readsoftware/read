@@ -137,6 +137,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'value'=> $sequence->getLabel(),
         'entityIDs' => $sequence->getEntityIDs(),
         'readonly' => $sequence->isReadonly(),
+        'editibility' => $sequence->getOwnerID(),
         'superscript' => $sequence->getSuperScript(),
         'attributionIDs' => $sequence->getAttributionIDs(),
         'typeID' => $sequence->getTypeID());

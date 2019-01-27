@@ -4225,6 +4225,7 @@ mergeLine: function (direction,cbError) {
     });
 
     var mdTarget = null,
+        mdPos= [0,0],
         mdTime = null,
         dblClickThreshold = 60;
 
@@ -4238,6 +4239,7 @@ mergeLine: function (direction,cbError) {
     function sclMouseDownHandler(e) {
       var eTime = (new Date()).getTime();
       mdTarget = e.target;
+      mdPos =[e.clientX,e.clientY];
       if ((eTime - mdTime) > dblClickThreshold) {
         mdTime = eTime;
       }
@@ -4327,6 +4329,7 @@ mergeLine: function (direction,cbError) {
       selectNode,tcmPos,childNodes,i,sclID,endOrdPos,selectOrdPos,
       startContainer,endContainer,startOffset,endOffset, otherContainer,
       newStartContainer,newStartOffset,newEndContainer,newEndOffset;
+//      DEBUG.log("gen","muPos "+e.clientX+","+e.clientY);
       if (window.getSelection) {
         sel = window.getSelection();
         if (sel.getRangeAt && sel.rangeCount) {
@@ -4347,7 +4350,7 @@ mergeLine: function (direction,cbError) {
       endOffset = eRange.endOffset;
       if (ednVE.editMode == "modify" && ednVE.sclEd && startContainer && endContainer &&
              ((muTime - mdTime) > dblClickThreshold) ) {//edit mode restricts to syllable so fix up selection to constrain to a syllable
-        isCaretOnly = (startContainer == endContainer &&
+        isCaretOnly = ((mdPos[0] == e.clientX && mdPos[1] == e.clientY) || startContainer == endContainer &&
                         startOffset == endOffset && mdTarget == this);
         isReverseSelection = (!isCaretOnly &&((startContainer != endContainer &&
                                                 (sel && startContainer == sel.focusNode &&
@@ -4364,8 +4367,9 @@ mergeLine: function (direction,cbError) {
           DEBUG.trace("ednVE mousup","1 "+muTime);
           //handle caret reposition by snapping to nearest syllable- nearest text position in that syllable
           //range still on selected node case
-          if (startContainer.nodeName == 'SPAN' && startContainer.className.match(/selected/) && eTarget !== startContainer ||
-              startContainer.nodeName == '#text' && startContainer.parentElement.className.match(/selected/) && eTarget !== startContainer.parentElement) {
+          if ((startContainer.nodeName == 'SPAN' && startContainer.className.match(/selected/) && eTarget !== startContainer ||
+              startContainer.nodeName == '#text' && startContainer.parentElement.className.match(/selected/) && eTarget !== startContainer.parentElement) ||
+              startContainer == endContainer && startOffset != endOffset) {
             useTarget = true;
           }
           // line label case
@@ -4795,7 +4799,7 @@ mergeLine: function (direction,cbError) {
               otherContainer = range.endContainer;
             }
             if (!newEndContainer && //check to see if range (clone) need its other node adjusted
-                  endContainer != otherContainer ) {
+                endContainer != otherContainer ) {
               if( isReverseSelection ) {
                 range.setStart(endContainer,endOffset);
               } else {
@@ -4855,7 +4859,12 @@ mergeLine: function (direction,cbError) {
                       });
           } else {
             ednVE.removeFreeTextLineUI();
-            ednVE.sclEd.init(selectNode);
+            if (sclID != ednVE.sclEd.sclID) {
+              ednVE.sclEd.init(selectNode);
+            } else {
+              ednVE.sclEd.synchSelection();
+//              ednVE.sclEd.calculateState();
+            }
           }
         }
         e.stopImmediatePropagation();

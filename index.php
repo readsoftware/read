@@ -171,6 +171,7 @@
                                                      dataMgr: dataManager,
                                                      projTitle: "<?=defined("PROJECT_TITLE")?PROJECT_TITLE:"Set PROJECT_TITLE in config.php"?>",
                                                      username: "<?= @$username?$username:"unknown"?>" });
+        dataManager.layoutMgr = layoutManager;
       });
     </script>
   </head>

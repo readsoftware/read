@@ -676,6 +676,9 @@ EDITORS.sclEditor.prototype = {
     }
     posOldCur = this.cursorPos;
     this.cursorPos += isLeft?-1:1;
+    if (!isSelect) {
+      this.anchorPos = this.cursorPos;
+    }
     pos = this.cursorPos;
     // set screen range selection to match syllable position
     childNodes = this.textNodes;
@@ -691,7 +694,6 @@ EDITORS.sclEditor.prototype = {
             i++;
             pos = 0;
           }
-
         }
         if (window.getSelection) {
           sel = window.getSelection();
@@ -706,7 +708,8 @@ EDITORS.sclEditor.prototype = {
         DEBUG.log("gen","moving cursor from "+posOldCur+" to "+this.cursorPos+" with anchor at "+ this.anchorPos);
         if (range) {
           if (!isSelect || this.anchorPos == this.cursorPos) {// move both anchor and cursor
-            this.anchorPos = this.cursorPos;
+            this.anchorNodePos = this.cursorNodePos;
+            this.anchorIndex = this.cursorIndex;
             DEBUG.trace("moveCurso","moving anchor and cursor of '"+this.curSyl+"' to "+this.anchorPos);
             range.setStart(childNodes[i],pos);
             range.setEnd(childNodes[i],pos);
@@ -820,7 +823,7 @@ EDITORS.sclEditor.prototype = {
           }
         }
         this.anchorPos = start;
-        DEBUG.trace("replaceText","set anchor to start of '"+this.curSyl+"' "+this.anchorPos);
+        DEBUG.trace("replaceText",mode+" mode single node, set anchor to start of '"+this.curSyl+"' "+this.anchorPos);
         this.cursorPos = end;
         this.calculateState();
         this.syllable.focus();
@@ -828,19 +831,38 @@ EDITORS.sclEditor.prototype = {
       }
     } else { // multiple text nodes and/or TCM case
 //      DEBUG.log("warn","BEEP! VSE Replace text for syllable with embedded TCMs not implemented yet!");
-      if (this.beforeSplitIndex >=0 && this.anchorPos == this.cursorPos && this.beforeSplitIndex == this.anchorIndex){
-        startNodeIndex = this.anchorIndex;
-        startNodeOffset = this.anchorPos;
+      if (this.anchorPos == this.cursorPos) { // cursor only
+          startNodeIndex = this.anchorIndex;
+          startNodeOffset = this.anchorNodePos;
+      } else if (this.beforeSplitIndex >=0) {
+        if (this.anchorPos < this.cursorPos) { //forward selection
+          if (this.anchorPos == this.strPreSplit.length) { //anchor at split so start at right side
+            startNodeIndex = 1 + this.beforeSplitIndex;
+            startNodeOffset = 0;
+          } else {
+            startNodeIndex = this.anchorIndex;
+            startNodeOffset = this.anchorNodePos;
+          }
+        } else {
+          if (this.cursorPos == this.strPreSplit.length) { //anchor at split so start at right side
+            startNodeIndex = 1 + this.beforeSplitIndex;
+            startNodeOffset = 0;
+          } else {
+            startNodeIndex = this.cursorIndex;
+            startNodeOffset = this.cursorNodePos;
+          }
+        }
       } else {
-        startNodeIndex = this.charToNodeMap[this.anchorPos][0];
-        startNodeOffset = this.charToNodeMap[this.anchorPos][1];
+        startNodeIndex = this.anchorIndex;
+        startNodeOffset = this.anchorNodePos;
       }
       selectLen = this.cursorPos - this.anchorPos;
       if (selectLen < 0) { //reverse selection
-        startNodeOffset = startNodeOffset + selectLen;
-        if (startNodeOffset < 0 ) {
-          DEBUG.log('err',"startNodeOffset is smaller than select length on reverse select");
-        }
+//        startNodeOffset = startNodeOffset + selectLen;
+//        if (startNodeOffset < 0 ) {
+//          DEBUG.log('err',"startNodeOffset is smaller than select length on reverse select");
+//          startNodeOffset = 0;
+//        }
         selectLen = -selectLen;
       }
 //      return;
@@ -852,15 +874,15 @@ EDITORS.sclEditor.prototype = {
       } else if (mode == "augment") {// replace selection with text and keep unselected text and highlite fullstop
         // find selection start node, remove selected portion and add text.
         for (i=0;i<this.textNodes.length; i++) {
-          // if index is less than start node index ther skip
+          // if index is less than start node index then skip
           if ( i < startNodeIndex) {
             anchorOffset += this.textNodes[i].textContent.length;
             continue;
           } else if (i == startNodeIndex) {
             startNode = this.textNodes[i];
-            //from startnode beginning to startnode ofset retain characters and add text
+            //from startnode beginning to startnode offset retain characters and add text
             tmp = startNode.textContent.substring(0,startNodeOffset) + txt;
-            //grab any leftover startnode characters
+            //grab any leftover startnode characters, note substr start pos greater than string returns empty
             tmp += startNode.textContent.substring(startNodeOffset + selectLen);
             selectLen -= (startNode.textContent.length - startNodeOffset);
             //if new string is empty, remove startnode
@@ -883,7 +905,7 @@ EDITORS.sclEditor.prototype = {
                 $(this.textNodes[i]).parent().next().remove();
               }
               $(this.textNodes[i]).parent().remove();
-            } else { //remove up the remaining selection length
+            } else { //remove text up to the remaining selection length
               this.textNodes[i].textContent = this.textNodes[i].textContent.substring(selectLen);
             }
             selectLen -= this.textNodes[i].length;
@@ -1092,9 +1114,9 @@ EDITORS.sclEditor.prototype = {
           }
         }
         // recalculate position for new text
-        this.anchorPos = parseInt(start) + parseInt(anchorOffset);
-        DEBUG.trace("replaceText","set anchor to start+offset of '"+this.curSyl+"' = "+this.anchorPos);
-        this.cursorPos = parseInt(end) + parseInt(anchorOffset);
+        this.anchorPos = parseInt(start) + parseInt(anchorOffset);//error needs to include previous node char count
+        DEBUG.trace("replaceText",mode+" mode milti-node, set anchor to start+offset of '"+this.curSyl+"' = "+this.anchorPos);
+        this.cursorPos = parseInt(end) + parseInt(anchorOffset);//error
         this.calculateState();
         this.syllable.focus();
         $(this.contentDiv).focus();
@@ -1133,7 +1155,16 @@ EDITORS.sclEditor.prototype = {
         posLastH = this.state.lastIndexOf("H"),
         posLastC = this.state.lastIndexOf("C"),
        // selection = this.anchorPos != this.cursorPos;
-        selection = (posEnd - posStart) > 1;
+        selection = ((posEnd - posStart) > 1);
+        if (selection && posS > -1) { //split syllable selection
+          if (posStart == (posS - 1)) { // adjust start to position split, fake a swap
+            posStart = posS;
+            posS--;
+          } else if (posEnd == (posS + 1)) {
+            posEnd = posS;
+            posS++;
+          }
+        } 
     DEBUG.log("gen","preprocess key '"+key+"' keyType "+keyType+" cursyl "+this.curSyl+" state "+this.state+" posV "+posV
                 +" posSelStart "+posSelStart+" posSelEnd "+posSelEnd+" posStart "+posStart+" posEnd "+posEnd+" posS "+posS);
 /****************************Special Control Keys************************************/
@@ -1802,8 +1833,10 @@ EDITORS.sclEditor.prototype = {
     if (iSplit = this.getSylSplitIndex()) {
       this.beforeSplitIndex = iSplit-1;
       this.strPreSplit = this.getPreSplitText();
-      this.charToNodeMap[this.strPreSplit.length][0] = this.beforeSplitIndex;
+      this.charToNodeMap[this.strPreSplit.length][0] = this.beforeSplitIndex;//ref to left side of xplit
       this.charToNodeMap[this.strPreSplit.length][1] = this.textNodes[this.beforeSplitIndex].length;
+      this.charToNodeMap[this.strPreSplit.length][2] = this.beforeSplitIndex+1;//ref to right side of split
+      this.charToNodeMap[this.strPreSplit.length][3] = 0;
     } else if (this.beforeSplitIndex || this.strPreSplit) {
       delete this.beforeSplitIndex;
       delete this.strPreSplit;
@@ -1873,7 +1906,7 @@ EDITORS.sclEditor.prototype = {
         }
         if (anchorSclNode.id.match(/textContent/)) { // on parent div need to find the nearest grp
           if (anchorOffset > 0 && anchorOffset <= anchorSclNode.childNodes.length) {
-            prevNode = $(anchorSclNode.childNodes[anchorOffset]).next();
+            prevNode = $(anchorSclNode.childNodes[anchorOffset]);//.next();
             while (prevNode && prevNode.length && grdCnt-- && !prevNode.hasClass('grpGra')) {
               prevNode = prevNode.prev();
             }
@@ -1883,7 +1916,12 @@ EDITORS.sclEditor.prototype = {
             anchorSclNode = $(anchorSclNode).children('.grpGra').get(0);
             anchorOffset = 0;
           }
-        }
+          if (anchorIsStart) {
+            range.setStart(anchorSclNode,anchorOffset);
+          } else {
+            range.setEnd(anchorSclNode,anchorOffset);
+          }
+      }
         if (!anchorSclNode.className.match(/grpGra/)){ //the node is not a grapheme group
           if (anchorIsStart) { // forward selection
             nextNode = $(anchorSclNode);
@@ -2355,6 +2393,11 @@ EDITORS.sclEditor.prototype = {
           }
         } else {
           this.state += typ;
+          if (this.beforeSplitIndex >= 0  && i == this.strPreSplit.length && !splitPositioned &&
+            (this.cursorIndex > this.beforeSplitIndex || this.anchorIndex > this.beforeSplitIndex)) {
+            this.state += "S";
+            splitPositioned = true;
+          }
           if(!anchorPositioned && this.anchorPos <= i) {
             this.state += ">";
             anchorPositioned = true;
@@ -2364,8 +2407,10 @@ EDITORS.sclEditor.prototype = {
             cursorPositioned = true;
           }
         }
-        if(this.beforeSplitIndex >= 0 && i == this.strPreSplit.length && !splitPositioned) {
+        if(this.beforeSplitIndex >= 0 && i == this.strPreSplit.length && !splitPositioned &&
+           (this.cursorIndex <= this.beforeSplitIndex || this.anchorIndex <= this.beforeSplitIndex)) {
           this.state += "S";
+          splitPositioned = true;
         }
       }//end while
       if(!anchorPositioned) {
@@ -2375,7 +2420,10 @@ EDITORS.sclEditor.prototype = {
         this.state += "<";
       }
     }
-//    DEBUG.log("gen""Syllable #" + this.sclID + " state = " + this.state + ", raw = " + this.rawSyl + ", cur = " + this.curSyl + ", anchorPos = " + this.anchorPos + ", cursorPos = " + this.cursorPos);
+    DEBUG.log("gen","Syllable #" + this.sclID + " state = " + this.state + ", pre = '" + this.strPreSplit + 
+              "',  aPos:cPos = " + this.anchorPos + ":" + this.cursorPos +
+              ", aI:aO = " + this.anchorIndex + ":" + this.anchorNodePos +
+              ", cI:cO = " + this.cursorIndex + ":" + this.cursorNodePos );
   },
 
 // table of valid input characters.

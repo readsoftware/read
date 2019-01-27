@@ -74,10 +74,13 @@
       }
     } else if (strpos($txtIDs,',') !== false) {
       $txtIDs = explode(",",$txtIDs);
-      if (is_int($txtIDs[0])) {
+      if (is_numeric($txtIDs[0])) {
         $condition = "txt_id in (".join(",",$txtIDs).") and not txt_owner_id = 1";
         $groupLabel = "Selected texts from ".DBNAME." database";
       }
+    } else if (is_numeric($txtIDs)) { //single number case
+      $condition = "txt_id = $txtIDs and not txt_owner_id = 1";
+      $groupLabel = "Selected text from ".DBNAME." database";
     }
   }
   $texts = new Texts($condition,"txt_id",null,null);

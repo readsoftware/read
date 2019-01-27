@@ -55,8 +55,10 @@ if (!$cmd && !$dbname && !$sqlfilename) {
 } else {
   //get password from config.php
   $psqlPWD = defined("PASSWORD")? PASSWORD :null;
-  //need to set environment 'PGPASSWORD' before running script
-  $psqlPath = ($psqlPWD?"set PGPASSWORD=$psqlPWD& ":'').(defined("PSQL_PATH")? PSQL_PATH."\\" :"");//configured tool dir or assume in PATH windows
+  //set default postgresql database
+  $psqlDB = defined("PSQLDEFAULTDB")? PSQLDEFAULTDB :'postgres';
+  //need to set environment 'PGPASSWORD' and 'PGDATABASE' before running script
+  $psqlPath = ("export PGDATABASE=$psqlDB; ").($psqlPWD?"export PGPASSWORD=$psqlPWD; ":'').(defined("PSQL_PATH")? PSQL_PATH."\\" :"");//configured tool dir or assume in PATH windows
   //get db username
   $psqlUser = defined("USERNAME")? USERNAME :'postgres';
   //get path to db SQL files
@@ -64,7 +66,7 @@ if (!$cmd && !$dbname && !$sqlfilename) {
 //  $psqlPath = defined("PSQL_PATH")? PSQL_PATH."/" :"";//configured tool dir or assume in PATH
 //  $sqlFilePath = defined("READ_FILE_STORE")?READ_FILE_STORE."/":"";//set dir for sql file
   switch ($cmd) {
-    case "restore":
+    case "restore": 
     //WARNING this set of commands may shut of a connection causing a warning first connection to the new/restored db
     //This can be avoided by checking PHP.ini for pgsql.auto_reset_persistent and set it to On.
       $command = $psqlPath.'psql -U '.$psqlUser.' -c "REVOKE CONNECT ON DATABASE '.$dbname.' FROM PUBLIC;"';

@@ -212,6 +212,7 @@
                                         '"id":"'.$seqID.'",'.
                                         '"value":"'.$sequence->getLabel().'",'.
                                         '"readonly":'.($sequence->isReadonly()?'true':'false').','.
+                                        '"editibility":"'.$sequence->getOwnerID().'",'.
                                         '"typeID":"'.$seqTypeID.'",'.
                                         '"entityIDs":['.(count($sequence->getEntityIDs())?'"'.join('","',$sequence->getEntityIDs()).'"':'').']';
           $superscript = $sequence->getSuperScript();
@@ -251,6 +252,7 @@
                                             '"id":"'.$seqID.'",'.
                                             '"value":"'.$sequence->getLabel().'",'.
                                             '"readonly":'.($sequence->isReadonly()?'true':'false').','.
+                                            '"editibility":"'.$sequence->getOwnerID().'",'.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
                                             '"children":'.getSeqData($sequence, $refresh).','.
                                             '"entityIDs":['.(count($seqEntityIDs)?'"'.join('","',$seqEntityIDs).'"':'').']';
@@ -301,6 +303,7 @@
                                             '"id":"'.$seqID.'",'.
                                             '"value":"'.$sequence->getLabel().'",'.
                                             '"readonly":'.($sequence->isReadonly()?'true':'false').','.
+                                            '"editibility":"'.$sequence->getOwnerID().'",'.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
                                             '"children":'.getSeqData($sequence, $refresh).','.
                                             '"entityIDs":["'.((isset($seqEntityIDs) && count($seqEntityIDs)>0)?join('","',$seqEntityIDs):'').'"]';
@@ -342,6 +345,7 @@
                                             '"id":"'.$seqID.'",'.
                                             '"value":"'.$sequence->getLabel().'",'.
                                             '"readonly":'.($sequence->isReadonly()?'true':'false').','.
+                                            '"editibility":"'.$sequence->getOwnerID().'",'.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
                                             '"children":'.getChildEntitiesJsonString($sequence->getEntityIDs()).
                                             (count(@$seqEntityIDs)?',"entityIDs":["'.join('","',$seqEntityIDs).'"]':'');
@@ -457,6 +461,7 @@
                 $entities['seq'][$seqID] = array( 'label'=> $sequence->getLabel(),
                                        'id' => $seqID,
                                        'value'=> $sequence->getLabel(),
+                                       'editibility' => $sequence->getOwnerID(),
                                        'readonly' => $sequence->isReadonly(),
                                        'typeID' => $sequence->getTypeID());
                 $superscript = $sequence->getSuperScript();
@@ -992,7 +997,7 @@
 
   function getSeqData($sequence, $refresh = 0) {  // check for cache
     global $publicOnly,$edition,$userOnly;
-    if(USECACHE & !$edition->isReadonly()) {
+    if(USECACHE && !$edition->isReadonly()) {
       $cacheKey = "seq".$sequence->getID()."edn".$edition->getID();
       $jsonCache = new JsonCache($cacheKey);
       if ($jsonCache->hasError() || !$jsonCache->getID()) {
