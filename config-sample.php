@@ -71,11 +71,18 @@
   define("SHOWETYMPARENS",false);
   define("LEMMALINKTEMPLATE",READ_DIR."/plugins/dictionary/?search=%lemval%");
 
-//location label formatting
-  define("CKNMATCHREGEXP","'([a-z]+)0*(\\d+)'");//grp1 match starting non numeric characters followed by zero or more 0 grp2 match following numbers
-  define("CKNREPLACEMENTEXP","'\\1\\2'");//replace is grp1 followed by grp2
-  define("CKNREPLACEFLAGS","'i'");//ignore case during match
+  //location label formatting
+  define("CKNMATCHREGEXP","'([a-z]+)0*(\\d+)'");//SQL grp1 match starting non numeric characters followed by zero or more 0 grp2 match following numbers
+  define("CKNREPLACEMENTEXP","'\\1\\2'");//SQL replace is grp1 followed by grp2
+  define("CKNREPLACEFLAGS","'i'");//SQL ignore case during match
   define("CKNLINENUMSEPARATOR",":");//separate txt label from line label using a space
+
+  //viewer title formatting
+  define("INVMATCHREGEXP","/([a-z]+)0*(\\d+)/i");//grp1 match starting non numeric characters followed by zero or more 0 grp2 match following numbers
+  define("INVREPLACEMENTEXP","\\1 \\2");//replace is grp1 followed by grp2
+  define("VIEWERINVTITLESEP",": ");//separate txt label from line label using a space
+
+  // part-fragment-side labeling control
   define("SUBIMGTITLEFORPARTSIDELABEL",true);//allow image title to be used when not part side label is defined
   define("INCLUDEFRAGINPARTSIDELABEL",true);//include fragment label in the part side label is defined
   define("INLINEPARTSIDELABEL",true);//include fragment label in the part side label is defined

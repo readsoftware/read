@@ -408,7 +408,7 @@ MANAGERS.DataManager.prototype = {
         entity = this.getEntityFromGID(entGIDs[i]);
         switch (entGIDs[i].substring(0,3)) {
           case "seq":
-              if (!entity.readonly &&
+              if ((!entity.readonly && this.layoutMgr.userVE.isEditAsEditibilityMatch(entity.editibility)) &&
                   entity.entityIDs &&
                   entity.entityIDs.length > 0 &&
                   !this.checkEntityDeletable(entGIDs[i])) {
@@ -458,7 +458,7 @@ MANAGERS.DataManager.prototype = {
         entID = entTag.substring(3),
         entIDs = [],i, childEntity,
         entity = this.getEntityFromGID(entTag);
-    if (entity && !entity.readonly) {//owned and editable
+    if (entity && (!entity.readonly || (prefix == "edn" && this.layoutMgr.userVE.isEditAsEditibilityMatch(entity.editibility)))) {//owned and editable
       switch (prefix) {
         case "seq":
           if (!entity.entityIDs || entity.entityIDs.length == 0) {
@@ -629,7 +629,7 @@ MANAGERS.DataManager.prototype = {
           oldEndID = entity.endSegID;
         }
         if ( oldStartID == startID && oldEndID == endID) {// nothing changed so warning and nothing to do
-          DEBUG.log("warn","segIDs for entity " + tag + " have not changed nothing to do");
+          DEBUG.log("warn","switch IDs for entity " + tag + " have not changed nothing to do");
         } else {
           entity.startSegID = startID;
           entity.endSegID = endID;

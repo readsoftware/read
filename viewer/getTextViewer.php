@@ -90,6 +90,7 @@
       }
     }
     $entityCfgStaticView = null;
+    $text = null;
     if (!$txtID && !$ednID) {
       returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
     } else if ($txtID) {
@@ -118,10 +119,7 @@
       if (!$multiEdition){
         $ednIDs = null;
       }
-      if (!$title){//if not being
-        $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
-      }
-    } else {
+    } else { //case ednID and no txtID
       $edition = new Edition($ednID);
       if ($edition->hasError() || !$edition->getID()) {
         returnXMLErrorMsgPage("unable to load edition - ".join(",",$edition->getErrors()));
@@ -131,20 +129,30 @@
       if ($entityCfgStaticView) {
         $entityCfgStaticView = json_decode($entityCfgStaticView);
       }
-      $text = $edition->getText(true);
+      $text = $edition->getText(true); //find edition's text
       if (!$text || $text->hasError()) {
         returnXMLErrorMsgPage("invalid viewer request - access denied");
       }
-      if (!$title){//if not being
-        $title = ($text->getCKN()?$text->getCKN()." ∙ ":"").$text->getTitle();
-      }
       $txtID = $text->getID();
     }
+    if (!$title && $text) {//if title not passed in and text
+      $invNumber = $text->getCKN();
+      if ($invNumber) {
+        if (defined('INVMATCHREGEXP') && defined('INVREPLACEMENTEXP')) {
+          $invNumber = trim(preg_replace(INVMATCHREGEXP, INVREPLACEMENTEXP, $invNumber));
+        }
+      }
+      $titleSeparator = defined('VIEWERINVTITLESEP')?VIEWERINVTITLESEP:' ';
+      $title = ($invNumber?$invNumber.$titleSeparator:"").$text->getTitle();
+    }
+
     $multiEditionHeaderDivHtml = null;
     if ($multiEdition && $ednIDs && count($ednIDs) > 1) {//setup edition info strcture
       $multiEditionHeaderDivHtml = getMultiEditionHeaderHtml($ednIDs);
     }
   }
+
+  $title = $title?$title:"unknown title";
 
   if (!$isStaticView){
     $overwrite = (isset($data['overwrite']) && $data['overwrite'] != 0)?true:false;
@@ -622,7 +630,7 @@
       }
 
       $staticViewSettings = array("fname"=>($text && $text->getCKN()?str_replace(' ','_',trim($text->getCKN())):"tempfname"),
-                              "title"=>($title?$title:"unknown title"),
+                              "title"=>$title,
                               "cfgStaticLayout"=>$staticViewLayout);
       $_SESSION["cfgStaticView$cfgEntityTag"] = $staticViewSettings;
     }

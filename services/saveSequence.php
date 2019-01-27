@@ -62,8 +62,8 @@ if (!$data) {
     $edition = new Edition($ednID);
     if ($edition->hasError()) {
       array_push($errors,"error loading edition id $seqID - ".join(",",$edition->getErrors()));
-    } else if ($edition->isReadonly()) {
-      array_push($errors,"error edition '".$edition->getDescription()."' - is readonly");
+//    } else if ($edition->isReadonly()) {
+//      array_push($errors,"error edition '".$edition->getDescription()."' - is readonly");
     } else {
       //get default attribution
       if (!$defAttrIDs || count($defAttrIDs) == 0) {

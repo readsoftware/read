@@ -1055,6 +1055,7 @@
               $entities['seq'][$seqID] = array( 'label'=> $sequence->getLabel(),
                                      'id' => $seqID,
                                      'value'=> $sequence->getLabel(),
+                                     'editibility' => $sequence->getOwnerID(),
                                      'readonly' => $sequence->isReadonly(),
                                      'superscript' => $sequence->getSuperScript(),
                                      'typeID' => $sequence->getTypeID());
