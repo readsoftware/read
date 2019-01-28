@@ -69,14 +69,14 @@ if (!$data) {
       array_push($errors,"edition readonly");
     } else {
       $ednOwnerID = $edition->getOwnerID();
-      //get default attribution
+      //get default attribution from edition if needed
       if (!$defAttrIDs || count($defAttrIDs) == 0) {
         $attrIDs = $edition->getAttributionIDs();
         if ($attrIDs && count($attrIDs) > 0 ) {
           $defAttrIDs = array($attrIDs[0]);
         }
       }
-      //get default visibility
+      //get default visibility from edition if needed
       if (!$defVisIDs || count($defVisIDs) == 0) {
         $visIDs = $edition->getVisibilityIDs();
         if ($visIDs && count($visIDs) > 0 ) {
@@ -91,10 +91,10 @@ if (!$data) {
       $edSeqs = $edition->getSequences(true);
       foreach ($edSeqs as $edSequence) {
         $seqType = $edSequence->getType();
-        if (!$seqPhys && $seqType == "TextPhysical"){
+        if (!$seqPhys && $seqType == "TextPhysical"){ //warning!!!! term dependency
           $seqPhys = $edSequence;
         }
-        if (!$seqText && $seqType == "Text"){
+        if (!$seqText && $seqType == "Text"){ //warning!!!! term dependency
           $seqText = $edSequence;
         }
       }
@@ -137,6 +137,7 @@ $textDivSeq = null;
 $textDivSeq2 = null;
 $preSplitString = null;
 $isSplitSyllable = false;
+// retrieve all context entities needed for save
 if (count($errors) == 0) {
   if (isset($data['context'])) {
     if (isset($data['strPre'])) {// split syllable case
@@ -185,7 +186,7 @@ if (count($errors) == 0) {
         $id = substr($gid,3);
         switch (substr($gid,0,3)) {
           case "scl":
-            if (!$syllable || $syllable->getID() != $id) {
+            if (!$syllable || $syllable->getID() != $id) { //split syllable should have same sclID
               array_push($errors,"error non matching split syllable ids");
             }
             break;
@@ -193,7 +194,7 @@ if (count($errors) == 0) {
             $token2 = new Token($id);
             break;
           case "cmp":
-            if ( $compounds && $compounds[0]->getID() != $id) {
+            if ( $compounds && $compounds[0]->getID() != $id) { //todo check if multiple cmpIDs possible and compare the same
               $compound = new Compound($id);
               if (!$compounds2) {
                 $compounds2 = array($compound);
@@ -241,9 +242,9 @@ if (count($errors) == 0) {
     $dbGraphemes = $syllable->getGraphemes(true);
     $oldSylGra = array();
     foreach ($dbGraphemes as $dbGrapheme) {
-      array_push($oldSylGra,$dbGrapheme);// create 'in order' array of graphemes
+      array_push($oldSylGra,$dbGrapheme);// create 'in order' array of graphemes for syllable
     }
-    //for each char in $strSylNew compare against $strSylDB
+    //for each grapheme in $strSylNew compare against $strSylDB
     $parsedGraData = array();
     $newSylGra = array();
     $reuseGraIndex = array();
@@ -252,6 +253,8 @@ if (count($errors) == 0) {
     $entities = array();
     $cnt = mb_strlen($strSylNew);
     $sylState = "S"; //start of syllable
+
+    //parse new syllable string into graphemes
     for ($i=0; $i< $cnt;) {
       $char = mb_substr($strSylNew,$i,1);
       $inc = 1;
@@ -345,16 +348,17 @@ if (count($errors) == 0) {
         $graData['gra_uppercase'] = $ustr;
       }
       array_push($parsedGraData,$graData);
+      //remove str from preSplit string until done, then mark index as split
       if ($preSplitString && mb_strpos($preSplitString,$str) === 0) {
         $preSplitString = mb_substr($preSplitString,count($str));
         $newSplitIndex = count($parsedGraData);
       }
     }
-    if (count($errors) == 0) {//parsed syllable with no errors so run through old syllable to match graphemes and calculate TCM
+
+    if (count($errors) == 0) {//parsed new syllable with no errors so run through old syllable to match graphemes and calculate TCM
       $lastFindIndex = -1;//keep track of location in oldSylGra set at -1 so first time check is index 0
       $cnt = count($oldSylGra);
-      $dbGraphemes->rewind(); //   $data['prevTCM'];
-//      $prevTCM = $dbGraphemes->current()->getTextCriticalMark();
+//      $dbGraphemes->rewind(); //   $data['prevTCM'];
       $prevTCM = $oldSylGra[0]->getTextCriticalMark();
       $iGraData = 0;
       $preSplitTokenChanged = false;
@@ -367,16 +371,16 @@ if (count($errors) == 0) {
             break;
           }
         }
-        if ($index == $cnt) { //searched to the end so create a new grapheme in $newSylGra array as a new character with $prevTCM
+        if ($index == $cnt) { //searched to the end, not found, so create a new grapheme in $newSylGra array as a new character with $prevTCM
           if ($iGraData > $lastFindIndex && $iGraData < $cnt) {//grapheme postion lies in old set so find TCM from position
             $graData["gra_text_critical_mark"] = $oldSylGra[$iGraData]->getTextCriticalMark();
           } else if ($prevTCM){
             $graData["gra_text_critical_mark"] = $prevTCM;
           }
           if ($isSplitSyllable) {
-            if ($iGraData < $newSplitIndex) {//if preSplit grapheme then mark first token as changed
+            if ($iGraData < $newSplitIndex) {// preSplit new grapheme so mark first token as changed
               $preSplitTokenChanged = true;
-            } else {                         // post split to mark second token as changed
+            } else {                         // post split new grapheme so mark second token as changed
               $postSplitTokenChanged = true;
             }
           }
@@ -400,14 +404,13 @@ if (count($errors) == 0) {
           $lastFindIndex = $index;
           array_push($reuseGraIndex,$index);
           if ($syllable->isReadonly()) {// syllable not editable so need to clone grapheme
-            if ($isSplitSyllable) {//since cloning the grapheme need to flag the changed token
+            if ($isSplitSyllable) {//since cloning the grapheme, need to flag the changed token
               if ($iGraData < $newSplitIndex) {//if preSplit grapheme then mark first token as changed
                 $preSplitTokenChanged = true;
-              } else {                         // post split to mark second token as changed
+              } else {                         // post split so mark second token as changed
                 $postSplitTokenChanged = true;
               }
             }
-//            $grapheme = $dbGraphemes->searchKey($oldSylGraIDs[$index])->cloneEntity($defAttrIDs,$defVisIDs);
             $grapheme = $oldSylGra[$index]->cloneEntity($defAttrIDs,$defVisIDs);
             $grapheme->storeScratchProperty("debugmessage","cloned in saveSyllable before cloning readonly syllable sclID ".$syllable->getID());
             $grapheme->save();
@@ -423,7 +426,6 @@ if (count($errors) == 0) {
               }
             }
           } else { //TODO discuss whether grapheme vis should be validated to match syllable
-//            $grapheme = $dbGraphemes->searchKey($oldSylGraIDs[$index]);
             $grapheme =$oldSylGra[$index];
           }
           $prevTCM = $grapheme->getTextCriticalMark();
@@ -431,6 +433,7 @@ if (count($errors) == 0) {
         }
         $iGraData++;
       }
+
       //save any new graphemes
       $newGraIDs = array();
       foreach ($newSylGra as $grapheme) {
@@ -443,10 +446,11 @@ if (count($errors) == 0) {
         }
         array_push($newGraIDs, $grapheme->getID());
       }
+
       if (count($errors) == 0) {
         //update syllable and hierarchy if needed
         if ($syllable->isReadonly()) {
-          //clone syllable
+          //clone syllable and add new grapheme ids
           $syllableClone = $syllable->cloneEntity($defAttrIDs,$defVisIDs);
           $syllableClone->setGraphemeIDs($newGraIDs);
           $syllableClone->calculateSortCodes();
@@ -459,9 +463,9 @@ if (count($errors) == 0) {
           }
           if ($syllableClone->hasError()) {
             array_push($errors,"error cloning syllable '".$syllableClone->getValue()."' - ".$syllableClone->getErrors(true));
-          } else if ($physLineSeq == null){
+          } else if ($physLineSeq == null) {
             array_push($warnings,"no physical line found for syllable ID $oldSclID");
-          } else {// clone hierarchy
+          } else {// update hierarchy
             $oldPhysLineSeqID = $physLineSeq->getID();
             $oldPhysLineSeqGID = $physLineSeq->getGlobalID();
             if ($physLineSeq->isReadonly()) {
@@ -491,7 +495,7 @@ if (count($errors) == 0) {
               array_push($errors,"no index in physical line found for syllable $oldSclGID");
             }
           }
-          if (count($errors) == 0) {
+          if (count($errors) == 0 && $oldPhysLineSeqGID != $physLineSeq->getGlobalID()) {
             $oldPhysSeqID = $seqPhys->getID();
             if ($seqPhys->isReadonly()) {//clone physicalText sequence if not owned
               $seqPhys = $seqPhys->cloneEntity($defAttrIDs,$defVisIDs);
@@ -511,10 +515,10 @@ if (count($errors) == 0) {
                 addUpdateEntityReturnData('seq',$seqPhys->getID(),'entityIDs',$seqPhys->getEntityIDs());
               }
             } else {
-              array_push($errors,"no index in physical text found for seq $oldPhysLineSeqGID");
+              array_push($errors,"no index in physical text found for line physical seq $oldPhysLineSeqGID");
             }
           }
-        } else {//syllable already owned so remove obsolete graphemes
+        } else { //syllable already owned so remove obsolete graphemes
           // Delete the old graphemes that are not reused
           for ($index =0; $index < $cnt; $index++) {
             if ( !in_array($index,$reuseGraIndex)) {
@@ -528,10 +532,9 @@ if (count($errors) == 0) {
               }
             }
           }
-          //update syllable with grapheme IDs
+          //update syllable with new grapheme IDs
           $syllable->setGraphemeIDs($newGraIDs);
           $syllable->calculateSortCodes();
-          //todo possibly need to update sort??
           $syllable->save();
           addUpdateEntityReturnData('scl',$syllable->getID(),'graphemeIDs',$syllable->getGraphemeIDs());
           addUpdateEntityReturnData('scl',$syllable->getID(),'value',$syllable->getValue());
@@ -547,7 +550,7 @@ if (count($errors) == 0) {
         if ($isSplitSyllable) {
           $oldTokGraIDs = $token->getGraphemeIDs();
           $oldTok2GraIDs = $token2->getGraphemeIDs();
-          //match oldSlyGraIDs or
+          //match oldSylGraIDs or
           $startIndex = array_search($oldSylGraIDs[0],$oldTokGraIDs);
           $endIndex = array_search($oldSylGraIDs[count($oldSylGraIDs)-1],$oldTok2GraIDs);
           $startTokIDs = array();
@@ -588,7 +591,7 @@ if (count($errors) == 0) {
               //normal case or special single token character already on boundary at first or last position
             (!$tokenSplitRequired || ( count($startTokIDs) == 0 && count($endTokIDs) ==0))) {
           //normal update token
-          if ($isSplitSyllable) {//split syllable case
+          if ($isSplitSyllable) {//split syllable case - divide grapheme ids into post 1st tok and pre 2nd tok
             $newGraIDsTok2 = array_splice($newGraIDs,$newSplitIndex);
             $newTokGraIDs = array_merge($startTokIDs,$newGraIDs);
             $newTok2GraIDs = array_merge($newGraIDsTok2,$endTokIDs);
@@ -610,7 +613,7 @@ if (count($errors) == 0) {
               addUpdateEntityReturnData('tok',$token->getID(),'graphemeIDs',$token->getGraphemeIDs());
               addUpdateEntityReturnData('tok',$token->getID(),'value',$token->getValue());
               addUpdateEntityReturnData('tok',$token->getID(),'transcr',$token->getTranscription());
-              addUpdateEntityReturnData('tok',$token->getID(),'syllableClusterIDs',$token->getSyllableClusterIDs());
+              addUpdateEntityReturnData('tok',$token->getID(),'syllableClusterIDs',$token->getSyllableClusterIDs(false,true));
               addUpdateEntityReturnData('tok',$token->getID(),'sort', $token->getSortCode());
               addUpdateEntityReturnData('tok',$token->getID(),'sort2', $token->getSortCode2());
             }
@@ -631,7 +634,7 @@ if (count($errors) == 0) {
               addUpdateEntityReturnData('tok',$token2->getID(),'graphemeIDs',$token2->getGraphemeIDs());
               addUpdateEntityReturnData('tok',$token2->getID(),'value',$token2->getValue());
               addUpdateEntityReturnData('tok',$token2->getID(),'transcr',$token2->getTranscription());
-              addUpdateEntityReturnData('tok',$token2->getID(),'syllableClusterIDs',$token2->getSyllableClusterIDs());
+              addUpdateEntityReturnData('tok',$token2->getID(),'syllableClusterIDs',$token2->getSyllableClusterIDs(false,true));
               addUpdateEntityReturnData('tok',$token2->getID(),'sort', $token2->getSortCode());
               addUpdateEntityReturnData('tok',$token2->getID(),'sort2', $token2->getSortCode2());
             }
@@ -658,7 +661,7 @@ if (count($errors) == 0) {
               addUpdateEntityReturnData('tok',$token->getID(),'graphemeIDs',$token->getGraphemeIDs());
               addUpdateEntityReturnData('tok',$token->getID(),'value',$token->getValue());
               addUpdateEntityReturnData('tok',$token->getID(),'transcr',$token->getTranscription());
-              addUpdateEntityReturnData('tok',$token->getID(),'syllableClusterIDs',$token->getSyllableClusterIDs());
+              addUpdateEntityReturnData('tok',$token->getID(),'syllableClusterIDs',$token->getSyllableClusterIDs(false,true));
               addUpdateEntityReturnData('tok',$token->getID(),'sort', $token->getSortCode());
               addUpdateEntityReturnData('tok',$token->getID(),'sort2', $token->getSortCode2());
             }
@@ -822,7 +825,7 @@ if (count($errors) == 0) {
             addUpdateEntityReturnData('tok',$token->getID(),'graphemeIDs',$token->getGraphemeIDs());
             addUpdateEntityReturnData('tok',$token->getID(),'value',$token->getValue());
             addUpdateEntityReturnData('tok',$token->getID(),'transcr',$token->getTranscription());
-            addUpdateEntityReturnData('tok',$token->getID(),'syllableClusterIDs',$token->getSyllableClusterIDs());
+            addUpdateEntityReturnData('tok',$token->getID(),'syllableClusterIDs',$token->getSyllableClusterIDs(false,true));
             addUpdateEntityReturnData('tok',$token->getID(),'sort', $token->getSortCode());
             addUpdateEntityReturnData('tok',$token->getID(),'sort2', $token->getSortCode2());
           }

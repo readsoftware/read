@@ -112,7 +112,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'sort' => $token->getSortCode(),
         'sort2' => $token->getSortCode2(),
         'attributionIDs' => $token->getAttributionIDs(),
-        'syllableClusterIDs' => $token->getSyllableClusterIDs());
+        'syllableClusterIDs' => $token->getSyllableClusterIDs(false,true));
       break;
     case 'cmp':
       $compound = $entity;
