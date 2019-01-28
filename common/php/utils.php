@@ -1154,15 +1154,28 @@ function getEntitySwitchHash($prefix,$id) {
     if (!$token) {
       return null;
     }
-    $sclIDs = $token->getSyllableClusterIDs();
+    $sclIDs = $token->getSyllableClusterIDs(false,true);
     if (!$sclIDs || !$sclIDs[0] || !$sclIDs[count($sclIDs)-1]) {
       return null;
     }
-    $syllable = new SyllableCluster($sclIDs[0]);
+    $startSclID = $sclIDs[0];
+    $endSclID = $sclIDs[count($sclIDs)-1];
+    $syllable = new SyllableCluster($startSclID);
     $startID = $syllable->getSegmentID();
-    $syllable = new SyllableCluster($sclIDs[count($sclIDs)-1]);
+    $split = checkForSplit($token,$syllable,false);
+    if ($split){
+      $startID = "scl".$startSclID."S".$split;
+//      $startID = "scl".$startSclID."S".$startID."-".$split;
+    }
+
+    $syllable = new SyllableCluster($endSclID);
     $endID = $syllable->getSegmentID();
-  } else if ($prefix == 'cmp') {
+    $split = checkForSplit($token,$syllable,true);
+    if ($split){
+      $endID = "scl".$endSclID."S".$split;
+//      $endID = "scl".$endSclID."S".$endID."-".$split;
+    }
+} else if ($prefix == 'cmp') {
     $compound = new Compound($id);
     if (!$compound) {
       return null;
@@ -1180,15 +1193,28 @@ function getEntitySwitchHash($prefix,$id) {
     if (!$sclIDs || !$sclIDs[0]) {
       return null;
     }
-    $syllable = new SyllableCluster($sclIDs[0]);
+    $startSclID = $sclIDs[0];
+    $syllable = new SyllableCluster($startSclID);
     $startID = $syllable->getSegmentID();
+    $split = checkForSplit($token,$syllable,false);
+    if ($split){
+      $startID = "scl".$startSclID."S".$split;
+//      $startID = "scl".$startSclID."S".$startID."-".$split;
+    }
+
     $token = $tokens[count($tokens)-1];
     $sclIDs = $token->getSyllableClusterIDs();
     if (!$sclIDs || !$sclIDs[count($sclIDs)-1]) {
       return null;
     }
-    $syllable = new SyllableCluster($sclIDs[count($sclIDs)-1]);
+    $endSclID = $sclIDs[count($sclIDs)-1];
+    $syllable = new SyllableCluster($endSclID);
     $endID = $syllable->getSegmentID();
+    $split = checkForSplit($token,$syllable,true);
+    if ($split){
+      $endID = "scl".$endSclID."S".$split;
+//      $endID = "scl".$endSclID."S".$endID."-".$split;
+    }
   } else {
     return null;
   }
@@ -1262,26 +1288,26 @@ function getSwitchInfoByTextFromEntities(&$entities,&$gra2SclMap,&$errors,&$warn
 *
 * @param Token $token to be checked
 * @param Syllable $syllable located at beginning or end of token to be checked
-* @param boolean $end determine whether to check end or start(defalut) of token
+* @param boolean $end determine whether to check end or start(default) of token
 *
 * @returns int position of split or zero if not split
 */
 
 function checkForSplit($token, $syllable, $end) {
-  $strTok = $token.value;
-  $strScl = $syllable.value;
+  $strTok = $token->getValue();
+  $strScl = $syllable->getValue();
   $cntScl = strlen($strScl);
   $split = 0;
-  if (!end) { //check start of token
+  if (!$end) { //check start of token
     $strTokCompare = substr($strTok,0,$cntScl);
     $split = 0;
     while ( $strScl != $strTokCompare) {
       $split++;
       $strScl = substr($strScl,1);//remove lead char
-      $strTokCompare = substr($strTokCompar,0, (strlen($strTokCompare) - 1));
+      $strTokCompare = substr($strTokCompare,0, (strlen($strTokCompare) - 1));
     }
   } else {
-    $strTokCompare = $strTok.substring($strTok.length - $cntScl);
+    $strTokCompare = substr($strTok,strlen($strTok) - $cntScl);
     $split = $cntScl;
     while ( $strScl != $strTokCompare) {
       $split--;
@@ -1325,9 +1351,11 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
           if ($entities['scl'][$startSclID]) {
             if (array_key_exists('segID',$entities['scl'][$startSclID]) && $entities['scl'][$startSclID]['segID']) {
               $startID = $entities['scl'][$startSclID]['segID'];
-              $split = checkForSplit($entObj,$startSclID,false);
+              $syllable = new SyllableCluster($endSclID);
+              $split = checkForSplit($entObj,$syllable,false);
               if ($split){
-                $startID = "scl".$startSclID."S".$startID."-".$split;
+                $startID = "scl".$startSclID."S".$split;
+//                $startID = "scl".$startSclID."S".$startID."-".$split;
               }
             } else {
               array_push($warnings,"warning no segID for syllable ID $startSclID of $entGID skipping switch calculation");
@@ -1338,9 +1366,11 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
           if ($entities['scl'][$endSclID]) {
             if (array_key_exists('segID',$entities['scl'][$endSclID]) && $entities['scl'][$endSclID]['segID']) {
               $endID = $entities['scl'][$endSclID]['segID'];
-              $split = checkForSplit($entObj,$endSclID,false);
+              $syllable = new SyllableCluster($endSclID);
+              $split = checkForSplit($entObj,$syllable,true);
               if ($split){
-                $endID = "scl".$endSclID."S".$endID."-".$split;
+                $endID = "scl".$endSclID."S".$split;
+//                $endID = "scl".$endSclID."S".$endID."-".$split;
               }
             } else {
               array_push($warnings,"warning no segID for syllable ID $endSclID of $entGID skipping switch calculation");
