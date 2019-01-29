@@ -335,6 +335,7 @@ $graphemeCharacterMap = array(
     "srt"=>"610","ssrt"=>"610","typ"=>"C"),
 "t"=>array(
 //    "·"=>array("ssrt"=>"243","typ"=>"M"),// for vp2sk only
+    "̄"=>array("srt"=>"442","ssrt"=>"442","typ"=>"C"),
     "́"=>array("srt"=>"449","ssrt"=>"449","typ"=>"C"),
     "h"=>array(
         "srt"=>"450","ssrt"=>"450","typ"=>"C",

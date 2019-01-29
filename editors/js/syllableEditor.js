@@ -2880,6 +2880,7 @@ EDITORS.sclEditor.prototype = {
       "srt": "610", "typ": "C" },
     "t": {
 //      "·": { "srt": "243", "typ": "MT" },
+      "̄": { "srt": "442", "typ": "C" },
       "́": { "srt": "449", "typ": "C" },
       "h": {
         "́": { "srt": "460", "typ": "C" },
