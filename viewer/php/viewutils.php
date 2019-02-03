@@ -861,7 +861,7 @@ function getEntityBoundaryHtml($entity,$classList = "") {
 *
 * @param object $entity that can be annotated
 */
-function getSubEntityFootnotesHtml($entity, $refresh = false) {
+function getSubEntityFootnotesHtml($entity, $refresh = false, $drillDown = true) {
   global $fnRefTofnText, $typeIDs;
   $fnHtml = "";
   if (!method_exists($entity,"getComponents")) {
@@ -872,7 +872,7 @@ function getSubEntityFootnotesHtml($entity, $refresh = false) {
     return "";
   }
   foreach ($subEntities as $subEntity){
-    $fnHtml .= getEntityFootnotesHtml($subEntity, $refresh);
+    $fnHtml .= getEntityFootnotesHtml($subEntity, $refresh, $drillDown);
   }
   return $fnHtml;
 }
@@ -882,11 +882,11 @@ function getSubEntityFootnotesHtml($entity, $refresh = false) {
 *
 * @param object $entity that can be annotated
 */
-function getEntityFootnotesHtml($entity, $refresh = false) {
+function getEntityFootnotesHtml($entity, $refresh = false, $drillDown = true) {
   global $fnRefTofnText, $typeIDs;
   $fnInfo = getEntityFootnoteInfo($entity, $typeIDs, $refresh);
   if (is_null($fnInfo)) {
-    if ($entity->getEntityTypeCode() == "cmp" && method_exists($entity,"getComponents")) {
+    if ($entity->getEntityTypeCode() == "cmp" && $drillDown && method_exists($entity,"getComponents")) {
       return getSubEntityFootnotesHtml($entity, $refresh);
     }
       return "";
@@ -1056,7 +1056,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
       }
     }
     if ($prefix == "cmp") {//end of compound so add cmp entity footnotes
-      $footnoteHtml .= getEntityFootnotesHtml($entity, $refresh);
+      $footnoteHtml .= getEntityFootnotesHtml($entity, $refresh,false);
     }
     if ($footnoteHtml) {
       $wordHtml .= $footnoteHtml;
@@ -1721,7 +1721,7 @@ function getPhysicalLinesHTML($textDivSeqIDs, $refresh = false, $addBoundaryHtml
                     }
                   }
                   if ($prefix == "cmp") {//end of compound so add cmp entity footnotes
-                    $footnoteHtml .= getEntityFootnotesHtml($entity, $refresh);
+                    $footnoteHtml .= getEntityFootnotesHtml($entity, $refresh, false);
                   }
                   if ($footnoteHtml) {
                     $wordHtml .= $footnoteHtml;
