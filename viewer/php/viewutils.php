@@ -1397,7 +1397,6 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                       $physicalLineHtml .= '</span>';
                       $previousA = false;
                     }
-                    list($tdSeqTag,$wordTag) = $graID2WordGID[$graID];
                     // check for inline structure marker
                     if (isset($graID2StructureInlineLabels) && !$prevGraIsVowelCarrier && 
                         array_key_exists($structLookupGraID,$graID2StructureInlineLabels)) {
@@ -1410,7 +1409,8 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                         $physicalLineHtml .= $structLabelsHtml;
                       }
                     }
-                    $physicalLineHtml .= '<span class="grpTok '.($tdSeqTag?$tdSeqTag.' ':'').$wordTag.'">';
+                    list($tdSeqTag,$wordTag,$sandhiWordPos) = $graID2WordGID[$graID];
+                    $physicalLineHtml .= '<span class="grpTok '.($sandhiWordPos?"sandhi$sandhiWordPos ":'').($tdSeqTag?$tdSeqTag.' ':'').$wordTag.'">';
                   } else if ($j==0 && $l == 0) {//first grapheme of physical line need to start wordhtml with prevous infor
                     // check for inline structure marker
                     if (isset($graID2StructureInlineLabels) && array_key_exists($structLookupGraID,$graID2StructureInlineLabels)) {

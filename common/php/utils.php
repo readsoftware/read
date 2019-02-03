@@ -3585,6 +3585,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
       error_log("error for querying for wordGIDs row count is 0");
     } else {
       $graID2WordGID = array();
+      $wrdLastGraID = 0;
       while ($row = $dbMgr->fetchResultRow()) {
         $txtDivSeqID = trim($row['txtdiv_seqid']);
         $tdSeqTokCmpGIDs = explode(",",trim($row['ent_ids'],"{}"));
@@ -3606,7 +3607,18 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
             error_log("warn, Warning irregular token tok$entID with no graphemes in $txtDivSeqID skipped.");
             continue;
           }
-          $graID2WordGID[$graIDs[0]] = array('seq'.$txtDivSeqID, $wordTag);
+          if ($graIDs[0] !== $prevWrdLastGraID) {
+            $graID2WordGID[$graIDs[0]] = array('seq'.$txtDivSeqID, $wordTag, 0);
+          } else { //shared grapheme currently vowel sandhi
+            //set word info to show second word in sandhi combination
+            $graID2WordGID[$graIDs[0]] = array('seq'.$txtDivSeqID, $wordTag, 2);
+            if (array_key_exists($prevWrdFirstGraID,$graID2WordGID )) {
+              //adjust to show first word in sandhi combination
+              $graID2WordGID[$prevWrdFirstGraID][2] = 1;
+            }
+          }
+          $prevWrdFirstGraID = $graIDs[0];
+          $prevWrdLastGraID = $graIDs[count($graIDs)-1];
         }
         if (count($graID2WordGID) > 0){
           $ednLookupInfo['gra2WordGID'] = $graID2WordGID;
