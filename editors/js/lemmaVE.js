@@ -1837,7 +1837,7 @@ DEBUG.traceEntry("createPhonologicalUI");
       infEdit.append(this.createRadioGroupUI("mood", "MoodUI", listMood,mood,null,icf[2] == 2));
       infEdit.append(this.createRadioGroupUI("num", "NumberUI", listNum,num,null,icf[4] == 2));
       infEdit.append(this.createRadioGroupUI("person", "PersonUI", listPerson,per,null,icf[6] == 2));
-      infEdit.append(this.createRadioGroupUI("conj2nd", "V2ndConjUI", listV2ndConj,null,conj2nd,icf[7] == 2));
+      infEdit.append(this.createRadioGroupUI("conj2nd", "V2ndConjUI", listV2ndConj,conj2nd,null,icf[7] == 2));
     } else {// other inflectables use a subset of the following
       if (lemmaShowInf.indexOf('showGender') > -1) {
         infEdit.append(this.createRadioGroupUI("gender", "GenderUI", listGen, gen,null,icf[3] == 2));
