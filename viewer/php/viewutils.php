@@ -2233,7 +2233,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                     if (!array_key_exists($vper,$groupedForms[$vtensemood][$num])) {
                       $groupedForms[$vtensemood][$num][$vper] = array();
                     }
-                    if ($num) {
+                    if ($num && $num != '?') {
                       $infString .= "<span class=\"inflectdescript\">$num</span>";
                     }
                     if ($conj2 && is_numeric($conj2)) {
@@ -2834,7 +2834,7 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
                 }
                 if ($conj2 && is_numeric($conj2)) {
                   $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
-               } else {
+                } else {
                   $conj2 = '?';
                 }
                 if (!array_key_exists($conj2,$groupedForms[$vtensemood][$num][$vper])) {
