@@ -169,6 +169,10 @@ font-weight: bold;
   content: " ";
   padding-right: 5px;
 }
+.grpTok.sandhi1:after{
+  content: "";
+  padding-right: 0px;
+}
 .grpTok{
   user-select: none;
   -moz-user-select: none;
