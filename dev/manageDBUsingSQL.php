@@ -57,10 +57,16 @@ if (!$cmd && !$dbname && !$sqlfilename) {
   $psqlPWD = defined("PASSWORD")? PASSWORD :null;
   //set default postgresql database
   $psqlDB = defined("PSQLDEFAULTDB")? PSQLDEFAULTDB :'postgres';
+  //get environment set command
+  $setCmd = defined("SETENVCMD")? SETENVCMD :'export'; //'export' for ubuntu, 'set' for mac bitnami 
+  //get shell command separator
+  $cmdsep = defined("CMDSEPARATOR")? CMDSEPARATOR :';'; // ';' for ubuntu, '&' for mac bitnami
   //need to set environment 'PGPASSWORD' and 'PGDATABASE' before running script
-  $psqlPath = ("set PGDATABASE=$psqlDB& ").($psqlPWD?"set PGPASSWORD=$psqlPWD& ":'').(defined("PSQL_PATH")? PSQL_PATH."\\" :"");//configured tool dir or assume in PATH windows
+  $psqlPath = ("$setCmd PGDATABASE=$cmdsep ").
+              ($psqlPWD?"$setCmd PGPASSWORD=$psqlPWD"."$cmdsep ":'').
+              (defined("PSQL_PATH")? PSQL_PATH."\\" :"");//configured tool dir or assume in PATH windows
   //get db username
-  $psqlUser = defined("USERNAME")? USERNAME :'postgres';
+  $psqlUser = defined("PGUSERNAME")? PGUSERNAME :'postgres';
   //get path to db SQL files
   $sqlFilePath = $sqlfilepath?$sqlfilepath:(defined("READ_FILE_STORE")?READ_FILE_STORE."\\":"");//set dir for sql file windows
 //  $psqlPath = defined("PSQL_PATH")? PSQL_PATH."/" :"";//configured tool dir or assume in PATH
@@ -94,7 +100,7 @@ if (!$cmd && !$dbname && !$sqlfilename) {
         if (runShellCommand($command, "Loaded $dbname database from $sqlFilePath$sqlfilename", "Aborting - failed to load database $dbname from $sqlFilePath$sqlfilename")) {
           $command = $psqlPath.'psql -U '.$psqlUser.' -c "GRANT CONNECT ON DATABASE '.$dbname.' TO PUBLIC;"';
            if (runShellCommand($command, "GRANTED connection on $dbname database", "Aborting - failed to GRANTED connections to database $dbname")) {
-             echo ('<span id="dbready">'.$dbname.' database ready</span>');
+             echo ('<span id="dbready">'.$dbname.' database ready</span>');// span id="dbready" is for front end test harness used to trigger test after db restore
              ob_flush();
            }
         }

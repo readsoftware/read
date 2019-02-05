@@ -39,8 +39,13 @@
   if(!defined("ENABLECATALOGRESOURCE")) define("ENABLECATALOGRESOURCE",'0');//0 = not enable else enabled
 //  if(!defined("LINKSYLPATTERN")) define("LINKSYLPATTERN","L1:S1,L5+5:S1");
 //  if(!defined("USESKTSORT")) define("USESKTSORT",'1');
+
+// defines for service to manage db snapshot and restore
+  if(!defined("SETENVCMD")) define("SETENVCMD",'export'); //for windows bash use 'set'
+  if(!defined("CMDSEPARATOR")) define("CMDSEPARATOR",';');//for windows bash use '&'
 //  if(!defined("READ_FILE_STORE")) define("READ_FILE_STORE",'\\xampp\\readfilestore');//simple script for managing db snapshot and restore
 //  if(!defined("PSQL_PATH")) define("PSQL_PATH",'\\xampp\\PostgreSQL\\9.3\\bin');////simple script for managing db snapshot and restore
+
   if(!defined("MAX_UPLOAD_SIZE")) {
     $maxUpload = intval(ini_get("upload_max_filesize"));
     $maxPost = intval(ini_get("post_max_size"));
