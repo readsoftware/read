@@ -109,7 +109,7 @@
                                'ano' => array(),
                                'atb' => array());
   $entities["update"] = array( 'bln' => array());
-  $blnID = (array_key_exists('bln',$_REQUEST)? $_REQUEST['bln']:null);
+  $blnID = (array_key_exists('blnID',$_REQUEST)? $_REQUEST['blnID']:(array_key_exists('bln',$_REQUEST)? $_REQUEST['bln']:null));
   $baseline = null;
   if ($blnID) {
     $baseline = new Baseline($blnID);

@@ -36,9 +36,9 @@ var DEBUG = DEBUG || {};
   DEBUG.healthLogOn = false;
   DEBUG.levelOverrides = [];
   DEBUG.outputChildIDs = true;
-  DEBUG.traceOn = false;
+  DEBUG.traceOn = true;
   DEBUG.level = 0;
-  DEBUG.addTimings = false;
+  DEBUG.addTimings = true;
   DEBUG.traceLevel = 10;
   DEBUG.logtxt = "";
   DEBUG.start = (new Date()).getTime();
@@ -51,11 +51,12 @@ var DEBUG = DEBUG || {};
 */
 
   DEBUG.log = function(cat, info) {
-    var i, tab = "\t", indent="",
-      elapse = (new Date()).getTime() - DEBUG.start;
+    var d = new Date(),
+        logtime = " "+ d.getHours()+":"+d.getMinutes() +":"+d.getSeconds()+":"+d.getMilliseconds(),
+        elapse = d.getTime() - DEBUG.start;
     if (info && info.length) {
       if (DEBUG.addTimings) {
-        info = info + " time = " + elapse +" ms";
+        info = info + " time = " + elapse +" ms at "+ logtime;
       }
       switch (cat) {
         case "data":

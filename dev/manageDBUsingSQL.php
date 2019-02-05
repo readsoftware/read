@@ -58,7 +58,7 @@ if (!$cmd && !$dbname && !$sqlfilename) {
   //set default postgresql database
   $psqlDB = defined("PSQLDEFAULTDB")? PSQLDEFAULTDB :'postgres';
   //need to set environment 'PGPASSWORD' and 'PGDATABASE' before running script
-  $psqlPath = ("export PGDATABASE=$psqlDB; ").($psqlPWD?"export PGPASSWORD=$psqlPWD; ":'').(defined("PSQL_PATH")? PSQL_PATH."\\" :"");//configured tool dir or assume in PATH windows
+  $psqlPath = ("set PGDATABASE=$psqlDB& ").($psqlPWD?"set PGPASSWORD=$psqlPWD& ":'').(defined("PSQL_PATH")? PSQL_PATH."\\" :"");//configured tool dir or assume in PATH windows
   //get db username
   $psqlUser = defined("USERNAME")? USERNAME :'postgres';
   //get path to db SQL files
@@ -93,7 +93,10 @@ if (!$cmd && !$dbname && !$sqlfilename) {
         $command = $psqlPath.'psql -U '.$psqlUser." -d $dbname -f ".$sqlFilePath.$sqlfilename;
         if (runShellCommand($command, "Loaded $dbname database from $sqlFilePath$sqlfilename", "Aborting - failed to load database $dbname from $sqlFilePath$sqlfilename")) {
           $command = $psqlPath.'psql -U '.$psqlUser.' -c "GRANT CONNECT ON DATABASE '.$dbname.' TO PUBLIC;"';
-           runShellCommand($command, "GRANTED connection on $dbname database", "Aborting - failed to GRANTED connections to database $dbname");
+           if (runShellCommand($command, "GRANTED connection on $dbname database", "Aborting - failed to GRANTED connections to database $dbname")) {
+             echo ('<span id="dbready">'.$dbname.' database ready</span>');
+             ob_flush();
+           }
         }
       }
       break;

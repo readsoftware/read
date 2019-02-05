@@ -1426,7 +1426,7 @@ MANAGERS.DataManager.prototype = {
       return;
     }
     if (blnID && (!this.isBaselineLoaded(blnID) || refresh) && !this.baselineForIDUnavailable(blnID)) {//test load again as call may have been on stack and another task may have loaded it
-      dataQuery = {bln:blnID};
+      dataQuery = {blnID:blnID};
       dataMgr.loadingBaseline = blnID;
       $.ajax({
           type:"POST",
