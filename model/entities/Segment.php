@@ -219,7 +219,6 @@
     //********GETTERS*********
 
     /**
-    /**
     * Get Segment's baseline unique IDs
     *
     * @param boolean $asString determines where to return as a string (default = false)

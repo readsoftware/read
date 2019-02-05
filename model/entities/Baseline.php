@@ -296,7 +296,7 @@
     public function getSegments() {
       if (!$this->_segments) {
         $condition = $this->_id." = ANY (\"seg_baseline_ids\") ";
-        $this->_segments = new Segments($condition,null,null,null);
+        $this->_segments = new Segments($condition,"seg_id",null,null);
         $this->_segments->setAutoAdvance(false);
       }
       return $this->_segments;
