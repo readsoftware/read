@@ -254,7 +254,7 @@
               continue;
             }
             $graVal = $grapheme->getValue();
-            if ($graVal == "◈" && $style == "reconstructed") {
+            if (($graVal == "◈" || $graVal == "◯") && $style == "reconstructed") {
               continue;
             }
             $typ = Entity::getTermFromID($grapheme->getType());

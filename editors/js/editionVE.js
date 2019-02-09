@@ -6045,7 +6045,7 @@ mergeLine: function (direction,cbError) {
             DEBUG.log("err","calculating graLookups and grapheme not available for graID "+graID);
             continue;
           }
-          if (this.repType == "reconstructed" && grapheme.value == "◈") {//knot symbol removed from reconstructed
+          if (this.repType == "reconstructed" && (grapheme.value == "◈" || grapheme.value == "◯")) {//knot symbol removed from reconstructed
             hasNonReconConsnt = false;
             hasNonAddedConsnt = false;
             prevGraIsVowelCarrier = false;
@@ -6463,7 +6463,7 @@ mergeLine: function (direction,cbError) {
               DEBUG.log("err","calculating graLookups and grapheme not available for graID "+graID);
               continue;
             }
-            if (grapheme.value == "◈") {//knot symbol removed from reconstructed
+            if (grapheme.value == "◈" || grapheme.value == "◯") {//knot or ◯ symbol removed from reconstructed
               hasNonReconConsnt = false;
               hasNonAddedConsnt = false;
               prevGraIsVowelCarrier = false;

@@ -337,7 +337,7 @@
             $prevGraIsVowelCarrier = true;
             continue;
           }
-          if ($grapheme->getValue() == "◈") {
+          if ($grapheme->getValue() == "◈" || $grapheme->getValue() == "◯") {
             $prevGraIsVowelCarrier = false;
             $previousA = false;
             continue;

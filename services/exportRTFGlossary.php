@@ -190,8 +190,8 @@
             }
           }
         }
-        $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/","/◈/");
-        $replacement = array("aï","aü","","","","","","");
+        $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/","/◈/","/◯/");
+        $replacement = array("aï","aü","","","","","","","");
         $lemmaComponents = $lemma->getComponents(true);
         if ($lemmaComponents && $lemmaComponents->getCount()) {
           $rtf .= $softReturn.$eol;

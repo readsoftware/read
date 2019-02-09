@@ -151,7 +151,7 @@ if (!$catID && !$ednID) {
                     //      get syllable value
                     $transcription = preg_replace("/ʔ/","",$lineSyllable->getValue(true));
                     //      count syllable character offset
-                    if ($transcription == "+" || $transcription == "◊" || $transcription == "◈" || $transcription == "///") {
+                    if ($transcription == "+" || $transcription == "◊" || $transcription == "◈" || $transcription == "◯" || $transcription == "///") {
                       continue;
                     }
                     $segCnt++;
