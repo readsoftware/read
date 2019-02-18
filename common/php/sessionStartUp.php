@@ -22,9 +22,10 @@ if (!isset($_SESSION)) {
 }
 
 $sessid = session_id();
-if (!$sessid) { // new session so may need to include default database from config.php
+//if (!$sessid) { // new session so may need to include default database from config.php
+  // removed conditional for multiple tabs using default database out of config.php
   require_once (dirname(__FILE__) . '/../../config.php');
-}
+//}
 
 //identify the DB name
 global $dbn;

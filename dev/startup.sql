@@ -4590,6 +4590,7 @@ SELECT pg_catalog.setval('syllablecluster_scl_id_seq', 1, false);
 COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_code, trm_description, trm_url, trm_attribution_ids, modified, trm_owner_id, trm_annotation_ids, trm_visibility_ids, trm_scratch) FROM stdin;
 1	en=>"SystemOntology"	\N	780	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 2	en=>"SystemEntity"	1	782	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+154	en=>"Date"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 3	en=>"ArchaeologicalContext"	1	781	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 4	en=>"ArchaeologicalStructure"	3	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 5	en=>"Stupa"	4	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -4741,7 +4742,6 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 151	en=>"Forgery"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 152	en=>"Arapacana"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 153	en=>"Seal, oval"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-154	en=>"Date"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 155	en=>"Seal, round"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 156	en=>"Wedge covering‐tablet"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 157	en=>"Oblong tablet"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -4808,6 +4808,7 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 218	en=>"Oblong covering‐tablet"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 219	en=>"Oblong under ‐tablet"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 220	en=>"Tablet (nearly square)"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+304	en=>"DaughterOf"	302	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 221	en=>"Oblong tablet (fragment) [wedge tablet fragment]"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 222	en=>"Wedge under‐tablet (?)"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 223	en=>"Wedge under‐tablet (broken in 6 pieces)"	138	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -4880,7 +4881,6 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 301	en=>"IsPlacedOutside"	297	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 302	en=>"PersonRelationship"	278	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 303	en=>"SonOf"	302	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-304	en=>"DaughterOf"	302	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 305	en=>"FatherOf"	302	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 306	en=>"MotherOf"	302	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 307	en=>"UncleOf"	302	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5284,10 +5284,10 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 712	en=>"Reference"	709	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 713	en=>"Catalog"	709	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 714	en=>"ArchaeologicalReport"	709	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1389	en=>"1"	1388	778	\N	bt1	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 716	en=>"Parallel"	710	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 717	en=>"RestorationState"	1	781	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 718	en=>"RestorationStateOption1"	717	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1389	en=>"1"	1388	778	\N	bt1	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 719	en=>"RestorationStateOption2"	717	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 720	en=>"LanguageScript"	8	781	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 721	en=>"pgd-Khar"	720	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5308,17 +5308,17 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 737	en=>"LinePhysical"	736	778	{1287}	Line	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 738	en=>"Text"	735	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 739	en=>"TextDivision"	738	778	{972,1345}	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-740	en=>"Analysis"	735	778	{741,1437,744,750}	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-741	en=>"Chapter"	740	778	{744,745,742,1442}	Chapter	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+740	en=>"Analysis"	735	778	{741,1437,744,750}	Analysis	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+741	en=>"Chapter"	740	778	{1437,744,745,742,1442}	Chapter	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 742	en=>"Stanza"	741	778	{743}	Stanza	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 743	en=>"Pāda"	742	778	{972,1345}	Pāda	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 744	en=>"Paragraph"	1437	778	{745,742,972,1345}	Paragraph	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-745	en=>"Sentence"	744	778	{746,747}	Sentence	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+745	en=>"Sentence"	744	778	{746,747,972,1345}	Sentence	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 746	en=>"Clause"	745	778	{747}	Clause	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 747	en=>"Phrase"	746	778	{972,1345}	Phrase	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 748	en=>"NounPhrase"	747	778	{972,1345}	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 749	en=>"VerbPhrase"	747	778	{972,1345}	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-750	en=>"Formulae"	740	778	\N	Formuale	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+750	en=>"Formulae"	740	778	\N	Formulae	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 756	en=>"TextReference"	735	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 757	en=>"RootRefContainer"	756	778	{972,1345}	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 758	en=>"RootRef"	756	778	{972,1345}	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5458,8 +5458,9 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 894	en=>"Modified"	881	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Annotation-Annotation-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 895	en=>"Attribution"	2	783	\N	atb	Each Entity in the system has a field for identification of Attributions.  Attribution encompasses both references to the Bibliography and Attributable Events in the system.	http://www.gandhari.org/kanishka/model/document/Attribution-Attribution.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 896	en=>"Annotations"	895	800	{881}	atb_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Attribution-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1390	en=>"2"	1388	778	\N	bt2	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 897	en=>"AttributionGroup"	895	802	{908}	atb_group_id	AttributionGroup record linked to this record.	http://www.gandhari.org/kanishka/model/document/Attribution-AttributionGroup.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1390	en=>"2"	1388	778	\N	bt2	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1391	en=>"3"	1388	778	\N	bt3	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 898	en=>"Bibliography"	895	802	{937}	atb_bib_id	Bibliography record linked to this record.	http://www.gandhari.org/kanishka/model/document/Attribution-Bibliography.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 899	en=>"Description"	895	785	\N	atb_description	Free text description.	http://www.gandhari.org/kanishka/model/document/Attribution-Attribution-Description.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 900	en=>"Detail"	895	785	\N	atb_detail	Where the Attribution record is a system Attributable Event, the value in the Attribution-Detail field is the system generated date stamp.  Where the Attribution record is a reference to the Bibliography, the the value in the Attribution-Detail field may be a page number or plate number.	http://www.gandhari.org/kanishka/model/document/Attribution-Attribution-Detail.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5485,6 +5486,7 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 920	en=>"Type"	908	806	{352,353}	atg_type_id	A Term record with a constrained vocabulary derived from AttributionGroupType.	http://www.gandhari.org/kanishka/model/document/AttributionGroup-Type.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 921	en=>"Visibilities"	908	800	{1369}	atg_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record.	http://www.gandhari.org/kanishka/model/document/AttributionGroup-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 922	en=>"Modified"	908	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/AttributionGroup-AttributionGroup-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+975	en=>"CompoundComponents"	972	804	{1345,972}	cmp_component_ids	Ordered Sequence of Token and/or Compound records.	http://www.gandhari.org/kanishka/model/document/Compound-CompoundComponents.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 923	en=>"BaseLine"	2	783	\N	bln	A Baseline is a fixed reference system for the Akṣaras on a Surface.  Where a relevant Image exists, a Baseline identifies an Image with a Surface as the basis for referential anchoring.  An Image associated with a Surface, at a particular resolution, has an Xycoordinate system; a grid much like the reference grids laid out at an archaeological excavation.	http://www.gandhari.org/kanishka/model/document/BaseLine-BaseLine.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 924	en=>"Annotations"	923	800	{881}	bln_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/BaseLine-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 925	en=>"Attributions"	923	800	{895}	bln_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/BaseLine-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5508,9 +5510,10 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 943	en=>"Scratch"	937	786	\N	bib_scratch	\N	http://www.gandhari.org/kanishka/model/document/Bibliography-Scratch.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 944	en=>"Visibilities"	937	800	{1369}	bib_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record.	http://www.gandhari.org/kanishka/model/document/Bibliography-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 945	en=>"Modified"	937	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Bibliography-Bibliography-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1463	en=>"AuxR"	1450	778	\N	reflexive passive	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 946	en=>"Catalog"	2	783	\N	cat	A Catalog sequences Edition records to configure Catalogs and Glossarys.	http://www.gandhari.org/kanishka/model/document/Catalog-Catalog.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 947	en=>"Annotations"	946	800	{881}	cat_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Catalog-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1391	en=>"3"	1388	778	\N	bt3	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1392	en=>"4"	1388	778	\N	bt4	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 948	en=>"Attributions"	946	800	{895}	cat_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Catalog-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 949	en=>"Description"	946	785	\N	cat_description	Free text description.	http://www.gandhari.org/kanishka/model/document/Catalog-Catalog-Description.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 950	en=>"Editions"	946	801	{1007}	cat_edition_ids	Ordered set of linked Editions.	http://www.gandhari.org/kanishka/model/document/Catalog-Editions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5536,10 +5539,10 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 970	en=>"Visibilities"	959	800	{1369}	col_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record.	http://www.gandhari.org/kanishka/model/document/Collection-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 971	en=>"Modified"	959	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Collection-Collection-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 972	en=>"Compound"	2	783	\N	cmp	A Compound is composed of Token and/or Compound records which are sequenced to represent an attested compound.	http://www.gandhari.org/kanishka/model/document/Compound-Compound.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1129	en=>"Line-Mask"	1125	785	\N	lin_mask	\N	http://www.gandhari.org/kanishka/model/document/Line-Line-Mask.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 973	en=>"Annotations"	972	800	{881}	cmp_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Compound-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 974	en=>"Attributions"	972	800	{895}	cmp_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Compound-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1031	en=>"Title"	1021	785	\N	era_title	Free text title derived from scholarship.	http://www.gandhari.org/kanishka/model/document/Era-Era-Title.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-975	en=>"CompoundComponents"	972	804	{1345,972}	cmp_component_ids	Ordered Sequence of Token and/or Compound records.	http://www.gandhari.org/kanishka/model/document/Compound-CompoundComponents.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+994	en=>"Date-ID"	989	784	{989}	dat_id	\N	http://www.gandhari.org/kanishka/model/document/Date-Date-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 976	en=>"DisplayValue"	972	791	\N	cmp_value	The Compound-DisplayValue field is concatenated from Token and/or Compound records sequenced on the Compound-CompoundComponents field without Text Critical Marks.	http://www.gandhari.org/kanishka/model/document/Compound-Compound-DisplayValue.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 977	en=>"ID"	972	784	{972}	cmp_id	\N	http://www.gandhari.org/kanishka/model/document/Compound-Compound-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 978	en=>"InternalComponentCase"	972	806	{359,360,361,362,363,364,365,366,367,368,369,370}	cmp_case_id	A Term record with a constrained vocabulary derived from Case.	http://www.gandhari.org/kanishka/model/document/Compound-InternalComponentCase.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5556,9 +5559,10 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 990	en=>"Annotations"	989	800	{881}	dat_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Date-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 991	en=>"Attributions"	989	800	{895}	dat_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Date-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 992	en=>"CalculatedYear"	989	793	\N	\N	Calculation of this value is predicated on their being a property value pair in Date-DateEvidences whose Term component has a value of ‘YearNumeric. This value is calculated from the value in Era-Begindate of record cited in Date-EraPreferred and the number component of the property value pair in Date-DateEvidences whose Term component has a value of ‘YearNumeric.	http://www.gandhari.org/kanishka/model/document/Date-Date-CalculatedYear.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1004	en=>"Visibilities"	989	800	{1369}	dat_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record. Unsupported Data Issue of conjectured data in fields like ruler and era in Azes.  This data would seem to be redundant in the new model where Ruler is identified in Person entity and Era identified through Date and Era entities. date-calender Presumed calender date-datetype Category of presumed date date-day Attested day date-id System generated date-attestedyear Attested year date-month Attested month date-yearof Attested era attribution would default to kaniska catalog team term:datedentity identifies the date record with any entity record. term:datedentitycontext utilises a controlled vocabulary from term to apply a semantic to the relationship with the record identified in term:datedentity.	http://www.gandhari.org/kanishka/model/document/Date-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1024	en=>"Begindate"	1021	154	\N	era_begin_date	The beginning date of this Era in BCE/CE.  Negative values indicate BCE.	http://www.gandhari.org/kanishka/model/document/Era-Era-Begindate.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1025	en=>"EndDate"	1021	154	\N	era_end_date	The end date of this Era in BCE/CE.  Negative values indicate BCE.	http://www.gandhari.org/kanishka/model/document/Era-Era-EndDate.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 993	en=>"DateEvidences"	989	810	\N	dat_evidences	Date record may have values in Date-DateEvidences field.  This field uses property value pairs to identify the type of evidence with the evidence value. The first value in the property value pair is a Term value nested under the Term-ParentTerm of 'DateEvidence'. If the Date record has a property value pair whose Term value has a Term-ParentTerm of 'conjectured' then: The evidence value component of this pair is empty. A default value for Date-ProbableBegin is not able to be calculated. A default value for Date-ProbableEnd is not able to be calculated. The basis for conjecture would ultimately rest with any Bibliography references in the Date-Attributions field. If the Date record has a property value pair whose Term value has a Term-ParentTerm of 'carbon14' and if that Term value is ‘measured’: Date-DateEvidences field must contain only a property value pair whose Term value has a Term-ParentTerm of ‘measured’ these include: ‘YearsBP-Number’ ‘BPPlusMinus-Number’ ‘CalibratedRange1StdDev-String’ ‘CalibratedRange2StdDev-String’ A default value for Date-ProbableBegin is calculated from values associated with 'yearsbp-number' and 'yearsbpplusminus-number'. A default value for Date-ProbableEnd is calculated from values associated with 'yearsbp-number' and 'yearsbpplusminus-number'.. The basis for calculation would ultimately rest with any Bibliography references in the Date-Attributions field. If the Date record has a property value pair whose Term value has a Term-ParentTerm of 'carbon14' and if that Term value is ‘extrapolated’: The evidence value component of this pair is empty. A default value for Date-ProbableBegin is not able to be calculated. A default value for Date-ProbableEnd is not able to be calculated. The basis for conjecture would ultimately rest with any Bibliography references in the Date-Attributions field. If the Date record has a property value pair whose Term value has a Term-ParentTerm of 'attested' and if that Term value is ‘extrapolated’: Date-DateEvidences field must contain only a property value pair whose Term value has a Term-ParentTerm of 'attested' these include: 'YearText' 'YearNumeric' 'āṣāḍha' 'CalenderDayText' 'CalenderDayNumeric' 'LunarDayText' A default value for Date-ProbableBegin, Date-ProbableEnd, Date-CalculatedYear, Where there is a property value pair in Date-DateEvidences whose Term component has a Term-ParentTerm value of ‘Measured, this value is calculated from the value the number component of the property value pair in Date-DateEvidences whose Term component has a value of ‘YearsBPNumber' and the value the number component of the property value pair in Date-DateEvidences whose Term component has a value of ‘YearsBPPlusMinusNumber' Date-TerminusAnteQuem and Date-TerminusPostQuem is able to be calculated if there is a value for 'YearNumeric'. Issue will be that in most circumstances we have the Year as earTet, a  reference to a compound number.  This however is no use for calculation purposes and basically would require one to (in addition tot eh YearText entry also develop a YearNumeric entry from which we can calculate.	http://www.gandhari.org/kanishka/model/document/Date-DateEvidences.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-994	en=>"Date-ID"	989	784	{989}	dat_id	\N	http://www.gandhari.org/kanishka/model/document/Date-Date-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1393	en=>"5"	1388	778	\N	bt5	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 995	en=>"EraPreferred"	989	802	{1021}	dat_preferred_era_id	The Era record which is to be identified with this Date for the purposes of calculation of Date-CalculatedYear, Where there is a property value pair in Date-DateEvidences whose Term component has a Term-ParentTerm value of ‘Measured, this value is calculated from the value the number component of the property value pair in Date-DateEvidences whose Term component has a value of ‘YearsBPNumber' and the value the number component of the property value pair in Date-DateEvidences whose Term component has a value of ‘YearsBPPlusMinusNumber' Date-TerminusAnteQuem and Date-TerminusPostQuem.	http://www.gandhari.org/kanishka/model/document/Date-EraPreferred.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 996	en=>"Eras"	989	800	{1021}	dat_era_ids	The set of Era records (inclusive of the record Date-EraPreferred) which are to be identified with this Date for the purposes of calculation of Where there is a property value pair in Date-DateEvidences whose Term component has a Term-ParentTerm value of ‘Measured, this value is calculated from the value the number component of the property value pair in Date-DateEvidences whose Term component has a value of ‘YearsBPNumber' and the value the number component of the property value pair in Date-DateEvidences whose Term component has a value of ‘YearsBPPlusMinusNumber' Date-TerminusAnteQuem and Date-TerminusPostQuem.	http://www.gandhari.org/kanishka/model/document/Date-Eras.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 997	en=>"EvidenceFrom"	989	805	\N	dat_entity_id	Entity from which evidence for the date has been derived.  This evidence is recorded in the Date-DateEvidences field.	http://www.gandhari.org/kanishka/model/document/Date-EvidenceFrom.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5568,10 +5572,15 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1001	en=>"Scratch"	989	786	\N	dat_scratch	\N	http://www.gandhari.org/kanishka/model/document/Date-Scratch.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1002	en=>"TerminusAnteQuem"	989	793	\N	\N	Calculation of this value is predicated on their being a property value pair in Date-DateEvidences whose Term component has a value of ‘YearNumeric. This value is calculated from from the latest value in Era-EndDate of records cited in Date-Eras and the number component of the property value pair in Date-DateEvidences whose Term component has a value of ‘YearNumeric.	http://www.gandhari.org/kanishka/model/document/Date-Date-TerminusAnteQuem.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1003	en=>"TerminusPostQuem"	989	793	\N	\N	Calculation of this value is predicated on their being a property value pair in Date-DateEvidences whose Term component has a value of ‘YearNumeric. This value is calculated from from the earliest value in Era-Begindate of records cited in Date-Eras and the number component of the property value pair in Date-DateEvidences whose Term component has a value of ‘YearNumeric.	http://www.gandhari.org/kanishka/model/document/Date-Date-TerminusPostQuem.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1026	en=>"ID"	1021	784	{1021}	era_id	\N	http://www.gandhari.org/kanishka/model/document/Era-Era-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1027	en=>"Order"	1021	531	\N	era_order	The ordinal position of the Era represented in Era-Title in the temporal order as derived from scholarship.  Era records with the same value in Era-Title will have the same value Era-Order.  This field is restricted to a special UserGroup with a Full name of User or group of Users. UserGroup-Name of 'Catalog'.	http://www.gandhari.org/kanishka/model/document/Era-Era-Order.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1028	en=>"Owner"	1021	802	{1369}	era_owner_id	UserGroup record linked to this record.  It defines which UserGroup owns this record.	http://www.gandhari.org/kanishka/model/document/Era-Owner.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1004	en=>"Visibilities"	989	800	{1369}	dat_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record. Unsupported Data Issue of conjectured data in fields like ruler and era in Azes.  This data would seem to be redundant in the new model where Ruler is identified in Person entity and Era identified through Date and Era entities. date-calender Presumed calender date-datetype Category of presumed date date-day Attested day date-id System generated date-attestedyear Attested year date-month Attested month date-yearof Attested era attribution would default to kaniska catalog team term:datedentity identifies the date record with any entity record. term:datedentitycontext utilises a controlled vocabulary from term to apply a semantic to the relationship with the record identified in term:datedentity.	http://www.gandhari.org/kanishka/model/document/Date-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1005	en=>"YearOf"	989	793	\N	\N	The Era-Title value corresponding to the value in Date-EraPreferred.	http://www.gandhari.org/kanishka/model/document/Date-Date-YearOf.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1006	en=>"Modified"	989	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Date-Date-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1007	en=>"Edition"	2	783	\N	edn	An Edition record identifies a set of Sequence records with a Text record to instantiate a particular Edition of a Text.	http://www.gandhari.org/kanishka/model/document/Edition-Edition.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1008	en=>"Annotations"	1007	800	{881}	edn_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Edition-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1158	en=>"Modified"	1141	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Lemma-Lemma-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1009	en=>"Attributions"	1007	800	{895}	edn_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Edition-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1010	en=>"Description"	1007	795	\N	edn_description	This is a UI assisted text description.  When an Edition is cloned this would be calculated from the Attribution-Title of the cloned Edition.  For example, “Draft copy of Falk 2008 38-46” where Falk 2008 is derived from the Bibliography-Name and and 38-46 is derived from Attribution-Detail.  This field can be overwritten by the owner of the cloned Edition.	http://www.gandhari.org/kanishka/model/document/Edition-Edition-Description.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1011	en=>"Label"	1007	791	\N	\N	A short form for display in the user interface.  Calculated from the AttributionGroup-Fullname field of the AttributionGroup identified with the Attribution record for this Edition and the date stamp from the Attribution-Detail field.  For Example “Stefan Baums - 1/01/2014”	http://www.gandhari.org/kanishka/model/document/Edition-Edition-Label.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5587,13 +5596,10 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1021	en=>"Era"	2	783	\N	era	Era records temporal data about an Era.	http://www.gandhari.org/kanishka/model/document/Era-Era.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1022	en=>"Annotations"	1021	800	{881}	era_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Era-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1023	en=>"Attributions"	1021	800	{895}	era_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Era-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1024	en=>"Begindate"	1021	154	\N	era_begin_date	The beginning date of this Era in BCE/CE.  Negative values indicate BCE.	http://www.gandhari.org/kanishka/model/document/Era-Era-Begindate.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1025	en=>"EndDate"	1021	154	\N	era_end_date	The end date of this Era in BCE/CE.  Negative values indicate BCE.	http://www.gandhari.org/kanishka/model/document/Era-Era-EndDate.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1026	en=>"ID"	1021	784	{1021}	era_id	\N	http://www.gandhari.org/kanishka/model/document/Era-Era-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1027	en=>"Order"	1021	531	\N	era_order	The ordinal position of the Era represented in Era-Title in the temporal order as derived from scholarship.  Era records with the same value in Era-Title will have the same value Era-Order.  This field is restricted to a special UserGroup with a Full name of User or group of Users. UserGroup-Name of 'Catalog'.	http://www.gandhari.org/kanishka/model/document/Era-Era-Order.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1028	en=>"Owner"	1021	802	{1369}	era_owner_id	UserGroup record linked to this record.  It defines which UserGroup owns this record.	http://www.gandhari.org/kanishka/model/document/Era-Owner.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1029	en=>"Preferred"	1021	789	\N	era_preferred	True/False indicator as to whether this record is the 'preferred' record for the era.  This field is restricted to a special UserGroup with a Full name of User or group of Users. UserGroup-Name of 'Catalog'.	http://www.gandhari.org/kanishka/model/document/Era-Era-Preferred.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1030	en=>"Scratch"	1021	786	\N	era_scratch	\N	http://www.gandhari.org/kanishka/model/document/Era-Scratch.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1031	en=>"Title"	1021	785	\N	era_title	Free text title derived from scholarship.	http://www.gandhari.org/kanishka/model/document/Era-Era-Title.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1394	en=>"6"	1388	778	\N	bt6	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1032	en=>"Visibilities"	1021	800	{1369}	era_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record. era-title (at this stage it would not seem feasible to make this a pointet to person record) era-order, is the temporal order of eras as identified by catalog admistrators as the preferred vales for system purposes.  (Might need to unpack whther and why we nmight need this.) era-preferreed, is the era selected by catalog admistrators as the preferred vales for system purposes.  (Might need to unpack whther and why we nmight need this.) era-begindate is the date proposed (BCE/CE) for beginning of era  era-enddate is is the date proposed (BCE/CE) for end of era	http://www.gandhari.org/kanishka/model/document/Era-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1033	en=>"Modified"	1021	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Era-Era-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1034	en=>"Fragment"	2	783	\N	frg	A Fragment is a piece of a Part.  A Fragment is a piece that is not intentionally separate from that Part rather it is separate through fracture or degradation.	http://www.gandhari.org/kanishka/model/document/Fragment-Fragment.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5615,11 +5621,13 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1050	en=>"Visibilities"	1034	800	{1369}	frg_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record. A fragment may have a links to object and materialcontext entities.  Note that it may become expedient to also include links to object and materialcontext entities in item if it is found that there is a large degree of data duplication at fragment level.	http://www.gandhari.org/kanishka/model/document/Fragment-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1051	en=>"Modified"	1034	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Fragment-Fragment-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1052	en=>"Grapheme"	2	783	\N	gra	Grapheme is the smallest Transcription Unit of a Segment.	http://www.gandhari.org/kanishka/model/document/Grapheme-Grapheme.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1074	en=>"Text"	1067	785	\N	img_title	Title of the image.	http://www.gandhari.org/kanishka/model/document/Image-Image-Text.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1464	en=>"AuxV"	1450	778	\N	auxiliary verb	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1053	en=>"AlternativeGrapheme"	1052	795	\N	gra_alt	This field has a value for an alternative Transcription Unit possibility for this Grapheme when the value for Grapheme-TextCriticalMark is "/"; the editor identifies both preferred and an alternative Transcription Unit possibilities.	http://www.gandhari.org/kanishka/model/document/Grapheme-AlternativeGrapheme.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1054	en=>"Annotations"	1052	800	{881}	gra_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Grapheme-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1055	en=>"Decomposition"	1052	795	\N	gra_decomposition	Whare a Grapheme is the subject of Sandhi effects, the sandhi decomposition string is stored in Grapheme-Decomposition.  For example, the Grapheme e in tatreva (represneted as tatre~e,a e~va) will have a Grapheme-Decomposition property "a:e".	http://www.gandhari.org/kanishka/model/document/Grapheme-Grapheme-Decomposition.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1392	en=>"4"	1388	778	\N	bt4	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1056	en=>"EmendationFrom"	1052	795	\N	gra_emmendation	This field has a value for an emended Transcription Unit possibility for this Grapheme when the value for Grapheme-TextCriticalMark is "to be developed; the editor identifies and emendation to the Transcription Unit executed by the Scribe.	http://www.gandhari.org/kanishka/model/document/Grapheme-EmendationFrom.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1395	en=>"7"	1388	778	\N	bt7	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1056	en=>"EmendationFrom"	1052	795	\N	gra_emmendation	This field has a value for an emended Transcription Unit possibility for this Grapheme when the value for Grapheme-TextCriticalMark is "to be developed"; the editor identifies and emendation to the Transcription Unit executed by the Scribe.	http://www.gandhari.org/kanishka/model/document/Grapheme-EmendationFrom.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1057	en=>"Grapheme"	1052	795	\N	gra_grapheme	Transcription Unit value.	http://www.gandhari.org/kanishka/model/document/Grapheme-Grapheme.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1058	en=>"Grapheme-Sc"	1057	791	\N	gra_sort_code	Numeric code used to sort Graphemes.  These values are concatenated for Graphemes sequenced in the SyllableCluster-Graphemes field to form a value for SyllableCluster-SyllableCluster-SC. The Grapheme-Grapheme-Sc value is unique to each Transcription Unit.  The only exception to this is Anusvāra and Visarga.  It is anticipated the Anusvāra and Visarga would have a default Grapheme-Grapheme-Sc value.  It is anticipated that contextual calculation of Anusvāra and Visargawould be handled at Token level.	http://www.gandhari.org/kanishka/model/document/Grapheme-Grapheme-Sc.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1059	en=>"ID"	1057	784	{1052}	gra_id	\N	http://www.gandhari.org/kanishka/model/document/Grapheme-Grapheme-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5637,12 +5645,11 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1071	en=>"Owner"	1067	802	{1369}	img_owner_id	UserGroup record linked to this record.  It defines which UserGroup owns this record.	http://www.gandhari.org/kanishka/model/document/Image-Owner.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1072	en=>"Position"	1067	798	\N	img_image_pos	Xycoordinates (polygon) of a cropped portion of an image file.	http://www.gandhari.org/kanishka/model/document/Image-Image-Position.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1073	en=>"Scratch"	1067	786	\N	img_scratch	\N	http://www.gandhari.org/kanishka/model/document/Image-Scratch.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1074	en=>"Text"	1067	785	\N	img_title	Title of the image.	http://www.gandhari.org/kanishka/model/document/Image-Image-Text.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1075	en=>"Type"	1067	806	{515,516,517,518,519,520,521,522,523}	img_type_id	The production type of the image file.  A Term record with a constrained vocabulary derived from ImageType.	http://www.gandhari.org/kanishka/model/document/Image-Type.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1076	en=>"URL"	1067	785	\N	img_url	URL for image file.	http://www.gandhari.org/kanishka/model/document/Image-Image-URL.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1103	en=>"Images"	1098	800	{1067}	itm_image_ids	An unordered set of Image records associated with the Item.	http://www.gandhari.org/kanishka/model/document/Item-Images.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1104	en=>"Measurement"	1098	785	\N	itm_measure	tbd	http://www.gandhari.org/kanishka/model/document/Item-Item-Measurement.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1393	en=>"5"	1388	778	\N	bt5	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1396	en=>"8"	1388	778	\N	bt8	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1077	en=>"Visibilities"	1067	800	{1369}	img_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record. Where we have only a rubbing or an eye copy, then for these purposes, that image is associated with that surface as the baseline. Each image has an image-access of 'public', 'restricted'... Each image has an image-category e.g 'inscriptionphotograph', 'inscriptionphotographinfrared'…	http://www.gandhari.org/kanishka/model/document/Image-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1078	en=>"Modified"	1067	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Image-Image-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1079	en=>"Inflection"	2	783	\N	inf	An Inflection mediates the relationship between an Inflected Token or Compound and a Lemma.	http://www.gandhari.org/kanishka/model/document/Inflection-Inflection.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5664,6 +5671,7 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1096	en=>"Gender"	1079	806	{483,484,485,486,487,1381,1382}	inf_nominal_gender_id	A Term record with a constrained vocabulary derived from Gender.	http://www.gandhari.org/kanishka/model/document/Inflection-Gender.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1097	en=>"Modified"	1079	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Inflection-Inflection-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1098	en=>"Item"	2	783	\N	itm	An Item is an object, or set of integrated objects, at least one of which has a Kharosthī Akṣara on it.	http://www.gandhari.org/kanishka/model/document/Item-Item.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1128	en=>"Line-ID"	1125	784	{1125}	lin_id	\N	http://www.gandhari.org/kanishka/model/document/Line-Line-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1099	en=>"Annotations"	1098	800	{881}	itm_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Item-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1100	en=>"Attributions"	1098	800	{895}	\N	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Item-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1101	en=>"Description"	1098	791	\N	\N	Calculated from the concatenation of values from Item-Type and Item-Mediums.  The default calculated value may be overwritten with a structred description. Standards, Protocols and Examples A structured description which encompasses all the Part or Fragment records encapsulated in that Item.	http://www.gandhari.org/kanishka/model/document/Item-Item-Description.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5691,8 +5699,6 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1125	en=>"Line"	2	783	\N	lin	\N	http://www.gandhari.org/kanishka/model/document/Line-Line.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1126	en=>"Annotations"	1125	800	{881}	lin_annotation_ids	\N	http://www.gandhari.org/kanishka/model/document/Line-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1127	en=>"Attributions"	1125	800	{895}	lin_attribution_ids	\N	http://www.gandhari.org/kanishka/model/document/Line-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1128	en=>"Line-ID"	1125	784	{1125}	lin_id	\N	http://www.gandhari.org/kanishka/model/document/Line-Line-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1129	en=>"Line-Mask"	1125	785	\N	lin_mask	\N	http://www.gandhari.org/kanishka/model/document/Line-Line-Mask.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1130	en=>"Line-Order"	1125	531	\N	lin_order	\N	http://www.gandhari.org/kanishka/model/document/Line-Line-Order.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1131	en=>"Owner"	1125	802	{1369}	lin_owner_id	\N	http://www.gandhari.org/kanishka/model/document/Line-Owner.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1132	en=>"Scratch"	1125	786	\N	lin_scratch	\N	http://www.gandhari.org/kanishka/model/document/Line-Scratch.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5721,8 +5727,7 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1155	en=>"SC2"	1141	791	\N	lem_sort_code2	The Lemma-SC2 value is the primary sort order for Lemmas.  It is anticipated that contextual calculation of Anusvāra and Visarga would be enabled for Sanskrit but not for Gāndhārī.	http://www.gandhari.org/kanishka/model/document/Lemma-Lemma-SC2.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1156	en=>"Description"	1141	785	\N	lem_description	Free text gloss of Lemma.  It is anticipated that Lemma-Description may include URI linkages to related Lemma.	http://www.gandhari.org/kanishka/model/document/Lemma-Lemma-Description.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1157	en=>"Forms"	1141	803	{1345,972,1079}	lem_component_ids	Homogenous set of Inflection, Token or Compound records.	http://www.gandhari.org/kanishka/model/document/Lemma-Forms.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1394	en=>"6"	1388	778	\N	bt6	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1158	en=>"Modified"	1141	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Lemma-Lemma-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1397	en=>"9"	1388	778	\N	bt9	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1159	en=>"MaterialContext"	2	783	\N	mcx	MaterialContext encapsulates the Archaeological Context and Find Context of a Fragment. Entity Attributes	http://www.gandhari.org/kanishka/model/document/MaterialContext-MaterialContext.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1160	en=>"Annotations"	1159	800	{881}	mcx_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/MaterialContext-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1161	en=>"ArchaeologicalContext"	1159	785	\N	mcx_arch_context	Free text description of the Archaeological Context of the Fragment.	http://www.gandhari.org/kanishka/model/document/MaterialContext-MaterialContext-ArchaeologicalContext.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5741,6 +5746,12 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1174	en=>"Owner"	1170	802	{1369}	mdt_owner_id	UserGroup record linked to this record.  It defines which UserGroup owns this record.	http://www.gandhari.org/kanishka/model/document/Metadata-Owner.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1175	en=>"Annotations"	1170	800	{881}	mdt_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Metadata-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1176	en=>"Attributions"	1170	800	{895}	mdt_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Metadata-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1197	en=>"Sequence"	1183	531	\N	prt_sequence	Numbered order of a Part where there is an identifiable physical sequence, e.g. the numbered leaves in a folio. Standards, Protocols and Examples Tbd	http://www.gandhari.org/kanishka/model/document/Part-Part-Sequence.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1198	en=>"Shape"	1183	806	\N	prt_shape_id	The shape of the Part.  A Term record with a constrained vocabulary derived from ObjectShape.	http://www.gandhari.org/kanishka/model/document/Part-Shape.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1199	en=>"Type"	1183	806	\N	prt_type_id	The artefact type of the Part.  A Term record with a constrained vocabulary derived from ObjectType.	http://www.gandhari.org/kanishka/model/document/Part-Type.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1200	en=>"Visibilities"	1183	800	{1369}	prt_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record.	http://www.gandhari.org/kanishka/model/document/Part-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1201	en=>"Modified"	1183	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Part-Part-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1202	en=>"ProperNoun"	2	783	\N	prn	ProperNoun is an Open Ontology.  ProperNoun encompasses the range of proper nouns encountered in Texts (e.g. persons, places, schools, titles, dynasties).	http://www.gandhari.org/kanishka/model/document/ProperNoun-ProperNoun.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1177	en=>"Visibilities"	1170	800	{1369}	mdt_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record. TextMetaData Entity – rationale for not just using  aprperty=value pair on Text  Currently have an attributed TextMetadata entity with a term foreign key.   Doesn’t make sense to have a property value pair on this at is already attributed. At this stage implementation is predicated up building a new attributed record and applying both term values. This seems reasonable given the extent of metadata configuration one might want to undertake on Text entity and the number of records seems supportable.  Inscriptions 800 * n Don’t think we can or need to take the same approach with any other entity. The term:editionreference-consulted field identifies a categorizing term with a pointer to the attribution entity and aggregates all editions refernces catalogs and archaeological reports consulted. Niya Specific Fields – This is dealt with in Field Mappings KI#  implemented in editionrefernce in catalog field as pointer to attribution Stein # - implemented in editionrefernce in catalog field as pointer to attribution BL Reference - implemented in fragment in fragment-location and fragment-locationrefernece Site – implemented using materialcontext-country, materialcontext-region and materialcontext-findspot Ruin –implemented using materialcontext-ruin Room – implemented using materialcontext-room Manuscript Specific Fields – This is dealt with in Field Mappings Basis for date – use date-datedeterminationtype Maintainer – the usage of this field seems to have been overtaken by ownership in the group entity.  Will need to look at how to implement what data there is in this field in Azes	http://www.gandhari.org/kanishka/model/document/Metadata-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1178	en=>"References"	1170	800	{895}	mdt_reference_ids	Attribution records, Editions, References, Catalogs and Archaeological Reports, identified by the Metadata-Owner with the records identified in Metadata-Referents.	http://www.gandhari.org/kanishka/model/document/Metadata-References.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1179	en=>"Images"	1170	800	{1067}	mdt_image_ids	Image records identified by the Metadata-Owner with the records identified in Metadata-Referents.	http://www.gandhari.org/kanishka/model/document/Metadata-Images.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5761,15 +5772,11 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1194	en=>"Owner"	1183	802	{1369}	prt_owner_id	UserGroup record linked to this record.  It defines which UserGroup owns this record.	http://www.gandhari.org/kanishka/model/document/Part-Owner.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1195	en=>"Scratch"	1183	786	\N	prt_scratch	\N	http://www.gandhari.org/kanishka/model/document/Part-Scratch.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1196	en=>"Scripts"	1183	792	\N	\N	Calculated from the concatenation of values from Fragment-Scripts of each related Fragment identified with this Part.  Where values are duplicated (e.g Kharoṣṭhī, Kharoṣṭhī) only one instance is displayed. Standards, Protocols and Examples A structured description which encompasses all the Fragment records encapsulated in that Part.	http://www.gandhari.org/kanishka/model/document/Part-Part-Scripts.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1197	en=>"Sequence"	1183	531	\N	prt_sequence	Numbered order of a Part where there is an identifiable physical sequence, e.g. the numbered leaves in a folio. Standards, Protocols and Examples Tbd	http://www.gandhari.org/kanishka/model/document/Part-Part-Sequence.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1198	en=>"Shape"	1183	806	\N	prt_shape_id	The shape of the Part.  A Term record with a constrained vocabulary derived from ObjectShape.	http://www.gandhari.org/kanishka/model/document/Part-Shape.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1199	en=>"Type"	1183	806	\N	prt_type_id	The artefact type of the Part.  A Term record with a constrained vocabulary derived from ObjectType.	http://www.gandhari.org/kanishka/model/document/Part-Type.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1200	en=>"Visibilities"	1183	800	{1369}	prt_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record.	http://www.gandhari.org/kanishka/model/document/Part-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1201	en=>"Modified"	1183	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Part-Part-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1202	en=>"ProperNoun"	2	783	\N	prn	ProperNoun is an Open Ontology.  ProperNoun encompasses the range of proper nouns encountered in Texts (e.g. persons, places, schools, titles, dynasties).	http://www.gandhari.org/kanishka/model/document/ProperNoun-ProperNoun.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1203	en=>"Annotations"	1202	800	{881}	prn_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/ProperNoun-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1204	en=>"Attributions"	1202	800	{895}	prn_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/ProperNoun-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1205	en=>"Description"	1202	785	\N	prn_description	Free text description.	http://www.gandhari.org/kanishka/model/document/ProperNoun-ProperNoun-Description.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1398	en=>"10"	1388	778	\N	bt10	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1399	en=>"FootMarkType"	1387	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1206	en=>"EntityFrom-Evidences"	1202	811	{689,690,691,692,693,694,695,696,697,698,699,700,701}	prn_evidences	Identifies a record (e.g a Token) to which this ProperNoun is to be applied together with Term semantic to articulate the evidence for its application.	http://www.gandhari.org/kanishka/model/document/ProperNoun-EntityFrom-Evidences.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1207	en=>"ID"	1202	784	{1202}	prn_id	\N	http://www.gandhari.org/kanishka/model/document/ProperNoun-ProperNoun-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1208	en=>"Language-Labels"	1202	786	\N	prn_labels	The label for the ProperNoun.  ProperNoun-Language-Labels is prefaced with the ISO language identifier code (e.g. en: for English).	http://www.gandhari.org/kanishka/model/document/ProperNoun-Language-Labels.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5840,6 +5847,7 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1272	en=>"Attributions"	1270	800	{895}	\N	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Surface-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1273	en=>"Description"	1270	785	\N	srf_description	Free text description.	http://www.gandhari.org/kanishka/model/document/Surface-Surface-Description.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1274	en=>"Fragment"	1270	802	{1034}	srf_fragment_id	The Fragment this Surface is a Face of.	http://www.gandhari.org/kanishka/model/document/Surface-Fragment.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1319	en=>"CKN"	1316	785	\N	txt_ckn	The CKN allocated to this Text.  Text-CKN are allocated by a special UserGroup with a Full name of User or group of Users. UserGroup-Name of 'Catalog'.	http://www.gandhari.org/kanishka/model/document/Text-Text-CKN.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1275	en=>"FragmentSurfaceDescription"	1270	791	\N	\N	A calculated field which concatenates values from Fragment-PartFragmentDescription and Surface-Description. A structured description which encompasses both the Surface and the Fragment of which it is a Face.	http://www.gandhari.org/kanishka/model/document/Surface-Surface-FragmentSurfaceDescription.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1276	en=>"ID"	1270	784	{1270}	srf_id	\N	http://www.gandhari.org/kanishka/model/document/Surface-Surface-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1277	en=>"Images"	1270	800	{1067}	srf_image_ids	Images associated with the Surface.  An unordered set of Image records.	http://www.gandhari.org/kanishka/model/document/Surface-Images.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5863,6 +5871,7 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1295	en=>"SyllableCluster-ID"	1287	784	{1287}	scl_id	\N	http://www.gandhari.org/kanishka/model/document/SyllableCluster-SyllableCluster-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1296	en=>"SyllableCluster-SC"	1287	791	\N	scl_sort_code	Numeric code used to sort SyllableClusters.  This values is concatenated from the SC Values for Graphemes sequenced in the SyllableCluster-Graphemes field.	http://www.gandhari.org/kanishka/model/document/SyllableCluster-SyllableCluster-SC.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1297	en=>"TextCriticalMark"	1287	795	\N	scl_text_critical_mark	The SyllableCluster-TextCriticalMark field has values for Akṣara level Text Critical Marks; those associated with a SyllableCluster.  Values entered into this field are populated into the Grapheme-TextCriticalMark field of the Graphemes sequenced in the SyllableCluster-Graphemes field.	http://www.gandhari.org/kanishka/model/document/SyllableCluster-TextCriticalMark.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1318	en=>"Attributions"	1316	800	{895}	txt_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Text-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1298	en=>"Transcription"	1287	792	\N	\N	Concatenation of values from SyllableCluster-Graphemes field with automated application of associated Text Critical Marks from Grapheme-TextCriticalMark field to represent the edited transcription; the Hybrid rendition of this Syllable complete with Text Critical Marks.	http://www.gandhari.org/kanishka/model/document/SyllableCluster-SyllableCluster-Transcription.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1299	en=>"Visibilities"	1287	800	{1369}	scl_visibility_ids	UserGroup records linked to this record.  It defines which UserGroup can view this record. Scratch Each syllablecluster record has metadata which records the syllablecluster-alterativetype.  Need to challenge the spec for this field.  It can be calculated from comparison to other syllable clusters linked to the same segment.  Secondly need to question whether it does indeed need to be stored at syllable level.	http://www.gandhari.org/kanishka/model/document/SyllableCluster-Visibilities.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1300	en=>"Modified"	1287	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/SyllableCluster-SyllableCluster-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5882,14 +5891,13 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1315	en=>"Modified"	1301	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/Term-Term-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1316	en=>"Text"	2	783	\N	txt	A Text record identifies a Text with a CKN and allocates a unique title to that Text.	http://www.gandhari.org/kanishka/model/document/Text-Text.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1317	en=>"Annotations"	1316	800	{881}	txt_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Text-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1318	en=>"Attributions"	1316	800	{895}	txt_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Text-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1319	en=>"CKN"	1316	785	\N	txt_ckn	The CKN allocated to this Text.  Text-CKN are allocated by a special UserGroup with a Full name of User or group of Users. UserGroup-Name of 'Catalog'.	http://www.gandhari.org/kanishka/model/document/Text-Text-CKN.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1377	en=>"Password"	1369	785	\N	ugr_password	Password.	http://www.gandhari.org/kanishka/model/document/UserGroup-UserGroup-Password.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1320	en=>"EditionReferences"	1316	800	{895}	txt_edition_ref_ids	Attribution records identified with this Text.  The set of Editions, References, Catalogs and Archaeological Reports relevant to this Text.	http://www.gandhari.org/kanishka/model/document/Text-EditionReferences.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1321	en=>"TextRef"	1316	785	\N	txt_ref	An abbreviated identifier for the Text for display in the Dictionary UI when diplaying Tokens or Compounds as attested froms of a Lemma.	http://www.gandhari.org/kanishka/model/document/Text-Text-TextRef.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1322	en=>"FindspotRegion"	1316	791	\N	\N	tbd	http://www.gandhari.org/kanishka/model/document/Text-Text-FindspotRegion.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1323	en=>"ID"	1316	784	{1316}	txt_id	\N	http://www.gandhari.org/kanishka/model/document/Text-Text-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1387	en=>"Paleography"	8	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1395	en=>"7"	1388	778	\N	bt7	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1400	en=>"0"	1399	778	\N	ft0	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1324	en=>"Images"	1316	800	{1067}	txt_image_ids	Images identified with this this Text.	http://www.gandhari.org/kanishka/model/document/Text-Images.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1325	en=>"ItemPartDescription"	1316	791	\N	\N	tbd	http://www.gandhari.org/kanishka/model/document/Text-Text-ItemPartDescription.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1326	en=>"Owner"	1316	802	{1369}	txt_owner_id	UserGroup record linked to this record.  It defines which UserGroup owns this record.	http://www.gandhari.org/kanishka/model/document/Text-Owner.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5914,6 +5922,7 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1345	en=>"Token"	2	783	\N	tok	A Token record is a sequence of Graphemes which are combined to represent an attested Word, Compound Component, Number Sign Component or Punctuation Mark.	http://www.gandhari.org/kanishka/model/document/Token-Token.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1346	en=>"Annotations"	1345	800	{881}	tok_annotation_ids	Annotation records linked to this record.	http://www.gandhari.org/kanishka/model/document/Token-Annotations.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1347	en=>"Attributions"	1345	800	{895}	tok_attribution_ids	Attribution records linked to this record.  It defines either a System Event or a Bibliographic Reference that this record is attributed to.	http://www.gandhari.org/kanishka/model/document/Token-Attributions.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1378	en=>"Scratch"	1369	786	\N	ugr_scratch	\N	http://www.gandhari.org/kanishka/model/document/UserGroup-Scratch.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1350	en=>"DisplayValue"	1345	791	\N	tok_value	The Token-DisplayValue field is concatenated from Grapheme records without Text Critical Marks. Where a Punctuation Mark includes a Number Sign Component inside a Punctuation Mark, the Token-DisplayValue the Punctuation Mark and the Number Sign Component with a separating a hyphen.	http://www.gandhari.org/kanishka/model/document/Token-Token-DisplayValue.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1352	en=>"Graphemes"	1345	801	{1052}	tok_grapheme_ids	Ordered sequence of linked Graphemes.	http://www.gandhari.org/kanishka/model/document/Token-Graphemes.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1353	en=>"ID"	1345	784	{1345}	tok_id	\N	http://www.gandhari.org/kanishka/model/document/Token-Token-ID.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5934,8 +5943,6 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1374	en=>"MemberIDs"	1369	800	{1369}	ugr_member_ids	UserGroup record linked to this record.  Defines which UserGroup are Member.	http://www.gandhari.org/kanishka/model/document/UserGroup-MemberIDs.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1375	en=>"FamilyName"	1369	785	\N	ugr_family_name	Family name of User or group of Users.	http://www.gandhari.org/kanishka/model/document/UserGroup-UserGroup-FamilyName.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1376	en=>"GivenName"	1369	785	\N	ugr_given_name	Given name(s) of User or group of Users.	http://www.gandhari.org/kanishka/model/document/UserGroup-UserGroup-GivenName.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1377	en=>"Password"	1369	785	\N	ugr_password	Password.	http://www.gandhari.org/kanishka/model/document/UserGroup-UserGroup-Password.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1378	en=>"Scratch"	1369	786	\N	ugr_scratch	\N	http://www.gandhari.org/kanishka/model/document/UserGroup-Scratch.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1379	en=>"Type"	1369	806	{511,512,513}	ugr_type_id	A Term record with a constrained vocabulary derived from UserGroupType.	http://www.gandhari.org/kanishka/model/document/UserGroup-Type.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1380	en=>"Modified"	1369	814	\N	modified	The last modified date and time stamp for this record.	http://www.gandhari.org/kanishka/model/document/UserGroup-UserGroup-Modified.htm	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1381	en=>"mn."	482	778	\N	Male/Neuter	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5943,11 +5950,6 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1383	en=>"mfn."	488	778	\N	Male/Female/Neuter	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1384	en=>"nf."	488	778	\N	Neuter/Female	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1385	en=>"CitationContainer"	735	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1396	en=>"8"	1388	778	\N	bt8	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1397	en=>"9"	1388	778	\N	bt9	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1398	en=>"10"	1388	778	\N	bt10	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1399	en=>"FootMarkType"	1387	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1400	en=>"0"	1399	778	\N	ft0	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1401	en=>"1"	1399	778	\N	ft1	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1402	en=>"2"	1399	778	\N	ft2	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1403	en=>"3"	1399	778	\N	ft3	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
@@ -5981,37 +5983,35 @@ COPY term (trm_id, trm_labels, trm_parent_id, trm_type_id, trm_list_ids, trm_cod
 1431	en=>"omx"	720	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1432	en=>"obx"	720	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1433	en=>"FK-PairMultiple_Semantic(Term)-Text"	773	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1434	en=>"CompoundConstituent"	278	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1435	en=>"CompoundConstituentHead"	278	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1434	en=>"CompoundConstituent"	1444	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1435	en=>"CompoundConstituentHead"	1444	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1436	en=>"ArchaeologicalReport"	339	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1437	en=>"Section"	741	778	{744,745,742,1442,972,1345}	Section	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1438	en=>"FreeText"	736	778	\N	Line	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1439	en=>"Compare"	278	778	\N	cf	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1440	en=>"See"	278	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1439	en=>"Compare"	1444	778	\N	cf.	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1440	en=>"See"	1444	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1441	en=>"Glossary"	264	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1442	en=>"List"	741	778	{1443}	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 1443	en=>"Item"	1442	778	{742,744,745,972,1345}	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
-1444	en=>"LemmaLinkage"  278	778	\N	\N	\N	\N	\N	\N	1	{2}	\N
-1445	en=>"Alternate" 1444	778	\N	\N	\N	\N	\N	\N	1	{2}	\N
-1446	en=>"GVerbalVoice"  873	776	'{877}'	\N	'Verbal Voice'	\N	\N	\N	1	{2}	\N
-1447	en=>"LanguageForm"  1	780	\N	\N	\N	\N	\N	\N	1	{2}	\N
-1448	en=>"Prose" 1447	778	\N	\N	\N	\N	\N	\N	1	{2}	\N
-1449	en=>"Poetry"    1447	778	\N	\N	\N	\N	\N	\N	1	{2}	\N
-1450	en=>"SyntacticFunction" 278	781	\N	\N	Syntactic Function	\N	\N	\N	1	{2}	\N
-1451	en=>"PRED"  1450	778	\N	\N	predicate	\N	\N	\N	1	{2}	\N
-1452	en=>"SBJ"   1450	778	\N	\N	subject	\N	\N	\N	1	{2}	\N
-1453	en=>"OBJ"   1450	778	\N	\N	object	\N	\N	\N	1	{2}	\N
-1454	en=>"ATR"   1450	778	\N	\N	attributive	\N	\N	\N	1	{2}	\N
-1455	en=>"ADV"   1450	778	\N	\N	adverbial	\N	\N	\N	1	{2}	\N
-1456	en=>"ATV/AtvV"  1450	778	\N	\N	complement	\N	\N	\N	1	{2}	\N
-1457	en=>"PNOM"  1450	778	\N	\N	predicate nominal	\N	\N	\N	1	{2}	\N
-1458	en=>"OCOMP" 1450	778	\N	\N	object complement	\N	\N	\N	1	{2}	\N
-1459	en=>"COORD" 1450	778	\N	\N	coordinator	\N	\N	\N	1	{2}	\N
-1460	en=>"APOS"  1450	778	\N	\N	apposing element	\N	\N	\N	1	{2}	\N
-1461	en=>"AuxP"  1450	778	\N	\N	preposition	\N	\N	\N	1	{2}	\N
-1462	en=>"AuxC"  1450	778	\N	\N	conjunction	\N	\N	\N	1	{2}	\N
-1463	en=>"AuxR"  1450	778	\N	\N	reflexive passive	\N	\N	\N	1	{2}	\N
-1464	en=>"AuxV"  1450	778	\N	\N	auxiliary verb	\N	\N	\N	1	{2}	\N
+1444	en=>"LemmaLinkage"	278	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1445	en=>"Alternate"	1444	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1446	en=>"GVerbalVoice"	873	776	{877}	Verbal Voice	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1447	en=>"LanguageForm"	1	780	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1448	en=>"Prose"	1447	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1449	en=>"Poetry"	1447	778	\N	\N	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1450	en=>"SyntaticFunction"	278	781	\N	Syntatic Function	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1451	en=>"PRED"	1450	778	\N	predicate	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1452	en=>"SBJ"	1450	778	\N	subject	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1453	en=>"OBJ"	1450	778	\N	object	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1454	en=>"ATR"	1450	778	\N	attributive	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1455	en=>"ADV"	1450	778	\N	adverbial	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1456	en=>"ATV/AtvV"	1450	778	\N	complement	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1457	en=>"PNOM"	1450	778	\N	predicate nominal	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1458	en=>"OCOMP"	1450	778	\N	object complement	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1459	en=>"COORD"	1450	778	\N	coordinator	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1460	en=>"APOS"	1450	778	\N	apposing element	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1461	en=>"AuxP"	1450	778	\N	preposition	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
+1462	en=>"AuxC"	1450	778	\N	conjunction	\N	\N	\N	2017-09-08 14:05:33.264841	1	\N	{2}	\N
 \.
 
 
@@ -6072,19 +6072,20 @@ SELECT pg_catalog.setval('token_tok_id_seq', 1, false);
 --
 
 COPY usergroup (ugr_id, ugr_name, ugr_type_id, ugr_given_name, ugr_family_name, ugr_description, ugr_password, modified, ugr_member_ids, ugr_admin_ids, ugr_scratch) FROM stdin;
-1	SysAdmin	513	\N	System Administration	Special system level group with full access for administrating the complete system.	\N	2018-03-25 05:14:43.015	{11,12,13}	{11}	\N
-2	Public	513	\N	General Public	Special system level group used to give free open access.	\N	2017-09-08 14:05:33.415031	\N	\N	\N
-3	Users	513	\N	Logged in Users	Special system level group used to give access to all user accounts.	\N	2017-09-08 14:05:33.415031	\N	\N	\N
-4	Catalog	513	\N	Dictionary Editors	Special editorial group responsible for the default catalog.	\N	2017-09-08 14:05:33.415031	{11,12}	{11}	\N
-5	Delete	513	\N	Marked for Delete	Record marked for delete by admin.	\N	2017-09-08 14:05:33.415031	{1}	{1}	\N
-6	Reserved2	513	\N	\N	Resrved for future special system level group.	\N	2017-09-08 14:05:33.415031	{1}	{1}	\N
-7	Reserved3	513	\N	\N	Resrved for future special system level group.	\N	2017-09-08 14:05:33.415031	{1}	{1}	\N
-8	Reserved4	513	\N	\N	Resrved for future special system level group.	\N	2017-09-08 14:05:33.415031	{1}	{1}	\N
-9	Reserved5	513	\N	\N	Resrved for future special system level group.	\N	2017-09-08 14:05:33.415031	{1}	{1}	\N
-10	Reserved6	513	\N	\N	Resrved for future special system level group.	\N	2017-09-08 14:05:33.415031	{1}	{1}	\N
-11	User1	511	User	One	\N	5f4dcc3b5aa765d61d8327deb882cf99	2018-03-25 05:14:20.843	{11}	{11}	\N
-12	User2	511	User	Two	\N	5f4dcc3b5aa765d61d8327deb882cf99	2018-03-25 05:14:24.171	{12}	{12}	\N
-13	User2	511	User	Three	\N	5f4dcc3b5aa765d61d8327deb882cf99	2018-03-25 05:14:27.905	{13}	{13}	\N
+1	SysAdmin	513	\N	System Administration	Special system level group with full access for administrating the complete system	\N	2017-10-10 12:22:43.543225	{14}	{14}	\N
+2	Published	513	\N	Published - Citable	Special system level group used to give free open access and citable.	\N	2018-06-15 08:56:51.233632	\N	\N	\N
+3	Users	513	\N	Logged in Users	Special system level group used to give access to all user accounts.	\N	2017-10-10 12:22:43.395822	\N	\N	\N
+4	Catalog	513	\N	Catalog Editors	Special editorial group with responsibility for default catalog.	\N	2017-10-10 12:22:43.546864	{12}	{12}	\N
+5	Delete	513	\N	Marked for Delete	Reserved for future special system level group.	\N	2017-10-10 12:22:43.567835	{12}	{12}	\N
+6	Public	513	\N	General Public	Special system level group used to give free open access.	\N	2018-06-15 08:56:51.289866	{6}	{1}	\N
+7	Reserved3	513	\N	\N	Reserved for future special system level group.	\N	2017-10-10 12:22:43.570991	{12}	{12}	\N
+8	Reserved4	513	\N	\N	Reserved for future special system level group.	\N	2017-10-10 12:22:43.572569	{12}	{12}	\N
+9	Reserved5	513	\N	\N	Reserved for future special system level group.	\N	2017-10-10 12:22:43.574107	{12}	{12}	\N
+10	Reserved6	513	\N	\N	Reserved for future special system level group.	\N	2017-10-10 12:22:43.575733	{12}	{12}	\N
+11	editor	512	\N	Editor Group	Group for testing group editing	\N	2017-10-10 12:22:43.577268	{12,13}	{12}	\N
+12	tester	511	Tester	One	\N	5f4dcc3b5aa765d61d8327deb882cf99	2018-10-05 13:15:51.086447	{12}	{12}	\N
+13	tester2	511	Tester	Two	\N	5f4dcc3b5aa765d61d8327deb882cf99	2018-06-15 16:30:17.789998	{13}	{12}	\N
+14	admin	511	Admin	st8er	\N	5f4dcc3b5aa765d61d8327deb882cf99	2018-06-15 16:30:17.789998	{14}	{14}	\N
 \.
 
 
@@ -6092,7 +6093,7 @@ COPY usergroup (ugr_id, ugr_name, ugr_type_id, ugr_given_name, ugr_family_name, 
 -- Name: usergroup_ugr_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('usergroup_ugr_id_seq', 14, true);
+SELECT pg_catalog.setval('usergroup_ugr_id_seq', 15, false);
 
 
 --
