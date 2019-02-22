@@ -180,7 +180,7 @@
       if ($seqPhys && $seqPhys->getEntityIDs() && count($seqPhys->getEntityIDs()) > 0) {
         foreach ($seqPhys->getEntities(true) as $physicalLineSeq) {
           $sclGIDs = $physicalLineSeq->getEntityIDs();
-          if (count($sclGIDs) == 0 || strpos($sclGIDs[0],'scl:') != 0) {
+          if (!$sclGIDs || count($sclGIDs) == 0 || strpos($sclGIDs[0],'scl:') != 0) {
             array_push($warnings,"Found physical Line without syllables ".$physicalLineSeq->getGlobalID());
             continue;
           }
@@ -190,7 +190,7 @@
             continue;
           }
           $graIDs = $syllable->getGraphemeIDs();
-          if (count($graIDs) == 0 ) {
+          if (!$graIDs && count($graIDs) == 0 ) {
             array_push($warnings,"Found syllable without graphemes ".$sclIDs[0]);
             continue;
           }
@@ -322,6 +322,9 @@
         $tokID = $tokIDs[$i];
         $token = new Token($tokID);
         $graIDs = $token->getGraphemeIDs();
+        if (!$graIDs) {
+          continue;
+        }
         $firstT = ($i==0);
         $lastT = (1+$i == $tokCnt);
         //for each grapheme in token

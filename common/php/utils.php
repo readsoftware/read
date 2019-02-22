@@ -2273,7 +2273,7 @@ function checkEditionHealth($ednID, $verbose = true) {
                 }
               }
             }
-            if (count($sclIDs)) {
+            if ($sclIDs && count($sclIDs) > 0) {
               array_push($hltherrors,"Error Unread syllablecluster ids (".join(',',$sclIDs).").");
             }
             if ($blnIDs && count($blnIDs) > 0) {
@@ -3341,7 +3341,7 @@ function addSequenceLabelToLookup($seqID) {
               }
               $token = new Token($entID);
               $graIDs = $token->getGraphemeIDs();
-              if (count($graIDs) == 0) {
+              if ($graIDs && count($graIDs) == 0) {
                 error_log("warn, Warning irregular token $entTag with no graphemes - $structGID skipped.");
                 continue;
               }
@@ -3352,7 +3352,7 @@ function addSequenceLabelToLookup($seqID) {
               }
               $syllable = new SyllableCluster($entID);
               $graIDs = $syllable->getGraphemeIDs();
-              if (count($graIDs) == 0) {
+              if ($graIDs && count($graIDs) == 0) {
                 error_log("warn, Warning irregular syllable $entTag with no graphemes - $structGID skipped.");
                 continue;
               }
@@ -3364,7 +3364,7 @@ function addSequenceLabelToLookup($seqID) {
             if ($grapheme && !$grapheme->hasError()) {
               if ($grapheme->getSortCode() != "195") {
                 $firstGraID = $graIDs[0];
-              } else if (count($graIDs) > 1) {
+              } else if ($graIDs && count($graIDs) > 1) {
                 $firstGraID = $graIDs[1];
               }
             }
@@ -3603,7 +3603,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
           }
           $token = new Token($entID);
           $graIDs = $token->getGraphemeIDs();
-          if (count($graIDs) == 0) {
+          if ($graIDs && count($graIDs) == 0) {
             error_log("warn, Warning irregular token tok$entID with no graphemes in $txtDivSeqID skipped.");
             continue;
           }

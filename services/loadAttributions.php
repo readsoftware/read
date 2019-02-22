@@ -92,7 +92,7 @@
                               'detail' => $attribution->getDetail(),
                               'types' => $attribution->getTypes());
       $AnoIDs = $attribution->getAnnotationIDs();
-      if (count($AnoIDs) > 0) {
+      if ($AnoIDs && count($AnoIDs) > 0) {
         $entities['atb'][$atbID]['annotationIDs'] = $AnoIDs;
         $anoIDs = array_merge($anoIDs,$AnoIDs);
       }
@@ -156,7 +156,7 @@
       return;
     }
     $tempIDs = $entityIDs[$prefix];
-    if (count($tempIDs) > 0 && !array_key_exists($prefix,$entities)) {
+    if ($tempIDs && count($tempIDs) > 0 && !array_key_exists($prefix,$entities)) {
       $entities[$prefix] = array();
     }
     $entIDs = array();
@@ -168,7 +168,7 @@
       }
     }
     unset($entityIDs[$prefix]);//we have captured the ids of this entity type remove them so we progress in the recursive call
-    if (count($entIDs) > 0) {
+    if ($entIDs && count($entIDs) > 0) {
       switch ($prefix) {
         case 'atb':
           $attributions = new Attributions("atb_id in (".join(",",$entIDs).")",null,null,null);
@@ -186,7 +186,7 @@
                                       'detail' => $attribution->getDetail(),
                                       'types' => $attribution->getTypes());
               $AnoIDs = $attribution->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['atb'][$atbID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -244,7 +244,7 @@
               }
               $entities['ano'][$anoID]['vis'] = $vis;
               $AnoIDs = $annotation->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['ano'][$anoID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -274,7 +274,7 @@
                 }
               }
               $AnoIDs = $annotation->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['ano'][$anoID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('atb',$entityIDs)) {
                   $entityIDs['ano'] = array();

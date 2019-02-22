@@ -199,7 +199,7 @@
           case 'txt':
             $txtIDs = array($id);
         }
-        if (count($txtIDs)) {
+        if ($txtIDs && count($txtIDs)) {
           foreach ($txtIDs as $txtID) {
             if (!in_array($txtID,$textIDs)) {
               array_push($textIDs,$txtID);
@@ -210,7 +210,7 @@
     }
   }
 // check for cache
-  if (count($textIDs) == 1 && USECACHE) {// text ids
+  if ($txtIDs && count($textIDs) == 1 && USECACHE) {// text ids
     $text = new Text($textIDs[0]);
     //todo check edition mod times are less than cache
     if ($text->isPublic()) {
@@ -233,7 +233,7 @@
   }
 
 
-  if (count($textIDs)) {// text ids
+  if ($txtIDs && count($textIDs)) {// text ids
     $condition2 = "txt_id in ('".join("','",$textIDs)."') ";
   } else {
     $condition2 = "";
@@ -282,12 +282,12 @@
                                'title' => $text->getTitle());
         $cknLookup[$ckn] = $txtID;
         $tImgIDs = $text->getImageIDs();
-        if (count($tImgIDs) > 0) {
+        if ($tImgIDs && count($tImgIDs) > 0) {
           $entities['txt'][$txtID]['imageIDs'] = $tImgIDs;
           $imgIDs = array_unique(array_merge($imgIDs,$tImgIDs));
         }
         $AnoIDs = $text->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['txt'][$txtID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -306,12 +306,12 @@
           }
         }
         $AtbIDs = $text->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['txt'][$txtID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
         $AtbIDs = $text->getEditionReferenceIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['txt'][$txtID]['refIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -338,12 +338,12 @@
                                'textIDs' => $surface->getTextIDs());
         array_push($srfIDs,$srfID);
         $sImgIDs = $surface->getImageIDs();
-        if (count($sImgIDs) > 0) {
+        if ($sImgIDs && count($sImgIDs) > 0) {
           $entities['srf'][$srfID]['imageIDs'] = $sImgIDs;
           $imgIDs = array_unique(array_merge($imgIDs,$sImgIDs));
         }
         $AnoIDs = $surface->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['srf'][$srfID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -362,7 +362,7 @@
           }
         }
         $AtbIDs = $surface->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['srf'][$srfID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -385,12 +385,12 @@
                                'readonly' => $fragment->isReadonly(),
                                'locRef' => $fragment->getLocationRefs());
         $fImgIDs = $fragment->getImageIDs();
-        if (count($fImgIDs) > 0) {
+        if ($fImgIDs && count($fImgIDs) > 0) {
           $entities['frg'][$frgID]['imageIDs'] = $fImgIDs;
           $imgIDs = array_unique(array_merge($imgIDs,$fImgIDs));
         }
         $AnoIDs = $fragment->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['frg'][$frgID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -409,7 +409,7 @@
           }
         }
         $AtbIDs = $fragment->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['frg'][$frgID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -436,12 +436,12 @@
                                'measure' => $part->getMeasure(),
                                'shapeID' => $part->getShape());
         $pImgIDs = $part->getImageIDs();
-        if (count($pImgIDs) > 0) {
+        if ($pImgIDs && count($pImgIDs) > 0) {
           $entities['prt'][$prtID]['imageIDs'] = $pImgIDs;
           $imgIDs = array_unique(array_merge($imgIDs,$pImgIDs));
         }
         $AnoIDs = $part->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['prt'][$prtID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -475,12 +475,12 @@
                                'measure' => $item->getMeasure(),
                                'shapeID' => $item->getShapeID());
         $iImgIDs = $item->getImageIDs();
-        if (count($iImgIDs) > 0) {
+        if ($iImgIDs && count($iImgIDs) > 0) {
           $entities['itm'][$itmID]['imageIDs'] = $iImgIDs;
           $imgIDs = array_unique(array_merge($imgIDs,$iImgIDs));
         }
         $AnoIDs = $item->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['itm'][$itmID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -517,7 +517,7 @@
                                'readonly' => $baseline->isReadonly(),
                                'transcription' => $baseline->getTranscription(),
                                'boundary' => $baseline->getImageBoundary(),
-                               'segCount' => count($segIDs),
+                               'segCount' => ($segIDs?count($segIDs):0),
                                'segIDs' => $segIDs);
         array_push($blnIDs,$blnID);
         $srfID = $baseline->getSurfaceID();
@@ -536,7 +536,7 @@
           $imgIDs = array_unique(array_merge($imgIDs,array($bImgID)));
         }
         $AnoIDs = $baseline->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['bln'][$blnID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -555,7 +555,7 @@
           }
         }
         $AtbIDs = $baseline->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['bln'][$blnID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -591,7 +591,7 @@
         }
         array_push($segIDs,$segID);
         $mappedSegIDs = $segment->getMappedSegmentIDs();
-        if (count($mappedSegIDs) > 0) {
+        if ($mappedSegIDs && count($mappedSegIDs) > 0) {
           $entities['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
         }
         $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
@@ -599,7 +599,7 @@
           $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
         }
         $AnoIDs = $segment->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['seg'][$segID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -618,7 +618,7 @@
           }
         }
         $AtbIDs = $segment->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['seg'][$segID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -645,7 +645,7 @@
           $entities['img'][$imgID]['thumbUrl'] = $thumbUrl;
         }
         $AnoIDs = $image->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['img'][$imgID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -664,7 +664,7 @@
           }
         }
         $AtbIDs = $image->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['img'][$imgID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -685,7 +685,7 @@
                                'baselineID' => $entities['seg'][$spnSegIDs[0]]['baselineIDs'][0]);
         array_push($spnIDs,$spnID);
         $AnoIDs = $span->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['spn'][$spnID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -704,7 +704,7 @@
           }
         }
         $AtbIDs = $span->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['spn'][$spnID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -723,13 +723,13 @@
                                'value' => $line->getMask(),
                                'readonly' => $line->isReadonly(),
                                'mask' => $line->getMask());
-        if (count($linSpnIDs) && @$linSpnIDs[count($linSpnIDs)-1] && @$entities['spn'][$linSpnIDs[count($linSpnIDs)-1]] ) {
+        if ($linSpnIDs && count($linSpnIDs) && @$linSpnIDs[count($linSpnIDs)-1] && @$entities['spn'][$linSpnIDs[count($linSpnIDs)-1]] ) {
           $lastSpnSegIDs = $entities['spn'][$linSpnIDs[count($linSpnIDs)-1]]['segIDs'];
           $entities['lin'][$linID]['txtID'] = @$entities['bln'][$entities['spn'][$linSpnIDs[0]]['baselineID']]['txtID'];
           $entities['lin'][$linID]['brSegID'] = $lastSpnSegIDs[count($lastSpnSegIDs)-1];
         }
         $AnoIDs = $line->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['lin'][$linID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -748,7 +748,7 @@
           }
         }
         $AtbIDs = $line->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['lin'][$linID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -769,12 +769,12 @@
                                'typeIDs' => $textMetadata->getTypeIDs());
         array_push($entities['txt'][$entities['tmd'][$tmdID]['txtID']]['tmdIDs'],$tmdID);
         $tmRefIDs =$textMetadata->getReferenceIDs();
-        if (count($tmRefIDs) > 0) {
+        if ($tmRefIDs && count($tmRefIDs) > 0) {
           $entities['tmd'][$tmdID]['refIDs'] = $tmRefIDs;
           $atbIDs = array_merge($atbIDs,$tmRefIDs);
         }
         $AnoIDs = $textMetadata->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['tmd'][$tmdID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -793,7 +793,7 @@
           }
         }
         $AtbIDs = $textMetadata->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['tmd'][$tmdID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -831,7 +831,7 @@
           }
           array_push($catIDs,$catID);
           $lemmas = new Lemmas("lem_catalog_id = $catID");
-          if ($lemmas->getCount() > 0) {
+          if ($lemmas && $lemmas->getCount() > 0) {
             $lemIDs = array();
             foreach($lemmas as $lemma) {
               $lemID = $lemma->getID();
@@ -862,7 +862,7 @@
                   $entities["update"]['lem'][$lemID]['phonetics'] = $lemma->getScratchProperty('phonetics');
                 }
                 $lemCompIDs = $lemma->getComponentIDs();
-                if (count($lemCompIDs) > 0) {
+                if ($lemCompIDs && count($lemCompIDs) > 0) {
                   foreach ($lemCompIDs as $gid) {
                     list($entPrefix,$entID) = explode(':',$gid);
                     if (!array_key_exists($entPrefix,$entityIDs)) {
@@ -873,7 +873,7 @@
                   }
                 }
                 $AnoIDs = $lemma->getAnnotationIDs();
-                if (count($AnoIDs) > 0) {
+                if ($AnoIDs && count($AnoIDs) > 0) {
                   $entities['lem'][$lemID]['annotationIDs'] = $AnoIDs;
                   $anoIDs = array_merge($anoIDs,$AnoIDs);
                 }
@@ -892,7 +892,7 @@
                   }
                 }
                 $AtbIDs = $lemma->getAttributionIDs();
-                if (count($AtbIDs) > 0) {
+                if ($AtbIDs && count($AtbIDs) > 0) {
                   $entities['lem'][$lemID]['attributionIDs'] = $AtbIDs;
                   $atbIDs = array_merge($atbIDs,$AtbIDs);
                 }
@@ -901,7 +901,7 @@
             }
           }
           $AnoIDs = $catalog->getAnnotationIDs();
-          if (count($AnoIDs) > 0) {
+          if ($AnoIDs && count($AnoIDs) > 0) {
             $entities['cat'][$catID]['annotationIDs'] = $AnoIDs;
             $anoIDs = array_merge($anoIDs,$AnoIDs);
           }
@@ -920,16 +920,16 @@
             }
           }
           $AtbIDs = $catalog->getAttributionIDs();
-          if (count($AtbIDs) > 0) {
+          if ($AtbIDs && count($AtbIDs) > 0) {
             $entities['cat'][$catID]['attributionIDs'] = $AtbIDs;
             $atbIDs = array_merge($atbIDs,$AtbIDs);
           }
         }
-        if (count($catIDs)) {
+        if ($catIDs && count($catIDs)) {
           $entities['edn'][$ednID]['catIDs'] = $catIDs;
         }
         $AnoIDs = $edition->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['edn'][$ednID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
@@ -948,7 +948,7 @@
           }
         }
         $AtbIDs = $edition->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['edn'][$ednID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -1032,7 +1032,7 @@
       return;
     }
     $tempIDs = $entityIDs[$prefix];
-    if (count($tempIDs) > 0 && !array_key_exists($prefix,$entities)) {
+    if ($tempIDs && count($tempIDs) > 0 && !array_key_exists($prefix,$entities)) {
       $entities[$prefix] = array();
     }
     $entIDs = array();
@@ -1044,7 +1044,7 @@
       }
     }
     unset($entityIDs[$prefix]);//we have captured the ids of this entity type remove them so we progress in the recursive call
-    if (count($entIDs) > 0) {
+    if ($entIDs && count($entIDs) > 0) {
       switch ($prefix) {
         case 'seq':
           $sequences = new Sequences("seq_id in (".join(",",$entIDs).")",null,null,null);
@@ -1060,7 +1060,7 @@
                                      'superscript' => $sequence->getSuperScript(),
                                      'typeID' => $sequence->getTypeID());
               $sEntIDs = $sequence->getEntityIDs();
-              if (count($sEntIDs) > 0) {
+              if ($sEntIDs && count($sEntIDs) > 0) {
                 $entities['seq'][$seqID]['entityIDs'] = $sEntIDs;
                 foreach ($sEntIDs as $gid) {
                   list($entPrefix,$entID) = explode(':',$gid);
@@ -1072,7 +1072,7 @@
                 }
               }
               $AnoIDs = $sequence->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['seq'][$seqID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1102,7 +1102,7 @@
                 }
               }
               $AtbIDs = $sequence->getAttributionIDs();
-              if (count($AtbIDs) > 0) {
+              if ($AtbIDs && count($AtbIDs) > 0) {
                 $entities['seq'][$seqID]['attributionIDs'] = $AtbIDs;
                 if (!array_key_exists('atb',$entityIDs)) {
                   $entityIDs['atb'] = array();
@@ -1130,7 +1130,7 @@
                                      'sort' => $compound->getSortCode(),
                                      'sort2' => $compound->getSortCode2());
               $cEntIDs = $compound->getComponentIDs();
-              if (count($cEntIDs) > 0) {
+              if ($cEntIDs && count($cEntIDs) > 0) {
                 $entities['cmp'][$cmpID]['entityIDs'] = $cEntIDs;
                 foreach ($cEntIDs as $gid) {
                   list($entPrefix,$entID) = explode(':',$gid);
@@ -1144,7 +1144,7 @@
                 }
               }
               $AnoIDs = $compound->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['cmp'][$cmpID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1174,7 +1174,7 @@
                 }
               }
               $AtbIDs = $compound->getAttributionIDs();
-              if (count($AtbIDs) > 0) {
+              if ($AtbIDs && count($AtbIDs) > 0) {
                 $entities['cmp'][$cmpID]['attributionIDs'] = $AtbIDs;
                 if (!array_key_exists('atb',$entityIDs)) {
                   $entityIDs['atb'] = array();
@@ -1202,7 +1202,7 @@
                                      'syllableClusterIDs' => array());
               array_push($processedTokIDs,$tokID);
               $tGraIDs = $token->getGraphemeIDs();
-              if (count($tGraIDs) > 0) {
+              if ($tGraIDs && count($tGraIDs) > 0) {
                 $entities['tok'][$tokID]['graphemeIDs'] = $tGraIDs;
                 if (!array_key_exists('gra',$entityIDs)) {
                   $entityIDs['gra'] = array();
@@ -1212,7 +1212,7 @@
                 }
               }
               $AnoIDs = $token->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['tok'][$tokID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1242,7 +1242,7 @@
                 }
               }
               $AtbIDs = $token->getAttributionIDs();
-              if (count($AtbIDs) > 0) {
+              if ($AtbIDs && count($AtbIDs) > 0) {
                 $entities['tok'][$tokID]['attributionIDs'] = $AtbIDs;
                 if (!array_key_exists('atb',$entityIDs)) {
                   $entityIDs['atb'] = array();
@@ -1270,7 +1270,7 @@
                  $entities['gra'][$graID]['decomp'] = preg_replace("/:/",'',$grapheme->getDecomposition());
               }
               $AnoIDs = $grapheme->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['gra'][$graID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1317,7 +1317,7 @@
                                                 'sort' => $syllable->getSortCode(),
                                                 'sort2' => $syllable->getSortCode2());
               $sGraIDs = $syllable->getGraphemeIDs();
-              if (count($sGraIDs) > 0) {
+              if ($sGraIDs && ccount($sGraIDs) > 0) {
                 $entities['scl'][$sclID]['graphemeIDs'] = $sGraIDs;
                 if (!array_key_exists('gra',$entityIDs)) {
                   $entityIDs['gra'] = array();
@@ -1348,7 +1348,7 @@
                 }
               }
               $AnoIDs = $syllable->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['scl'][$sclID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1378,7 +1378,7 @@
                 }
               }
               $AtbIDs = $syllable->getAttributionIDs();
-              if (count($AtbIDs) > 0) {
+              if ($AtbIDs && count($AtbIDs) > 0) {
                 $entities['scl'][$sclID]['attributionIDs'] = $AtbIDs;
                 if (!array_key_exists('atb',$entityIDs)) {
                   $entityIDs['atb'] = array();
@@ -1410,7 +1410,7 @@
                 $entities['seg'][$segID]['urls']= $segment->getURLs();
               }
               $mappedSegIDs = $segment->getMappedSegmentIDs();
-              if (count($mappedSegIDs) > 0) {
+              if ($mappedSegIDs && count($mappedSegIDs) > 0) {
                 $entities['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
               }
               $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
@@ -1418,7 +1418,7 @@
                 $entities['seg'][$segID]['ordinal'] = $segBlnOrder;
               }
               $sBlnIDs = $segment->getBaselineIDs();
-              if (count($sBlnIDs) > 0) {
+              if ($sBlnIDs && count($sBlnIDs) > 0) {
                 $entities['seg'][$segID]['baselineIDs'] = $sBlnIDs;
                 if (!array_key_exists('bln',$entityIDs)) {
                   $entityIDs['bln'] = array();
@@ -1435,7 +1435,7 @@
               }
               // ??? do we need to get spans??? mapped segments???
               $AnoIDs = $segment->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['seg'][$segID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1465,7 +1465,7 @@
                 }
               }
               $AtbIDs = $segment->getAttributionIDs();
-              if (count($AtbIDs) > 0) {
+              if ($AtbIDs && count($AtbIDs) > 0) {
                 $entities['seg'][$segID]['attributionIDs'] = $AtbIDs;
                 if (!array_key_exists('atb',$entityIDs)) {
                   $entityIDs['atb'] = array();
@@ -1491,7 +1491,7 @@
                                       'detail' => $attribution->getDetail(),
                                       'types' => $attribution->getTypes());
               $AnoIDs = $attribution->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['atb'][$atbID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1549,7 +1549,7 @@
               }
               $entities['ano'][$anoID]['vis'] = $vis;
               $AnoIDs = $annotation->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['ano'][$anoID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1579,7 +1579,7 @@
                 }
               }
               $AtbIDs = $annotation->getAnnotationIDs();
-              if (count($AtbIDs) > 0) {
+              if ($AtbIDs && count($AtbIDs) > 0) {
                 $entities['ano'][$anoID]['annotationIDs'] = $AtbIDs;
                 if (!array_key_exists('atb',$entityIDs)) {
                   $entityIDs['atb'] = array();
@@ -1618,7 +1618,7 @@
                 $entities['lem'][$lemID]['compAnalysis'] = $lemma->getCompoundAnalysis();
               }
               $lemCompIDs = $lemma->getComponentIDs();
-              if (count($lemCompIDs) > 0) {
+              if ($lemCompIDs && count($lemCompIDs) > 0) {
                 foreach ($lemCompIDs as $gid) {
                   list($entPrefix,$entID) = explode(':',$gid);
                   if (!array_key_exists($entPrefix,$entityIDs)) {
@@ -1629,7 +1629,7 @@
                 }
               }
               $AnoIDs = $lemma->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['lem'][$lemID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1659,7 +1659,7 @@
                 }
               }
               $AtbIDs = $lemma->getAttributionIDs();
-              if (count($AtbIDs) > 0) {
+              if ($AtbIDs && count($AtbIDs) > 0) {
                 $entities['lem'][$lemID]['annotationIDs'] = $AtbIDs;
                 if (!array_key_exists('atb',$entityIDs)) {
                   $entityIDs['atb'] = array();
@@ -1690,7 +1690,7 @@
                                      'mood' => $inflection->getVerbalMood(),
                                      'conj2nd' => $inflection->getSecondConjugation());
               $infCompIDs = $inflection->getComponentIDs();
-              if (count($infCompIDs) > 0) {
+              if ($infCompIDs && count($infCompIDs) > 0) {
                 foreach ($infCompIDs as $gid) {
                   list($entPrefix,$entID) = explode(':',$gid);
                   if (!array_key_exists($entPrefix,$entityIDs)) {
@@ -1701,7 +1701,7 @@
                 }
               }
               $AnoIDs = $inflection->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['inf'][$infID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -1731,7 +1731,7 @@
                 }
               }
               $AtbIDs = $inflection->getAttributionIDs();
-              if (count($AtbIDs) > 0) {
+              if ($AtbIDs && count($AtbIDs) > 0) {
                 $entities['inf'][$infID]['annotationIDs'] = $AtbIDs;
                 if (!array_key_exists('atb',$entityIDs)) {
                   $entityIDs['atb'] = array();

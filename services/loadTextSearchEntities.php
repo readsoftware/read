@@ -211,12 +211,12 @@
                                  'ednIDs' => $catalog->getEditionIDs(),
                                  'typeID' => $catalog->getTypeID());
           $AnoIDs = $catalog->getAnnotationIDs();
-          if (count($AnoIDs) > 0) {
+          if ($AnoIDs && count($AnoIDs) > 0) {
             $entities['cat'][$catID]['annotationIDs'] = $AnoIDs;
             $anoIDs = array_merge($anoIDs,$AnoIDs);
           }
           $AtbIDs = $catalog->getAttributionIDs();
-          if (count($AtbIDs) > 0) {
+          if ($AtbIDs && count($AtbIDs) > 0) {
             $entities['cat'][$catID]['attributionIDs'] = $AtbIDs;
             $atbIDs = array_merge($atbIDs,$AtbIDs);
           }
@@ -226,7 +226,8 @@
 
     $texts = new Texts($condition,'txt_ckn',null,null);//get all user visible text
     foreach ($texts as $text){
-      if (count($text->getReplacementIDs(true))) continue; // skip forwarding references
+      $replacementIDs = $text->getReplacementIDs(true);
+      if ($replacementIDs && count($replacementIDs)) continue; // skip forwarding references
       $txtID = $text->getID();
       $ckn = $text->getCKN();
       if ($txtID && !array_key_exists($txtID, $entities['txt'])) {
@@ -241,22 +242,22 @@
                                'title' => $text->getTitle());
         $cknLookup[$ckn] = $txtID;
         $tImgIDs = $text->getImageIDs();
-        if (count($tImgIDs) > 0) {
+        if ($tImgIDs && count($tImgIDs) > 0) {
           $entities['txt'][$txtID]['imageIDs'] = $tImgIDs;
           $imgIDs = array_unique(array_merge($imgIDs,$tImgIDs));
         }
         $AnoIDs = $text->getAnnotationIDs();
-        if (count($AnoIDs) > 0) {
+        if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['txt'][$txtID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
         $AtbIDs = $text->getAttributionIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['txt'][$txtID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
         $AtbIDs = $text->getEditionReferenceIDs();
-        if (count($AtbIDs) > 0) {
+        if ($AtbIDs && count($AtbIDs) > 0) {
           $entities['txt'][$txtID]['refIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
@@ -265,30 +266,30 @@
     $txtIDs = array_keys($entities['txt']);
 
     $entityIDs = array();
-    if (count( $atbIDs) > 0) {
+    if ($atbIDs && count( $atbIDs) > 0) {
       $entityIDs['atb'] = $atbIDs;
     }
-    if (count( $anoIDs) > 0) {
+    if ($anoIDs && count( $anoIDs) > 0) {
       $entityIDs['ano'] = $anoIDs;
     }
-    if (count( $entityIDs) > 0) {
+    if ($entityIDs && count( $entityIDs) > 0) {
       getRelatedEntities($entityIDs);
     }
     // strip away empty entityType arrays
     foreach ($entities['txt'] as $txtID => $propsArray) {
-      if (count($propsArray['tmdIDs']) == 0) {
+      if ($propsArray['tmdIDs'] && count($propsArray['tmdIDs']) == 0) {
         unset($entities['txt'][$txtID]['tmdIDs']);
       }
       if (array_key_exists('imageIDs',$propsArray) && count($propsArray['imageIDs']) == 0) {
         unset($entities['txt'][$txtID]['imageIDs']);
       }
-      if (count($propsArray['blnIDs']) == 0) {
+      if ($propsArray['blnIDs'] && count($propsArray['blnIDs']) == 0) {
         unset($entities['txt'][$txtID]['blnIDs']);
       }
-      if (count($propsArray['ednIDs']) == 0) {
+      if ($propsArray['ednIDs'] && count($propsArray['ednIDs']) == 0) {
         unset($entities['txt'][$txtID]['ednIDs']);
       }
-      if (count($propsArray) == 0) {
+      if ($propsArray && count($propsArray) == 0) {
         unset($entities['txt'][$txtID]);
       }
     }
@@ -364,7 +365,7 @@
       return;
     }
     $tempIDs = $entityIDs[$prefix];
-    if (count($tempIDs) > 0 && !array_key_exists($prefix,$entities)) {
+    if ($tempIDs && count($tempIDs) > 0 && !array_key_exists($prefix,$entities)) {
       $entities[$prefix] = array();
     }
     $entIDs = array();
@@ -376,7 +377,7 @@
       }
     }
     unset($entityIDs[$prefix]);//we have captured the ids of this entity type remove them so we progress in the recursive call
-    if (count($entIDs) > 0) {
+    if ($entIDs && count($entIDs) > 0) {
       switch ($prefix) {
         case 'atb':
           $attributions = new Attributions("atb_id in (".join(",",$entIDs).")",null,null,null);
@@ -394,7 +395,7 @@
                                       'detail' => $attribution->getDetail(),
                                       'types' => $attribution->getTypes());
               $AnoIDs = $attribution->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['atb'][$atbID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();
@@ -430,7 +431,7 @@
               }
               $entities['ano'][$anoID]['vis'] = $vis;
               $AnoIDs = $annotation->getAnnotationIDs();
-              if (count($AnoIDs) > 0) {
+              if ($AnoIDs && count($AnoIDs) > 0) {
                 $entities['ano'][$atbID]['annotationIDs'] = $AnoIDs;
                 if (!array_key_exists('ano',$entityIDs)) {
                   $entityIDs['ano'] = array();

@@ -83,7 +83,7 @@ function addNewEntityReturnData($prefix,$entity) {
            $entities['insert']['gra'][$entID]['decomp'] = preg_replace("/\:/",'',$grapheme->getDecomposition());
         }
         $attrIDs = $grapheme->getAttributionIDs();
-        if (count($attrIDs)) {
+        if ($attrIDs && count($attrIDs)) {
           $entities['insert']['gra'][$entID]['attributionIDs'] = $attrIDs;
         }
       break;
@@ -209,7 +209,7 @@ function addNewEntityReturnData($prefix,$entity) {
         $entities["insert"]['seg'][$entID]['stringpos']= $stringpos;
       }
       $mappedSegIDs = $segment->getMappedSegmentIDs();
-      if (count($mappedSegIDs) > 0) {
+      if ($mappedSegIDs && count($mappedSegIDs) > 0) {
         $entities["insert"]['seg'][$entID]['mappedSegIDs'] = $mappedSegIDs;
       }
       $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
@@ -241,7 +241,7 @@ function addNewEntityReturnData($prefix,$entity) {
           $entities['insert']['lem'][$entID]['compAnalysis'] = $lemma->getCompoundAnalysis();
         }
         $attrIDs = $lemma->getAttributionIDs();
-        if (count($attrIDs)) {
+        if ($attrIDs && count($attrIDs)) {
           $entities['insert']['lem'][$entID]['attributionIDs'] = $attrIDs;
         }
       break;
@@ -270,7 +270,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'ednIDs' => $catalog->getEditionIDs(),
         'typeID' => $catalog->getTypeID());
         $attrIDs = $catalog->getAttributionIDs();
-        if (count($attrIDs)) {
+        if ($attrIDs && count($attrIDs)) {
           $entities['insert']['cat'][$entID]['attributionIDs'] = $attrIDs;
         }
       break;
@@ -286,7 +286,7 @@ function addNewEntityReturnData($prefix,$entity) {
          'seqIDs' => $edition->getSequenceIDs());
       //todo create service to push and remove from FK list
         $attrIDs = $edition->getAttributionIDs();
-        if (count($attrIDs)) {
+        if ($attrIDs && count($attrIDs)) {
           $entities['insert']['edn'][$entID]['attributionIDs'] = $attrIDs;
         }
       break;
@@ -303,7 +303,7 @@ function addNewEntityReturnData($prefix,$entity) {
          'imageIDs' => $text->getImageIDs());
       //todo create service to push and remove from FK list
         $attrIDs = $text->getAttributionIDs();
-        if (count($attrIDs)) {
+        if ($attrIDs && count($attrIDs)) {
           $entities['insert']['txt'][$entID]['attributionIDs'] = $attrIDs;
         }
       break;
@@ -354,7 +354,7 @@ function addNewEntityReturnData($prefix,$entity) {
         }
         $entities['insert']['ano'][$entID]['vis'] = $vis;
         $attrIDs = $annotation->getAttributionIDs();
-        if (count($attrIDs)) {
+        if ($attrIDs && count($attrIDs)) {
           $entities['insert']['ano'][$entID]['attributionIDs'] = $attrIDs;
         }
       break;

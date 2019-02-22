@@ -132,7 +132,7 @@
                                                     'layer' => $surface->getLayerNumber(),
                                                     'textIDs' => $surface->getTextIDs());
         $sImgIDs = $surface->getImageIDs();
-        if (count($sImgIDs) > 0) {
+        if ($sImgIDs && count($sImgIDs) > 0) {
           $entities["insert"]['srf'][$srfID]['imageIDs'] = $sImgIDs;
           $imgIDs = array_unique(array_merge($imgIDs,$sImgIDs));
         }
@@ -157,7 +157,7 @@
                                               'description' => $fragment->getDescription(),
                                               'locRefs' => $fragment->getLocationRefs());
             $fImgIDs = $fragment->getImageIDs();
-            if (count($fImgIDs) > 0) {
+            if ($fImgIDs && count($fImgIDs) > 0) {
               $entities["insert"]['frg'][$frgID]['imageIDs'] = $fImgIDs;
               $imgIDs = array_unique(array_merge($imgIDs,$fImgIDs));
             }
@@ -202,7 +202,7 @@
             $entities["insert"]['seg'][$segID]['urls']= $segment->getURLs();
           }
           $mappedSegIDs = $segment->getMappedSegmentIDs();
-          if (count($mappedSegIDs) > 0) {
+          if ($mappedSegIDs && count($mappedSegIDs) > 0) {
             $entities["insert"]['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
           }
           $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
@@ -230,11 +230,11 @@
 
   $entities["update"]['bln'][$blnID]=array();
   $entities["update"]['bln'][$blnID]['segCount'] = count($segIDs);
-  if (count($segIDs) > 0) {
+  if ($segIDs && count($segIDs) > 0) {
     $entities["update"]['bln'][$blnID]['segIDs'] = array_unique($segIDs);
   }
 
-  if (count($imgIDs) > 0) {
+  if ($imgIDs && count($imgIDs) > 0) {
     $images = new Images('img_id in ('.join(",",$imgIDs).')',null,null.null);
     if($images->getCount()>0) {
       $images->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -313,7 +313,7 @@
         return;
       }
       $tempIDs = $entityIDs[$prefix];
-      if (count($tempIDs) > 0 && !array_key_exists($prefix,$entities["insert"])) {
+      if ($tempIDs && count($tempIDs) > 0 && !array_key_exists($prefix,$entities["insert"])) {
         $entities["insert"][$prefix] = array();
       }
       $entIDs = array();
@@ -323,7 +323,7 @@
         }
       }
       unset($entityIDs[$prefix]);//we have captured the ids of this entity type remove them so we progress in the recursive call
-      if (count($entIDs) > 0) {
+      if ($entIDs && count($entIDs) > 0) {
         switch ($prefix) {
           case 'atb':
             $attributions = new Attributions("atb_id in (".join(",",$entIDs).")",null,null,null);
@@ -341,7 +341,7 @@
                                         'detail' => $attribution->getDetail(),
                                         'types' => $attribution->getTypes());
                 $AnoIDs = $attribution->getAnnotationIDs();
-                if (count($AnoIDs) > 0) {
+                if ($AnoIDs && count($AnoIDs) > 0) {
                   $entities["insert"]['atb'][$atbID]['annotationIDs'] = $AnoIDs;
                   if (!array_key_exists('ano',$entityIDs)) {
                     $entityIDs['ano'] = array();
@@ -377,7 +377,7 @@
                 }
                 $entities["insert"]['ano'][$anoID]['vis'] = $vis;
                 $AnoIDs = $annotation->getAnnotationIDs();
-                if (count($AnoIDs) > 0) {
+                if ($AnoIDs && count($AnoIDs) > 0) {
                   $entities["insert"]['ano'][$anoID]['annotationIDs'] = $AnoIDs;
                   if (!array_key_exists('ano',$entityIDs)) {
                     $entityIDs['ano'] = array();
@@ -385,7 +385,7 @@
                   $entityIDs['ano'] = array_merge($entityIDs['ano'],$AnoIDs);
                 }
                 $AtbIDs = $annotation->getAttributionIDs();
-                if (count($AtbIDs) > 0) {
+                if ($AtbIDs && count($AtbIDs) > 0) {
                   $entities["insert"]['ano'][$anoID]['attributionIDs'] = $AtbIDs;
                   if (!array_key_exists('atb',$entityIDs)) {
                     $entityIDs['atb'] = array();

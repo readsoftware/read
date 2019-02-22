@@ -44,7 +44,7 @@
     global $userID, $dbn;
     return (isset($_SESSION['readSessions']) && isset($_SESSION['readSessions'][$dbn]) &&
             isset($_SESSION['readSessions'][$dbn]['ka_userid']) && 
-            count($_SESSION['readSessions'][$dbn]['ka_userid'])) ? intval($_SESSION['readSessions'][$dbn]['ka_userid']):(isset($userID)?$userID:6);
+            strlen($_SESSION['readSessions'][$dbn]['ka_userid']) > 0) ? intval($_SESSION['readSessions'][$dbn]['ka_userid']):(isset($userID)?$userID:6);
   }
 
   /**
@@ -124,7 +124,7 @@
     global $dbn;
     return (isset($_SESSION['readSessions']) && isset($_SESSION['readSessions'][$dbn]) &&
             isset($_SESSION['readSessions'][$dbn]['ka_username']) && 
-            count($_SESSION['readSessions'][$dbn]['ka_username'])) ? $_SESSION['readSessions'][$dbn]['ka_username']:"Guest";
+            strlen($_SESSION['readSessions'][$dbn]['ka_username'])) ? $_SESSION['readSessions'][$dbn]['ka_username']:"Guest";
   }
 
   /**

@@ -134,7 +134,7 @@ if (!isSysAdmin()) {
     }
   }
   if (strtolower($scope) == 'table') {//all entities of a table
-    if (count($tags) == 1 && strtolower($tags[0]) == 'all') {
+    if ( count($tags) == 1 && strtolower($tags[0]) == 'all') {
       $tags = array_keys($prefixToTableName);
     }
     foreach ($tags as $prefix) {

@@ -497,13 +497,13 @@
                         }
                         //remove internal ordinal
                         $locParts = explode(":",$formLoc);
-                        if (count($locParts) == 3) {
+                        if ($locParts && count($locParts) == 3) {
                           if (strpos(trim($locParts[0]),"sort") === 0) {
                             $formLoc = $locParts[2];
                           } else {
                             $formLoc = $locParts[0].$locParts[2];
                           }
-                        } else if (count($locParts) == 2) {
+                        } else if ($locParts && count($locParts) == 2) {
                           $formLoc = $locParts[1];
                         }
                         if (strpos($formLoc,"–")) {//replace en dash with \'96
@@ -686,7 +686,7 @@
             $label = 'seq'.$sequence->getID();
           }
           $sclGIDs = $sequence->getEntityIDs();
-          if ($label && count($sclGIDs)) {//create lookup for location of word span B11-B12
+          if ($label && $sclGIDs && count($sclGIDs)) {//create lookup for location of word span B11-B12
             $label = "$ord:".$label; //save ordinal of line for sorting later.
             foreach ($sclGIDs as $sclGID) {
               $tag = preg_replace("/:/","",$sclGID);
@@ -727,7 +727,7 @@
               $tokens = $tokenSet->getEntities();
               $fToken = $tokens[0];
               $sclIDs = $fToken->getSyllableClusterIDs();
-              if (count($sclIDs) > 0) {
+              if ($sclIDs && count($sclIDs) > 0) {
                 $fSclID = $sclIDs[0];
                 $sclTag = 'scl'.$fSclID;
                 if ( array_key_exists($sclTag,$sclTagToLabel)) {
@@ -741,7 +741,7 @@
               if ($label) {
                 $lToken = $tokens[count($tokens)-1];
                 $sclIDs = $lToken->getSyllableClusterIDs();
-                if (count($sclIDs) > 0) {
+                if ($sclIDs && count($sclIDs) > 0) {
                   $lSclID = $sclIDs[count($sclIDs)-1];
                   $sclTag = 'scl'.$lSclID;
                   if ( array_key_exists($sclTag,$sclTagToLabel)) {
@@ -761,7 +761,7 @@
               }
             } else if ($prefix == 'tok') {
               $sclIDs = $word->getSyllableClusterIDs();
-              if (count($sclIDs) > 0) {
+              if ($sclIDs && count($sclIDs) > 0) {
                 $fSclID = $sclIDs[0];
                 $sclTag = 'scl'.$fSclID;
                 if ( array_key_exists($sclTag,$sclTagToLabel)) {

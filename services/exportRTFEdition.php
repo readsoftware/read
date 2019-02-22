@@ -165,7 +165,7 @@
           $bkuplabel = $textDivSeq->getSuperScript();
         }
         $wrdGIDs = $textDivSeq->getEntityIDs();
-        if (count($wrdGIDs) == 0) {
+        if (!$wrdGIDs && count($wrdGIDs) == 0) {
           array_push($warnings,"Found text division without words ".$textDivSeq->getGlobalID());
           continue;
         }
@@ -511,7 +511,7 @@
       case 'tok':
         $token = $entity;
         $graIDs = $token->getGraphemeIDs();
-        if (count($graIDs)>0) {
+        if ($graIDs && count($graIDs)>0) {
           $lastGraphemeID = array_pop($graIDs);
           $fnRTF = getEntityFootnotesRTF($token);
           if ($fnRTF) {
