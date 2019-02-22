@@ -262,7 +262,7 @@
       for($i=2; $i<=count($values);$i++) {
         $paramList .= ',$'.$i;
       }
-      $query = "UPDATE $table SET ($keys) = ($paramList) WHERE $condition ;";
+      $query = "UPDATE $table SET ($keys) = ROW($paramList) WHERE $condition ;";
       $res = pg_query_params($this->_dbHandle,$query,$values);
       return $res;
     }

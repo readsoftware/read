@@ -129,7 +129,7 @@ if (count($errors) == 0) {
         }
         $image->save();
         if ($image->hasError()) {
-          array_push($errors,"error creating image '".$image->getValue()."' - ".$image->getErrors(true));
+          array_push($errors,"error creating image '".$image->getTitle()."' - ".$image->getErrors(true));
         }else{
           $image = new Image($image->getID());//reread image from DB
           addNewEntityReturnData('img',$image);
@@ -211,7 +211,7 @@ if (count($errors) == 0) {
           }
           $image->save();
           if ($image->hasError()) {
-            array_push($errors,"error creating annotation '".$image->getValue()."' - ".$image->getErrors(true));
+            array_push($errors,"error creating annotation '".$image->getTitle()."' - ".$image->getErrors(true));
           } else {
             $image = new Annotation($image->getID());//reread anotation from DB
             addUpdateEntityReturnData('img',$image->getID(),'modStamp',$image->getModificationStamp());
