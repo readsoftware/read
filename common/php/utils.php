@@ -421,7 +421,7 @@ function constructCroppedImageURL($imageURL, $boundary) {
 function getTranslatedPoly($points,$newOrigX, $newOrigY, $forceSerial = false) {
   $cnt = count($points); // find number of points
   if(!$cnt || (!$newOrigX && !$newOrigY)) return $points;
-  if ( is_array($points[0]) && count($points[0] === 2)) {
+  if ( is_array($points[0]) && count($points[0]) === 2) {
     $format = 'tuples';
   }else{
     $format = 'serial';

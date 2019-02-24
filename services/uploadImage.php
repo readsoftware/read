@@ -123,9 +123,10 @@ if (!$data) {
   //check path exist if not try to create it
   $info = new SplFileInfo($path);
   if (!$info->isDir()) {
-    $isDir = mkdir($info, 0775, true);
+    $isDir = mkdir($path, 0775, true);
     if (!$isDir) {//point at the temp dir which will only can temporarily
       echo "Error: unable to open destination. Nothing uploaded.";
+      error_log("Error: unable to open destination $path. Nothing uploaded.");
       exit;
     }
   } else if (!$info->isWritable()) {
