@@ -17,9 +17,9 @@
 */
 /**
 * @author      Stephen White  <stephenawhite57@gmail.com>
-* @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
-* @link        https://github.com/readsoftware
-* @version     1.0
+* @copyright   Stephen White  <stephenawhite57@gmail.com>
+* @link        https://github.com/stevewh/readlatin
+* @version     0.1
 * @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
 * @package     READ Research Environment for Ancient Documents
 */
@@ -92,7 +92,7 @@ $graphemeCharacterMap = array(
 "⁝"=>array("srt"=>"806","ssrt"=>"806","typ"=>"P"),
 "⏑"=>array("srt"=>"807","ssrt"=>"807","typ"=>"P"),
 "⎼"=>array("srt"=>"808","ssrt"=>"808","typ"=>"P"),
-"❉"=>array("srt"=>"850","ssrt"=>"850","typ"=>"P"),
+","=>array("srt"=>"850","ssrt"=>"850","typ"=>"P"),
 "–"=>array("srt"=>"890","ssrt"=>"890","typ"=>"P"),
 "—"=>array("srt"=>"890","ssrt"=>"890","typ"=>"P"),
 "|"=>array(
@@ -112,8 +112,9 @@ $graphemeCharacterMap = array(
     "srt"=>"950","ssrt"=>"950","typ"=>"O"), // debug temp assiqnment remove after / clean up
 "#"=>array("srt"=>"956","ssrt"=>"956","typ"=>"O"),
 "…"=>array("srt"=>"955","ssrt"=>"955","typ"=>"O"),
-"’"=>array("srt"=>"100","ssrt"=>"100","typ"=>"V"),
+";’"=>array("srt"=>"851","ssrt"=>"851","typ"=>"p"),
 "a"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
+"á"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
 "â"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
 "ạ"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
 "b"=>array("srt"=>"420","csrt"=>"b","typ"=>"I"),
@@ -127,6 +128,7 @@ $graphemeCharacterMap = array(
     "̂"=>array("srt"=>"450","csrt"=>"e","typ"=>"I"),
     "̣"=>array("srt"=>"450","csrt"=>"e","typ"=>"I"),
     "srt"=>"450","csrt"=>"e","typ"=>"I"),
+"é"=>array("srt"=>"450","csrt"=>"e","typ"=>"I"),
 "ê"=>array("srt"=>"450","csrt"=>"e","typ"=>"I"),
 "f"=>array("srt"=>"460","csrt"=>"f","typ"=>"I"),
 "f̣"=>array("srt"=>"460","csrt"=>"f","typ"=>"I"),
@@ -137,6 +139,7 @@ $graphemeCharacterMap = array(
 "ĥ"=>array("srt"=>"480","csrt"=>"h","typ"=>"I"),
 "ḥ"=>array("srt"=>"480","csrt"=>"h","typ"=>"I"),
 "i"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
+"í"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "î"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "ị"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "j"=>array("srt"=>"500","csrt"=>"j","typ"=>"I"),
@@ -156,6 +159,7 @@ $graphemeCharacterMap = array(
     "̂"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
     "̣"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
     "srt"=>"550","csrt"=>"o","typ"=>"I"),
+"ó"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
 "ô"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
 "p"=>array("srt"=>"560","csrt"=>"p","typ"=>"I"),
 "p̣"=>array("srt"=>"560","csrt"=>"p","typ"=>"I"),
@@ -172,6 +176,7 @@ $graphemeCharacterMap = array(
     "̂"=>array("srt"=>"610","csrt"=>"u","typ"=>"I"),
     "̣"=>array("srt"=>"610","csrt"=>"u","typ"=>"I"),
     "srt"=>"610","csrt"=>"u","typ"=>"I"),
+"ú"=>array("srt"=>"610","csrt"=>"u","typ"=>"I"),
 "û"=>array("srt"=>"610","csrt"=>"u","typ"=>"I"),
 "v"=>array(
     "̂"=>array("srt"=>"620","csrt"=>"v","typ"=>"I"),
@@ -200,9 +205,9 @@ $graphemeCharacterMap = array(
 * S(C)→C(C)→CC(.)→CC.(~VM)→S
 * S(C)→C(C)→CC(.)→CC.(VM)→CC.VM(~VM)→S
 * S(C)→C(V)→CV(~VM)→S
-* S(C)→C(V)→CV(VM)→CVVM(~VM)→S
-* S(C)→C(.)→C.(VM)→C.VM(~VM)→S
-* S(C)→C(.)→C.(~VM)→S
+* S(C)→C(V)→CV(VM)→VM(~VM)→S
+* S(C)→C(.)→C.(VM)→VM(~VM)→Si
+* S(C)→C(.)→C.→S(~VM)
 * S(V)→V(~VM)→S
 * S(.)→.(~VM && ~V)→S
 * S(.)→.(V)→V(~VM)→S
