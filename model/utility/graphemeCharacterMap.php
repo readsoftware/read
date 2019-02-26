@@ -138,9 +138,12 @@ $graphemeCharacterMap = array(
 "h"=>array("srt"=>"480","csrt"=>"h","typ"=>"I"),
 "ĥ"=>array("srt"=>"480","csrt"=>"h","typ"=>"I"),
 "ḥ"=>array("srt"=>"480","csrt"=>"h","typ"=>"I"),
-"i"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
+"i"=>array(
+    "͞"=>array("srt"=>"530","csrt"=>"m","typ"=>"I"),
+    "srt"=>"490","csrt"=>"i","typ"=>"I"),
 "í"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "î"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
+"ī"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "ị"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "j"=>array("srt"=>"500","csrt"=>"j","typ"=>"I"),
 "ĵ"=>array("srt"=>"500","csrt"=>"j","typ"=>"I"),
