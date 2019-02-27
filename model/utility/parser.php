@@ -1148,9 +1148,13 @@ class Parser {
             case "‐":// compound token separator multiByte e28090 hyphen
               if ($i == 0) {// at the start of a line and compound hyphens are not allowed
                 array_push($this->_errors,"error - compound hyphen found character $i at start of line $lineMask of $ckn"." cfg line # $cfgLnCnt");
-              } else if  (mb_substr($script,$i-1,1) == " "){//previous char is a space and is not allowed
+                break;
+              } else if (mb_substr($script,$i-1,1) == " ") {//previous char is a space and is not allowed
                 array_push($this->_errors,"error - compound hyphen following space found at character $i on line $lineMask of $ckn "." cfg line # $cfgLnCnt");
-              } else if ((!isset($cmpIndex) || !$cmpIndex) && isset($tokIndex) && $tokIndex) {//must be first separator of this compound
+                break;
+              } else if (mb_substr($script,$i-1,1) == "[" || mb_substr($script,$i-1,1) == "(") {//previous char is a bracket fall through to character map
+                //break; continue processing for ---  LATIN
+              } else if (!@$cmpIndex && @$tokIndex) {//must be first separator of this compound
                 $curCompound = new Compound();
                 $curCompound->setComponentIDs(array('tok:'.$tokTempID));
                 $curCompound->setVisibilityIDs($vis);
@@ -1209,19 +1213,19 @@ class Parser {
                     array_push($this->_errors,"token line sequence - compound marker (line $lineMask character $i) last entity $lastentityGID does not match tok:$tokTempID"." cfg line # $cfgLnCnt");
                   }
                 }
+                $graIndex = null;
+  //              $sclIndex = null;
+  //              $segIndex = null;
+                $tokIndex = null;
+                $tokTempID = null;
+                $graTempID = null;
+  //              $segTempID = null;
+  //              $sclTempID = null;
+  //              $segState = "S";//signal new syllable
+                $i++;
+                $atCompoundSeparator = true; // use when changing lines to all compound to span lines.
+                break;
               }
-              $graIndex = null;
-//              $sclIndex = null;
-//              $segIndex = null;
-              $tokIndex = null;
-              $tokTempID = null;
-              $graTempID = null;
-//              $segTempID = null;
-//              $sclTempID = null;
-//              $segState = "S";//signal new syllable
-              $i++;
-              $atCompoundSeparator = true; // use when changing lines to all compound to span lines.
-              break;
             default:
               $testChar = $char;
               $char = mb_strtolower($char);
