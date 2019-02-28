@@ -111,7 +111,8 @@
                         "}}" => "S",
                         "⟪" => "SdI",
                         "⟨*" => "SdA"),
-          "U" => array( "]" => "S"),
+          "U" => array(  "(" => "UR",//LATIN
+                        "]" => "S"),
           //Double TCM States
           "DA" => array( "⟩" => "D"),
           "DI" => array( "[" => "DIU",
@@ -126,6 +127,7 @@
           "DU" => array( "]" => "D"),
           "IA" => array( "⟩" => "I"),
           "ID" => array( "}" => "I"),
+          "UR" => array( ")" => "U"),//LATIN
           "IR" => array( ")" => "I"),
           "ISd" => array( "}}" => "I"),
           "IU" => array( "]" => "I"),
@@ -227,6 +229,8 @@
                          "S"   => "}}"),
           "U" => array( "S" => "]"),
           //Double TCM States
+          "UR" => array( "U" => ")",//LATIN
+                        "S" => ")]"),//LATIN
           "DA" => array( "D" => "⟩",
                          "S" => "⟩}"),
           "DI" => array( "DIU" => "[",

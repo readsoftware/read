@@ -7150,6 +7150,7 @@ var tcmBracketsLookup = {
       "SdIU" : "{{⟪[",
       "SdID" : "{{⟪{",
       "SdIA" :"{{⟪⟨*",
+      "UR" : "[(",//LATIN
       "U" : "["},
     //Singular TCM States
     "A" : {
@@ -7192,8 +7193,13 @@ var tcmBracketsLookup = {
       "S"   : "}}"},
     "U" : {
       "U" : "",
+      "UR" : "(",//LATIN
       "S" : "]"},
     //Double TCM States
+    "UR" : {//LATIN
+      "UR" : "",
+      "U" : ")",
+      "S" : ")]"},
     "DA" : {
       "DA" : "",
       "D" : "⟩",
