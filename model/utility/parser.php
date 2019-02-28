@@ -1076,7 +1076,7 @@ class Parser {
                   $tcm = $char."*";
                   $i+=2;
                 }else{
-                  array_push($this->_errors,"found no * for $char at character $i for TCM brackets for cknLine $ckn.$lineMask"." cfg line # $cfgLnCnt");
+//LATIN relax                  array_push($this->_errors,"found no * for $char at character $i for TCM brackets for cknLine $ckn.$lineMask"." cfg line # $cfgLnCnt");
                   $i++;
                   $tcm = $char;
                 }
