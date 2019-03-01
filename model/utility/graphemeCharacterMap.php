@@ -113,68 +113,85 @@ $graphemeCharacterMap = array(
 "#"=>array("srt"=>"956","ssrt"=>"956","typ"=>"O"),
 "…"=>array("srt"=>"955","ssrt"=>"955","typ"=>"O"),
 ";’"=>array("srt"=>"851","ssrt"=>"851","typ"=>"p"),
-"a"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
+"a"=>array(
+    "̣"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
+    "̂"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
+    "srt"=>"410","csrt"=>"a","typ"=>"I"),
 "á"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
 "â"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
-"ạ"=>array("srt"=>"410","csrt"=>"a","typ"=>"I"),
-"b"=>array("srt"=>"420","csrt"=>"b","typ"=>"I"),
-"ḅ"=>array("srt"=>"420","csrt"=>"b","typ"=>"I"),
-"c"=>array("srt"=>"430","csrt"=>"c","typ"=>"I"),
+"b"=>array(
+    "̣"=>array("srt"=>"420","csrt"=>"b","typ"=>"I"),
+    "srt"=>"420","csrt"=>"b","typ"=>"I"),
+"c"=>array(
+    "̣"=>array("srt"=>"430","csrt"=>"c","typ"=>"I"),
+    "srt"=>"430","csrt"=>"c","typ"=>"I"),
 "ĉ"=>array("srt"=>"430","csrt"=>"c","typ"=>"I"),
-"c̣"=>array("srt"=>"430","csrt"=>"c","typ"=>"I"),
-"d"=>array("srt"=>"440","csrt"=>"d","typ"=>"I"),
-"ḍ"=>array("srt"=>"440","csrt"=>"d","typ"=>"I"),
+"d"=>array(
+    "̣"=>array("srt"=>"440","csrt"=>"d","typ"=>"I"),
+    "srt"=>"440","csrt"=>"d","typ"=>"I"),
 "e"=>array(
     "̂"=>array("srt"=>"450","csrt"=>"e","typ"=>"I"),
     "̣"=>array("srt"=>"450","csrt"=>"e","typ"=>"I"),
     "srt"=>"450","csrt"=>"e","typ"=>"I"),
 "é"=>array("srt"=>"450","csrt"=>"e","typ"=>"I"),
 "ê"=>array("srt"=>"450","csrt"=>"e","typ"=>"I"),
-"f"=>array("srt"=>"460","csrt"=>"f","typ"=>"I"),
-"f̣"=>array("srt"=>"460","csrt"=>"f","typ"=>"I"),
-"g"=>array("srt"=>"470","csrt"=>"g","typ"=>"I"),
+"f"=>array(
+    "̣"=>array("srt"=>"460","csrt"=>"f","typ"=>"I"),
+    "srt"=>"460","csrt"=>"f","typ"=>"I"),
+"g"=>array(
+    "̣"=>array("srt"=>"470","csrt"=>"g","typ"=>"I"),
+    "srt"=>"470","csrt"=>"g","typ"=>"I"),
 "ĝ"=>array("srt"=>"470","csrt"=>"g","typ"=>"I"),
-"g̣"=>array("srt"=>"470","csrt"=>"g","typ"=>"I"),
-"h"=>array("srt"=>"480","csrt"=>"h","typ"=>"I"),
+"h"=>array(
+    "̣"=>array("srt"=>"480","csrt"=>"h","typ"=>"I"),
+    "srt"=>"480","csrt"=>"h","typ"=>"I"),
 "ĥ"=>array("srt"=>"480","csrt"=>"h","typ"=>"I"),
-"ḥ"=>array("srt"=>"480","csrt"=>"h","typ"=>"I"),
 "i"=>array(
-    "͞"=>array("srt"=>"530","csrt"=>"m","typ"=>"I"),
+    "͞"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
+    "̣"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
     "srt"=>"490","csrt"=>"i","typ"=>"I"),
 "í"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "î"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "ī"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
-"ị"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
-"j"=>array("srt"=>"500","csrt"=>"j","typ"=>"I"),
+"j"=>array(
+    "̣"=>array("srt"=>"500","csrt"=>"j","typ"=>"I"),
+    "srt"=>"500","csrt"=>"j","typ"=>"I"),
 "ĵ"=>array("srt"=>"500","csrt"=>"j","typ"=>"I"),
-"j̣"=>array("srt"=>"500","csrt"=>"j","typ"=>"I"),
-"k"=>array("srt"=>"510","csrt"=>"k","typ"=>"I"),
-"ḳ"=>array("srt"=>"510","csrt"=>"k","typ"=>"I"),
-"l"=>array("srt"=>"520","csrt"=>"l","typ"=>"I"),
-"ḷ"=>array("srt"=>"520","csrt"=>"l","typ"=>"I"),
+"k"=>array(
+    "̣"=>array("srt"=>"510","csrt"=>"k","typ"=>"I"),
+    "srt"=>"510","csrt"=>"k","typ"=>"I"),
+"l"=>array(
+    "̣"=>array("srt"=>"520","csrt"=>"l","typ"=>"I"),
+    "srt"=>"520","csrt"=>"l","typ"=>"I"),
 "m"=>array(
     "̂"=>array("srt"=>"530","csrt"=>"m","typ"=>"I"),
     "̣"=>array("srt"=>"530","csrt"=>"m","typ"=>"I"),
     "srt"=>"530","csrt"=>"m","typ"=>"I"),
-"n"=>array("srt"=>"540","csrt"=>"n","typ"=>"I"),
-"ṇ"=>array("srt"=>"540","csrt"=>"n","typ"=>"I"),
+"n"=>array(
+    "̣"=>array("srt"=>"540","csrt"=>"n","typ"=>"I"),
+    "srt"=>"540","csrt"=>"n","typ"=>"I"),
 "o"=>array(
     "̂"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
     "̣"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
     "srt"=>"550","csrt"=>"o","typ"=>"I"),
 "ó"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
 "ô"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
-"p"=>array("srt"=>"560","csrt"=>"p","typ"=>"I"),
-"p̣"=>array("srt"=>"560","csrt"=>"p","typ"=>"I"),
-"q"=>array("srt"=>"570","csrt"=>"q","typ"=>"I"),
-"q̣"=>array("srt"=>"570","csrt"=>"q","typ"=>"I"),
-"r"=>array("srt"=>"580","csrt"=>"r","typ"=>"I"),
-"ṛ"=>array("srt"=>"580","csrt"=>"r","typ"=>"I"),
-"s"=>array("srt"=>"590","csrt"=>"s","typ"=>"I"),
+"p"=>array(
+    "̣"=>array("srt"=>"560","csrt"=>"p","typ"=>"I"),
+    "srt"=>"560","csrt"=>"p","typ"=>"I"),
+"q"=>array(
+    "̣"=>array("srt"=>"570","csrt"=>"q","typ"=>"I"),
+    "srt"=>"570","csrt"=>"q","typ"=>"I"),
+"r"=>array(
+    "̣"=>array("srt"=>"580","csrt"=>"r","typ"=>"I"),
+    "srt"=>"580","csrt"=>"r","typ"=>"I"),
+"s"=>array(
+    "̣"=>array("srt"=>"590","csrt"=>"s","typ"=>"I"),
+    "srt"=>"590","csrt"=>"s","typ"=>"I"),
 "ŝ"=>array("srt"=>"590","csrt"=>"s","typ"=>"I"),
-"ṣ"=>array("srt"=>"590","csrt"=>"s","typ"=>"I"),
-"t"=>array("srt"=>"600","csrt"=>"t","typ"=>"I"),
-"ṭ"=>array("srt"=>"600","csrt"=>"t","typ"=>"I"),
+"t"=>array(
+    "̣"=>array("srt"=>"600","csrt"=>"t","typ"=>"I"),
+    "srt"=>"600","csrt"=>"t","typ"=>"I"),
 "u"=>array(
     "̂"=>array("srt"=>"610","csrt"=>"u","typ"=>"I"),
     "̣"=>array("srt"=>"610","csrt"=>"u","typ"=>"I"),
@@ -189,13 +206,16 @@ $graphemeCharacterMap = array(
     ""=>array("srt"=>"630","csrt"=>"w","typ"=>"I"),
     "̣"=>array("srt"=>"630","csrt"=>"w","typ"=>"I"),
     "srt"=>"630","csrt"=>"w","typ"=>"I"),
-"x"=>array("srt"=>"640","csrt"=>"x","typ"=>"I"),
-"x̣"=>array("srt"=>"640","csrt"=>"x","typ"=>"I"),
-"y"=>array("srt"=>"650","csrt"=>"y","typ"=>"I"),
+"x"=>array(
+    "̣"=>array("srt"=>"640","csrt"=>"x","typ"=>"I"),
+    "srt"=>"640","csrt"=>"x","typ"=>"I"),
+"y"=>array(
+    "̣"=>array("srt"=>"650","csrt"=>"y","typ"=>"I"),
+    "srt"=>"650","csrt"=>"y","typ"=>"I"),
 "ŷ"=>array("srt"=>"650","csrt"=>"y","typ"=>"I"),
-"ỵ"=>array("srt"=>"650","csrt"=>"y","typ"=>"I"),
-"z"=>array("srt"=>"660","csrt"=>"z","typ"=>"I"),
-"ẓ"=>array("srt"=>"660","csrt"=>"z","typ"=>"I"));
+"z"=>array(
+    "̣"=>array("srt"=>"660","csrt"=>"z","typ"=>"I"),
+    "srt"=>"660","csrt"=>"z","typ"=>"I"));
 
 /**
 * getNextSegmentState - state engine for segmenting a stream of grapheme types
