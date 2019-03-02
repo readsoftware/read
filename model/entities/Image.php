@@ -142,6 +142,14 @@
     }
 
     /**
+    * Gets the value/title for this Image
+    * @return string title
+    */
+    public function getValue() {
+      return $this->_title;
+    }
+
+    /**
     * Get Type of the image
     *
     * @return string from a typology of terms for types of images

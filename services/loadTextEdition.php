@@ -255,7 +255,7 @@
                                             '"editibility":"'.$sequence->getOwnerID().'",'.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
                                             '"children":'.getSeqData($sequence, $refresh).','.
-                                            '"entityIDs":['.(count($seqEntityIDs)?'"'.join('","',$seqEntityIDs).'"':'').']';
+                                            '"entityIDs":['.((isset($seqEntityIDs) && count($seqEntityIDs))?'"'.join('","',$seqEntityIDs).'"':'').']';
               $superscript = $sequence->getSuperScript();
               if ($superscript && count($superscript) > 0) {
                 $seqRetString .= ',"sup":"'.$superscript.'"';
@@ -348,7 +348,7 @@
                                             '"editibility":"'.$sequence->getOwnerID().'",'.
                                             '"typeID":"'.$sequence->getTypeID().'",'.
                                             '"children":'.getChildEntitiesJsonString($sequence->getEntityIDs()).
-                                            (count(@$seqEntityIDs)?',"entityIDs":["'.join('","',$seqEntityIDs).'"]':'');
+                                            ((isset($seqEntityIDs) && count(@$seqEntityIDs))?',"entityIDs":["'.join('","',$seqEntityIDs).'"]':'');
               $superscript = $sequence->getSuperScript();
               if ($superscript && count($superscript) > 0) {
                 $seqRetString .= ',"sup":"'.$superscript.'"';
@@ -465,7 +465,7 @@
                                        'readonly' => $sequence->isReadonly(),
                                        'typeID' => $sequence->getTypeID());
                 $superscript = $sequence->getSuperScript();
-                if ($superscript && count($superscript) > 0) {
+                if ($superscript && strlen($superscript) > 0) {
                   $entities['seq'][$seqID]['sup'] = $superscript;
                 }
                 $sEntIDs = $sequence->getEntityIDs();
@@ -866,7 +866,7 @@
       $prevSclID = null;
       if (isset($entities['tok'][$newTokID]['graphemeIDs'])) {
         $tokGraIDs = $entities['tok'][$newTokID]['graphemeIDs'];
-        if ($gra2SclMap && count($tokGraIDs) > 0 && isset($gra2SclMap[$tokGraIDs[0]])) { // use gra2scl map
+        if ($gra2SclMap && $tokGraIDs && count($tokGraIDs) > 0 && isset($gra2SclMap[$tokGraIDs[0]])) { // use gra2scl map
           foreach($tokGraIDs as $tokGraID) {
             $graSclID = null;
 //            if ($tokGraID && array_key_exists($tokGraID,$gra2SclMap)){

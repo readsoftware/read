@@ -174,16 +174,21 @@
     //*******************************PUBLIC FUNCTIONS************************************
 
     /**
-    * Calculate sort codes for this token
+    * Calculate centroid for this segment
     *
     * @return boolean true if successful, false otherwise
     */
     public function calculateCenter(){
-      $boundary = $this->polyStringToArray($this->_image_pos);
-      $cnt = count($boundary);
-      if ( $cnt <= 0) {//improper polygon set center to null
-        $this->_center_pos = null;
-      } else {
+      $this->_center_pos = null;
+      $boundary = null;
+      if ($this->_image_pos) {
+        $boundary = $this->polyStringToArray($this->_image_pos);
+      }
+      $cnt = 0;
+      if ($boundary) {
+        $cnt = count($boundary);
+      }
+      if ( $cnt > 0) {//proper polygon calc center
         $center_x = $center_y = 0;
         foreach ($boundary as $polygon){
           $center = $polygon->getCenter();

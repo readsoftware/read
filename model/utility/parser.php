@@ -446,6 +446,7 @@ class Parser {
       }
       $parseGUID = "#".$this->_sessUid;
       $ckn = null;
+      $tokIndex = null;
       $cfgLnCnt = 0;
       $curTokLineSequence = null;
       $srtKey = (!defined("USESKTSORT")|| !USESKTSORT)?"srt":"ssrt";

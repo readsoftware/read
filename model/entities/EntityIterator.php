@@ -264,7 +264,7 @@
     * @return int returns the number of entities in currently in the iterator
     */
     public function getCount() {
-      return count($this->_entities);
+      return $this->_entities? count($this->_entities):0;
     }
 
     /**

@@ -185,6 +185,20 @@
     }
 
     /**
+    * Get Value of the text
+    *
+    * When this is not stored it is caclulated from related entities.
+    * @return string represents a more human readable label for this text
+    * @todo add code for calculating the title
+    */
+    public function getValue() {
+      if (!$this->_title){
+        //calculate title here
+      }
+      return $this->_title;
+    }
+
+    /**
     * Get Reference Number/Label of the text
     *
     * @return string represents a Number/label for this text

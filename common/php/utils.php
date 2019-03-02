@@ -1585,7 +1585,7 @@ function invalidateParentCache($seqGID,$ednSeqIDs,$ednID) {
     return;//top level sequence nothing to do
   }
   $containers = new Sequences("'$seqGID' = ANY(seq_entity_ids)",null,null,null);
-  if ($containers && count($containers) > 0){
+  if ($containers && $containers->getCount() > 0){
     foreach($containers as $seqContainer){
       invalidateParentCache($seqContainer->getGlobalID(),$ednSeqIDs,$ednID);
       invalidateSequenceCache($seqContainer,$ednID);
