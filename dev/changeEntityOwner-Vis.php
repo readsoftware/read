@@ -110,7 +110,7 @@ if (!isSysAdmin()) {
         echo "visibility usergroup $usrname is not valid";
         exit();
       }
-      if (isFirst) {
+      if ($isFirst) {
         $strVis .= $usrID;
         $isFirst = false;
       } else {

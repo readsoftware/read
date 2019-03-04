@@ -3880,10 +3880,12 @@ function changeVisibility($prefix,$table,$ids,$vis,$owner) {
     if ($ids && $owner) {
       $query .= " where $prefix"."_id in (".join(",",$ids).") and $prefix"."_owner_id=$owner";
     }else if ($ids) {
-      $query .= " where $prefix"."_id in (".join(",",$ids).")";
-    } else if ($ids && $owner) {
+      $query .= " where $prefix"."_id in (".join(",",$ids).") and $prefix"."_owner_id != 1";
+    } else if ($owner) {
       $query .= " where $prefix"."_owner_id=$owner";
     }
+  } else {
+    $query .= " where $prefix"."_owner_id != 1";
   }
   $query .= ";";
   $dbMgr->query($query);
