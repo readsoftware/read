@@ -476,8 +476,7 @@
     }
 
     //********SETTERS*********
-    /**
-    /**
+    
     /**
     * Set Segment's baseline unique IDs
     *
@@ -499,10 +498,10 @@
     public function setImageBoundary($boundary) {
       if($this->polygonsToString($this->_image_pos) != $this->polygonsToString($boundary)) {
         $this->_dirty = true;
+        $this->_image_pos = $boundary;
         $this->calculateCenter();
         $this->setDataKeyValuePair("seg_image_pos",$this->polygonsToString($boundary));
       }
-      $this->_image_pos = $boundary;
     }
 
     /**

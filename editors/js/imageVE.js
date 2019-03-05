@@ -289,6 +289,64 @@ EDITORS.ImageVE.prototype = {
 *
 */
 
+savePolygons: function () {
+  var imgVE = this, cnt = imgVE.polygons.length,
+      i, savedata = {}, segs = {};
+  imgVE.clearPath();
+  //for each new or dirty segment polygon
+  for(i=0; i<cnt; i++) {
+    polygon = imgVE.polygons[i];
+    if (polygon.dirty) {
+      id = polygon.label.substr(3);
+      segs[id] = {"boundary":'{"'+JSON.stringify(polygon.polygon).replace(/\[/g,"(").replace(/\]/g,")")+'"}'};
+    }
+  }
+  if (Object.keys(segs).length) {
+    //save polygon segment
+    savedata["segs"] = segs;
+    $.ajax({
+        dataType: 'json',
+        url: basepath+'/services/updateSegments.php?db='+dbName, //TODO: convert this to saveSegment service with update cache model
+        data: savedata,
+        asynch: true,
+        success: function (data, status, xhr) {
+            if (typeof data == 'object' && data.success && data.entities) {
+              imgVE.dataMgr.updateLocalCache(data);
+              if (Object.keys(data.entities.update.seg).length) {
+                var segID, polygon, segData;
+                for(segID in data.entities.update.seg) {
+                  segData = data.entities.update.seg[segID];
+                  if (segData && segData.boundary) {
+                    segLabel = 'seg'+segID;
+                    polygon = imgVE.polygons[imgVE.polygonLookup[segLabel]-1]
+                    delete polygon.dirty;
+                    polygon.polygon = segData.boundary[0]; //TODO design how to manage for multiple polygon segment
+                    polygon.center = UTILITY.getCentroid(polygon.polygon);
+                  }
+                }
+                imgVE.selectedPolygons = {};
+                imgVE.drawImage();
+                imgVE.drawImagePolygons();
+              }
+              if (data['error']) {
+                alert("An error occurred while trying to save to a segments. Error: " + data[error]);
+              }
+            }
+        },// end success cb
+        error: function (xhr,status,error) {
+            // add record failed.
+            alert("An error occurred while trying to save to a segment record. Error: " + error);
+        }
+    });// end ajax
+  }
+},
+
+
+/**
+* saves a new created polygon
+*
+*/
+
   savePolygon: function () {
     var imgVE = this, path = imgVE.getPath(),indx;
     if (path && path.length > 2) {
@@ -413,10 +471,10 @@ EDITORS.ImageVE.prototype = {
                 if (data['error']) {
                   alert("An error occurred while trying to save to a segment record. Error: " + data[error]);
                 }
-                if (data.entities) {
+//                if (data.entities) {
                   //update data
-                  imgVE.dataMgr.updateLocalCache(data,null);
-                }
+//                  imgVE.dataMgr.updateLocalCache(data,null);
+//                }
               }
           },// end success cb
           error: function (xhr,status,error) {
@@ -475,24 +533,41 @@ EDITORS.ImageVE.prototype = {
       }
     });
 
+    // save polygon
     var btnSavePolysName = this.id+'saveSeg';
     this.savePolysBtnDiv = $('<div class="toolbuttondiv">' +
                             '<button class="toolbutton iconbutton" id="'+btnSavePolysName +
                               '" title="Save image polygon as segment">&#x1F4BE;</button>'+
                             '<div class="toolbuttonlabel">Save polygon</div>'+
                            '</div>');
+    // save polygon click handler
     $('#'+btnSavePolysName,this.savePolysBtnDiv).unbind('click')
                                .bind('click',function(e) {
+                                 //TODO add code to detect select polygons dirty and call savePolygons
                                  imgVE.savePolygon();
     });
 
+    // select polygons
+    var btnSelectPolysName = this.id+'selectPolys';
+    this.selectPolysBtnDiv = $('<div class="toolbuttondiv">' +
+                            '<button class="toolbutton iconbutton" id="'+btnSelectPolysName +
+                              '" title="Select image polygons">&#x1F4BE;</button>'+
+                            '<div class="toolbuttonlabel">Select polygons</div>'+
+                           '</div>');
+    // select polygons click handler
+    $('#'+btnSelectPolysName,this.selectPolysBtnDiv).unbind('click')
+                               .bind('click',function(e) {
+                                 imgVE.selectPolygons();
+    });
+
+    // replace polygon
     var btnReplacePolyName = this.id+'updateSeg';
     this.replacePolyBtnDiv = $('<div class="toolbuttondiv">' +
                             '<button class="toolbutton iconbutton" id="'+btnReplacePolyName +
                               '" title="Replace select segment polygon with new one">&#x25C8;</button>'+
                             '<div class="toolbuttonlabel">Replace polygon</div>'+
                            '</div>');
-    // replace polygon code
+    // replace polygon click handler
     $('#'+btnReplacePolyName,this.replacePolyBtnDiv).unbind('click').bind('click',function(e) {
       if (!Object.keys(imgVE.selectedPolygons).length ||
            Object.keys(imgVE.selectedPolygons).length > 1 ) {
@@ -940,7 +1015,8 @@ EDITORS.ImageVE.prototype = {
       this.editToolbar.append(this.linkSegBtnDiv)
                   .append(this.savePolysBtnDiv)
                   .append(this.replacePolyBtnDiv)
-                  .append(this.deleteSegBtnDiv)
+                  .append(this.selectPolysBtnDiv)
+                  .append(this.deleteSegBtnDiv) 
                   .append(this.orderSegBtnDiv)
                   .append(this.autoLinkOrdBtnDiv)
                   .append(this.ordinalSetInputDiv);
@@ -1142,6 +1218,129 @@ EDITORS.ImageVE.prototype = {
   unselectAllPolygons: function () {
     this.selectedPolygons ={};
   },
+
+
+/**
+* put your comment there...
+*
+*/
+
+selectAllPolygons: function () {
+  if (Object.keys(this.polygonLookup).length) {
+    this.selectedPolygons ={};
+    for (key in this.polygonLookup) {
+      this.selectedPolygons[key] = 1;
+    }
+  }
+},
+
+
+/**
+* put your comment there...
+*
+*/
+
+moveSelectPolygons: function (dx, dy) {
+  if (Object.keys(this.selectedPolygons).length) {
+    var polygon, x, y;
+    if (!dx) {
+      dx = 0;
+    }
+    if (!dy) {
+      dy = 0;
+    }
+    if (dx || dy) {
+      for (key in this.selectedPolygons) {
+        polygon = this.polygons[this.polygonLookup[key]-1];
+        polygon.polygon = UTILITY.getTranslatedPoly(polygon.polygon,dx,dy);
+        polygon.center[0] += dx;
+        polygon.center[1] += dy;
+        polygon.dirty = true;
+        this.polygons[this.polygonLookup[key]-1] = polygon;
+      }
+    }
+  }
+  this.drawImage();
+  this.drawImagePolygons();
+},
+
+
+/**
+* put your comment there...
+*
+*/
+
+scaleSelectPolygons: function (b) {
+  var cntPoly = Object.keys(this.selectedPolygons).length;
+  if (cntPoly) {
+    var polygon, xCtr = 0, yCtr = 0, key, i, cntL = 5, orgPoly;
+    if (!b || b == 1) {
+      return;
+    }
+    for (key in this.selectedPolygons) {
+      polygon = this.polygons[this.polygonLookup[key]-1];
+      xCtr += polygon.center[0];
+      yCtr += polygon.center[1];
+    }
+    xCtr = xCtr/cntPoly;
+    yCtr = yCtr/cntPoly;
+    for (key in this.selectedPolygons) {
+      i = this.polygonLookup[key]-1;
+      polygon = Object.assign(this.polygons[i].polygon);
+      polygon = UTILITY.getTranslatedPoly(polygon,-xCtr,-yCtr,b);
+      polygon = UTILITY.getTranslatedPoly(polygon,xCtr,yCtr);
+      orgPoly = this.polygons[i].polygon;
+      while (cntL && orgPoly[0][0] == polygon[0][0] &&
+                     orgPoly[0][1] == polygon[0][1] &&
+                     orgPoly[2][0] == polygon[2][0] &&
+                     orgPoly[2][1] == polygon[2][1]) {
+        if (b > 1) {
+          b = b * 1.05;
+        } else {
+          b = b * .95
+        }
+        polygon = UTILITY.getTranslatedPoly(polygon,-xCtr,-yCtr,b);
+        polygon = UTILITY.getTranslatedPoly(polygon,xCtr,yCtr);
+      }
+      polygon.dirty = true;
+      this.polygons[i].center = UTILITY.getCentroid(polygon);
+      this.polygons[i].polygon = polygon;
+    }
+    this.drawImage();
+    this.drawImagePolygons();
+  }
+},
+
+
+/**
+* put your comment there...
+*
+*/
+
+selectPolygons: function () {
+  if (!this.path || this.path.length < 3) {
+    this.selectAllPolygons();
+  } else {
+    var bRect = UTILITY.getBoundingRect(this.path),
+        polygon, i, x, y,
+        minx = bRect[0][0],
+        maxx = bRect[1][0],
+        miny = bRect[1][1],
+        maxy = bRect[2][1];
+    this.selectedPolygons ={};
+    for (i in this.polygons) {
+      polygon = this.polygons[i];
+      x = polygon.center[0];
+      y = polygon.center[1];
+      if ( x > minx && x < maxx && y > miny && y < maxy) {
+        this.selectedPolygons[polygon.label] = 1;
+      }
+    }
+    this.path = null;
+  }
+  this.drawImage();
+  this.drawImagePolygons();
+},
 
 
 /**
@@ -1636,35 +1835,68 @@ EDITORS.ImageVE.prototype = {
       imgVE.handleWheel.call(imgVE,e); //delegate passing imgVE as context
     };
     imgVE.imgCanvas.onkeydown = function(e) {
-      var keyCode = (e.keyCode || e.which);
+      var keyCode = (e.keyCode || e.which),
+          hasSelected = Object.keys(imgVE.selectedPolygons).length > 0;
       if (keyCode > 36 && keyCode <41) {
         switch (e.keyCode || e.which) {
           case 38://'Up':
             if (e.ctrlKey || e.metaKey) {
-              imgVE.moveNavPanelRelative(0,-5);
+              if (hasSelected && e.shiftKey) {
+                imgVE.moveSelectPolygons(0,-5)
+              } else {
+                imgVE.moveNavPanelRelative(0,-5);
+              }
             } else {
-              imgVE.moveViewportRelative(0,-1);
+              if (hasSelected && e.shiftKey) {
+                imgVE.moveSelectPolygons(0,-1)
+              } else {
+                imgVE.moveViewportRelative(0,-1);
+              }
             }
             break;
           case 40://'Down':
             if (e.ctrlKey || e.metaKey) {
-              imgVE.moveNavPanelRelative(0,5);
+              if (hasSelected && e.shiftKey) {
+                imgVE.moveSelectPolygons(0,5)
+              } else {
+                imgVE.moveNavPanelRelative(0,5);
+              }
             } else {
-              imgVE.moveViewportRelative(0,1);
+              if (hasSelected && e.shiftKey) {
+                imgVE.moveSelectPolygons(0,1)
+              } else {
+                imgVE.moveViewportRelative(0,1);
+              }
             }
             break;
           case 37://"Left":
             if (e.ctrlKey || e.metaKey) {
-              imgVE.moveNavPanelRelative(-3,0);
+              if (hasSelected && e.shiftKey) {
+                imgVE.moveSelectPolygons(-3,0)
+              } else {
+                imgVE.moveNavPanelRelative(-3,0);
+              }
             } else {
-              imgVE.moveViewportRelative(-1,0);
+              if (hasSelected && e.shiftKey) {
+                imgVE.moveSelectPolygons(-1,0)
+              } else {
+                imgVE.moveViewportRelative(-1,0);
+              }
             }
             break;
           case 39://"Right":
             if (e.ctrlKey || e.metaKey) {
-              imgVE.moveNavPanelRelative(3,0);
+              if (hasSelected && e.shiftKey) {
+                imgVE.moveSelectPolygons(3,0)
+              } else {
+                imgVE.moveNavPanelRelative(3,0);
+              }
             } else {
-              imgVE.moveViewportRelative(1,0);
+              if (hasSelected && e.shiftKey) {
+                imgVE.moveSelectPolygons(1,0)
+              } else {
+                imgVE.moveViewportRelative(1,0);
+              }
             }
             break;
         }
@@ -1679,13 +1911,26 @@ EDITORS.ImageVE.prototype = {
     };
     imgVE.imgCanvas.onkeypress = function(e) {
       var key = e.which == null?String.fromCharCode(e.keyCode):
-                (e.which != 0 )?String.fromCharCode(e.which):null;
+                (e.which != 0 )?String.fromCharCode(e.which):null,
+          hasSelected = Object.keys(imgVE.selectedPolygons).length > 0;
 //      alert('-keypress img in imageVE '+key);
       if (key == '+' || key == '=') {
-        imgVE.zoomCenter.call(imgVE,-1);
+        if (hasSelected ) { // && e.altKey && (e.ctrlKey || e.metaKey)) {
+          imgVE.scaleSelectPolygons(1.01)
+          e.stopImmediatePropagation();
+          return false;
+        } else {
+          imgVE.zoomCenter.call(imgVE,-1);
+        }
       } else if (key == '-'){
-        imgVE.zoomCenter.call(imgVE,1);
-      } else if (key == 's' && (e.ctrlKey || e.metaKey)) {
+        if (hasSelected) { // && e.altKey && (e.ctrlKey || e.metaKey)) {
+          imgVE.scaleSelectPolygons(0.99)
+          e.stopImmediatePropagation();
+          return false;
+        } else {
+          imgVE.zoomCenter.call(imgVE,1);
+        }
+       } else if (key == 's' && (e.ctrlKey || e.metaKey)) {
         imgVE.savePolygon();
         e.stopImmediatePropagation();
         return false;
@@ -1785,6 +2030,15 @@ EDITORS.ImageVE.prototype = {
         imgVE.focusMode = 'focused';
         imgVE.imgCanvas.focus();
         imgVE.layoutMgr.curLayout.trigger('focusin',imgVE.id);
+      }
+      if (imgVE.dragnav && imgVE.dragnav == "dragendselected") {
+        if (e.shiftKey && Object.keys(imgVE.selectedPolygons).length &&
+            confirm("Would you like to save the position of the selected polygons?")) {
+          //save selected polygon position
+          imgVE.savePolygons();
+        }
+        delete imgVE.dragnav;
+        return;
       }
       if (imgVE.orderSegMode == "resetting" || imgVE.orderSegMode == "setting") { //(re)setting segment(s) ordinal so ignore clicks
         return;
@@ -1900,21 +2154,21 @@ EDITORS.ImageVE.prototype = {
         e.preventDefault();
         e.stopImmediatePropagation();
         return false;
-      }else if (e.altKey) { //user wants set start point for path
+      } else if (e.altKey) { //user wants set start point for path
         imgVE.path = [[x,y]];
         imgVE.segMode = "path";
         imgVE.redrawPath();
-      }else if (imgVE.segMode == "path"){
+      } else if (imgVE.segMode == "path"){
         if ( imgVE.path && imgVE.path.length > 2 && //user click on start point so end polygon draw
             Math.abs(imgVE.path[0][0] - x) <= 3 *imgVE.image.width/imgVE.imgCanvas.width*imgVE.zoomFactor/100 &&
             Math.abs(imgVE.path[0][1] - y)<= 3 *imgVE.image.height/imgVE.imgCanvas.height*imgVE.zoomFactor/100) {
           imgVE.segMode = "done";
           imgVE.redrawPath();
-        }else{ //add point to path
+        } else{ //add point to path
           imgVE.path.push([x,y]);
           imgVE.redrawPath();
         }
-      }else if (imgVE.path && imgVE.path.length>0){
+      } else if (imgVE.path && imgVE.path.length>0){
 //        imgVE.path = null;
 //        imgVE.drawImage();
       }
@@ -1929,7 +2183,7 @@ EDITORS.ImageVE.prototype = {
         imgVE.dragnav = 'down';
         //store drag start
         imgVE.drgStart = imgVE.eventToCanvas(e, imgVE.imgCanvas);
-      e.preventDefault();
+        e.preventDefault();
         e.stopImmediatePropagation();
         return false;
       }
@@ -1958,9 +2212,19 @@ EDITORS.ImageVE.prototype = {
         imgVE.imgCanvas.style.cursor = 'grabbing';
         //get new postion
         newPos = imgVE.eventToCanvas(e, imgVE.imgCanvas);
-        //move image to new location
-        imgVE.moveViewportRelative((imgVE.drgStart[0] - newPos[0])*imgVE.vpSize.width/imgVE.imgCanvas.width,
-                                    (imgVE.drgStart[1] - newPos[1])*imgVE.vpSize.height/imgVE.imgCanvas.height);
+        //calc delta
+        if (e.shiftKey) { 
+          //move selected polygons to new location
+          dx = (imgVE.drgStart[0] - newPos[0]);
+          dy = (imgVE.drgStart[1] - newPos[1]);
+          imgVE.dragnav = 'moveselected';
+          imgVE.moveSelectPolygons(-dx,-dy);
+        } else {
+          //move image to new location
+          dx = (imgVE.drgStart[0] - newPos[0])*imgVE.vpSize.width/imgVE.imgCanvas.width;
+          dy = (imgVE.drgStart[1] - newPos[1])*imgVE.vpSize.height/imgVE.imgCanvas.height;
+          imgVE.moveViewportRelative(dx,dy);
+        }
         imgVE.drgStart = newPos;
         imgVE.draw()
         e.preventDefault();
@@ -1999,8 +2263,8 @@ EDITORS.ImageVE.prototype = {
       if ((e.ctrlKey || e.metaKey) || e.type == "touchend") { // || isDragNavigation ) { //user ending drag navigation
         //close flag
         //reset cursor to grab if ctrl else to pointer
-        if (imgVE.dragnav == 'move' || imgVE.dragnav == 'down') {
-          delete imgVE.dragnav;
+        if (imgVE.dragnav == 'move' || imgVE.dragnav == 'moveselected' || imgVE.dragnav == 'down') {
+          imgVE.dragnav = (imgVE.dragnav == 'moveselected'?"dragendselected":"dragend");
           imgVE.imgCanvas.style.cursor = 'crosshair';
           e.stopImmediatePropagation();
         }else{
@@ -2686,7 +2950,7 @@ EDITORS.ImageVE.prototype = {
         }
       }
       if ( this.orderSegMode != "on" ) {
-        this.imgContext.strokeStyle = polygon.hilite? "#DDDDDD" : (this.selectedPolygons[polygon.label]? "#DDDDDD" : polygon.color);
+        this.imgContext.strokeStyle = polygon.hilite? "#DDDDDD" : (this.selectedPolygons[polygon.label]? "#DDDDDD" : (polygon.dirty? "orange":polygon.color));
         if (this.showPolygonNumbers && polygon.order) {// draw order numer if there is one
           this.imgContext.lineWidth = 1;
           this.imgContext.fillStyle = this.imgContext.strokeStyle;

@@ -89,21 +89,27 @@ var UTILITY = UTILITY || {};
 * put your comment there...
 *
 * @param points
-* @param newOrigX
-* @param newOrigY
+* @param dX
+* @param dY
 * @param {Number} scaleFactor
 *
 * @returns {Array}
 */
 
-  UTILITY.getTranslatedPoly = function (points,newOrigX, newOrigY, scaleFactor) {
+  UTILITY.getTranslatedPoly = function (points, dX, dY, scaleFactor) {
     var poly = [];
     var i;
-    if (!scaleFactor) scaleFactor = 1;
-    for(i=0;i<points.length;i++){
-      poly.push([scaleFactor*(points[i][0]+newOrigX), scaleFactor*(points[i][1]+newOrigY)]);
+    if (!scaleFactor) {
+      for(i=0;i<points.length;i++){
+        poly.push([(points[i][0]+dX), (points[i][1]+dY)]);
+      }
+      return poly;
+    } else {
+      for(i=0;i<points.length;i++){
+        poly.push([Math.round((points[i][0]+dX)*scaleFactor), Math.round((points[i][1]+dY)*scaleFactor)]);
+      }
+      return poly;
     }
-    return poly;
   };
 
 
