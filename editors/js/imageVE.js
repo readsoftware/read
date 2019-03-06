@@ -542,9 +542,23 @@ savePolygons: function () {
                            '</div>');
     // save polygon click handler
     $('#'+btnSavePolysName,this.savePolysBtnDiv).unbind('click')
-                               .bind('click',function(e) {
-                                 //TODO add code to detect select polygons dirty and call savePolygons
-                                 imgVE.savePolygon();
+                      .bind('click',function(e) {
+                        //add code to detect select polygons dirty and call savePolygons
+                        var hasSelectedDirty = false, i, cnt;
+                        if (imgVE.polygons && imgVE.polygons.length) {
+                          cnt = imgVE.polygons.length;
+                          for(i=0; i<cnt; i++) {
+                            if (imgVE.polygons[i].dirty) {
+                              hasSelectedDirty = true;
+                              break;
+                            }
+                          }
+                        }
+                        if (hasSelectedDirty) {
+                          imgVE.savePolygons();
+                        } else {
+                          imgVE.savePolygon();
+                        }
     });
 
     // select polygons
@@ -1273,7 +1287,7 @@ moveSelectPolygons: function (dx, dy) {
 scaleSelectPolygons: function (b) {
   var cntPoly = Object.keys(this.selectedPolygons).length;
   if (cntPoly) {
-    var polygon, xCtr = 0, yCtr = 0, key, i, cntL = 5, orgPoly;
+    var polygon, xCtr = 0, yCtr = 0, key, i, cntL, orgPoly, sfactor;
     if (!b || b == 1) {
       return;
     }
@@ -1282,27 +1296,31 @@ scaleSelectPolygons: function (b) {
       xCtr += polygon.center[0];
       yCtr += polygon.center[1];
     }
-    xCtr = xCtr/cntPoly;
-    yCtr = yCtr/cntPoly;
+    xCtr = Math.round(xCtr/cntPoly);
+    yCtr = Math.round(yCtr/cntPoly);
     for (key in this.selectedPolygons) {
       i = this.polygonLookup[key]-1;
+      sfactor = b;
+      cntL = 5;
       polygon = Object.assign(this.polygons[i].polygon);
-      polygon = UTILITY.getTranslatedPoly(polygon,-xCtr,-yCtr,b);
+      polygon = UTILITY.getTranslatedPoly(polygon,-xCtr,-yCtr,sfactor);
       polygon = UTILITY.getTranslatedPoly(polygon,xCtr,yCtr);
       orgPoly = this.polygons[i].polygon;
+      // try up to cntL times to have scale change polygon
       while (cntL && orgPoly[0][0] == polygon[0][0] &&
                      orgPoly[0][1] == polygon[0][1] &&
                      orgPoly[2][0] == polygon[2][0] &&
                      orgPoly[2][1] == polygon[2][1]) {
-        if (b > 1) {
-          b = b * 1.05;
+        if (sfactor > 1) {
+          sfactor = sfactor * 1.05;
         } else {
-          b = b * .95
+          sfactor = sfactor * .95
         }
         polygon = UTILITY.getTranslatedPoly(polygon,-xCtr,-yCtr,b);
         polygon = UTILITY.getTranslatedPoly(polygon,xCtr,yCtr);
+        cntL--;
       }
-      polygon.dirty = true;
+      this.polygons[i].dirty = true;
       this.polygons[i].center = UTILITY.getCentroid(polygon);
       this.polygons[i].polygon = polygon;
     }
@@ -1338,6 +1356,7 @@ selectPolygons: function () {
     }
     this.path = null;
   }
+  this.imgCanvas.focus();
   this.drawImage();
   this.drawImagePolygons();
 },
