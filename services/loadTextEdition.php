@@ -123,7 +123,7 @@
   $publicOnly = false;
   $userOnly = false;
   $saveEditionToCache = false;
-  $ednID = (array_key_exists('edn',$_REQUEST)? $_REQUEST['edn']:null);
+  $ednID = (array_key_exists('edn',$_REQUEST)? $_REQUEST['edn']:(array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null));
   $edition = null;
   if ($ednID) {
     $edition = new Edition($ednID);
