@@ -333,8 +333,8 @@
       Entity::getIDofTermParentLabel('linephysical-textphysical'),//warning!!! term dependency
       Entity::getIDofTermParentLabel('analysis-sequencetype'),//warning!!! term dependency
       Entity::getIDofTermParentLabel('chapter-analysis'),//warning!!! term dependency
-      Entity::getIDofTermParentLabel('rootref-textreference'),//warning!!! term dependency
-      Entity::getIDofTermParentLabel('textreference-sequencetype')//warning!!! term dependency
+      Entity::getIDofTermParentLabel('rootref-textreferences'),//warning!!! term dependency
+      Entity::getIDofTermParentLabel('textreferences-sequencetype')//warning!!! term dependency
     );
     if ($seqText) {
         array_push($ignoreTypeIDs, Entity::getIDofTermParentLabel('text-sequencetype'));//warning!!! term dependency

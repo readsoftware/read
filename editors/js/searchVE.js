@@ -58,7 +58,7 @@ EDITORS.SearchVE = function(searchVECfg) {
   this.searchNavBar = searchVECfg['searchNavBar'] ? searchVECfg['searchNavBar']:null;
   this.searchNavBar.addClass('searchNavBar');
   this.id ="searchVE";
-  this.pageSize = 3;
+  this.pageSize = 10;
   this.isLoading = false;
   this.init();
   return this;

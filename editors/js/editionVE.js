@@ -310,11 +310,36 @@ EDITORS.EditionVE.prototype = {
       this.setDefaultSeqType(null);
     }
     if (this.entPropVE && this.entPropVE.createNewSequence) {
-      this.entPropVE.createNewSequence(this.defaultSeqTypeID,this.getSelectionEntityGIDs());
+      this.entPropVE.createNewSequence(this.defaultSeqTypeID,
+                                       this.getSelectionEntityGIDs(),
+                                       function(entTag) {
+                                         $('.editContainer').trigger('structureChange',[ednVE.id,ednVE.edition.id,entTag]); 
+                                       });
       this.showProperties(true);
     }
     DEBUG.traceExit("addSequence");
   },
+
+
+/**
+* add a text reference sequence entity to this edition
+*/
+
+addTextReference: function () {
+  DEBUG.traceEntry("addTextReference");
+  var ednVE = this,
+      externalRefID = this.dataMgr.termInfo.idByTerm_ParentLabel['externalreference-textreferences'];
+
+  if (externalRefID && this.entPropVE && this.entPropVE.createNewSequence) {
+    this.entPropVE.createNewSequence(externalRefID,
+                                     this.getSelectionEntityGIDs(),
+                                     function(entTag) {
+                                       $('.editContainer').trigger('structureChange',[ednVE.id,ednVE.edition.id,entTag]); 
+                                     });
+    this.showProperties(true);
+  }
+  DEBUG.traceExit("addTextReference");
+},
 
 
 /**
@@ -700,6 +725,7 @@ EDITORS.EditionVE.prototype = {
         btnShowSepName = this.id+'showtoksep',
         btnShowPropsName = this.id+'showprops',
         btnAddSequenceName = this.id+'addsequence',
+        btnAddTextRefName = this.id+'addtextref',
         btnInsertLineName = this.id+'insertline',
         btnDeleteLineName = this.id+'deleteline',
         ddbtnShowTagName = this.id+'showtagbutton',
@@ -1010,6 +1036,18 @@ EDITORS.EditionVE.prototype = {
       }
     });
 
+    this.addTextRefBtnDiv = $('<div class="toolbuttondiv">' +
+                            '<button class="toolbutton" id="'+btnAddTextRefName +
+                              '" title="Create a new text reference set">+ Reference</button>'+
+                            '<div class="toolbuttonlabel">Add Text Ref</div>'+
+                           '</div>');
+    this.addTextRefBtn = $('#'+btnAddTextRefName,this.addTextRefBtnDiv);
+    this.addTextRefBtn.unbind('click').bind('click',function(e) {
+      if (ednVE.addTextReference ) {
+        ednVE.addTextReference();
+      }
+    });
+
       var btnLinkOrdName = this.id+'LinkOrd';
       this.linkOrdBtnDiv = $('<div class="toolbuttondiv">' +
                               '<button class="toolbutton" id="'+btnLinkOrdName +
@@ -1177,6 +1215,7 @@ EDITORS.EditionVE.prototype = {
     this.editToolbar.append(this.deleteLineBtnDiv);
     this.editToolbar.append(this.curTagBtnDiv);
     this.editToolbar.append(this.addSequenceBtnDiv);
+    this.editToolbar.append(this.addTextRefBtnDiv);
     this.editToolbar.append(this.linkOrdBtnDiv);
     this.editToolbar.append(this.addSyllableBtnDiv);
     this.layoutMgr.registerEditToolbar(this.id,this.editToolbar);
@@ -1292,6 +1331,7 @@ EDITORS.EditionVE.prototype = {
     this.deleteLineBtnDiv.show();
     this.addSyllableBtnDiv.show();
     this.addSequenceBtnDiv.hide();
+    this.addTextRefBtnDiv.hide();
     this.linkOrdBtnDiv.hide();
     this.showSeqBtnDiv.hide();
     this.showTagBtnDiv.hide();
@@ -1325,27 +1365,7 @@ EDITORS.EditionVE.prototype = {
       } else {
         this.changeToModify(e,editModeBtn);
       }
-/*      this.editMode = "modify";
-      editModeBtn.html("Modify");
-      if (!this.sclEd) {
-        this.sclEd = new EDITORS.sclEditor(ednVE);//todo guard against syllableEditor.js not included
-      } else {
-        this.sclEd.reInit();
-      }
-      this.insertLineBtnDiv.show();
-      this.deleteLineBtnDiv.show();
-      this.addSyllableBtnDiv.show();
-      this.addSequenceBtnDiv.hide();
-      this.linkOrdBtnDiv.hide();
-      this.showSeqBtnDiv.hide();
-      this.showTagBtnDiv.hide();
-      this.objLevelBtn.attr('disabled','disabled');
-      this.edStyleBtn.attr('disabled','disabled');
-      this.linkSclBtn.attr('disabled','disabled');
-      this.formatBtn.attr('disabled','disabled');
-      $(ednVE.contentDiv).addClass("modify");
-      */
-    //TCM mode
+     //TCM mode
     } else if (ednVE.editMode == "modify") {
       ednVE.editMode = "tcm";
       editModeBtn.html("Text Critical");
@@ -1376,7 +1396,8 @@ EDITORS.EditionVE.prototype = {
            ednVE.edition &&
            ednVE.edition.editibility &&
           !ednVE.layoutMgr.userVE.isEditAsEditibilityMatch(ednVE.edition.editibility)) {
- this.addSequenceBtnDiv.hide();
+        this.addSequenceBtnDiv.hide();
+        this.addTextRefBtnDiv.hide();
         this.linkOrdBtnDiv.hide();
         this.objLevelBtn.attr('disabled','disabled');
         this.edStyleBtn.attr('disabled','disabled');
@@ -1414,6 +1435,7 @@ EDITORS.EditionVE.prototype = {
         this.formatBtn.removeAttr('disabled');
         this.curTagBtnDiv.hide();
         this.addSequenceBtnDiv.show();
+        this.addTextRefBtnDiv.show();
         if (this.autoLinkOrdMode) {
           this.linkOrdBtnDiv.show();
         }
@@ -2985,11 +3007,11 @@ mergeLine: function (direction,cbError) {
     * @param string ednID Identifies the edition with the structural change
     */
 
-   function structureChangeHandler(e,senderID, ednID) {
+   function structureChangeHandler(e,senderID, ednID, seqTag) {
     if (senderID == ednVE.id || ednVE.edition.id != ednID) {
       return;
     }
-    DEBUG.log("event","struct change recieved by editionVE in "+ednVE.id+" from "+senderID);
+    DEBUG.log("event","struct change recieved by editionVE in "+ednVE.id+" from "+senderID+" for "+seqTag);
     ednVE.refreshSeqMarkers();
   };
 

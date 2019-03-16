@@ -143,8 +143,8 @@ class Parser {
     $this->_sectionID = $this->_termLookups['section-chapter'];//warning!!! term dependency
     $this->_stanzaID = $this->_termLookups['stanza-chapter'];//warning!!! term dependency
     $this->_padaID = $this->_termLookups['pāda-stanza'];//warning!!! term dependency
-    $this->_rootrefID = $this->_termLookups['rootref-textreference'];//warning!!! term dependency
-    $this->_textreferenceID = $this->_termLookups['textreference-sequencetype'];//warning!!! term dependency
+    $this->_rootrefID = $this->_termLookups['rootref-textreferences'];//warning!!! term dependency
+    $this->_textreferenceID = $this->_termLookups['textreferences-sequencetype'];//warning!!! term dependency
     $this->_textphysicalID = $this->_termLookups['textphysical-sequencetype'];//warning!!! term dependency
     $this->_textID = $this->_termLookups['text-sequencetype'];//warning!!! term dependency
     $this->_textdivisionID = $this->_termLookups['textdivision-text'];

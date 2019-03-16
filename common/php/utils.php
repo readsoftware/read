@@ -871,6 +871,30 @@ function getLinkTypeInfo() {
   return $linkTypeInfo;
 }
 
+
+/**
+* validate child term is decendant of parent term
+*
+* @param int $pTypeID Term id
+* @param int $cTypeID Term id
+* @param int $maxDepth indicates a limit for the search (default 8 levels)
+* @return boolean
+*/
+
+function isSubTerm($pTypeID, $cTypeID, $maxDepth = 8) {
+  if ($pTypeID && $cTypeID && $pTypeID != $cTypeID){
+    $pTermID = $cTypeID;
+    while ($maxDepth--) {
+      $pTermID = Entity::getParentIDFromID($pTermID);
+      if ($pTermID == $pTypeID) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+
 /**
 * get child term Term Iterator given a Term id
 *

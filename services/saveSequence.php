@@ -99,6 +99,8 @@ if (!$data) {
         array_push($errors,"error loading sequence id $seqID - ".join(",",$sequence->getErrors()));
       } else if ($sequence->isReadonly()) {
         array_push($errors,"error sequence id $seqID - is readonly");
+      } else if ($sequence->isMarkedDelete()) {
+        array_push($errors,"error sequence id $seqID - is marked for delete");
       } else {
         $seqGID = $sequence->getGlobalID();
       }
@@ -147,11 +149,12 @@ if (!$data) {
       $addEntityGID = $data['addEntityGID'];
     }
     $addSubSeqTypeID = null;
-    if ( isset($data['addSubSeqTypeID'])) {//get addSubSeqTypeID for sequence
+    if ( isset($data['addSubSeqTypeID'])) {//get addSubSeqTypeID for sub sequence
       $addSubSeqTypeID = $data['addSubSeqTypeID'];
     }
   }
 }
+$isSequenceUpdate = ($seqID && $sequence);
 if (count($errors) == 0) {
   if (!$sequence || ($label === null && $superscript === null && !$typeID &&
                    !isset($entityIDs) && !$removeEntityGID && !$addEntityGID && !$addSubSeqTypeID)) {
@@ -159,7 +162,7 @@ if (count($errors) == 0) {
   } else {//use data to update sequence and save
     if ($label !== null) {
       $sequence->setLabel($label);
-      if ($seqID) {
+      if ($isSequenceUpdate) {
         addUpdateEntityReturnData("seq",$seqID,'value', $sequence->getLabel());
         addUpdateEntityReturnData("seq",$seqID,'label', $sequence->getLabel());
       }
@@ -170,19 +173,20 @@ if (count($errors) == 0) {
     }
     if ($superscript !== null) {
       $sequence->setSuperScript($superscript);
-      if ($seqID) {
+      if ($isSequenceUpdate) {
         addUpdateEntityReturnData("seq",$seqID,'sup', $sequence->getSuperScript());
       }
+      //todo check if superscript can impact cache
     }
     if ($typeID) {
       $sequence->setTypeID($typeID);
-      if ($seqID) {
+      if ($isSequenceUpdate) {
         addUpdateEntityReturnData("seq",$seqID,'typeID', $sequence->getTypeID());
       }
     }
     if (isset($entityIDs)) {
       $sequence->setEntityIDs($entityIDs);
-      if ($seqID) {
+      if ($isSequenceUpdate) {
         addUpdateEntityReturnData("seq",$seqID,'entityIDs', $sequence->getEntityIDs());
       }
     }
@@ -191,7 +195,7 @@ if (count($errors) == 0) {
       $entGIDIndex = array_search($removeEntityGID,$entityIDs);
       array_splice($entityIDs,$entGIDIndex,1);
       $sequence->setEntityIDs($entityIDs);
-      if ($seqID) {
+      if ($isSequenceUpdate) {
         addUpdateEntityReturnData("seq",$seqID,'entityIDs', $sequence->getEntityIDs());
       }
       if ($edition && strpos($removeEntityGID,'seq')!== false && !$isSeqMove){//removing a sequence so if substructure add back to edition sequenceIDs
@@ -209,30 +213,34 @@ if (count($errors) == 0) {
           }
         }
       }
-    } else if ($addSubSeqTypeID && $seqID) { // use $seqID to indicate existing parent sequence
+    } else if ($addSubSeqTypeID && $isSequenceUpdate) { // use $seqID to indicate existing parent sequence
       //todo check that type is a sequence type and a sub type of parent sequence
-      //create new subsequence
-      $subSequence = new Sequence();
-      $subSequence->setOwnerID($defOwnerID);
-      $subSequence->setVisibilityIDs($defVisIDs);
-      if ($defAttrIDs){
-        $subSequence->setAttributionIDs($defAttrIDs);
-      }
-      $subSequence->setTypeID($addSubSeqTypeID);
-      $subSequence->save();
-      if ($subSequence->hasError()) {
-        array_push($errors,"error creating new subsequence - ".join(",",$subSequence->getErrors()));
+      if (!isSubTerm($sequence->getTypeID(),$addSubSeqTypeID)) {
+        array_push($errors,"error creating new subsequence - types are not related");
       } else {
-        addNewEntityReturnData('seq',$subSequence);
-        $subSequenceGID = $subSequence->getGlobalID();
-        $entityIDs = $sequence->getEntityIDs();
-        if ($entityIDs && count($entityIDs)>0) {
-          array_push($entityIDs,$subSequenceGID);
-        } else {
-          $entityIDs = array($subSequenceGID);
+        //create new subsequence
+        $subSequence = new Sequence();
+        $subSequence->setOwnerID($defOwnerID);
+        $subSequence->setVisibilityIDs($defVisIDs);
+        if ($defAttrIDs){
+          $subSequence->setAttributionIDs($defAttrIDs);
         }
-        $sequence->setEntityIDs($entityIDs);
-        addUpdateEntityReturnData("seq",$seqID,'entityIDs', $sequence->getEntityIDs());
+        $subSequence->setTypeID($addSubSeqTypeID);
+        $subSequence->save();
+        if ($subSequence->hasError()) {
+          array_push($errors,"error creating new subsequence - ".join(",",$subSequence->getErrors()));
+        } else {
+          addNewEntityReturnData('seq',$subSequence);
+          $subSequenceGID = $subSequence->getGlobalID();
+          $entityIDs = $sequence->getEntityIDs();
+          if ($entityIDs && count($entityIDs)>0) {
+            array_push($entityIDs,$subSequenceGID);
+          } else {
+            $entityIDs = array($subSequenceGID);
+          }
+          $sequence->setEntityIDs($entityIDs);
+          addUpdateEntityReturnData("seq",$seqID,'entityIDs', $sequence->getEntityIDs());
+        }
       }
     } else if ($addEntityGID && $edition) {
       $skip = false;
@@ -251,7 +259,7 @@ if (count($errors) == 0) {
           $entityIDs = array($addEntityGID);
         }
         $sequence->setEntityIDs($entityIDs);
-        if ($seqID) {
+        if ($isSequenceUpdate) {
           addUpdateEntityReturnData("seq",$seqID,'entityIDs', $sequence->getEntityIDs());
         }
         if ($edition && strpos($addEntityGID,'seq')!== false){//adding a sequence so check for removal from edition sequenceIDs
@@ -275,17 +283,70 @@ if (count($errors) == 0) {
     if ($sequence->hasError()) {
       array_push($errors,"error updating sequence '".$sequence->getLabel()."' - ".$sequence->getErrors(true));
     }else {
-      if (!$seqID){
+      if (!$isSequenceUpdate){ //adding a new sequence
         addNewEntityReturnData('seq',$sequence);
         if ($edition){//new sequence so attach it to edition sequenceIDs
-          $seqIDs = $edition->getSequenceIDs();
-          array_push($seqIDs,$sequence->getID());
-          $edition->setSequenceIDs($seqIDs);
-          $edition->save();
-          if ($edition->hasError()) {
-            array_push($errors,"error updating edition '".$edition->getDescription()."' - ".$edition->getErrors(true));
-          }else {
-            addUpdateEntityReturnData("edn",$edition->getID(),'seqIDs', $edition->getSequenceIDs());
+          //first check if this is a text reference type sequence
+          $textRefTypeID = ENTITY::getIDofTermParentLabel("textreferences-sequencetype");//warning!!!! term dependency
+          if (isSubTerm($textRefTypeID,$sequence->getTypeID())) {//text reference seq created need to add it to container
+            //check if container exist
+            $edSeqs = $edition->getSequences(true);
+            $textReferenceSeq = null;
+            foreach ($edSeqs as $edSequence) {
+              $seqType = $edSequence->getType();
+              if (!$textReferenceSeq && $seqType == "TextReferences"){//warning!!!! term dependency
+                $textReferenceSeq = $edSequence;
+                break;
+              }
+            }
+            if (!$textReferenceSeq) {
+              $textReferenceSeq = new Sequence();
+              $textReferenceSeq->setOwnerID($defOwnerID);
+              $textReferenceSeq->setVisibilityIDs($defVisIDs);
+              if ($defAttrIDs){
+                $textReferenceSeq->setAttributionIDs($defAttrIDs);
+              }
+              $textReferenceSeq->setTypeID($textRefTypeID);
+              $textReferenceSeq->setEntityIDs(array($sequence->getGlobalID()));
+              $textReferenceSeq->save();
+              if ($textReferenceSeq->hasError()) {
+                array_push($errors,"error creating new textReference container - ".join(",",$textReferenceSeq->getErrors()));
+              } else {
+                addNewEntityReturnData('seq',$textReferenceSeq);
+                $seqID = $textReferenceSeq->getID(); //need to link container into edition
+              }
+            } else {
+              $seqGID = $sequence->getGlobalID();
+              $entityIDs = $textReferenceSeq->getEntityIDs();
+              if ($entityIDs && count($entityIDs)>0) {
+                //check if already in entityIDs
+                if (!in_array($seqGID,$entityIDs)){
+                  array_push($entityIDs,$seqGID);
+                }
+              } else {
+                $entityIDs = array($seqGID);
+              }
+              $textReferenceSeq->setEntityIDs($entityIDs);
+              $textReferenceSeq->save();
+              if ($textReferenceSeq->hasError()) {
+                array_push($errors,"error updating textReference container - ".join(",",$textReferenceSeq->getErrors()));
+              } else {
+                addUpdateEntityReturnData("seq",$textReferenceSeq->getID(),'entityIDs', $textReferenceSeq->getEntityIDs());
+              }
+            }
+          } else { // not text reference and new so link it into the edition for now
+            $seqID = $sequence->getID();
+          }
+          if ($seqID) {
+            $seqIDs = $edition->getSequenceIDs();
+            array_push($seqIDs,$seqID);
+            $edition->setSequenceIDs($seqIDs);
+            $edition->save();
+            if ($edition->hasError()) {
+              array_push($errors,"error updating edition '".$edition->getDescription()."' - ".$edition->getErrors(true));
+            }else {
+              addUpdateEntityReturnData("edn",$edition->getID(),'seqIDs', $edition->getSequenceIDs());
+            }
           }
         }
       }

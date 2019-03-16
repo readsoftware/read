@@ -715,7 +715,7 @@ EDITORS.SequenceVE.prototype = {
       if (senderID == seqVE.id || !seqVE.linkTargetTag || !entTag) {
         return;
       }
-      DEBUG.log("event","selection changed recieved by sequenceVE in "+seqVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
+      DEBUG.log("event","selection changed received by sequenceVE in "+seqVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
       var parentEntTag = seqVE.linkTargetTag,
           linkEntGID = entTag.substring(0,3)+":"+entTag.substring(3),
           $linkElement = $('.linktarget',seqVE.$structTree);
@@ -763,7 +763,7 @@ EDITORS.SequenceVE.prototype = {
                   seqVE.$structTree.jqxTree('expandItem', elem);
                 }
               }
-              $('.editContainer').trigger('structureChange',[seqVE.id,seqVE.edition.id]);
+              $('.editContainer').trigger('structureChange',[seqVE.id,seqVE.edition.id, newSeqID]);
             },
             null);
       }
@@ -772,13 +772,36 @@ EDITORS.SequenceVE.prototype = {
     $(this.editDiv).unbind('structurelinkresponse').bind('structurelinkresponse', structureLinkResponseHandler);
 
 
-/**
-* put your comment there...
-*
-* @param object e System event object
-*
-* @returns true|false
-*/
+    /**
+    * handle 'structureChange' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string ednID Identifies the edition with the structural change
+    * @param string entTag Identifies the entity that changed the structural change
+    */
+
+    function structureChangeHandler(e,senderID, ednID, entTag) {
+      if (senderID == seqVE.id || seqVE.edition.id != ednID) {
+        return;
+      }
+      var newSeqID = entTag.substring(3);
+      DEBUG.log("event","struct change recieved by sequenceVE in "+seqVE.id+" from "+senderID);
+      seqVE.showStructureTree();
+      seqVE.entPropVE.showEntity("seq",newSeqID);
+      seqVE.showProperties(true);
+    };
+
+    $(this.editDiv).unbind('structureChange').bind('structureChange', structureChangeHandler);
+
+
+    /**
+    * put your comment there...
+    *
+    * @param object e System event object
+    *
+    * @returns true|false
+    */
 
     function seqVEClickHandler(e) {
       seqVE.$contentDiv.focus();
@@ -1374,8 +1397,9 @@ EDITORS.SequenceVE.prototype = {
 */
 
   showStructureTree: function() {
-    var seqVE = this, ednID = this.edition.id, seqGIDs, analySeqID,
+    var seqVE = this, ednID = this.edition.id, seqGIDs, analySeqID,// txtRefSeqID,
         analysTrmID = this.dataMgr.getIDFromTermParentTerm("Analysis","SequenceType"),
+//        textRefTrmID = this.dataMgr.getIDFromTermParentTerm("TextReferences","SequenceType"),
         textTrmID = this.dataMgr.getIDFromTermParentTerm("Text","SequenceType"),
         textDivTrmID = this.dataMgr.getIDFromTermParentTerm("TextDivision","Text"),
         textPhysTrmID = this.dataMgr.getIDFromTermParentTerm("TextPhysical","SequenceType"),
@@ -1386,10 +1410,13 @@ EDITORS.SequenceVE.prototype = {
           sequence.typeID != textDivTrmID &&
           sequence.typeID != textPhysTrmID &&
           sequence.typeID != linePhysTrmID) {
-        if (sequence.typeID == analysTrmID) {
-          analySeqID = str;
-        }
-        return "seq:"+str;
+          if (sequence.typeID == analysTrmID) {
+            analySeqID = str;
+          }
+//          if (sequence.typeID == textRefTrmID) {
+//            txtRefSeqID = str;
+//          }
+          return "seq:"+str;
       }
     });
     if (!analySeqID) {
@@ -1403,8 +1430,23 @@ EDITORS.SequenceVE.prototype = {
       } else {
         alert("no analysis structure for this edition. Please add an Analysis Sequence.");
       }
-      return;
+      return false;
     }
+    /*
+    if (!txtRefSeqID) {
+      //no text so create one.
+      if (this.entPropVE && this.entPropVE.createNewSequence) {
+        this.entPropVE.createNewSequence(textRefTrmID,null,function (newSeqID) {
+          seqVE.showStructureTree();
+          seqVE.entPropVE.showEntity("seq",newSeqID);
+          seqVE.showProperties(true);
+        });
+      } else {
+        alert("no analysis structure for this edition. Please add an Analysis Sequence.");
+      }
+      return false;
+    }
+    */
     seqVE.$structTree.jqxTree({
           source: seqVE.getSubItems(seqGIDs,1),
           enableHover: false,
@@ -1452,27 +1494,33 @@ EDITORS.SequenceVE.prototype = {
     seqVE.attachMenuEventHandler(seqVE.$structTree);
     seqVE.$structTree.on('select',function (e) {
       var item = $(this).jqxTree('getItem', args.element),
-          label = item.label, entTag = item.id;
-      seqVE.propMgr.showVE('entPropVE',entTag);
+          entTag;
+      if (item) {
+        entTag = item.id;
+        seqVE.propMgr.showVE('entPropVE',entTag);
+      }
       $('.linktarget',seqVE.$structTree).removeClass('linktarget');
       seqVE.linkTargetTag = null;
     });
     seqVE.$structTree.unbind("expand").bind("expand", function (e) {
       var elem = e.args.element,
         item = seqVE.$structTree.jqxTree('getItem', elem),
-        tag = item.id, subItems,
-        entity = seqVE.dataMgr.getEntityFromGID(tag),
+        tag, entity, subItems, loadElement;
+      if (item) {
+        tag = item.id;
+        entity = seqVE.dataMgr.getEntityFromGID(tag);
         loadElement = null;
-      if (item.hasItems && item.nextItem.id == (item.id + "children")) {//dynamic load case
-        loadElement = item.nextItem.element;
-      }
-      if (loadElement) {
-        if (entity && entity.entityIDs && entity.entityIDs.length) {
-          subItems = seqVE.getSubItems(entity.entityIDs,0);
-          if (subItems) {
-            seqVE.$structTree.jqxTree('addTo', subItems, elem);
-            seqVE.$structTree.jqxTree('removeItem', loadElement);
-            seqVE.attachMenuEventHandler($(elem));
+        if (item && item.hasItems && item.nextItem.id == (item.id + "children")) {//dynamic load case
+          loadElement = item.nextItem.element;
+        }
+        if (loadElement) {
+          if (entity && entity.entityIDs && entity.entityIDs.length) {
+            subItems = seqVE.getSubItems(entity.entityIDs,0);
+            if (subItems) {
+              seqVE.$structTree.jqxTree('addTo', subItems, elem);
+              seqVE.$structTree.jqxTree('removeItem', loadElement);
+              seqVE.attachMenuEventHandler($(elem));
+            }
           }
         }
       }
@@ -1484,6 +1532,7 @@ EDITORS.SequenceVE.prototype = {
         }
         return true;
     });
+    return true;
   }
 
 };

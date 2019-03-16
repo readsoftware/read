@@ -317,7 +317,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (327,'en=>"Cozbo"',320,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (328,'en=>"???King (aparajitasa )"',320,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (329,'en=>"Great??? (Mahanuava)"',320,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(330,'en=>"Parallel"',278,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(330,'en=>"Parallel"',1466,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (331,'en=>"PaliParallel"',330,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (332,'en=>"SanskritParallel"',330,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (333,'en=>"ChineseParallel"',330,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
@@ -729,8 +729,8 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (748,'en=>"NounPhrase"',747,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (749,'en=>"VerbPhrase"',747,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (750,'en=>"Formulae"',740,778,NULL,NULL,'Formulae',NULL,NULL,NULL,1,'{2}'),
-(756,'en=>"TextReference"',735,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(757,'en=>"RootRefContainer"',756,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(756,'en=>"TextReferences"',735,778,'{757,758,759}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(757,'en=>"ExternalReference"',756,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (758,'en=>"RootRef"',756,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (759,'en=>"Commentary"',756,778,'{972,1345}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (760,'en=>"DependancyTree"',735,778,'{881}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
@@ -1422,6 +1422,10 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1461,'en=>"AuxP"',1450,778,NULL,NULL,'preposition',NULL,NULL,NULL,1,'{2}'),
 (1462,'en=>"AuxC"',1450,778,NULL,NULL,'conjunction',NULL,NULL,NULL,1,'{2}'),
 (1463,'en=>"AuxR"',1450,778,NULL,NULL,'reflexive passive',NULL,NULL,NULL,1,'{2}'),
-(1464,'en=>"AuxV"',1450,778,NULL,NULL,'auxiliary verb',NULL,NULL,NULL,1,'{2}');
+(1464,'en=>"AuxV"',1450,778,NULL,NULL,'auxiliary verb',NULL,NULL,NULL,1,'{2}'),
+(1465,'en=>"Sence"',1444,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1466,'en=>"TextRefLinkage"',278,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1467,'en=>"Paraphrase"',1466,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1468,'en=>"Quote"',1466,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}');
 
-ALTER SEQUENCE term_trm_id_seq RESTART WITH 1465;
+ALTER SEQUENCE term_trm_id_seq RESTART WITH 1469;
