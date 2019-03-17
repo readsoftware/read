@@ -204,6 +204,9 @@ EDITORS.EntityPropVE.prototype = {
       if (this.prefix == "seq" && this.entity ) {
         this.createSuperScriptDisplay();
         this.createSeqTypeUI();
+        if (this.entity.typeID == this.dataMgr.termInfo.idByTerm_ParentLabel["externalreference-textreferences"]) {
+          this.createExternalLinkUI();
+        }
       }
       if ((this.prefix == "tok" || this.prefix == "cmp") && this.entity ) {
         //find current syntax dependency link info
@@ -1209,7 +1212,145 @@ EDITORS.EntityPropVE.prototype = {
     DEBUG.traceExit("createSubTypeUI");
   },
 
-  /************* Components ****************/
+/**
+* create external link UI
+*/
+
+createExternalLinkUI: function() {
+  var entPropVE = this,i,j, anoID, displayUI, annotation, typeIDs, annoIDsByType;
+  if (this.dataMgr) {
+    annoIDsByType = this.tag ? this.dataMgr.getEntityAnoIDsByType(this.tag):[];
+    typeIDs = [this.dataMgr.termInfo.idByTerm_ParentLabel["paraphrase-textreflinkage"],//term dependency
+               this.dataMgr.termInfo.idByTerm_ParentLabel["parallel-textreflinkage"],//term dependency
+               this.dataMgr.termInfo.idByTerm_ParentLabel["paliparallel-parallel"],//term dependency
+               this.dataMgr.termInfo.idByTerm_ParentLabel["sanskritparallel-parallel"],//term dependency
+               this.dataMgr.termInfo.idByTerm_ParentLabel["Chineseparallel-parallel"],//term dependency
+               this.dataMgr.termInfo.idByTerm_ParentLabel["Tibetanparallel-parallel"],//term dependency
+               this.dataMgr.termInfo.idByTerm_ParentLabel["quote-textreflinkage"]];//term dependency
+  }
+  DEBUG.traceEntry("createExternalLinkUI");
+  //create UI container
+  this.exlinkUI = $('<div class="exlinkUI"></div>');
+  this.contentDiv.append(this.exlinkUI);
+  displayUI = $('<div class="propDisplayUI"/>');
+  //create Header
+  displayUI.append($('<div class="exLinkUIHeader"><span>External Links:</span><span class="addButton"><u>Add new</u></span></div>'));
+  //create a list of Annotations
+  if (Object.keys(annoIDsByType).length) {
+    for (i in annoIDsByType) {
+      if (typeIDs.indexOf(parseInt(i)) == -1) {
+        continue;
+      }
+      annoType = this.dataMgr.getTermFromID(i);
+      annoIDs = annoIDsByType[i];
+      for (j in annoIDs) {
+        annoID =  annoIDs[j];
+        annotation = this.dataMgr.getEntity("ano",annoID);
+        if (annotation) {
+          annotation.tag = "ano" + annoID;
+          //TODO add code to display the different types linked vs URL vs text
+          displayUI.append(this.createExternalLinkEntry(annotation));
+        }
+      }
+    }
+  }
+  this.exlinkUI.append(displayUI);
+  $('div.annotationentry',this.exlinkUI).unbind("dblclick").bind("dblclick",function(e) {
+    var classes = $(this).attr("class"),anoTag,annotation;
+    if (classes.match(/ano\d+/)) {
+      anoTag = classes.match(/ano\d+/)[0];
+    }
+    annotation = entPropVE.dataMgr.getEntityFromGID(anoTag);
+    if (annotation && !annotation.readonly && entPropVE.propMgr && entPropVE.propMgr.showVE) {
+      entPropVE.propMgr.showVE("annoVE",anoTag,{"typeIDs":typeIDs});
+    } else {
+      UTILITY.beep();
+    }
+  });
+  $('span.addButton',this.exlinkUI).unbind("click").bind("click",function(e) {
+    if (entPropVE.propMgr && entPropVE.propMgr.showVE) {
+      entPropVE.propMgr.showVE("annoVE",null,{"typeIDs":typeIDs});
+    }
+  });
+  //remove anno
+  $('span.removeanno',this.exlinkUI).unbind("click").bind("click",function(e) {
+    var classes = $(this).attr('class'),
+        anoTag = classes.match(/ano\d+/)[0];
+    entPropVE.removeLink(anoTag);
+  });
+  //create input with save button
+  DEBUG.traceExit("createExternalLinkUI");
+},
+
+
+/**
+* create external link UI entry
+*
+* @param {annotation} anno Annotation entity
+*/
+
+createExternalLinkEntry: function(anno) {
+  var entPropVE = this, attribution, attrText = null,
+      annoType = this.dataMgr.getTermFromID(anno.typeID);
+  if (anno.attributionIDs && anno.attributionIDs.length > 0) {
+    attribution = this.dataMgr.getEntity('atb',anno.attributionIDs[0]);
+    if (attribution && attribution.value) {
+      attrText = attribution.value;
+    }
+  }
+  DEBUG.trace("createExternalLinkEntry");
+  //create Annotation Entry
+  return($('<div class="annotationentry '+annoType+' '+anno.tag+'">' +
+       '<span class="annotation">(' + annoType + ') ' + anno.text + 
+       (anno.url?' <a class="linkanno '+anno.tag+'" target="_blank" href="'+anno.url+'">Link</a>':'') + '</span>'+
+       '<span class="modstamp">' + (attrText?attrText:anno.modStamp) + '</span>'+
+       (anno.readonly?'':'<span class="removeanno '+anno.tag+'" title="remove external link '+anno.tag+'">X</span>')+
+       '</div>'));
+},
+
+
+/**
+* remove link annotation
+*
+* @param string anoTag Annotation entity tag id for link
+*/
+
+removeLink: function(anoTag) {
+  var entPropVE = this, savedata = {};
+  DEBUG.traceEntry("removeLink");
+  savedata["cmd"] = "removeAno";
+  savedata["linkFromGID"] = this.prefix+":"+this.entID;
+  savedata["anoTag"] = anoTag;
+  //jqAjax synch save
+  $.ajax({
+      type: 'POST',
+      dataType: 'json',
+      url: basepath+'/services/saveAnno.php?db='+dbName,//caution dependency on context having basepath and dbName
+      data: savedata,
+      async: true,
+      success: function (data, status, xhr) {
+          if (typeof data == 'object' && data.success && data.entities) {
+            //update data
+            entPropVE.dataMgr.updateLocalCache(data,null);
+            entPropVE.propMgr.showVE();
+            if (entPropVE.propMgr && entPropVE.propMgr.entityUpdated) {
+              entPropVE.propMgr.entityUpdated();
+            }
+          }
+          if (data.errors) {
+            alert("An error occurred while trying to remove link record. Error: " + data.errors.join());
+          }
+      },
+      error: function (xhr,status,error) {
+          // add record failed.
+          alert("An error occurred while trying to remove a link record. Error: " + error);
+      }
+  });
+  DEBUG.traceExit("removeLink");
+},
+
+
+/************* Components ****************/
 
 /**
 * create entity components UI
@@ -2049,8 +2190,22 @@ removeBln: function(blnTag) {
 */
 
   createAnnotationUI: function() {
-    var entPropVE = this,i,j, anoID, displayUI, annotation,
-        annoIDsByType = this.tag ? this.dataMgr.getEntityAnoIDsByType(this.tag):[];
+    var entPropVE = this,i,j, anoID, displayUI, annotation,typeIDs, annoIDsByType;
+    if (this.dataMgr) {
+      annoIDsByType = this.tag ? this.dataMgr.getEntityAnoIDsByType(this.tag):[];
+      typeIDs = [this.dataMgr.termInfo.idByTerm_ParentLabel["footnote-footnotetype"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["transcription-footnote"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["reconstruction-footnote"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["translation-annotationtype"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["chaya-translation"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["question-commentarytype"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["comment-commentarytype"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["glossary-commentarytype"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["issue-commentarytype"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["todo-workflowtype"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["done-workflowtype"],//term dependency
+                  this.dataMgr.termInfo.idByTerm_ParentLabel["obsolete-workflowtype"]];//term dependency
+    }
     DEBUG.traceEntry("createAnnotationUI");
     //create UI container
     this.annoUI = $('<div class="annoUI"></div>');
@@ -2061,6 +2216,9 @@ removeBln: function(blnTag) {
     //create a list of Annotations
     if (Object.keys(annoIDsByType).length) {
       for (i in annoIDsByType) {
+        if (typeIDs.indexOf(parseInt(i)) == -1) {
+          continue;
+        }
         annoType = this.dataMgr.getTermFromID(i);
         annoIDs = annoIDsByType[i];
         for (j in annoIDs) {

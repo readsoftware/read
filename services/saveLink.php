@@ -90,7 +90,8 @@ if (!$data) {
   if (!$toGID || count($toGID) == 0) {
 //    array_push($errors,"saveLink must have a 'to' entity GID");
   }
-  if (!$linkTypeID) { // todo add check that this is a valid linktype
+  $linkageTypeID = ENTITY::getIDofTermParentLabel("linkagetype-annotationtype");//warning!!!! term dependency
+  if (!$linkTypeID || !isSubTerm($linkageTypeID,$linkTypeID)) { // check that this is a valid linktype
     array_push($errors,"saveLink must have a link type");
   }
   $healthLogging = false;
@@ -103,7 +104,7 @@ if (count($errors) == 0) {
   $originalLinkID = null;
   //check for linkType links containing link from GID
   $links = new Annotations("ano_type_id = $linkTypeID and '$fromGID' = ANY(ano_linkfrom_ids) and ano_owner_id != 1");
-  if ($links->getCount() > 0) {//for now take first writable one later either combine or check for existing to GID
+  if ($links->getCount() > 0) {//for now take first writable one later either combine or check for existing to_GID
     foreach ( $links as $sLink ) {
       if ($sLink->isReadonly()) {
         continue;

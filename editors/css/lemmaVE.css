@@ -633,7 +633,8 @@ div.phonoUI .valueLabelDiv, div.declUI .valueLabelDiv, div.linkTypeUI .valueLabe
 }
 .attestedUIHeader > span, .annoUIHeader > span, .imgUIHeader > span,
 .tagUIHeader > span, .altTransUIHeader > span, .relUIHeader > span,
-.attrUIHeader > span, .relUISection > span, .componentsUIHeader > span{
+.attrUIHeader > span, .relUISection > span, .exLinkUIHeader > span,
+.componentsUIHeader > span{
   background-color: inherit!important;
 }
 .relUISection div.relationentry{

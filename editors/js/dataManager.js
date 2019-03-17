@@ -1530,7 +1530,7 @@ MANAGERS.DataManager.prototype = {
 
 
 /**
-* get linked annoations by type lookup for a given entity
+* get linked annotations by type lookup for a given entity
 *
 * @param string entTag Entity tag
 *

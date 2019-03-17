@@ -43,6 +43,7 @@ EDITORS.AnnoVE =  function(annoVECfg) {
   this.entTag = annoVECfg['entTag'] ? annoVECfg['entTag']:null;//lemma, token or compound etc.
   this.cbVEType = annoVECfg['cbVEType'] ? annoVECfg['cbVEType']:null;//callback VE type
   this.controlVE = annoVECfg['editor'] ? annoVECfg['editor']:null;
+  this.typeIDs = annoVECfg['typeIDs'] ? annoVECfg['typeIDs']:null;
   this.dataMgr = annoVECfg['dataMgr'] ? annoVECfg['dataMgr']:null;
   this.propMgr = annoVECfg['propMgr'] ? annoVECfg['propMgr']:null;
   this.editDiv = annoVECfg['editDiv'] ? $(annoVECfg['editDiv']):null;
@@ -65,7 +66,7 @@ EDITORS.AnnoVE.prototype = {
 
   init: function() {
     DEBUG.traceEntry("init","init anno editor");
-    if (this.dataMgr){
+    if (! this.typeIDs && this.dataMgr){
       this.typeIDs = [this.dataMgr.termInfo.idByTerm_ParentLabel["footnote-footnotetype"],//term dependency
                       this.dataMgr.termInfo.idByTerm_ParentLabel["transcription-footnote"],//term dependency
                       this.dataMgr.termInfo.idByTerm_ParentLabel["reconstruction-footnote"],//term dependency
@@ -78,6 +79,7 @@ EDITORS.AnnoVE.prototype = {
                       this.dataMgr.termInfo.idByTerm_ParentLabel["todo-workflowtype"],//term dependency
                       this.dataMgr.termInfo.idByTerm_ParentLabel["done-workflowtype"],//term dependency
                       this.dataMgr.termInfo.idByTerm_ParentLabel["obsolete-workflowtype"]];//term dependency
+      this.config["typeIDs"] = this.typeIDs;
     }
     this.showAnno();
     DEBUG.traceExit("init","init anno editor");

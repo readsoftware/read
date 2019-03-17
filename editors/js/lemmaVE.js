@@ -764,11 +764,11 @@ DEBUG.traceEntry("createPhonologicalUI");
       $('.saveDiv',this.compUI).unbind("click").bind("click",function(e) {
         var lemProp = {}, compAnalysis, nodeKey, rootKey = null, rootNode, compKeys;
 
-/**
-* put your comment there...
-*
-* @param key
-*/
+        /**
+        * put your comment there...
+        *
+        * @param key
+        */
 
         function resolveSubLemma(key) {
           var node = compAnalysis[key], j, lemma,
@@ -2136,7 +2136,7 @@ DEBUG.traceEntry("createPhonologicalUI");
     });
     $('span.attestedannobtn',this.attestedUI).unbind("click").bind("click",function(e) {
       //show anno editor with glossary annotation if exist
-      lemmaVE.propMgr.showVE("annoVE",$(this).prop('anoTag'),$(this).prop('gid'));
+      lemmaVE.propMgr.showVE("annoVE",$(this).prop('anoTag'),{'ctxGID':$(this).prop('gid')});
       e.stopImmediatePropagation();
       return false;
     });
