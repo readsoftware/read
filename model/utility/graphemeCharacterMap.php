@@ -66,11 +66,12 @@ $graphemeCharacterMap = array(
 	"."=>array("srt"=>"810","typ"=>"P"),
 	";"=>array("srt"=>"820","typ"=>"P"),
 	":"=>array("srt"=>"830","typ"=>"P"),
-	"?"=>array("srt"=>"840","typ"=>"P"),
-	"("=>array("srt"=>"850","typ"=>"P"), //Open - space before
-	")"=>array("srt"=>"860","typ"=>"P"), //Close - space after
-	"«"=>array("srt"=>"870","typ"=>"P"), //Open - space before
-	"»"=>array("srt"=>"880","typ"=>"P"), //Close - space after
+	"!"=>array("srt"=>"840","typ"=>"P"),
+	"?"=>array("srt"=>"850","typ"=>"P"),
+	"("=>array("srt"=>"860","typ"=>"P"), //Open - space before
+	")"=>array("srt"=>"870","typ"=>"P"), //Close - space after
+	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
+	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
 	// Other Symbols
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	// Alphabetic signs
@@ -129,7 +130,7 @@ $graphemeCharacterMap = array(
 	// Logographic signs
 	// "☧"=>array("srt"=>"430","typ"=>"L") //chi rho (Christogram)
 	// Functional symbols handled by parser
-	// § [ ]
+	// § [ ] "
 );
 
 /**
