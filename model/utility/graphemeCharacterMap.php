@@ -178,6 +178,34 @@ $graphemeCharacterMap = array(
 	"χ"=>array("srt"=>"625","typ"=>"I"),
 	"ψ"=>array("srt"=>"635","typ"=>"I"),
 	"ω"=>array("srt"=>"645","typ"=>"I"),
+	// Hebrew
+	"א"=>array("srt"=>"650","typ"=>"I"), //ALEF
+	"ב"=>array("srt"=>"650","typ"=>"I"), //BET
+	"ג"=>array("srt"=>"650","typ"=>"I"), //GIMEL
+	"ד"=>array("srt"=>"650","typ"=>"I"), //DALET
+	"ה"=>array("srt"=>"650","typ"=>"I"), //HE
+	"ו"=>array("srt"=>"650","typ"=>"I"), //VAV
+	"ז"=>array("srt"=>"650","typ"=>"I"), //ZAYIN
+	"ח"=>array("srt"=>"650","typ"=>"I"), //HET
+	"ט"=>array("srt"=>"650","typ"=>"I"), //TET
+	"י"=>array("srt"=>"650","typ"=>"I"), //YOD
+	"ך"=>array("srt"=>"650","typ"=>"I"), //KAF FINAL
+	"כ"=>array("srt"=>"650","typ"=>"I"), //KAF
+	"ל"=>array("srt"=>"650","typ"=>"I"), //LAMED
+	"ם"=>array("srt"=>"650","typ"=>"I"), //MEM FINAL
+	"מ"=>array("srt"=>"650","typ"=>"I"), //MEM
+	"ן"=>array("srt"=>"650","typ"=>"I"), //NUN FINAL
+	"נ"=>array("srt"=>"650","typ"=>"I"), //NUN
+	"ס"=>array("srt"=>"650","typ"=>"I"), //SAMEKH
+	"ע"=>array("srt"=>"650","typ"=>"I"), //AYIN
+	"ף"=>array("srt"=>"650","typ"=>"I"), //PE FINAL
+	"פ"=>array("srt"=>"650","typ"=>"I"), //PE
+	"ץ"=>array("srt"=>"650","typ"=>"I"), //TSADI FINAL
+	"צ"=>array("srt"=>"650","typ"=>"I"), //TSADI
+	"ק"=>array("srt"=>"650","typ"=>"I"), //QOF
+	"ר"=>array("srt"=>"650","typ"=>"I"), //RESH
+	"ש"=>array("srt"=>"650","typ"=>"I"), //SHIN
+	"ת"=>array("srt"=>"650","typ"=>"I"), //TAV
 
 	// Logographic signs
 	// "☧"=>array("srt"=>"430","typ"=>"L") //chi rho (Christogram)
