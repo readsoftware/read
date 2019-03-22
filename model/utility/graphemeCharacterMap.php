@@ -62,16 +62,16 @@ $graphemeCharacterMap = array(
 	"8"=>array("srt"=>"780","typ"=>"N"),
 	"9"=>array("srt"=>"790","typ"=>"N"),
 	// Punctuation
-	","=>array("srt"=>"800","typ"=>"P"),
-	"."=>array("srt"=>"810","typ"=>"P"),
-	";"=>array("srt"=>"820","typ"=>"P"),
-	":"=>array("srt"=>"830","typ"=>"P"),
-	"!"=>array("srt"=>"840","typ"=>"P"),
-	"?"=>array("srt"=>"850","typ"=>"P"),
-	"("=>array("srt"=>"860","typ"=>"P"), //Open - space before
-	")"=>array("srt"=>"870","typ"=>"P"), //Close - space after
-	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
-	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
+	","=>array("srt"=>"800","typ"=>"I"),
+	"."=>array("srt"=>"810","typ"=>"I"),
+	";"=>array("srt"=>"820","typ"=>"I"),
+	":"=>array("srt"=>"830","typ"=>"I"),
+	"!"=>array("srt"=>"840","typ"=>"I"),
+	"?"=>array("srt"=>"850","typ"=>"I"),
+	"("=>array("srt"=>"860","typ"=>"I"), //Open - space before
+	")"=>array("srt"=>"870","typ"=>"I"), //Close - space after
+	"«"=>array("srt"=>"880","typ"=>"I"), //Open - space before
+	"»"=>array("srt"=>"890","typ"=>"I"), //Close - space after
 	// Other Symbols
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	// Alphabetic signs
