@@ -152,6 +152,7 @@ $graphemeCharacterMap = array(
     "srt"=>"490","csrt"=>"i","typ"=>"I"),
 "í"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "î"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
+"ị"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "ī"=>array("srt"=>"490","csrt"=>"i","typ"=>"I"),
 "j"=>array(
     "̣"=>array("srt"=>"500","csrt"=>"j","typ"=>"I"),
@@ -163,6 +164,8 @@ $graphemeCharacterMap = array(
 "l"=>array(
     "̣"=>array("srt"=>"520","csrt"=>"l","typ"=>"I"),
     "srt"=>"520","csrt"=>"l","typ"=>"I"),
+"ḷ"=>array("srt"=>"520","csrt"=>"l","typ"=>"I"),
+"ḷ"=>array("srt"=>"520","csrt"=>"l","typ"=>"I"),
 "m"=>array(
     "̂"=>array("srt"=>"530","csrt"=>"m","typ"=>"I"),
     "̣"=>array("srt"=>"530","csrt"=>"m","typ"=>"I"),
@@ -175,6 +178,7 @@ $graphemeCharacterMap = array(
     "̣"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
     "srt"=>"550","csrt"=>"o","typ"=>"I"),
 "ó"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
+"ọ"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
 "ô"=>array("srt"=>"550","csrt"=>"o","typ"=>"I"),
 "p"=>array(
     "̣"=>array("srt"=>"560","csrt"=>"p","typ"=>"I"),
