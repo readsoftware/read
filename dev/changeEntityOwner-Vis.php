@@ -26,9 +26,9 @@
   * to change ownership from usergroup name "andrea" to usergroup name "ingoandrea" for edition 1 and edition 2
   * http://localhost/kanishka/dev/changeEntityOwner-Vis.php?db=bctest&ownerNew=ingoandrew&scope=entity&tags=tok153,cmp52
   * to change ownership to usergroup name "ingoandrea" on token 153 and compound 52
-  * http://localhost/kanishka/dev/testEditionLinks.php?db=bctest&ownerNew=stefan&scope=table&tags=edn
+  * http://localhost/kanishka/dev/changeEntityOwner-Vis.php?db=bctest&ownerNew=stefan&scope=table&tags=edn
   * to change ownership to usergroup name "stefan" on all editions
-  * http://localhost/kanishka/dev/testEditionLinks.php?db=bctest&ownerNew=stefan&scope=table&tags=all
+  * http://localhost/kanishka/dev/changeEntityOwner-Vis.php?db=bctest&ownerNew=stefan&scope=table&tags=all
   * to change ownership to usergroup name "stefan" on all tables (all entities)
   * @author      Stephen White  <stephenawhite57@gmail.com>
   * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>

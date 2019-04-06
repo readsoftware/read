@@ -405,8 +405,10 @@ EDITORS.EntityPropVE.prototype = {
       //click to edit
       if (valueEditable) {
         $('div.valueLabelDiv',this.valueUI).unbind("click").bind("click",function(e) {
-          $('div.edit',entPropVE.contentDiv).removeClass("edit");
-          entPropVE.valueUI.addClass("edit");
+          if (!entPropVE.valueUI.hasClass("edit")) {
+            $('div.edit',entPropVE.contentDiv).removeClass("edit");
+            entPropVE.valueUI.addClass("edit");
+          }
           $('div.valueInputDiv input',this.valueUI).focus();
           //$('div.valueInputDiv input',this.valueUI).select();
           e.stopImmediatePropagation();
@@ -417,6 +419,11 @@ EDITORS.EntityPropVE.prototype = {
           if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
             entPropVE.valueUI.removeClass("edit");
           }
+        });
+        //stop click in input from propagation
+        $('div.valueInputDiv input',this.valueUI).unbind("click").bind("click",function(e) {
+          e.stopImmediatePropagation();
+          return false;
         });
         //mark dirty on input
         $('div.valueInputDiv input',this.valueUI).unbind("input").bind("input",function(e) {
@@ -545,6 +552,11 @@ EDITORS.EntityPropVE.prototype = {
             entPropVE.supUI.removeClass("edit");
           }
         });
+        //stop click in input from propagation
+        $('div.valueInputDiv input',this.supUI).unbind("click").bind("click",function(e) {
+          e.stopImmediatePropagation();
+          return false;
+        });
         //mark dirty on input
         $('div.valueInputDiv input',this.supUI).unbind("input").bind("input",function(e) {
           if ($('div.valueLabelDiv',this.supUI).text() != $(this).val()) {
@@ -605,6 +617,11 @@ EDITORS.EntityPropVE.prototype = {
           entPropVE.refUI.addClass("edit");
           $('div.valueInputDiv input',this.refUI).focus();
           //$('div.valueInputDiv input',this.refUI).select();
+          e.stopImmediatePropagation();
+          return false;
+        });
+        //stop click in input from propagation
+        $('div.valueInputDiv input',this.refUI).unbind("click").bind("click",function(e) {
           e.stopImmediatePropagation();
           return false;
         });
@@ -673,6 +690,11 @@ EDITORS.EntityPropVE.prototype = {
           entPropVE.invUI.addClass("edit");
           $('div.valueInputDiv input',this.invUI).focus();
           //$('div.valueInputDiv input',this.invUI).select();
+          e.stopImmediatePropagation();
+          return false;
+        });
+        //stop click in input from propagation
+        $('div.valueInputDiv input',this.invUI).unbind("click").bind("click",function(e) {
           e.stopImmediatePropagation();
           return false;
         });
