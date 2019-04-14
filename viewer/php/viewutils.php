@@ -992,6 +992,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
         if ($postTCMBrackets && !($i == 0 && $firstG)) {
           $wordHtml .= $postTCMBrackets;
         }
+        //get part-side-n-fragment markers
         if (INLINEPARTSIDELABEL && array_key_exists($graID,$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graID])) {
           $sideMarker = $graID2PSnFMarkerMap[$graID]['sideMarker'];
         } else {
@@ -1263,6 +1264,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
   //**************process each physical line
   for ($i = 0; $i < $cntLinePhysGID; $i++) {
     $linePhysSeqGID = $linePhysSeqIDs[$i];
+    $physicalLineHtml = null;
     $nextLineSeqGID = $i+1<$cntLinePhysGID?$linePhysSeqIDs[$i+1]:null;
     if (strpos($linePhysSeqGID,'seq') === 0) {
       if ($nextLineSequence && $linePhysSeqGID == $nextLineSequence->getGlobalID()) {
@@ -1275,7 +1277,9 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
         continue;
       } else {//physical line sequence
         //check for cached value
-        $physicalLineHtml = $linePhysSequence->getScratchProperty("edn".$edition->getID()."physLineHtml");
+        if (USEVIEWERCACHING) {
+          $physicalLineHtml = $linePhysSequence->getScratchProperty("edn".$edition->getID()."physLineHtml");
+        }
         if ($physicalLineHtml && !$refresh) {
           $physicalLinesHtml .= $physicalLineHtml;
           $nextLineSequence = null;
@@ -1387,8 +1391,9 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   }
                   //check for new word start
                   if (array_key_exists($graID,$graID2WordGID)){
+                      $word = EntityFactory::createEntityFromGlobalID($graID2WordGID[$graID][1]);
+                      addWordToEntityLookups($word, true);
                     if ($j > 0 || $l > 0) {//not start of line so must be existing word to close
-                      $word = EntityFactory::createEntityFromGlobalID($wordTag);
                       $footnoteHtml = getEntityFootnotesHtml($word, $refresh);
                       if ($footnoteHtml) {
                         $physicalLineHtml .= $footnoteHtml;
@@ -1939,6 +1944,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
             $graID2LineHtmlMarkerlMap[$lineGraID] = $lineHtml;
           }
         }
+        //get part-side-n-fragment markers
         if (array_key_exists("PFSHtmlMarkerMap",$ednLookupInfo) && count($ednLookupInfo['PFSHtmlMarkerMap'])) {
           foreach ($ednLookupInfo['PFSHtmlMarkerMap'] as $sclGraID => $PSnFMarker) {
             $graID2PSnFMarkerMap[$sclGraID] = $PSnFMarker;

@@ -1242,7 +1242,8 @@ createExternalLinkUI: function() {
   var entPropVE = this,i,j, anoID, displayUI, annotation, typeIDs, annoIDsByType;
   if (this.dataMgr) {
     annoIDsByType = this.tag ? this.dataMgr.getEntityAnoIDsByType(this.tag):[];
-    typeIDs = [this.dataMgr.termInfo.idByTerm_ParentLabel["paraphrase-textreflinkage"],//term dependency
+    typeIDs = [this.dataMgr.termInfo.idByTerm_ParentLabel["altedition-textreflinkage"],//term dependency
+               this.dataMgr.termInfo.idByTerm_ParentLabel["paraphrase-textreflinkage"],//term dependency
                this.dataMgr.termInfo.idByTerm_ParentLabel["parallel-textreflinkage"],//term dependency
                this.dataMgr.termInfo.idByTerm_ParentLabel["paliparallel-parallel"],//term dependency
                this.dataMgr.termInfo.idByTerm_ParentLabel["sanskritparallel-parallel"],//term dependency

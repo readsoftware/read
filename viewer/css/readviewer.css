@@ -399,12 +399,12 @@ body.showTOC .tocNavPanel {
 }
 
 .zoomButton {
-  width: 50%;
+  width: 10px;
   height: auto;
-  font-size: 20pt;
+  font-size: 15pt;
   font-weight: bold;
   display: inline-flex;
-
+  margin-left: 5px;
 }
 
 .zoomUI {
@@ -414,6 +414,7 @@ body.showTOC .tocNavPanel {
   margin-right: 25px;
   min-width: 70px;
   cursor: pointer;
+  padding-left: 20px;
 }
 
 .imgmenuresource:hover {
