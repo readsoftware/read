@@ -103,7 +103,7 @@
     }
     $wrdTag2GlossaryPopupHtmlLookup = getWrdTag2GlossaryPopupHtmlLookup($catID,$ednID, $refresh);
     echo print_r($wrdTag2GlossaryPopupHtmlLookup,true);
-    if(USEVIEWERCACHING) {
+    if(USEVIEWERCACHING && $jsonCache) {
       $jsonCache->setJsonString(json_encode($wrdTag2GlossaryPopupHtmlLookup));
       $jsonCache->save();
       unset($jsonCache);

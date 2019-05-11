@@ -2099,7 +2099,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
     $cnt = 100;
     while ($cnt == 100) {// get lemma in pages of 100 to avoid memory overload, consider configure param for tuning
       $lemmas = new Lemmas($condition,"lem_sort_code,lem_sort_code2",$offset,100);
-      $cnt = $lemmas->getCount();
+      $cnt = $lemmas->getCount(); // should get 100 except possibly for last page
       if ($cnt > 0) {
         $lemmas->setAutoAdvance(false);
         foreach($lemmas as $lemma) {
@@ -2132,7 +2132,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
               $lemmaLookupURL = str_replace("%lemtag%",$lemTag,$lemmaLookupURL);
             }
             if ($lemmaLookupURL && strpos($lemmaLookupURL,"%lemval%")) {
-              $lemmaLookupURL = str_replace("%lemval%",$lemmaValue,$lemmaLookupURL);
+              $lemmaLookupURL = str_replace("%lemval%",($lemmaOrder?$lemmaOrder:'').$lemmaValue,$lemmaLookupURL);
             }
             if ($lemmaLookupURL == "") {//no link case
               $lemHtml .= "<span class=\"lemmaheadword\">$lemmaValue</span><span class=\"lemmapos\">";
@@ -2315,7 +2315,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                     $entTag2GlossaryHtml[$entTag] = array('lemTag' => $lemTag,// word link to inflection data and lemma - popup shows inflection for clicked word only
                       'infTag'=> $infTag,
                       'infHtml'=> $infString);
-                    //TODO:Syntax   add code here to check inflectionComponent has syntaxt info and add to glossary info
+                    //TODO:Syntax   add code here to check inflectionComponent has syntax info and add to glossary info
                     //this will cache the information for the popup html calc code
                     $syntacticDependency = $inflectionComponent->getScratchProperty('syntacticRelation');
                     if ($syntacticDependency) {
@@ -2373,10 +2373,10 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                   $sc = $lemmaComponent->getSortCode();
                   $entTag = preg_replace("/:/","",$lemmaComponent->getGlobalID());
                   $entTag2GlossaryHtml[$entTag] = array('lemTag' => $lemTag);//word link to lemma
-                  //TODO:Syntax   add code here to check lemmaComponent has syntaxt info and add to glossary info
+                  //check lemmaComponent has syntax info and add to glossary info
                   $syntacticDependency = $lemmaComponent->getScratchProperty('syntacticRelation');
                   if ($syntacticDependency) {
-                    $entTag2GlossaryHtml[$entTag]['syntax'] = "<span class=\"syntaxDependency\">| $syntacticDependency</span>";
+                    $entTag2GlossaryHtml[$entTag]['syntax'] = "<span class=\"syntaxDependency\">| $syntacticDependency</span";
                   }
                   $attested2LemmaInfoMap[$entTag] = $entTag2GlossaryHtml[$entTag];
                   $attestedCommentary = "";
@@ -2617,7 +2617,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
           }
         }//end foreach lemma
         unset($lemmas);
-        $offset += $cnt;
+        $offset += $cnt; //adjust offset to read next 100
       }//end if $cnt > 0
     }//end while $cnt ==100
     return $entTag2GlossaryHtml;

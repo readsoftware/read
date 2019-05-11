@@ -2263,14 +2263,16 @@ removeBln: function(blnTag) {
       }
       annotation = entPropVE.dataMgr.getEntityFromGID(anoTag);
       if (annotation && !annotation.readonly && entPropVE.propMgr && entPropVE.propMgr.showVE) {
-        entPropVE.propMgr.showVE("annoVE",anoTag);
+//        entPropVE.propMgr.showVE("annoVE",anoTag);
+        entPropVE.propMgr.showVE("annoVE",anoTag,{"typeIDs":typeIDs});
       } else {
         UTILITY.beep();
       }
     });
     $('span.addButton',this.annoUI).unbind("click").bind("click",function(e) {
       if (entPropVE.propMgr && entPropVE.propMgr.showVE) {
-        entPropVE.propMgr.showVE("annoVE");
+//        entPropVE.propMgr.showVE("annoVE");
+        entPropVE.propMgr.showVE("annoVE",null,{"typeIDs":typeIDs});
       }
     });
     //remove anno

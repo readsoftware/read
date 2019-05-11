@@ -208,9 +208,9 @@ EDITORS.AttrVE.prototype = {
             dataAdapter = new $.jqx.dataAdapter(source,
                 {
                   formatData: function (data) {
-                    srchString = userVE.attrSearchInput.val();
+                    srchString = attrVE.attrSearchInput.val();
                     if (srchString) {
-                      data.titleContains = userVE.attrSearchInput.val();
+                      data.titleContains = attrVE.attrSearchInput.val();
                     }
                     return data;
                   }
@@ -231,7 +231,7 @@ EDITORS.AttrVE.prototype = {
     this.editDiv.append(this.multiAttrUI);
     //create attrList
     this.attrList = $('.attrSearchListBox',this.multiAttrUI);
-    this.searchInput = $('.attrSearchInput',this.multiAttrUI);
+    this.attrSearchInput = $('.attrSearchInput',this.multiAttrUI);
     this.attrList.jqxListBox(
             {
                 width: 320,
@@ -271,7 +271,7 @@ EDITORS.AttrVE.prototype = {
     this.attrList.unbind('bindingComplete').bind('bindingComplete', function (event) {
         attrVE.synchAttrListWithEntity();
     });
-    this.searchInput.on('keyup', function (e) {
+    this.attrSearchInput.on('keyup', function (e) {
         if (attrVE.timer) clearTimeout(attrVE.timer);
         attrVE.timer = setTimeout(function () {
             attrVE.attrList.jqxListBox('uncheckAll');

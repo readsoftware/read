@@ -157,17 +157,23 @@ span.grpGra.prepadding {
 
 div.section {
   padding-left: 10px;
+  padding-bottom: 20px;
 }
 
 div.section.Stanza, div.section.Pāda {
   display: block !important;
 }
 
+div.section.Pāda div.secMarker{
+  display: none;
+}
+
 div.section.level2,
 div.section.level3,
 div.section.level4,
 div.section.level5{
-  display: inline-block;
+  /*display: inline-block; */
+  padding-bottom: 0px;
 }
 
 div.section.Sentence{
@@ -177,8 +183,10 @@ div.section.Sentence{
   padding-right: 5px;
 }
 
-div.secHeader.level2{
+div.secHeader, div.secTitle{
 /*  display: inline-block; */
+  font-weight: bold;
+  padding-top: 10px;
 }
 
 div.secMarker{
