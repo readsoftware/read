@@ -61,17 +61,17 @@ $graphemeCharacterMap = array(
 	"7"=>array("srt"=>"770","typ"=>"N"),
 	"8"=>array("srt"=>"780","typ"=>"N"),
 	"9"=>array("srt"=>"790","typ"=>"N"),
-	// Punctuation
-	","=>array("srt"=>"800","typ"=>"I"),
-	"."=>array("srt"=>"810","typ"=>"I"),
-	";"=>array("srt"=>"820","typ"=>"I"),
-	":"=>array("srt"=>"830","typ"=>"I"),
-	"!"=>array("srt"=>"840","typ"=>"I"),
-	"?"=>array("srt"=>"850","typ"=>"I"),
-	"("=>array("srt"=>"860","typ"=>"I"), //Open - space before
-	")"=>array("srt"=>"870","typ"=>"I"), //Close - space after
-	"«"=>array("srt"=>"880","typ"=>"I"), //Open - space before
-	"»"=>array("srt"=>"890","typ"=>"I"), //Close - space after
+	// Punctuation and Intra-word Punctuation
+	","=>array("srt"=>"800","typ"=>"P"),
+	"."=>array("srt"=>"810","typ"=>"P"),
+	";"=>array("srt"=>"820","typ"=>"P"),
+	":"=>array("srt"=>"830","typ"=>"P"),
+	"!"=>array("srt"=>"840","typ"=>"P"),
+	"?"=>array("srt"=>"850","typ"=>"P"),
+	"("=>array("srt"=>"860","typ"=>"P"), //Open - space before
+	")"=>array("srt"=>"870","typ"=>"P"), //Close - space after
+	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
+	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
 	// Other Symbols
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	// Latin
@@ -128,6 +128,7 @@ $graphemeCharacterMap = array(
 	"y"=>array("srt"=>"345","typ"=>"I"),
 	"z"=>array("srt"=>"355","typ"=>"I"),
 	// Greek
+	"Ἀ"=>array("srt"=>"400","typ"=>"I"),
 	"Α"=>array("srt"=>"400","typ"=>"I"),
 	"Β"=>array("srt"=>"410","typ"=>"I"),
 	"Γ"=>array("srt"=>"420","typ"=>"I"),
@@ -153,15 +154,18 @@ $graphemeCharacterMap = array(
 	"Χ"=>array("srt"=>"620","typ"=>"I"),
 	"Ψ"=>array("srt"=>"630","typ"=>"I"),
 	"Ω"=>array("srt"=>"640","typ"=>"I"),
+	"ἀ"=>array("srt"=>"405","typ"=>"I"),
 	"α"=>array("srt"=>"405","typ"=>"I"),
 	"β"=>array("srt"=>"415","typ"=>"I"),
 	"γ"=>array("srt"=>"425","typ"=>"I"),
 	"δ"=>array("srt"=>"435","typ"=>"I"),
 	"ε"=>array("srt"=>"445","typ"=>"I"),
+	"ἔ"=>array("srt"=>"445","typ"=>"I"),
 	"ζ"=>array("srt"=>"455","typ"=>"I"),
 	"η"=>array("srt"=>"465","typ"=>"I"),
 	"θ"=>array("srt"=>"475","typ"=>"I"),
 	"ι"=>array("srt"=>"485","typ"=>"I"),
+	"ί"=>array("srt"=>"485","typ"=>"I"),
 	"κ"=>array("srt"=>"495","typ"=>"I"),
 	"λ"=>array("srt"=>"505","typ"=>"I"),
 	"μ"=>array("srt"=>"515","typ"=>"I"),
@@ -171,10 +175,13 @@ $graphemeCharacterMap = array(
 	"π"=>array("srt"=>"555","typ"=>"I"),
 	"ρ"=>array("srt"=>"565","typ"=>"I"),
 	"ς"=>array("srt"=>"575","typ"=>"I"),
+	"ϛ"=>array("srt"=>"575","typ"=>"I"),
 	"σ"=>array("srt"=>"585","typ"=>"I"),
 	"τ"=>array("srt"=>"595","typ"=>"I"),
 	"υ"=>array("srt"=>"605","typ"=>"I"),
+	"ῦ"=>array("srt"=>"605","typ"=>"I"),
 	"φ"=>array("srt"=>"615","typ"=>"I"),
+	"ό"=>array("srt"=>"615","typ"=>"I"),
 	"χ"=>array("srt"=>"625","typ"=>"I"),
 	"ψ"=>array("srt"=>"635","typ"=>"I"),
 	"ω"=>array("srt"=>"645","typ"=>"I"),
