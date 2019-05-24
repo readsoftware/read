@@ -308,6 +308,9 @@ div.freetext.dirty {
 .freetext .commitButton {
   display: none;
 }
+.freetext.saving .commitButton {
+  cursor: wait;
+}
 .freetext.valid .commitButton {
   display: inline-block;
   background-color: rgb(217,217,217);

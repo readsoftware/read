@@ -5372,6 +5372,14 @@ mergeLine: function (direction,cbError) {
       });
       commitBtn.unbind('click').bind('click', function(e) {
         $freeTextInput.focus();
+        //unmark as valid so commit btn will hide
+        if ($freeTextDiv.hasClass('valid')) {
+          $freeTextDiv.removeClass('valid');
+        }
+        if (!$freeTextDiv.hasClass('saving')) {
+          $freeTextDiv.addClass('saving');
+        }
+
         commitData = { seqID: freeTextLineSeqID,
                        ednID: ednVE.edition.id};
         if (DEBUG.healthLogOn) {
@@ -5388,6 +5396,9 @@ mergeLine: function (direction,cbError) {
                   firstSyllable, newSeqTag, index, tokCmpTag, tokCmpGID,
                   oldSeqTag;
               if (typeof data == 'object') {
+                if ($freeTextDiv && $freeTextDiv.hasClass('saving')) {
+                  $freeTextDiv.removeClass('saving');
+                }        
                 if (data.entities) {
                   //update local cache
                   ednVE.dataMgr.updateLocalCache(data,ednVE.edition.txtID);
