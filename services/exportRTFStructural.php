@@ -190,7 +190,7 @@
             continue;
           }
           $graIDs = $syllable->getGraphemeIDs();
-          if (!$graIDs && count($graIDs) == 0 ) {
+          if (!$graIDs || count($graIDs) == 0 ) {
             array_push($warnings,"Found syllable without graphemes ".$sclIDs[0]);
             continue;
           }
