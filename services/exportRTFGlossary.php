@@ -16,11 +16,9 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
   /**
-  * loadCatalogEntities
+  * exportRTFGlossary.php
   *
-  *  A service that returns a json structure of the catalog (unrestricted type) requested along with its
-  *  lemma and the lemma's inflections, compounds, and tokens.
-  *  There is NO CACHING of this information.
+  *  A service that returns .rtf for an edition
   *
   * @author      Stephen White  <stephenawhite57@gmail.com>
   * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>

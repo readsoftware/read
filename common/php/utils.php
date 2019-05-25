@@ -3691,6 +3691,50 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
   return $ednLookupInfo;
 }
 
+function getWordIdsForLineQueryString($seqID){
+  $linePhysicalTypeID = Entity::getIDofTermParentLabel('linephysical-textphysical');// warning!!! term dependency
+
+  return "select distinct(tok_id), cmp_id from token left join syllablecluster on scl_grapheme_ids && tok_grapheme_ids ".
+                                          "left join compound on concat('tok:',tok_id) = ANY(cmp_component_ids) ".
+                                          "left join sequence c on concat('scl:',scl_id) = ANY(c.seq_entity_ids) ".
+          "where c.seq_id = $seqID and c.seq_type_id = $linePhysicalTypeID and ".
+                 "tok_id is not null and scl_id is not null and not scl_owner_id = 1 and not tok_owner_id = 1 and ".
+                 "(cmp_owner_id is null or not cmp_owner_id = 1) ".
+          "order by tok_id;";
+}
+
+function updateWordLocationForLine($seqID) {
+  $dbMgr = new DBManager();
+  if (!$dbMgr || $dbMgr->getError()) {
+    error_log("error loading dataManager");
+    return null;
+  }
+  $dbMgr->query(getWordIdsForLineQueryString($seqID));
+  if ($dbMgr->getError()) {
+    error_log("error querying line seq$seqID ".$dbMgr->getError());
+    return null;
+  } else if ($dbMgr->getRowCount() < 1) {
+    error_log("error querying line seq$seqID row count is 0");
+    return null;
+  } else {
+    $updateWords = array();
+    while ($row = $dbMgr->fetchResultRow()) {
+      if ($row[0]) {
+        $token = new Token($row[0]);
+        $token->updateLocationLabel();
+        array_push($updateWords, $token);
+      }
+      if ($row[1]) {
+        $compound = new Compound($row[1]);
+        $compound->updateLocationLabel();
+        array_push($updateWords, $compound);
+      }
+    }
+    return $updateWords;
+  }
+}
+
+          
 function getTokLocQueryString($tokID){
   $strMatch = defined('CKNMATCHREGEXP')?CKNMATCHREGEXP:"'([a-z]+)0*(\d+)'";
   $strReplace = defined('CKNREPLACEMENTEXP')?CKNREPLACEMENTEXP:"'\\1\\2'";

@@ -676,30 +676,45 @@ EDITORS.WordlistVE.prototype = {
             word.edn = ednTag;
           }
           // find first and last SclID for word to calc attested form location
-          if (prefix == 'cmp' && word.tokenIDs.length) {
-            fToken = this.dataMgr.getEntity('tok',word.tokenIDs[0]);
-            if ( fToken && fToken.syllableClusterIDs && fToken.syllableClusterIDs.length && sclTagToLabel['scl'+fToken.syllableClusterIDs[0]]) {
-              label = sclTagToLabel['scl'+fToken.syllableClusterIDs[0]];
-              lToken = this.dataMgr.getEntity('tok',word.tokenIDs[word.tokenIDs.length - 1]);
-              if ( lToken && lToken.syllableClusterIDs && lToken.syllableClusterIDs.length &&
-                  sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]] &&
-                  sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]] != label) {
-                label += "-" + sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]];
+          if (!word.locLabel) {
+            if (prefix == 'cmp' && word.tokenIDs.length) {
+              fToken = this.dataMgr.getEntity('tok',word.tokenIDs[0]);
+              if ( fToken && fToken.syllableClusterIDs && fToken.syllableClusterIDs.length && sclTagToLabel['scl'+fToken.syllableClusterIDs[0]]) {
+                label = sclTagToLabel['scl'+fToken.syllableClusterIDs[0]];
+                lToken = this.dataMgr.getEntity('tok',word.tokenIDs[word.tokenIDs.length - 1]);
+                if ( lToken && lToken.syllableClusterIDs && lToken.syllableClusterIDs.length &&
+                    sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]] &&
+                    sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]] != label) {
+                  label += "-" + sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]];
+                }
+                word.locTag = ednLabel + label;
+              } else {
+                word.locTag = defLabel;
               }
-              word.locLabel = ednLabel + label;
-            } else {
-              word.locLabel = defLabel;
+            } else if (prefix == 'tok') {
+              if ( word.syllableClusterIDs && word.syllableClusterIDs.length && sclTagToLabel['scl'+word.syllableClusterIDs[0]]) {
+                label = sclTagToLabel['scl'+word.syllableClusterIDs[0]];
+                if (sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]] &&
+                    sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]] != label) {
+                  label += "-" + sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]];
+                }
+                word.locTag = ednLabel + label;
+              } else {
+                word.locTag = defLabel;
+              }
             }
-          } else if (prefix == 'tok') {
-            if ( word.syllableClusterIDs && word.syllableClusterIDs.length && sclTagToLabel['scl'+word.syllableClusterIDs[0]]) {
-              label = sclTagToLabel['scl'+word.syllableClusterIDs[0]];
-              if (sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]] &&
-                  sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]] != label) {
-                label += "-" + sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]];
+          } else {
+            if (word.locLabel.indexOf(":")) {
+              locParts = word.locLabel.split(":");
+              if (locParts.length == 2) {
+                word.locTag = locParts[1]; // get label after ordinal
+              } else if (!locParts[0].match(/sort/)) {
+                word.locTag = locParts[0]+":"+locParts[2]; // skip ordinal
+              } else {
+                word.locTag = locParts[2];
               }
-              word.locLabel = ednLabel + label;
             } else {
-              word.locLabel = defLabel;
+              word.locTag = word.locLabel;
             }
           }
           if (linkedWordTags[wtag]) {//since lemmas have been added to entities we don't want attested forms in our list
@@ -746,7 +761,7 @@ EDITORS.WordlistVE.prototype = {
       wordHTML = '<div class="wordlistentry"><span class="word '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+
                       word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                       (!word.transcr?'MISSING':word.transcr.replace(/ʔ/g,'').replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨')) +
-                      ' ' + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) + '</span></div>';
+                      ' <span class= "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span></span></div>';
     }
     return wordHTML;
   },
@@ -936,17 +951,17 @@ EDITORS.WordlistVE.prototype = {
                       }
                     }
                   }
-                  if (word && word.value && word.transcr && word.locLabel) {
+                  if (word && word.value && word.transcr && word.locTag) {
                     html += '<span class="linkedword'+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +
                             '" srch="'+word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
-                            ((k>0 || j>0)?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
+                            ((k>0 || j>0)?', ':' ') + '<span class = "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span>' +
                             ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                             (wordAnno?' ('+wordAnno+')':"") + '</span>';
                   } else {
                     DEBUG.log('err',"Genreating html for inflection found incomplete word data "+word.tag?word.tag+" ":""+
                               (!word.value ? " missing word value":"")+
                               (!word.transcr ? " missing word trascription":"")+
-                              (!word.locLabel ? " missing word location label":""));
+                              (!word.locTag ? " missing word location label":""));
                   }
                 }
               }
@@ -964,17 +979,17 @@ EDITORS.WordlistVE.prototype = {
                     }
                   }
                 }
-                if (word && word.value && word.transcr && word.locLabel) {
+                if (word && word.value && word.transcr && word.locTag) {
                   html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
                           word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
-                          (k>0?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
+                          (k>0?', ':' ') + '<span class = "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span>'  +
                           ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                           (wordAnno?' ('+wordAnno+')':"") + '</span>';
                 } else {
                   DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
                             (!word.value ? " missing word value":"")+
                             (!word.transcr ? " missing word trascription":"")+
-                            (!word.locLabel ? " missing word location label":""));
+                            (!word.locTag ? " missing word location label":""));
                 }
               }
             }
@@ -1006,17 +1021,17 @@ EDITORS.WordlistVE.prototype = {
                         (wordAnno?' ('+wordAnno+')':"") + '</span>';
 */
               }
-              if (word && word.value && word.transcr && word.locLabel) {
+              if (word && word.value && word.transcr && word.locTag) {
                 html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
                         word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
-                        (j?', ':' ') + (word.edn?'<span class="edndraghandle">'+word.locLabel+'</span>':word.locLabel) +
+                        (j?', ':' ') + '<span class = "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span>' +
                         ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                         (wordAnno?' ('+wordAnno+')':"") + '</span>';
               } else {
                 DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
                           (!word.value ? " missing word value":"")+
                           (!word.transcr ? " missing word trascription":"")+
-                          (!word.locLabel ? " missing word location label":""));
+                          (!word.locTag ? " missing word location label":""));
               }
             }
           }
@@ -1485,30 +1500,45 @@ EDITORS.WordlistVE.prototype = {
         }
         word.tag = tag;
         // find first and last SclID for word
-        if (prefix == 'cmp' && word.tokenIDs.length) {
-          fToken = this.dataMgr.getEntity('tok',word.tokenIDs[0]);
-          if ( fToken && fToken.syllableClusterIDs && fToken.syllableClusterIDs.length && sclTagToLabel['scl'+fToken.syllableClusterIDs[0]]) {
-            label = sclTagToLabel['scl'+fToken.syllableClusterIDs[0]];
-            lToken = this.dataMgr.getEntity('tok',word.tokenIDs[word.tokenIDs.length - 1]);
-            if ( lToken && lToken.syllableClusterIDs && lToken.syllableClusterIDs.length &&
-                sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]] &&
-                sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]] != label) {
-              label += "-" + sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]];
+        if (!word.locLabel) {
+          if (prefix == 'cmp' && word.tokenIDs.length) {
+            fToken = this.dataMgr.getEntity('tok',word.tokenIDs[0]);
+            if ( fToken && fToken.syllableClusterIDs && fToken.syllableClusterIDs.length && sclTagToLabel['scl'+fToken.syllableClusterIDs[0]]) {
+              label = sclTagToLabel['scl'+fToken.syllableClusterIDs[0]];
+              lToken = this.dataMgr.getEntity('tok',word.tokenIDs[word.tokenIDs.length - 1]);
+              if ( lToken && lToken.syllableClusterIDs && lToken.syllableClusterIDs.length &&
+                  sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]] &&
+                  sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]] != label) {
+                label += "-" + sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]];
+              }
+              word.locTag = label;
+            } else {
+              word.locTag = defLabel;
             }
-            word.locLabel = label;
-          } else {
-            word.locLabel = defLabel;
+          } else if (prefix == 'tok') {
+            if ( word.syllableClusterIDs && word.syllableClusterIDs.length && sclTagToLabel['scl'+word.syllableClusterIDs[0]]) {
+              label = sclTagToLabel['scl'+word.syllableClusterIDs[0]];
+              if (sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]] &&
+                  sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]] != label) {
+                label += "-" + sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]];
+              }
+              word.locTag = label;
+            } else {
+              word.locTag = defLabel;
+            }
           }
-        } else if (prefix == 'tok') {
-          if ( word.syllableClusterIDs && word.syllableClusterIDs.length && sclTagToLabel['scl'+word.syllableClusterIDs[0]]) {
-            label = sclTagToLabel['scl'+word.syllableClusterIDs[0]];
-            if (sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]] &&
-                sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]] != label) {
-              label += "-" + sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]];
+        } else {
+          if (word.locLabel.indexOf(":")) {
+            locParts = word.locLabel.split(":");
+            if (locParts.length == 2) {
+              word.locTag = locParts[1]; // get label after ordinal
+            } else if (!locParts[0].match(/sort/)) {
+              word.locTag = locParts[0]+":"+locParts[2]; // skip ordinal
+            } else {
+              word.locTag = locParts[2];
             }
-            word.locLabel = label;
           } else {
-            word.locLabel = defLabel;
+            word.locTag = word.locLabel;
           }
         }
         //add word to entities and tag to word
@@ -1520,16 +1550,16 @@ EDITORS.WordlistVE.prototype = {
     html = '<h3 class="wordListTitle edn'+edition.id+'">'+edition.value+' Word List</h3>';
     for (i=0; i<entities.length; i++) {
       word = entities[i];
-      if (word && word.tag && word.value && word.transcr && word.locLabel) {
+      if (word && word.tag && word.value && word.transcr && word.locTag) {
         html += '<div class="wordlistentry"><span class="word '+word.tag+'" srch="'+
                 word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
                 word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
-                ' ' + word.locLabel + '</span></div>';
+                ' ' + word.locTag + '</span></div>';
       } else {
         DEBUG.log('err',"Genreating html for wordlist found incomplete word data "+word.tag+
                   (!word.value ? " missing word value":"")+
                   (!word.transcr ? " missing word trascription":"")+
-                  (!word.locLabel ? " missing word location label":""));
+                  (!word.locTag ? " missing word location label":""));
       }
     }
     this.contentDiv.html(html+"<hr class=\"viewEndRule\">");
@@ -1610,6 +1640,48 @@ EDITORS.WordlistVE.prototype = {
 
 
     /**
+    * handle 'updatelabel' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string array entTags parallel array of entity tags who's labels have changed
+    * @param string array entLabels parallel array of labels for entity tags
+    * @param string entTag Entity tag of primary change
+    */
+
+   function updateLabelHandler(e,senderID, entTags, entLabels, primaryTag) {
+    if (senderID == wordlistVE.id) {
+      return;
+    }
+    var entTag, i, $labelElements, locLabel, locTag;
+    if (entTags.length > 1) {
+      for (i in entTags) {
+        entTag = entTags[i];
+        $labelElements = $("."+entTag+" .wordloclabel");
+        if ($labelElements.length > 0) {
+          locLabel = entLabels[i];
+          if (locLabel.indexOf(":")) {
+            locParts = locLabel.split(":");
+            if (locParts.length == 2) {
+              locTag = locParts[1]; // get label after ordinal
+            } else if (!locParts[0].match(/sort/)) {
+              locTag = locParts[0]+":"+locParts[2]; // skip ordinal
+            } else {
+              locTag = locParts[2];
+            }
+          } else {
+            locTag = locLabel;
+          }
+          $labelElements.html(locTag);
+        }
+      }
+    }
+  };
+
+  $(this.editDiv).unbind('updatelabel').bind('updatelabel', updateLabelHandler);
+
+
+    /**
     * handle 'updateselection' event
     *
     * @param object e System event object
@@ -1618,35 +1690,35 @@ EDITORS.WordlistVE.prototype = {
     * @param string entTag Entity tag of selection
     */
 
-    function updateSelectionHandler(e,senderID, selectionIDs, entTag) {
-      if (senderID == wordlistVE.id) {
-        return;
-      }
-      var i, id, prefix;
-      DEBUG.log("event","selection changed recieved by "+wordlistVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
-      $(".selected", wordlistVE.contentDiv).removeClass("selected");
-      if (selectionIDs && selectionIDs.length && selectionIDs[0].substr(0,3) != 'seg') {
-        $.each(selectionIDs, function(i,val) {
-          if (val) {
-            var elem;
-            elem = $('.'+val,wordlistVE.contentDiv);
-            if (elem && !elem.hasClass("selected")) {
-              elem.addClass("selected");
-            }
+   function updateSelectionHandler(e,senderID, selectionIDs, entTag) {
+    if (senderID == wordlistVE.id) {
+      return;
+    }
+    var i, id, prefix;
+    DEBUG.log("event","selection changed recieved by "+wordlistVE.id+" from "+senderID+" selected ids "+ selectionIDs.join());
+    $(".selected", wordlistVE.contentDiv).removeClass("selected");
+    if (selectionIDs && selectionIDs.length && selectionIDs[0].substr(0,3) != 'seg') {
+      $.each(selectionIDs, function(i,val) {
+        if (val) {
+          var elem;
+          elem = $('.'+val,wordlistVE.contentDiv);
+          if (elem && !elem.hasClass("selected")) {
+            elem.addClass("selected");
           }
-        });
-      } else if (entTag && entTag.length && entTag.length > 3) {
-        prefix = entTag.substr(0,3);
-        if (prefix == 'tok' || prefix == 'cmp' ) {
-          $('.'+entTag,wordlistVE.contentDiv).addClass("selected");
         }
+      });
+    } else if (entTag && entTag.length && entTag.length > 3) {
+      prefix = entTag.substr(0,3);
+      if (prefix == 'tok' || prefix == 'cmp' ) {
+        $('.'+entTag,wordlistVE.contentDiv).addClass("selected");
       }
-    };
+    }
+  };
 
-    $(this.editDiv).unbind('updateselection').bind('updateselection', updateSelectionHandler);
+  $(this.editDiv).unbind('updateselection').bind('updateselection', updateSelectionHandler);
 
 
-    /**
+/**
     * handle 'click' event for contentdiv
     *
     * @param object e System event object

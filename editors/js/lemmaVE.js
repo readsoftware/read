@@ -87,6 +87,31 @@ EDITORS.LemmaVE.prototype = {
         $editElems.removeClass('edit');
       }
     });
+    this.editDiv.unbind("updatelabel").bind("updatelabel", function(e, senderID,entTags,entLabels,primaryTag) {
+      var entTag,i, $labelElements, locLabel, locTag;
+      if (entTags.length > 1) {
+        for (i in entTags) {
+          entTag = entTags[i];
+          $labelElements = $("."+entTag+".attestedformloc");
+          if ($labelElements.length > 0) {
+            locLabel = entLabels[i];
+            if (locLabel.indexOf(":")) {
+              locParts = locLabel.split(":");
+              if (locParts.length == 2) {
+                locTag = locParts[1]; // get label after ordinal
+              } else if (!locParts[0].match(/sort/)) {
+                locTag = locParts[0]+":"+locParts[2]; // skip ordinal
+              } else {
+                locTag = locParts[2];
+              }
+            } else {
+              locTag = locLabel;
+            }
+            $labelElements.html(locTag);
+          }
+        }
+      }
+    });
     DEBUG.traceExit("init","init lemma editor");
   },
 
@@ -2102,8 +2127,22 @@ DEBUG.traceEntry("createPhonologicalUI");
             attestedAnnoLabel = "…"
           }
         }
+        if (attested.locLabel) {
+          if (attested.locLabel.indexOf(":")) {
+            locParts = attested.locLabel.split(":");
+            if (locParts.length == 2) {
+              attested.locTag = locParts[1]; // get label after ordinal
+            } else if (!locParts[0].match(/sort/)) {
+              attested.locTag = locParts[0]+":"+locParts[2]; // skip ordinal
+            } else {
+              attested.locTag = locParts[2];
+            }
+          } else {
+            attested.locTag = attested.locLabel;
+          }
+        }
         attestedEntry = $('<div class="attestedentry">' +
-                            '<span class="attestedformloc '+attested.tag+'">' + (attested.locLabel?attested.locLabel:"$nbsp;") + '</span>'+
+                            '<span class="attestedformloc '+attested.tag+'">' + (attested.locTag?attested.locTag:"$nbsp;") + '</span>'+
                             '<span class="attestedform '+attested.tag+'">' +
                             attested.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') + '</span>'+
                             (infVal?'<span class="inflection '+attested.tag+'">' + infVal + '</span>':'') +

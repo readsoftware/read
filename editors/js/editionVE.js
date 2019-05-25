@@ -582,7 +582,13 @@ addTextReference: function () {
         lineHeaderSpan;
     if ('linephysical' == seqType || 'freetext' == seqType) { // warning!!! term dependency
       lineHeaderSpan = $('span.textDivHeader.lineseq'+seqID,this.contentDiv);
-      lineHeaderSpan.html(sequence.value);
+      if (lineHeaderSpan.length) {
+        lineHeaderSpan.html(sequence.value);
+      }
+      lineMarkerSpan = $('span.linelabel.seq'+seqID,this.contentDiv);
+      if (lineMarkerSpan.length) {
+        lineMarkerSpan.html("["+sequence.value+"]");
+      }
     }
   },
 
@@ -3283,6 +3289,30 @@ mergeLine: function (direction,cbError) {
     };
 
     $(this.editDiv).unbind('linkResponse').bind('linkResponse', linkResponseHandler);
+
+
+    /**
+    * handle 'updatelabel' event
+    *
+    * @param object e System event object
+    * @param string senderID Identifies the sending editor pane for recursion control
+    * @param string array entTags parallel array of entity tags who's labels have changed
+    * @param string array entLabels parallel array of labels for entity tags
+    * @param string entTag Entity tag of primary change
+    */
+
+    function updateLabelHandler(e,senderID, entTags, entLabels, primaryTag) {
+      if (senderID == ednVE.id) {
+        return;
+      }
+      if (primaryTag && primaryTag.match(/^seq/)) {
+        var seqID = primaryTag.substr(3);
+        ednVE.calcLineGraphemeLookups(seqID);
+        ednVE.refreshPhysLineHeader(seqID);
+      }
+    };
+
+    $(this.editDiv).unbind('updatelabel').bind('updatelabel', updateLabelHandler);
 
 
     /**

@@ -166,10 +166,6 @@ if (count($errors) == 0) {
         addUpdateEntityReturnData("seq",$seqID,'value', $sequence->getLabel());
         addUpdateEntityReturnData("seq",$seqID,'label', $sequence->getLabel());
       }
-      if ($sequence->getType()=='LinePhysical') {
-        clearSessionCatCache();
-        //token locLabel update here for all tokens overlapping syllables
-      }
     }
     if ($superscript !== null) {
       $sequence->setSuperScript($superscript);
@@ -347,6 +343,13 @@ if (count($errors) == 0) {
             }else {
               addUpdateEntityReturnData("edn",$edition->getID(),'seqIDs', $edition->getSequenceIDs());
             }
+          }
+        }
+      } else if ($sequence->getType()=='LinePhysical') { // warning!!! Term Dependency
+        $updatesWords = updateWordLocationForLine($sequence->getID());
+        if ($updatesWords && count($updatesWords) > 0) {
+          foreach ($updatesWords as $word) {
+            addUpdateEntityReturnData($word->getEntityTypeCode(), $word->getID(),'locLabel', $word->getLocation());
           }
         }
       }

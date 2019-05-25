@@ -2733,7 +2733,7 @@ removeBln: function(blnTag) {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var seqID, newSeqID, propName, sequence, needsRefresh = false;
+              var seqID, newSeqID, sequence, needsRefresh = false, params = savedata;
               if (typeof data == 'object' && data.success && data.entities &&
                   entPropVE && entPropVE.dataMgr ) {
                 //update data
@@ -2753,14 +2753,31 @@ removeBln: function(blnTag) {
                   }
                   entPropVE.showEntity('seq',seqID);
                   sequence = entPropVE.dataMgr.getEntity('seq',seqID);
+                  seqtype = entPropVE.dataMgr.getTermFromID(sequence.typeID);
                   if (entPropVE.controlVE && entPropVE.controlVE.setDefaultSeqType){
                     entPropVE.controlVE.setDefaultSeqType(sequence.typeID);
                   }
                   if (entPropVE.controlVE && entPropVE.controlVE.refreshSeqMarkers) {
                     entPropVE.controlVE.refreshSeqMarkers([seqID]);
                   }
-                  if (entPropVE.controlVE && entPropVE.controlVE.refreshPhysLineHeader) {
-                    entPropVE.controlVE.refreshPhysLineHeader(seqID);
+//                  if (entPropVE.controlVE && entPropVE.controlVE.refreshPhysLineHeader) {
+                  if (params && params.label && needsRefresh && seqtype == "LinePhysical") { // warning!! Term Dependency
+                    var entTags = [], entLabels = [], updates = data.entities.update;
+                    for (prefix in updates) {
+                      for (entID in updates[prefix]) {
+                        for (prop in updates[prefix][entID]) {
+                          if (prop.match(/label/i)) {
+                            entTags.push(prefix+entID);
+                            entLabels.push(updates[prefix][entID][prop]);
+                          }
+                        }
+                      }
+                    }
+                    if (entTags.length) { 
+                      $('.editContainer,.propertyVEContainer').trigger('updatelabel',[entPropVE.id,entTags,entLabels,'seq'+seqID]);
+                    //  $('.propertyVEContainer').trigger('updatelabel',[entPropVE.id,entTags,entLabels,'seq'+seqID]);
+                    }
+                  //  entPropVE.controlVE.refreshPhysLineHeader(seqID);
                   }
                   if (!cb && needsRefresh && entPropVE.controlVE && entPropVE.controlVE.refreshNode) {
                     entPropVE.controlVE.refreshNode('seq:'+seqID);
@@ -2910,7 +2927,7 @@ removeBln: function(blnTag) {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var catID, propName, sequence, needsRefresh = false;
+              var catID, sequence, needsRefresh = false;
               if (typeof data == 'object' && data.success && data.entities &&
                   entPropVE && entPropVE.dataMgr ) {
                 //update data
@@ -3099,7 +3116,7 @@ removeBln: function(blnTag) {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var txtID, propName, text, needsRefresh = false;
+              var txtID, text, needsRefresh = false;
               if (typeof data == 'object' && data.success && data.entities &&
                   entPropVE && entPropVE.dataMgr ) {
                 //update data
