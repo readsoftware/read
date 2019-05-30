@@ -694,7 +694,7 @@ EDITORS.SearchVE.prototype = {
         this.searchCurInfoBar = $('<div id="searchCursorInfoBar">Loading....</div>');
         this.searchCurInfoBar.insertAfter(this.searchMediaBar);
       }
-      this.searchCurInfoBar.html('<div class="cursorTitle">'+ (curText.CKN?curText.CKN+" - ":"") + curText.value+ '</div>');
+      this.searchCurInfoBar.html('<div class="cursorTitle txt'+txtID+'">'+ (curText.CKN?curText.CKN+" - ":"") + curText.value+ '</div>');
       this.searchCurInfoBar.append(resBtnBar);
       if (this.searchCurResourcePanel) {
         this.searchCurResourcePanel.remove();
@@ -877,10 +877,18 @@ EDITORS.SearchVE.prototype = {
       resDiv =$('<div class="dragresource ednresource"> New Edition </div>');
       resPanel.append(resDiv);
       resDiv.unbind('click').bind('click', function (e) {
-                                var btn = this;
-                                srchVE.newEdition(e,btn);
-                              })
-                            .prop('GID', "txt:"+ srchVE.getCursorTextID());
+//                                var btn = this;
+//                                srchVE.newEdition(e,btn);
+                                if (!srchVE.layoutMgr.ednWizard) {
+                                  srchVE.layoutMgr.createNewEditionWizard(ckn);
+                                } else {
+                                  srchVE.layoutMgr.initEditionWizard(ckn)
+                                }
+                                if (!srchVE.layoutMgr.ednWizard.jqxWindow('isOpen')) {
+                                  srchVE.layoutMgr.ednWizard.jqxWindow('open');
+                                }
+                              });
+//                            .prop('GID', "txt:"+ srchVE.getCursorTextID());
 
     }
     return resPanel;

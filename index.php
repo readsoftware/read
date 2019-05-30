@@ -179,5 +179,43 @@
   <div id="frameContentPanel"></div>
   <div id="frameNavPanel"></div>
   <div id="layoutBtnBar"></div>
+  <div id="editionWizard">
+    <div id="wizardHeader">
+        <span id="headerSpan" style="float: left">New Edition Wizard</span>
+    </div>
+    <div id="wizardContent">
+      <div class="wzInputBox">
+        <span id="lblTxtInv" class="wzInputLabel">Text Inv. :</span>
+        <input type="text" class="wzInput" id="txtInv" placeholder="Enter text inv. no."/>
+      </div>
+      <div class="wzInputBox">
+        <span id="lblTitle" class="wzInputLabel">Edition Title :</span>
+        <input type="text" class="wzInput" id="ednTitle"  placeholder="Enter edition title"/>
+      </div>
+      <div class="wzImportOptionsBox">
+        <span class="wzOptionsGroupLabel">import option :</span>
+        <div id="importOptions" >
+          <div id="freetextCheckBox" class="wzCheckBox">freetext only</div>
+          <div id="verboseCheckBox"  class="wzCheckBox">verbose</div>
+        </div>
+      </div>
+      <div class="wzTextareaBox">
+        <div id="lblTrans" class="wzInputLabel">Transcription :</div>
+        <textarea class="wzInputArea" id="transcript" placeholder="Enter transcription"></textarea>
+      </div>
+      <div  class="wzButtonBox">
+        <div style="float: right">
+          <input type="button" class="wzButton" value="Validate" id="btnEditionValidate" />
+          <input type="button" class="wzButton" value="Save" id="btnEditionSave" />
+          <input type="button" class="wzButton" value="Cancel" id="btnEditionWizardCancel" />
+        </div>
+      </div>
+      <div class="wzTextareaBox">
+        <div id="importResultsHeader" class="wzInputLabel">Import Results :</div>
+        <div id="importResultsContent"  class="wzResultArea" ></div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

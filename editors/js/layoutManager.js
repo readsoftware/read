@@ -128,6 +128,7 @@ MANAGERS.LayoutManager.prototype = {
         }
       }
     }
+    this.createNewEditionWizard();// placed here due to unknown interaction bug with toolbar, leave after load
     DEBUG.traceExit("layoutMgr.init","");
   },
 
@@ -1516,9 +1517,9 @@ MANAGERS.LayoutManager.prototype = {
   },
 
 
-/**
-* create Landing page
-*/
+  /**
+  * create Landing page
+  */
 
   createLandingPage: function(){
     DEBUG.traceEntry("layoutMgr.createLandingPage","");
@@ -1545,6 +1546,116 @@ MANAGERS.LayoutManager.prototype = {
 
   isLoggedIn: function(){
     return this.userVE.isLoggedIn();
-  }
+  },
 
+
+
+  /**
+  * create new edition wizard
+  */
+
+  initEditionWizard: function(ckn = null){
+    var layoutMgr = this;
+    DEBUG.traceEntry("layoutMgr.initEditionWizard","");
+    $('#btnEditionValidate').jqxButton({ width: '80px', disabled: true });
+    $('#btnEditionValidate').unbind('click').bind('click',function(e) {layoutMgr.importNewEdition(false);});
+    $('#btnEditionSave').jqxButton({ width: '80px', disabled: false });
+    $('#btnEditionSave').unbind('click').bind('click', function(e) {layoutMgr.importNewEdition(false);});
+    $('#btnEditionWizardCancel').jqxButton({ width: '80px', disabled: false });
+    $('#txtInv').val((ckn?ckn:null));
+    $('#ednTitle').val();
+    $('#freetextCheckBox').jqxCheckBox({ width: '150px', checked:true, disabled:true});
+    //    $('#verboseCheckBox').jqxCheckBox({ width: '150px', checked:false});
+    DEBUG.traceExit("layoutMgr.initEditionWizard","");
+  },
+
+
+
+  /**
+  * create new edition wizard
+  */
+
+  importNewEdition: function(saveAfterValidation = false){
+    DEBUG.traceEntry("layoutMgr.importNewEdition","");
+    var layoutMgr = this, savedata = {};
+    savedata['txtInv'] = $('#txtInv').val()
+    savedata['ednTitle'] = $('#ednTitle').val(),
+    savedata['transcription'] = $('#transcript').val(),
+    savedata['freetextImport'] = true,
+    savedata['verbose'] = false;
+    savedata['save'] = saveAfterValidation;
+    if (!$('#freetextCheckBox').jqxCheckBox('checked')) {
+      savedata.freetextImport = false;
+    }
+    if ($('#verboseCheckBox').jqxCheckBox('checked')) {
+      savedata.verbose =  true;
+    }
+  //make ajax call to create plain Text
+    $.ajax({
+        type:"POST",
+        dataType: 'json',
+        url: basepath+'/services/createPlainTextEdition.php?db='+dbName,
+        data: savedata,
+        asynch: true,
+        success: function (data, status, xhr) {
+            var srchVE = layoutMgr.editors.searchVE;
+            if (data && data.resultMsg) {
+              $('#importResultsContent').html(data.resultMsg);
+            }
+            if (typeof data == 'object' && data.success && data.entities) {
+              layoutMgr.dataMgr.updateLocalCache(data,srchVE.getCursorTextID());
+              if (data && data.entities && data.entities.insert && data.entities.insert.edn) {
+                var ednID, text = srchVE.dataMgr.getEntity('txt',srchVE.getCursorTextID());
+                if (text) {
+                  if (!text.ednIDs) {
+                    text.ednIDs = [];
+                  }
+                  for (ednID in data.entities.insert.edn) {
+                    if (text.ednIDs.indexOf(ednID) == -1){
+                      text.ednIDs.push(ednID);
+                    }
+                  }
+                  srchVE.dataMgr.updateTextResourcesCache(text.id);
+                }
+              }
+              srchVE.updateCursorInfoBar();
+              $('#btnEditionSave').jqxButton({disabled: false });
+              $('#transcript').val('')
+            }
+        },
+        error: function (xhr,status,error) {
+            // parsing text input failed.
+            errStr = "<div class=\"errmsg\">An error occurred while trying to parser text input. Error: " + error+"</div>";
+            $('#importResultsContent').val(errStr);
+        }
+    });// end ajax
+    DEBUG.traceExit("layoutMgr.importNewEdition","");
+  },
+
+
+
+  /**
+  * create new edition wizard
+  */
+
+  createNewEditionWizard: function(ckn = null){
+    DEBUG.traceEntry("layoutMgr.createNewEditionWizard","");
+    var layoutMgr = this, mainContainer = $('body'),
+        offset = mainContainer.offset(),
+        wzWidth, wzHeight;
+
+    offset.xcenter = mainContainer.innerWidth()/4;
+    offset.ycenter = mainContainer.innerHeight()/4;
+    wzWidth = 3 * offset.xcenter + 300;
+    wzHeight = 3 * offset.ycenter + 400;
+    layoutMgr.ednWizard = $('#editionWizard').jqxWindow({  width: wzWidth,
+                              height: wzHeight, resizable: true, isModal: true,
+                              cancelButton: $('#btnEditionWizardCancel'),
+                              position: { x: offset.left + 100, 
+                                          y: offset.top + 100},
+                              initContent: function () { layoutMgr.initEditionWizard(ckn);}
+                          });
+    layoutMgr.ednWizard.jqxWindow('close');
+    DEBUG.traceExit("layoutMgr.createNewEditionWizard","");
+  }
 }

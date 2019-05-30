@@ -289,6 +289,10 @@ div.freetext.dirty {
   color: red!important;
   background-color: yellow!important;
 }
+.successmsg {
+  color: green!important;
+  background-color: transparent!important;
+}
 .errmsg {
   color: brown!important;
   background-color: pink!important;

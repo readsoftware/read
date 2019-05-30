@@ -171,6 +171,14 @@
     }
 
     /**
+    * Gets the Inventory Number for this Text
+    * @return string for the Inv Number
+    */
+    public function getInv() {
+      return $this->_ckn;
+    }
+
+    /**
     * Get Title of the text
     *
     * When this is not stored it is caclulated from related entities.
