@@ -184,9 +184,9 @@ MANAGERS.PropertyManager.prototype = {
 *
 */
 
-  entityUpdated: function () {
+  entityUpdated: function (entTag) {
     if (this.currentVE && this.currentVE.afterUpdate) {
-      this.currentVE.afterUpdate();
+      this.currentVE.afterUpdate(entTag);
     }
   },
 

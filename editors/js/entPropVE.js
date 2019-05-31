@@ -166,9 +166,9 @@ EDITORS.EntityPropVE.prototype = {
   },
 
 
-  afterUpdate: function() {
+  afterUpdate: function(entTag) {
     if (this.controlVE && this.controlVE.afterUpdate) {
-      this.controlVE.afterUpdate(this.tag);
+      this.controlVE.afterUpdate(entTag?entTag:this.tag);
     }
   },
 

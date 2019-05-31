@@ -547,11 +547,32 @@ EDITORS.AnnoVE.prototype = {
   },
 
 
-  /**
+/**
 * put your comment there...
 *
 */
 
+  getAnchorEntityTag: function(entTag) {
+    var annoVE = this, anchTag = null;
+    DEBUG.traceEntry("getAnchorEntityTag");
+    if (entTag && entTag.substring(0,3) == "seq") {
+      sequence = annoVE.dataMgr.getEntityFromGID(entTag);
+      extRefTypeID = annoVE.dataMgr.termInfo.idByTerm_ParentLabel["externalreference-textreferences"];//term dependency
+      if (sequence.typeID == extRefTypeID) {
+        entGIDs = sequence.entityIDs;
+        anchTag = entGIDs[entGIDs.length - 1];
+      }
+    }
+    return anchTag;
+    DEBUG.traceExit("getAnchorEntityTag");
+  },
+
+
+/**
+  * put your comment there...
+  *
+  */
+    
   saveAnno: function() {
     var savedata ={},url, text, typeID, vis,
         annoVE = this;
@@ -564,6 +585,7 @@ EDITORS.AnnoVE.prototype = {
       if (!this.anoID && (text.length || url.length)) {//create new annotation case
         savedata["cmd"] = "createAno";
         savedata["linkFromGID"] = (this.linkTag?this.linkTag:this.entTag);
+        savedata["linkFromGIDAnchor"] = annoVE.getAnchorEntityTag(savedata["linkFromGID"]);
         savedata["typeID"] = typeID;
         savedata["vis"] = vis;
         if (text.length) {
@@ -597,7 +619,8 @@ EDITORS.AnnoVE.prototype = {
           data: savedata,
           async: true,
           success: function (data, status, xhr) {
-              var cmd = savedata["cmd"];
+              var cmd = savedata["cmd"],
+                  anchTag = annoVE.getAnchorEntityTag(annoVE.linkTag?annoVE.linkTag:annoVE.entTag);
               if (typeof data == 'object' && data.success && data.entities &&
                 annoVE && annoVE.dataMgr && annoVE.hide ) {
                 //update data
@@ -612,7 +635,12 @@ EDITORS.AnnoVE.prototype = {
                   }
                 }
                 if (annoVE.propMgr && annoVE.propMgr.entityUpdated) {
-                  annoVE.propMgr.entityUpdated();
+                  if (anchTag) { // the annotation anchors to a contained entity
+                    // ensure to update the line display for the anchor.
+                    annoVE.propMgr.entityUpdated(anchTag);
+                  } else {
+                    annoVE.propMgr.entityUpdated();
+                  }
                 }
               }
               if (data.errors) {

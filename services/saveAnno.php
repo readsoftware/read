@@ -134,10 +134,16 @@ if (!$data) {
     $url = $data['url'];
   }
   $linkedFromEntity = null;
-  if ( isset($data['linkFromGID'])) {//get entity
+  $linkedFromAnchorEntity = null;
+  if ( isset($data['linkFromGID']) && $data['linkFromGID']) {//get entity
     $linkedFromEntity = EntityFactory::createEntityFromGlobalID($data['linkFromGID']);
     if ($linkedFromEntity->hasError()) {
       array_push($errors,"creating linked entity - ".join(",",$linkedFromEntity->getErrors()));
+    } else if (isset($data['linkFromGIDAnchor']) && $data['linkFromGIDAnchor']) {
+      $linkedFromAnchorEntity = EntityFactory::createEntityFromGlobalID($data['linkFromGIDAnchor']);
+      if ($linkedFromAnchorEntity->hasError()) {
+        array_push($errors,"creating linked entity anchor- ".join(",",$linkedFromAnchorEntity->getErrors()));
+      }      
     }
   }
   $linkedToEntity = null;
@@ -181,7 +187,14 @@ if (count($errors) == 0) {
         array_push($errors,"insufficient data to create annotation");
       } else {//create annotation
         $annotation = new Annotation();
-        $annotation->setLinkFromIDs(array($linkedFromEntity->getGlobalID()));
+        $linkedFromGIDs = array($linkedFromEntity->getGlobalID());
+        if ($linkedFromAnchorEntity) {
+          array_push($linkedFromGIDs,$linkedFromAnchorEntity->getGlobalID());
+          if (!$typeID){
+            $typeID = Entity::getIDofTermParentLabel("paraphrase-textreflinkage");//term dependency
+           }
+        }
+        $annotation->setLinkFromIDs($linkedFromGIDs);
         if (!$typeID){
          $typeID = Entity::getIDofTermParentLabel("footnotetype-annotationtype");//term dependency
         }
@@ -314,6 +327,12 @@ if ((count($errors) == 0) && $linkedFromEntity) {//update all annotations for th
   $linkedAnoIDsByType = $linkedFromEntity->getLinkedAnnotationsByType();
   if ($linkedAnoIDsByType && count($linkedAnoIDsByType) > 0){
     addUpdateEntityReturnData(substr($linkedFromEntity->getGlobalID(),0,3),$linkedFromEntity->getID(),'linkedAnoIDsByType',$linkedAnoIDsByType);
+  }
+}
+if ((count($errors) == 0) && $linkedFromAnchorEntity) {//update all annotations for the linked anchor entity
+  $linkedAnoIDsByType = $linkedFromAnchorEntity->getLinkedAnnotationsByType();
+  if ($linkedAnoIDsByType && count($linkedAnoIDsByType) > 0){
+    addUpdateEntityReturnData(substr($linkedFromAnchorEntity->getGlobalID(),0,3),$linkedFromAnchorEntity->getID(),'linkedAnoIDsByType',$linkedAnoIDsByType);
   }
 }
 if ((count($errors) == 0) && $linkedToEntity) {//update all annotations for the linked entity

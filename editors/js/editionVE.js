@@ -73,8 +73,12 @@ EDITORS.EditionVE.prototype = {
     }
     this.footnoteTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["footnote-footnotetype"];//term dependency
     this.transcrTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["transcription-footnote"];//term dependency
+    this.paraphraseTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["paraphrase-textreflinkage"];//term dependency
+    this.quoteTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["quote-textreflinkage"];//term dependency
+    this.altEditionTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["altedition-textreflinkage"];//term dependency
     this.reconstrTypeID = this.dataMgr.termInfo.idByTerm_ParentLabel["reconstruction-footnote"];//term dependency
-    this.typeIDs = [this.footnoteTypeID,this.transcrTypeID,this.reconstrTypeID];
+    this.typeIDs = [this.footnoteTypeID,this.transcrTypeID,this.reconstrTypeID,
+                    this.paraphraseTypeID,this.quoteTypeID,this.altEditionTypeID];
     this.cntFootnote = 0;
     this.curTagID = null;
     this.anchorTagID = null;
@@ -690,7 +694,7 @@ addTextReference: function () {
     } else {
       $elems = $(".grpGra."+entTag,ednVE.contentDiv);
       if ($elems.length > 0) {
-        classes = $elems.get(0).className;
+        classes = $elems.get($elems.length - 1).className; // use last incase anchor to end
         match = classes.match(/seq(\d+)/);
         if (match && match.length > 1) {
           txtDivSeqID = match[1];
@@ -5903,8 +5907,9 @@ mergeLine: function (direction,cbError) {
             footnote = this.dataMgr.getEntity('ano',footnotes[j]);
             if (footnote) {
               this.cntFootnote ++;
+              title = footnote.text + (footnote.url? " "+footnote.url:"");
               html += '<sup class="footnote '+entTag+' trm'+typeID+'" '+
-                        'title="'+footnote.text+'">'+this.cntFootnote+'</sup>';
+                        'title="'+title+'">'+this.cntFootnote+'</sup>';
             }
           }
         }

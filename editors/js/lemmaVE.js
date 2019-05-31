@@ -2851,8 +2851,8 @@ DEBUG.traceEntry("createPhonologicalUI");
 *
 */
 
-  afterUpdate: function() {
-    this.wordlistVE.updateLemmaEntry(this.entID);
+  afterUpdate: function(entTag) {
+    this.wordlistVE.updateLemmaEntry(entTag?entTag:this.entID);
   },
 
 
