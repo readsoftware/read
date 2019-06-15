@@ -1,10 +1,20 @@
 <?php
-
+  $textCKN = null;
 
   $imageDefs = array(
-    "img1" => array(
+    "img1" => array(// img1 is a text local nonce that will be used to lookup the image if exist for deduplication
+                    //it can also be a image ID (int)
       "type" => "InscriptionRubbing",//"InscriptionPhotograph","InscriptionEyeCopy","InscriptionPhotograph","ReliquaryPhotograph","EyeCopy","ManuscriptReconstruction","ManuscriptConserved","InscriptionPhotographInfraRed","ReconstructedSurface",
-      "url" => "/images/vp/EIAD???/EIAD_???.JPG"
+      "url" => "/images/vp/EIAD???/EIAD_???.JPG",
+      "attribution" => array(
+                              "title" => "",
+                              "description" => "",
+                              "bibliographyid" => null,
+                              "type" => "reference",
+                              "detail" => "",
+                              "aedid" => null,
+                              "usergroupid" => null
+                            )
       //"polygon" => new Polygon("(55,65),(34,63),(45,95)) //cropping polygon
     )
   );

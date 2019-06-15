@@ -25,8 +25,22 @@
   if (!isset($textCKN)) {
     echo "invalid import file supplied";
     exit;
+  } else {
+    $texts = new Texts("txt_ckn = '$textCKN'","txt_id");
+    if (!$texts || $texts->getError() || $texts->getCount() == 0) {
+      echo "invalid text inventory number $textCKN supplied";
+      exit;
+    }
+    $text = $texts->current();
+    $txtID = $text->getID();
+    if (!$txtID || $text->hasError()) {
+      echo "invalid text for inventory number $textCKN supplied";
+      exit;
+    }
   }
+
   //PAGE VARIABLES
+  $ckn_Key = $textCKN[2];
   $userPrefs = getUserPreferences();
   $visibilityIDs = $userPrefs['defaultVisibilityIDs'];  // DEFAULT VISIBILITY SET TO PUBLIC
   $ownerID = $userPrefs['defaultEditUserID'];
@@ -46,21 +60,33 @@
       }
     }
   }
-  if (@$imageDefs && count($imageDefs) >0) {
+  if (isset($imageDefs) && count($imageDefs) >0) {
+    $imageIDs = array();
     foreach ($imageDefs as $imgNonce => $imgMetadata) {
       if (array_key_exists($imgNonce,$imagesNonce2image)) {
         $image = $imagesNonce2image[$imgNonce];
       } else {
-        $image = new Image();
-        $image->storeScratchProperty('nonce',$imgNonce);
-        $image->storeScratchProperty('ckn',$textCKN);
-        $image->setOwnerID($ownerID);
-        $image->setVisibilityIDs($visibilityIDs);
-        $image->setAttributionIDs($defAttrIDs);
+        if (intval($imgNonce)) {
+          $image = new Image(intval($imgNonce));
+          $imgNonce = 'img:'.$imgNonce;
+          if ($image && !$image->hasErrors()) {
+            $image->storeScratchProperty('nonce',$imgNonce);
+            $image->storeScratchProperty('ckn',$textCKN);
+          } else {
+            $image = null;
+          }
+        }
+        if (!$image) {
+          $image = new Image();
+          $image->storeScratchProperty('nonce',$imgNonce);
+          $image->storeScratchProperty('ckn',$textCKN);
+          $image->setOwnerID($ownerID);
+          $image->setVisibilityIDs($visibilityIDs);
+        }
       }
-      if (!array_key_exists('url',$imgMetadata)) {
+      if (isset($image) && !$image->getURL() && !array_key_exists('url',$imgMetadata)) {
         continue;
-      } else {
+      } else if (array_key_exists('url',$imgMetadata)) {
         $image->setURL($imgMetadata['url']);
       }
       if (array_key_exists('polygon',$imgMetadata)) {
@@ -74,25 +100,43 @@
           $image->storeScratchProperty('type',$imgMetadata['type']);
         }
       }
+      if (array_key_exists('attribution',$imgMetadata)) {
+        $attrInfo = $imgMetadata['attribution'];
+        if (isset($attrInfo['atbid'])) {
+          $attrID = $attrInfo['atbid'];
+        } else {
+          $attrID = createAttribution(
+                                      isset($attrInfo["title"])?$attrInfo["title"]:null,
+                                      isset($attrInfo["description"])?$attrInfo["description"]:null,
+                                      isset($attrInfo["bibliographyid"])?$attrInfo["bibliographyid"]:null,
+                                      isset($attrInfo["type"])?$attrInfo["type"]:null,
+                                      isset($attrInfo["detail"])?$attrInfo["detail"]:null,
+                                      isset($attrInfo["aedid"])?$attrInfo["aedid"]:null,
+                                      isset($attrInfo["usergroupid"])?$attrInfo["usergroupid"]:null
+                                    );
+        }
+        if (!$image->getAttributionIDs() || $attrID) {
+          if (!$attrID) {
+            $attrIDS = $defAttrIDs;
+          } else {
+            $attrIDS = array_unique(array_merge(array($attrID), $image->getAttributionIDs()));
+          }
+          $image->setAttributionIDs($attrIDS);
+        }
+      }
       $image->save();
       if (!$image->hasError()) {
         $imagesNonce2image[$imgNonce] = $image;
+        array_push($imageIDs, $image->getID());
       }else{
         error_log($image->getErrors(true));
       }
     }
-  }
-
-  // get TEXT entity
-  $texts = new Texts("txt_ckn = '$textCKN'","txt_id",null,null);
-  if ($texts->getCount() == 0 || $texts->getError()) {
-    echo "Error updataing $textCKN - ".$texts->getError();
-    return;
-  }
-  $text = $texts->current();
-  $txtID = $text->getID();
-  if (!$txtID || $text->hasError()) {
-    return;
+    if ($text && count($imageIDs) > 0) {
+      $txtImgIDs = array_unique(array_merge($imageIDs,$text->getImageIDs()));
+      $text->setImageIDs($txtImgIDs);
+      $text->save();
+    }
   }
 
   //ITEM
@@ -499,6 +543,55 @@ function createAnnotation($annoTypeTerm = "comment", $annoText = "", $fromGID = 
     return null;
   } else {
     return $annotation->getID();
+  }
+}
+
+function createAttribution($title, $description, $bibliographyID=null, $type='reference', $detail=null, $aEdId=null, $usergroupID=null) {
+  global $ckn_Key;
+  $attribution = new Attribution();
+  $nonce = "";
+  if (isset($title)) {
+    $attribution->setTitle($title);
+    $nonce .= $title;
+  }
+  $attribution->setDescription($description);
+  if (isset($bibliographyID)) {
+    $attribution->setBibliographyID($bibliographyID);
+    $nonce .= $bibliographyID;   
+  }
+  if (isset($usergroupID)) {
+    $attribution->setGroupID($usergroupID);
+  }
+  $attribution->setVisibilityIDs($visibilityIDs);
+  $typeID = Entity::getIDofTermParentLabel($type.'-attributiontype');
+  if ($typeID){
+    $attribution->setTypes(array($typeID));
+    $nonce .= $typeID;   
+  }
+  else {
+    $attribution->storeScratchProperty($ckn_Key."_editions:ed_cmty",$type);
+  }
+  if (isset($detail)) {
+    $attribution->setDetail($detail);
+    $nonce .= $detail;   
+  }
+  if ($nonce) {
+    $attributions = new Attributions("atb_scratch like '%$nonce%'","atb_id",null,null);
+    if($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
+      $attribution = $attributions->getCurrent();
+      return $attribution->getID();
+    } else {
+      $attribution->storeScratchProperty("nonce",$nonce);
+    }
+  }
+  if ($aEdId) {
+    $attribution->storeScratchProperty($ckn_Key."_editions:id",$aEdId);
+  }
+  $attribution->Save();
+  if ($attribution->hasError()) {
+    return null;
+  } else {
+    return $attribution->getID();
   }
 }
 
