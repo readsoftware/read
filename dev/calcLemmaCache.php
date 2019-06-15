@@ -81,7 +81,7 @@
       $groupLabel = "Selected lemma from ".DBNAME." database";
     }
   }
-  $lemmas = new Lemmas($condition,"lem_value",null,null);
+  $lemmas = new Lemmas($condition,"lem_id",null,null);
   if (!$lemmas || $lemmas->getCount() == 0 ) {
     //exit with error
   } else {

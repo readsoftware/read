@@ -1423,10 +1423,9 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1462,'en=>"AuxC"',1450,778,NULL,NULL,'conjunction',NULL,NULL,NULL,1,'{2}'),
 (1463,'en=>"AuxR"',1450,778,NULL,NULL,'reflexive passive',NULL,NULL,NULL,1,'{2}'),
 (1464,'en=>"AuxV"',1450,778,NULL,NULL,'auxiliary verb',NULL,NULL,NULL,1,'{2}'),
-(1465,'en=>"Sence"',1444,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1465,'en=>"Sense"',1444,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1466,'en=>"TextRefLinkage"',278,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1467,'en=>"Paraphrase"',1466,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1468,'en=>"Quote"',1466,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1469,'en=>"AltEdition"',1466,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}');
-
 ALTER SEQUENCE term_trm_id_seq RESTART WITH 1470;
