@@ -215,8 +215,9 @@
           $char = mb_substr($strSylNew,$i,1);
           $inc = 1;
           $testChar = $char;
-          $char = mb_strtolower($char);
-          $graphemeIsUpper = ($testChar != $char);//uppercase Grapheme
+//          $char = mb_strtolower($char);
+          $graphemeIsUpper = false;//uppercase Grapheme make it lower case to allow all caps for logograms
+//          $graphemeIsUpper = ($testChar != $char);//uppercase Grapheme
           // convert multi-byte to grapheme - using greedy lookup
           if (array_key_exists($char,$graphemeCharacterMap)){
             //check next character included
@@ -229,7 +230,71 @@
                 $char4 = mb_substr($strSylNew,$i+3,1);
                 if (($i+$inc < $cnt) && array_key_exists($char4,$graphemeCharacterMap[$char][$char2][$char3])){ // another char for grapheme
                   $inc++;
-                  if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4])){ // invalid sequence
+                  $char5 = mb_substr($strSylNew,$i+4,1);
+                  if (($i+$inc < $cnt) && array_key_exists($char4,$graphemeCharacterMap[$char][$char2][$char3][$char4])){ // another char for grapheme
+                    $inc++;
+                    $char6 = mb_substr($strSylNew,$i+5,1);
+                    if (($i+$inc < $cnt) && array_key_exists($char4,$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5])){ // another char for grapheme
+                      $inc++;
+                      $char7 = mb_substr($strSylNew,$i+6,1);
+                      if (($i+$inc < $cnt) && array_key_exists($char4,$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6])){ // another char for grapheme
+                        $inc++;
+                        $char8 = mb_substr($strSylNew,$i+7,1);
+                        if (($i+$inc < $cnt) && array_key_exists($char4,$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7])){ // another char for grapheme
+                          $inc++;
+                          if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8])){ // invalid sequence
+                            array_push($this->_errors,"incomplete grapheme $char$char2$char3$char4$char5$char6$char7$char8 has no sort code");
+                            return false;
+                          }else{//found valid grapheme, save it
+                            $str = $char.$char2.$char3.$char4.$char5.$char6.$char7.$char8;
+                            $ustr = $testChar.$char2.$char3.$char4.$char5.$char6.$char7.$char8;
+                            $typ = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8]['typ'];
+                            if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8])) {
+                              $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8]['ssrt'];
+                            } else {
+                              $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8]['srt'];
+                            }
+                          }
+                        } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7])){ // invalid sequence
+                          array_push($this->_errors,"incomplete grapheme $char$char2$char3$char4$char5$char6$char7 has no sort code");
+                          return false;
+                        }else{//found valid grapheme, save it
+                          $str = $char.$char2.$char3.$char4.$char5.$char6.$char7;
+                          $ustr = $testChar.$char2.$char3.$char4.$char5.$char6.$char7;
+                          $typ = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7]['typ'];
+                          if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7])) {
+                            $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7]['ssrt'];
+                          } else {
+                            $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7]['srt'];
+                          }
+                        }
+                      } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6])){ // invalid sequence
+                        array_push($this->_errors,"incomplete grapheme $char$char2$char3$char4$char5$char6 has no sort code");
+                        return false;
+                      }else{//found valid grapheme, save it
+                        $str = $char.$char2.$char3.$char4.$char5.$char6;
+                        $ustr = $testChar.$char2.$char3.$char4.$char5.$char6;
+                        $typ = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6]['typ'];
+                        if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6])) {
+                          $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6]['ssrt'];
+                        } else {
+                          $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6]['srt'];
+                        }
+                      }
+                    } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5])){ // invalid sequence
+                      array_push($this->_errors,"incomplete grapheme $char$char2$char3$char4$char5 has no sort code");
+                      return false;
+                    }else{//found valid grapheme, save it
+                      $str = $char.$char2.$char3.$char4.$char5;
+                      $ustr = $testChar.$char2.$char3.$char4.$char5;
+                      $typ = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5]['typ'];
+                      if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5])) {
+                        $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5]['ssrt'];
+                      } else {
+                        $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5]['srt'];
+                      }
+                    }
+                  } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4])){ // invalid sequence
                     array_push($errors,"incomplete grapheme $char$char2$char3$char4, has no sort code");
                     break;
                   }else{//found valid grapheme, save it
@@ -242,10 +307,10 @@
                       $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4]['srt'];
                     }
                   }
-                }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3])){ // invalid sequence
+                } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3])){ // invalid sequence
                   array_push($errors,"incomplete grapheme $char$char2$char3, has no sort code");
                   break;
-                }else{//found valid grapheme, save it
+                } else {//found valid grapheme, save it
                   $str = $char.$char2.$char3;
                   $ustr = $testChar.$char2.$char3;
                   $typ = $graphemeCharacterMap[$char][$char2][$char3]['typ'];
@@ -255,10 +320,10 @@
                     $srt = $graphemeCharacterMap[$char][$char2][$char3]['srt'];
                   }
                 }
-              }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2])){ // invalid sequence
+              } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2])){ // invalid sequence
                 array_push($errors,"incomplete grapheme $char$char2, has no sort code");
                 break;
-              }else{//found valid grapheme, save it
+              } else {//found valid grapheme, save it
                 $str = $char.$char2;
                 $ustr = $testChar.$char2;
                 $typ = $graphemeCharacterMap[$char][$char2]['typ'];
@@ -268,10 +333,10 @@
                   $srt = $graphemeCharacterMap[$char][$char2]['srt'];
                 }
               }
-            }else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char])){ // invalid sequence
+            } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char])){ // invalid sequence
               array_push($errors,"incomplete grapheme $char, has no sort code");
               break;
-            }else{//found valid grapheme, save it
+            } else {//found valid grapheme, save it
               $str = $char;
               $ustr = $testChar;
               $typ = $graphemeCharacterMap[$char]['typ'];
@@ -281,7 +346,7 @@
                 $srt = $graphemeCharacterMap[$char]['srt'];
               }
             }
-          }else{
+          } else {
             array_push($errors,"char $char not found in grapheme character map");
             break;
           }
