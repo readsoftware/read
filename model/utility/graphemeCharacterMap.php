@@ -83,7 +83,7 @@ $graphemeCharacterMap = array(
 "◎"=>array("srt"=>"823","ssrt"=>"823","typ"=>"P"),
 "◦"=>array("srt"=>"810","ssrt"=>"810","typ"=>"P"),
 "•"=>array("srt"=>"805","ssrt"=>"805","typ"=>"P"),
-"∙"=>array("srt"=>"804","ssrt"=>"804","typ"=>"I"),// 2219
+"·"=>array("srt"=>"804","ssrt"=>"804","typ"=>"I"),// 00B7
 "☒"=>array("srt"=>"845","ssrt"=>"845","typ"=>"P"),
 "☸"=>array("srt"=>"840","ssrt"=>"840","typ"=>"P"),
 "❀"=>array("srt"=>"851","ssrt"=>"851","typ"=>"P"),
@@ -104,7 +104,7 @@ $graphemeCharacterMap = array(
 "⚃"=>array("srt"=>"930","ssrt"=>"930","typ"=>"P"),
 "⚄"=>array("srt"=>"940","ssrt"=>"940","typ"=>"P"),
 "*"=>array("srt"=>"099","ssrt"=>"099","typ"=>"V"), // for sanskrit
-"·"=>array("srt"=>"000","ssrt"=>"099","typ"=>"M"), // 00B7 virama {ASG: why both * and · for virama?
+"∙"=>array("srt"=>"000","ssrt"=>"099","typ"=>"M"), // 2019 virama {ASG: why both * and · for virama?
 "."=>array("srt"=>"189","ssrt"=>"189","typ"=>"V"),
 "_"=>array("srt"=>"599","ssrt"=>"599","typ"=>"C"),
 "ʔ"=>array("srt"=>"195","ssrt"=>"195","typ"=>"C"),
