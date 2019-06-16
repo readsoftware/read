@@ -1,20 +1,20 @@
 <?php
 
   //DEPENDENCIES
-  require_once (dirname(__FILE__) . '/../../../common/php/userAccess.php');
-  include_once dirname(__FILE__) . '/../../entities/Annotation.php';
-  include_once dirname(__FILE__) . '/../../entities/Attribution.php';
-  include_once dirname(__FILE__) . '/../../entities/Bibliography.php';
-  include_once dirname(__FILE__) . '/../../entities/Baselines.php';
-  include_once dirname(__FILE__) . '/../../entities/Fragments.php';
-  include_once dirname(__FILE__) . '/../../entities/Items.php';
-  include_once dirname(__FILE__) . '/../../entities/Images.php';
-  include_once dirname(__FILE__) . '/../../entities/MaterialContexts.php';
-  include_once dirname(__FILE__) . '/../../entities/Runs.php';
-  include_once dirname(__FILE__) . '/../../entities/Parts.php';
-  include_once dirname(__FILE__) . '/../../entities/Surfaces.php';
-  include_once dirname(__FILE__) . '/../../entities/Texts.php';
-  include_once dirname(__FILE__) . '/../../utility/parser.php';
+  require_once (dirname(__FILE__) . '/../../common/php/userAccess.php');
+  include_once dirname(__FILE__) . '/../entities/Annotation.php';
+  include_once dirname(__FILE__) . '/../entities/Attribution.php';
+  include_once dirname(__FILE__) . '/../entities/Bibliography.php';
+  include_once dirname(__FILE__) . '/../entities/Baselines.php';
+  include_once dirname(__FILE__) . '/../entities/Fragments.php';
+  include_once dirname(__FILE__) . '/../entities/Items.php';
+  include_once dirname(__FILE__) . '/../entities/Images.php';
+  include_once dirname(__FILE__) . '/../entities/MaterialContexts.php';
+  include_once dirname(__FILE__) . '/../entities/Runs.php';
+  include_once dirname(__FILE__) . '/../entities/Parts.php';
+  include_once dirname(__FILE__) . '/../entities/Surfaces.php';
+  include_once dirname(__FILE__) . '/../entities/Texts.php';
+  include_once dirname(__FILE__) . '/../utility/parser.php';
 
   if (!@$_REQUEST['txtImportFilename']) {
     echo "no filename supplied";
@@ -50,9 +50,9 @@
   //Create Images
   $imagesNonce2image = array();
   $images = new Images("img_scratch like '%$textCKN%'","img_id",null,null);
-  if ($images->getCount() == 0 || $images->getError()) {
+  if ( $images->getError()) {
     echo "Error updating $textCKN - ".$images->getError();
-  } else {
+  } else if ($images->getCount() > 0) {
     foreach ($images as $image) {
       $nonce = $image->getScratchProperty('nonce');
       if ($nonce) {
@@ -75,8 +75,10 @@
           } else {
             $image = null;
           }
+        } else {
+          $image = null;
         }
-        if (!$image) {
+        if (!isset($image)) {
           $image = new Image();
           $image->storeScratchProperty('nonce',$imgNonce);
           $image->storeScratchProperty('ckn',$textCKN);
@@ -91,6 +93,9 @@
       }
       if (array_key_exists('polygon',$imgMetadata)) {
         $image->setBoundary($imgMetadata['polygon']);
+      }
+      if (array_key_exists('title',$imgMetadata)) {
+        $image->setTitle($imgMetadata['title']);
       }
       if (array_key_exists('type',$imgMetadata)) {
         $typeID = $image->getIDofTermParentLabel(strtolower($imgMetadata['type']).'-imagetype');//term dependency
@@ -133,7 +138,7 @@
       }
     }
     if ($text && count($imageIDs) > 0) {
-      $txtImgIDs = array_unique(array_merge($imageIDs,$text->getImageIDs()));
+      $txtImgIDs = array_unique(array_merge($imageIDs,($text->getImageIDs()?$text->getImageIDs():array())));
       $text->setImageIDs($txtImgIDs);
       $text->save();
     }
@@ -141,7 +146,7 @@
 
   //ITEM
   $itmID = null;
-  if($textItem && count($textItem) > 0) {
+  if(isset($textItem) && count($textItem) > 0) {
     $items = new Items("itm_scratch like '%$textCKN%'","itm_id",null,null);
     if ($items->getCount() == 0 || $items->getError()) {
       echo "Error updating $textCKN - ".$items->getError();
@@ -201,7 +206,7 @@
       }
     }
   }
-  if($textParts && count($textParts) > 0) {
+  if(isset($textParts) && count($textParts) > 0) {
     foreach ($textParts as $prtNonce => $prtMetadata) {
       if (array_key_exists($prtNonce,$partsNonce2part)) {
         $part = $partsNonce2part[$prtNonce];
@@ -265,7 +270,7 @@
 
   //MATERIALCONTEXT
   $mtxsNonce2mtx = array();
-  $mtxs = new MaterialContexts("mtx_scratch like '%$textCKN%'","mtx_id",null,null);
+  $mtxs = new MaterialContexts("mcx_scratch like '%$textCKN%'","mcx_id",null,null);
   if ($mtxs->getCount() == 0 || $mtxs->getError()) {
     echo "Error updating $textCKN - ".$mtxs->getError();
   } else {
@@ -277,7 +282,7 @@
     }
   }
   $mtxs = array();
-  if(@$materialContexts && count($materialContexts) > 0) {
+  if(isset($materialContexts) && count($materialContexts) > 0) {
     foreach ($materialContexts as $mtxNonce => $mtxMetadata) {
       if (array_key_exists($mtxNonce,$mtxsNonce2mtx)) {
         $materialContext = $mtxsNonce2mtx[$mtxNonce];
@@ -323,7 +328,7 @@
       }
     }
   }
-  if($textFragments && count($textFragments) > 0) {
+  if(isset($textFragments) && count($textFragments) > 0) {
     foreach ($textFragments as $fraNonce => $fraMetadata) {
       if (array_key_exists($fraNonce,$fragmentsNonce2fragment)) {
         $fragment = $fragmentsNonce2fragment[$fraNonce];
@@ -402,7 +407,7 @@
       }
     }
   }
-  if($textSurfaces && count($textSurfaces) > 0) {
+  if(isset($textSurfaces) && count($textSurfaces) > 0) {
     foreach ($textSurfaces as $srfNonce => $srfMetadata) {
       if (array_key_exists($srfNonce,$surfacesNonce2surface)) {
         $surface = $surfacesNonce2surface[$srfNonce];
@@ -479,7 +484,7 @@
     }
   }
   $baselines = array();
-  if($textImageBaselines && count($textImageBaselines) > 0) {
+  if(isset($textImageBaselines) && count($textImageBaselines) > 0) {
     foreach ($textImageBaselines as $blnNonce => $blnMetadata) {
       if (array_key_exists($blnNonce,$baselineNonce2baseline)) {
         $baseline = $baselineNonce2baseline[$blnNonce];
@@ -547,7 +552,7 @@ function createAnnotation($annoTypeTerm = "comment", $annoText = "", $fromGID = 
 }
 
 function createAttribution($title, $description, $bibliographyID=null, $type='reference', $detail=null, $aEdId=null, $usergroupID=null) {
-  global $ckn_Key;
+  global $ckn_Key, $visibilityIDs;
   $attribution = new Attribution();
   $nonce = "";
   if (isset($title)) {
@@ -578,7 +583,7 @@ function createAttribution($title, $description, $bibliographyID=null, $type='re
   if ($nonce) {
     $attributions = new Attributions("atb_scratch like '%$nonce%'","atb_id",null,null);
     if($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
-      $attribution = $attributions->getCurrent();
+      $attribution = $attributions->current();
       return $attribution->getID();
     } else {
       $attribution->storeScratchProperty("nonce",$nonce);
