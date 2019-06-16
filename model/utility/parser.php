@@ -1125,7 +1125,10 @@ class Parser {
                 $sclTempID = null;
                 $segState = "S";//signal new syllable
               } else {
-                error_log("at token break with grapheme consonant = ".$curGrapheme->getGrapheme()." and seg state $segState ");
+                $tokIndex = null;
+                $cmpIndex = null;
+                $cmpTempID = null;
+                $tokTempID = null;
               }
               $i++;
               break;
@@ -1565,7 +1568,7 @@ class Parser {
                   $graphemes = $this->_syllableClusters[$sclIndex-1]->getGraphemeIDs();
                   array_push($graphemes,$graTempID);
                   $this->_syllableClusters[$sclIndex-1]->setGraphemeIDs($graphemes);
-                  if (!isset($tokIndex) && $tokIndex) {// no token so must be intra syllable split
+                  if (!isset($tokIndex) && !$tokIndex) {// no token so must be intra syllable split
                     $curToken = new Token();
                     $curToken->setGraphemeIDs(array($graTempID));
                     $curToken->setToken($str);
