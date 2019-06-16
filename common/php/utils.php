@@ -4168,86 +4168,86 @@ function flushLog($wrapHeader = true, $jsonEncode = false) {
   $logHTML = "";
 }
 
-function updateTextEntites($textCKN, $entitiesConfig) {
+function createAnnotation($visibilityIDs, $ownerID, $defAttrIDs, $annoTypeTerm = "comment", $annoText = "", $fromGID = null, $toGID = null) {
+  //global $visibilityIDs,$ownerID,$defAttrIDs;
+  $annotation = new Annotation();
+  $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-commentarytype');//term dependency
+  if ($typeID) {
+    $typeID = $annotation->getIDofTermParentLabel('comment-commentarytype');//term dependency
+  }
+  if ($fromGID) {
+    $annotation->setLinkFromIDs(array($fromGID));
+  }
+  if ($toGID) {
+    $annotation->setLinkToIDs(array($toGID));
+  }
+  if ($annoText) {
+    $annotation->setText($annoText);
+  }
+  if ($typeID) {
+    $annotation->setTypeID($typeID);
+  }
+  $annotation->setVisibilityIDs($visibilityIDs);
+  $annotation->setAttributionIDs($defAttrIDs);
+  $annotation->setOwnerID($ownerID);
+  $annotation->save();
+  if ($annotation->hasError()) {
+    return null;
+  } else {
+    return $annotation->getID();
+  }
+}
 
-  function createAnnotation($visibilityIDs, $ownerID, $defAttrIDs, $annoTypeTerm = "comment", $annoText = "", $fromGID = null, $toGID = null) {
-    //global $visibilityIDs,$ownerID,$defAttrIDs;
-    $annotation = new Annotation();
-    $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-commentarytype');//term dependency
-    if ($typeID) {
-      $typeID = $annotation->getIDofTermParentLabel('comment-commentarytype');//term dependency
-    }
-    if ($fromGID) {
-      $annotation->setLinkFromIDs(array($fromGID));
-    }
-    if ($toGID) {
-      $annotation->setLinkToIDs(array($toGID));
-    }
-    if ($annoText) {
-      $annotation->setText($annoText);
-    }
-    if ($typeID) {
-      $annotation->setTypeID($typeID);
-    }
-    $annotation->setVisibilityIDs($visibilityIDs);
-    $annotation->setAttributionIDs($defAttrIDs);
-    $annotation->setOwnerID($ownerID);
-    $annotation->save();
-    if ($annotation->hasError()) {
-      return null;
+function createAttribution($title, $description, $visibilityIDs, $ckn_Key, $bibliographyID=null, $type='reference', $detail=null, $aEdId=null, $usergroupID=null) {
+  // global $ckn_Key, $visibilityIDs;
+  $attribution = new Attribution();
+  $nonce = "";
+  if (isset($title)) {
+    $attribution->setTitle($title);
+    $nonce .= $title;
+  }
+  $attribution->setDescription($description);
+  if (isset($bibliographyID)) {
+    $attribution->setBibliographyID($bibliographyID);
+    $nonce .= $bibliographyID;   
+  }
+  if (isset($usergroupID)) {
+    $attribution->setGroupID($usergroupID);
+  }
+  $attribution->setVisibilityIDs($visibilityIDs);
+  $typeID = Entity::getIDofTermParentLabel($type.'-attributiontype');
+  if ($typeID){
+    $attribution->setTypes(array($typeID));
+    $nonce .= $typeID;   
+  }
+  else {
+    $attribution->storeScratchProperty($ckn_Key."_editions:ed_cmty",$type);
+  }
+  if (isset($detail)) {
+    $attribution->setDetail($detail);
+    $nonce .= $detail;   
+  }
+  if ($nonce) {
+    $attributions = new Attributions("atb_scratch like '%$nonce%'","atb_id",null,null);
+    if($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
+      $attribution = $attributions->current();
+      return $attribution->getID();
     } else {
-      return $annotation->getID();
+      $attribution->storeScratchProperty("nonce",$nonce);
     }
   }
+  if ($aEdId) {
+    $attribution->storeScratchProperty($ckn_Key."_editions:id",$aEdId);
+  }
+  $attribution->Save();
+  if ($attribution->hasError()) {
+    return null;
+  } else {
+    return $attribution->getID();
+  }
+}  
 
-  function createAttribution($title, $description, $visibilityIDs, $ckn_Key, $bibliographyID=null, $type='reference', $detail=null, $aEdId=null, $usergroupID=null) {
-    // global $ckn_Key, $visibilityIDs;
-    $attribution = new Attribution();
-    $nonce = "";
-    if (isset($title)) {
-      $attribution->setTitle($title);
-      $nonce .= $title;
-    }
-    $attribution->setDescription($description);
-    if (isset($bibliographyID)) {
-      $attribution->setBibliographyID($bibliographyID);
-      $nonce .= $bibliographyID;   
-    }
-    if (isset($usergroupID)) {
-      $attribution->setGroupID($usergroupID);
-    }
-    $attribution->setVisibilityIDs($visibilityIDs);
-    $typeID = Entity::getIDofTermParentLabel($type.'-attributiontype');
-    if ($typeID){
-      $attribution->setTypes(array($typeID));
-      $nonce .= $typeID;   
-    }
-    else {
-      $attribution->storeScratchProperty($ckn_Key."_editions:ed_cmty",$type);
-    }
-    if (isset($detail)) {
-      $attribution->setDetail($detail);
-      $nonce .= $detail;   
-    }
-    if ($nonce) {
-      $attributions = new Attributions("atb_scratch like '%$nonce%'","atb_id",null,null);
-      if($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
-        $attribution = $attributions->current();
-        return $attribution->getID();
-      } else {
-        $attribution->storeScratchProperty("nonce",$nonce);
-      }
-    }
-    if ($aEdId) {
-      $attribution->storeScratchProperty($ckn_Key."_editions:id",$aEdId);
-    }
-    $attribution->Save();
-    if ($attribution->hasError()) {
-      return null;
-    } else {
-      return $attribution->getID();
-    }
-  }  
+function updateTextEntites($textCKN, $entitiesConfig) {
 
   if (!isset($textCKN)) {
     error_log("invalid inventory number $textCKN supplied");
