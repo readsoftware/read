@@ -3166,8 +3166,6 @@ mergeLine: function (direction,cbError) {
       if (senderID == ednVE.id) {
         return;
       }
-
-
       DEBUG.log("event","link abort recieved by editionVE in "+ednVE.id+" from "+senderID+" with source "+ linkSource+" and target "+linkTarget);
       ednVE.linkMode = false;
     };
@@ -3199,8 +3197,6 @@ mergeLine: function (direction,cbError) {
         syllable.addClass(linkSource);
         ednVE.refreshLineCache(syllable);
       }
-
-
       ednVE.linkMode = false;
     };
 
