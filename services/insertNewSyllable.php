@@ -202,9 +202,9 @@
       $parsedGraData = array();
       $newSylGraIDs = array();
       if ($txtScl == '.') { //default syllable insert
-        array_push($parsedGraData,array( "gra_grapheme"=>"ʔ",
-                                         'gra_type_id'=>$graphemeTypeTermIDMap[$graphemeCharacterMap["ʔ"]['typ']],
-                                         'gra_sort_code'=>$graphemeCharacterMap["ʔ"]['srt']));
+//        array_push($parsedGraData,array( "gra_grapheme"=>"ʔ",
+//                                         'gra_type_id'=>$graphemeTypeTermIDMap[$graphemeCharacterMap["ʔ"]['typ']],
+//                                         'gra_sort_code'=>$graphemeCharacterMap["ʔ"]['srt']));
         array_push($parsedGraData,array( "gra_grapheme"=>".",
                                          'gra_type_id'=>$graphemeTypeTermIDMap[$graphemeCharacterMap["."]['typ']],
                                          'gra_sort_code'=>$graphemeCharacterMap["."]['srt']));
@@ -286,7 +286,7 @@
             break;
           }
           if ($sylState == "S" && $typ == "V") {//add vowel carrier for starting vowel grapheme
-            array_push($parsedGraData,array( "gra_grapheme"=>"ʔ",'gra_type_id'=>$graphemeCharacterMap["ʔ"]['typ'],'gra_sort_code'=>$graphemeCharacterMap["ʔ"]['srt']));
+//            array_push($parsedGraData,array( "gra_grapheme"=>"ʔ",'gra_type_id'=>$graphemeCharacterMap["ʔ"]['typ'],'gra_sort_code'=>$graphemeCharacterMap["ʔ"]['srt']));
           }
           $prevState = $sylState;
           $sylState = getNextSegmentState($prevState,$typ);

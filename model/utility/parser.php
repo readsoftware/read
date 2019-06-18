@@ -1053,11 +1053,7 @@ class Parser {
                 $this->_syllableClusters[$sclIndex-1]->storeScratchProperty('footnote',$footnote);
               }else if ($atBOL && isset($physLineSeqIndex) && $physLineSeqIndex) {// placed it on the physicalLine sequence
                 $this->_sequences[$physLineSeqIndex-1]->storeScratchProperty('footnote',$footnote);
-<<<<<<< HEAD
               }
-=======
-              
->>>>>>> 4f43008... parser @ error changes
               if (isset($graIndex) && $graIndex) {// placed it on the previous grapheme - - - deprecate
                 $this->_graphemes[$graIndex-1]->storeScratchProperty('footnote',$footnote);
                 $footnote = null; // stop from being attach to next grapheme
