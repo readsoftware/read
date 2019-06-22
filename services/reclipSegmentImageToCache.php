@@ -50,8 +50,14 @@ if (!$data) {
     $forceReclip = false;
   }
   if (isset($data['blnIDs'])) {
-    $blnIDs = $data['blnIDs'];
-  } else if (isset($data['blnID'])) {
+    if (is_array($data['blnIDs'])) {
+      $blnIDs = $data['blnIDs'];
+    } else if (is_numeric($data['blnID'])) {
+      $blnIDs = array($data['blnIDs']);
+    } else if (strpos($data['blnIDs'])!==false) {
+      $blnIDs = explode(',',$data['blnIDs']);
+    }
+  } else if (isset($data['blnID']) && is_numeric($data['blnID'])) {
     $blnIDs = array($data['blnID']);
   } else {
     $blnIDs = null;

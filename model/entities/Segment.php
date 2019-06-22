@@ -211,9 +211,12 @@
         $urlCnt = 0;
         foreach ($urls as $url) {
           $urlCnt++;
+          $bytesSaved = null;
           $segFilename = $segFilenameBase.($urlCnt>1?"_part$urlCnt":"").".png";
-          //if segment url not cached then save it
-          $bytesSaved = file_put_contents($segFilename,loadURLContent($url,true));
+          $urlContent = loadURLContent($url,true);
+          if ($urlContent) {
+            $bytesSaved = file_put_contents($segFilename,$urlContent);
+          }
           if (!$bytesSaved) {
             array_push($this->_errors,"error caching segment image for $segFilename");
           }
@@ -370,9 +373,9 @@
     */
     public function getURLs($getCached = true) {//todo handle split segment case where there are 2 baselines and 2 boundaries.
       if(!$this->_urls
-            && !$this->_string_pos
-            && $this->getBaselines(true)
-            && $this->_baselines->valid()
+            && !$this->_string_pos // not a transcription segment
+            && $this->getBaselines(true) //has baseline(s)
+            && $this->_baselines->valid() // that are valid
             && $this->_baselines->current()->getType() == $this->getIDofTermParentLabel("image-baselinetype")) {//term dependency //'Image' ){  FIX THIS! lookup Image Type ID
         //get the boundary for this segment
         $boundary = $this->getImageBoundary();
@@ -386,7 +389,7 @@
           $reCalcCache = false;
           foreach ($boundary as $polygon){// this code assumes baseline IDs is a parallel array with polygons
             $urlCnt++;
-            if ($getCached) { //try cached first
+            if ((!defined("USESEGMENTCACHING") || USESEGMENTCACHING) && $getCached) { //try cached first
               $segFilename = $segFilenameBase.($urlCnt>1?"_part$urlCnt":"").".png";
               if (file_exists($segFilename)) {
                 array_push($urls,$segCacheBaseURL.($urlCnt>1?"_part$urlCnt":"").".png");
@@ -398,12 +401,12 @@
               $baseline = $this->_baselines->current();
               //get the baseline's image object
               $image = $baseline->getImage(true);
-              // if baseline has a boundary then translate segment points to the origin of the bounding box
+              // if baseline has a boundary then translate segment points to the origin of the baseline bounding box
               if($baseline->getImageBoundary()){
                 $bBox = new BoundingBox($baseline->getImageBoundary());
                 $polygon->translate($bBox->getXOffset(),$bBox->getYOffset());
               }
-              // if the image has a boundary then translate segment points to the origin of the bounding box
+              // if the image has a boundary then translate segment points to the origin of the image bounding box
               if($image->getBoundary()){
                 $bBox = new BoundingBox($image->getBoundary());
                 $polygon->translate($bBox->getXOffset(),$bBox->getYOffset());
@@ -416,9 +419,9 @@
         }
         if (count($urls) > 0) {
           $this->_urls = $urls;
-        }
-        if ($reCalcCache) {
-          $this->cacheSegmentImages();
+          if ((!defined("USESEGMENTCACHING") || USESEGMENTCACHING) && $reCalcCache) {
+            $this->cacheSegmentImages($urls);
+          }
         }
         $this->_baselines->rewind();
       }

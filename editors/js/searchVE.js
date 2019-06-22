@@ -953,8 +953,8 @@ EDITORS.SearchVE.prototype = {
               }
         },// end success cb
         error: function (xhr,status,error) {
-                 // show login error msg
-                 $('#errorMsg',userVE.signInUI).html("Invalid Username or Password!");
+                 // show error msg
+                 alert("An error occurred while trying to save new baseline. Error: " + error);
         }
     });// end ajax
     DEBUG.traceExit("newBaseline"," user editor");
@@ -1007,8 +1007,8 @@ EDITORS.SearchVE.prototype = {
               }
         },// end success cb
         error: function (xhr,status,error) {
-                 // show login error msg
-                 $('#errorMsg',userVE.signInUI).html("Invalid Username or Password!");
+              // show error msg
+              alert("An error occurred while trying to save cloned edition. Error: " + error);
         }
     });// end ajax
     DEBUG.traceExit("cloneEdition"," user editor");
@@ -1059,8 +1059,8 @@ EDITORS.SearchVE.prototype = {
               }
         },// end success cb
         error: function (xhr,status,error) {
-                 // show login error msg
-                 $('#errorMsg',userVE.signInUI).html("Invalid Username or Password!");
+              // show error msg
+              alert("An error occurred while trying to create new edition. Error: " + error);
         }
     });// end ajax
     DEBUG.traceExit("newEdition"," user editor");
