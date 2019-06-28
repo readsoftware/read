@@ -29,6 +29,7 @@
   if(!defined("USECACHE")) define("USECACHE",false);
   if(!defined("USEVIEWERCACHING")) define("USEVIEWERCACHING",true);
   if(!defined("USESEGMENTCACHING")) define("USESEGMENTCACHING",true);
+  if(!defined("USEDYNAMICLEMMAINFO")) define("USEDYNAMICLEMMAINFO",true);
   if(!defined("DEFAULTANNOTATIONSREFRESH")) define("DEFAULTANNOTATIONSREFRESH",0);//set >= 1 always refresh
   if(!defined("DEFAULTSEARCHREFRESH")) define("DEFAULTSEARCHREFRESH",0);
   if(!defined("DEFAULTCATALOGREFRESH")) define("DEFAULTCATALOGREFRESH",0);
