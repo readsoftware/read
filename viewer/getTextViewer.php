@@ -291,7 +291,7 @@
 
       $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
       $edFootnotesByEdn .= getEditionFootnoteTextLookup();
-      if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
+      if ((!defined('USEDYNAMICLEMMAINFO') || !USEDYNAMICLEMMAINFO) && $ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
         $edGlossaryLookupByEdn .= getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps?$refreshLookUps:$isStaticView,$glossaryUrlLookup);
       } else {
         $edGlossaryLookupByEdn .= '{}';
@@ -322,7 +322,7 @@
           multiEdition = false,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
 <?php
-      if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
+      if ((!defined('USEDYNAMICLEMMAINFO') || !USEDYNAMICLEMMAINFO) && $ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
         $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps?$refreshLookUps:$isStaticView,$glossaryUrlLookup);
       } else {
         $edGlossaryLookup = '{}';
@@ -346,7 +346,7 @@
           edStructHtml = <?=$structHtml?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,
 <?php
-      if ($ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
+      if ((!defined('USEDYNAMICLEMMAINFO') || !USEDYNAMICLEMMAINFO) && $ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
         $edGlossaryLookup = getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps?$refreshLookUps:$isStaticView,$glossaryUrlLookup);
       } else {
         $edGlossaryLookup = '{}';
@@ -1005,58 +1005,64 @@
               closeAllPopups();
               $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[]]);
             });
-            $('.grpTok',$textViewerContent).unbind('click').bind('click', function(e) {
-              var classes = $(this).attr("class"), entTag, entTags, lemTag, lemmaInfo, entGlossInfo,
-                  popupHtml = null, $glossaryPopup;
-                  //popupHtml = "No lemma info for " + $(this).text();
-              if ( entTags = classes.match(/cmp\d+/)) {//use first cmp tag for tool tip
-                entTag = entTags[0];
-              } else {
-                 entTag = classes.match(/tok\d+/);
-                 entTag = entTag[0];
-              }
-              if (edGlossaryLookup && entTag && edGlossaryLookup[entTag]) {
-                entGlossInfo = edGlossaryLookup[entTag];
-                if (entGlossInfo['lemTag']) {
-                  lemmaInfo = edGlossaryLookup[entGlossInfo['lemTag']];
-                  if (lemmaInfo && lemmaInfo['entry']) {
-                    popupHtml = '<div class="glossHeaderInfoDiv">'+lemmaInfo['entry'];
-                    if (entGlossInfo['infHtml']) {
-                      popupHtml += entGlossInfo['infHtml'];
-                    }
-                    if (entGlossInfo['syntax']) {
-                      popupHtml += entGlossInfo['syntax'];
-                    }
-                    //TODO syntax  add code here to construct syntax html and add dblclick and root-highlite code below
-                    popupHtml += '</div>';
-                    if (lemmaInfo['attestedHtml'] || lemmaInfo['relatedHtml']) {
+            $('.grpTok',$textViewerContent).unbind('click').bind('click',
+              function(e) {
+                var classes = $(this).attr("class"), entTag, entTags, lemTag, lemmaInfo, entGlossInfo,
+                    popupHtml = null, $glossaryPopup;
+                    //popupHtml = "No lemma info for " + $(this).text();
+                if ( entTags = classes.match(/cmp\d+/)) {//use first cmp tag for tool tip
+                  entTag = entTags[0];
+                } else {
+                  entTag = classes.match(/tok\d+/);
+                  entTag = entTag[0];
+                }
+
 <?php
-  if (!defined('USELEMMAEXTRAINFO') || USELEMMAEXTRAINFO) {
-    if (!defined('USESCROLLLEMMAPOPUP') || USESCROLLLEMMAPOPUP) {
+  if ($isStaticView || !defined('USEDYNAMICLEMMAINFO') || !USEDYNAMICLEMMAINFO) {
 ?>
-                      popupHtml += '<div class="glossExtraInfoDiv expanded">';
-<?php
-    } else {
-?>
-                      popupHtml += '<div class="glossExpanderDiv"><span class="glossaryExpander">+</span></div>';
-                      popupHtml += '<div class="glossExtraInfoDiv">';
-<?php
-    }
-?>
-                      if (lemmaInfo['attestedHtml']) {
-                        popupHtml += lemmaInfo['attestedHtml'];
+                if (edGlossaryLookup && entTag && edGlossaryLookup[entTag]) {
+                  entGlossInfo = edGlossaryLookup[entTag];
+                  if (entGlossInfo['lemTag']) {
+                    lemmaInfo = edGlossaryLookup[entGlossInfo['lemTag']];
+                    if (lemmaInfo && lemmaInfo['entry']) {
+                      popupHtml = '<div class="glossHeaderInfoDiv">'+lemmaInfo['entry'];
+                      if (entGlossInfo['infHtml']) {
+                        popupHtml += entGlossInfo['infHtml'];
                       }
-                      if (lemmaInfo['relatedHtml']) {
-                        popupHtml += lemmaInfo['relatedHtml'];
+                      if (entGlossInfo['syntax']) {
+                        popupHtml += entGlossInfo['syntax'];
                       }
+                      //TODO syntax  add code here to construct syntax html and add dblclick and root-highlite code below
                       popupHtml += '</div>';
+                      if (lemmaInfo['attestedHtml'] || lemmaInfo['relatedHtml']) {
 <?php
-  }
+    if (!defined('USELEMMAEXTRAINFO') || USELEMMAEXTRAINFO) {
+      if (!defined('USESCROLLLEMMAPOPUP') || USESCROLLLEMMAPOPUP) {
 ?>
+                        popupHtml += '<div class="glossExtraInfoDiv expanded">';
+<?php
+      } else {
+?>
+                        popupHtml += '<div class="glossExpanderDiv"><span class="glossaryExpander">+</span></div>';
+                        popupHtml += '<div class="glossExtraInfoDiv">';
+<?php
+      }
+?>
+                        if (lemmaInfo['attestedHtml']) {
+                          popupHtml += lemmaInfo['attestedHtml'];
+                        }
+                        if (lemmaInfo['relatedHtml']) {
+                          popupHtml += lemmaInfo['relatedHtml'];
+                        }
+                        popupHtml += '</div>';
+                      }
                     }
                   }
                 }
-              }
+<?php
+    }
+?>
+
               $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[entTag]]);
               closeAllPopups();
               //TODO syntax add code to highlight root word in transcription
@@ -1072,7 +1078,7 @@
                 $('.grpTok.'+entTag,$textViewerContent).addClass('showing');
                 //TODO syntax add code for dblclick on popup root to change popup to root.
 <?php
-  if (!USESCROLLLEMMAPOPUP && (!defined('USELEMMAEXTRAINFO') || USELEMMAEXTRAINFO)) {
+    if (!USESCROLLLEMMAPOPUP && (!defined('USELEMMAEXTRAINFO') || USELEMMAEXTRAINFO)) {
 ?>
                 $('.glossaryExpander').unbind('click').bind('click', function(e) {
                       var $popupWrapperDiv = $(this).parent().parent(), $expander = $(this),
@@ -1088,9 +1094,89 @@
                       return false;
                 });
 <?php
-  }
+    }
 ?>
               }
+<?php
+  } else { //dynamic lemma info
+?>
+              var tooltip = this, msgWarning = '', savedata = {}, 
+                  entGID = entTag.substr(0,3)+":"+entTag.substr(3);
+              //setup data
+              $.ajax({
+                  type:"POST",
+                  dataType: 'json',
+                  url: basepath+'/plugins/dev/php/componentLoader.php?db='+dbName+'&strJSON={"globalID":"'+entGID+'","mode":"popup"}',
+                  //data: savedata,
+                  asynch: true,
+                  success: function (data, status, xhr) {
+                    if (typeof data == 'object' ) {
+                      var popup = data.popup, lemSearch = (popup.hom?popup.hom:'') + (popup.lem?popup.lem:''),
+                          lemLink, lemURL, htmlLemma, inflect;
+                      if (popup.lem) {
+                        lemURL = basepath+'/plugins/dictionary/?search='+lemSearch;
+                        lemLink = '<a target="lemDict" href="'+lemURL+'">'+popup.lem+'</a>';
+                        
+                        htmlLemma ='<div class="lemma">';
+                        htmlLemma +=  '<span id="spanHomLem">';
+                        htmlLemma +=  '<span id="gd3form_hom" class="lemsuper">'+(popup.hom?popup.hom:'')+'</span>';
+                        htmlLemma +=   '<span id="gd3form_lem" class="lemma">'+(lemLink?lemLink:'')+'</span>';
+                        htmlLemma +=   '</span>';
+                        htmlLemma +=   '<span class="kharShow" id="nativeScript">'+(popup.native?popup.native:'')+'</span>';
+                        //    '<span class="id">'+
+                        //      '<span id="lemID" value="'+popup.id?popup.id:''+'">['+popup.id?popup.id:''+']</span>'+
+                        //    '</span>'+
+                        htmlLemma +=   '</div>';
+                        htmlLemma +=   '<div>';
+                        htmlLemma +=     '<p>';
+                        htmlLemma +=      '<span id="gd3form_etymology class="lemEtym">'+(popup.etymology?popup.etymology:'')+'</span>';
+                        htmlLemma +=      '<span id="gd3form_phonetic class="lemPhonetic">'+(popup.phonetic?popup.phonetic:'')+'</span>';
+                        htmlLemma +=      '<span id="gd3form_pos" class="lemPos">'+(popup.pos?popup.pos:'')+'</span>';
+                        htmlLemma +=      '<span id="gd3form_def class="lemGLoss">'+(popup.def?popup.def:'')+'</span>';
+                        htmlLemma +=    '</p>';
+                        htmlLemma +=  '</div>';
+                        if (popup.morphology) {
+                          inflect = data.popup.morphology.match(/<span[^>]+>(.*)<\/span>/)[1].match(/(<span class="morph">[^<]*<\/span>)/g);
+                          if (inflect.length) {
+                            htmlLemma +=   '<div id="morphology" class="morphology">';
+                            htmlLemma +=     '<p>';
+                            htmlLemma +=         inflect.join(' ');
+                            htmlLemma +=     '</p>';
+                            htmlLemma +=   '</div>';   
+                          }
+                        }
+                      }
+                      $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[entTag]]);
+                      closeAllPopups();
+                      //TODO syntax add code to highlight root word in transcription
+                      if (htmlLemma) {
+                        $glossExtraInfoDiv = $(tooltip).jqxTooltip({ content: '<div class="popupwrapperdiv">'+htmlLemma+"</div>",
+                                                                  trigger: 'click',
+                                                                  showArrow: false,
+                                                                  autoHide: false });
+                        $(tooltip).unbind('close').bind('close', function(e) {
+                          $(tooltip).jqxTooltip('destroy');
+                        });
+                        $(tooltip).jqxTooltip('open');
+                        $('.grpTok.'+entTag,$textViewerContent).addClass('showing');
+                      }
+
+                    }
+                    if (data.errors) {
+                      alert("An error occurred while trying to load component lemma. Error: " + data.errors.join());
+                    }
+                  },
+                  error: function (xhr,status,error) {
+                    // add record failed.
+                    errStr = "Error while trying to load component lemma. Error: " + error;
+                    DEBUG.log("err",errStr);
+                    alert(errStr);
+                  }
+              });// end ajax
+
+<?php
+  }
+?>
               e.stopImmediatePropagation();
               return false;
             });

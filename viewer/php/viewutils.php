@@ -2376,7 +2376,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                   //check lemmaComponent has syntax info and add to glossary info
                   $syntacticDependency = $lemmaComponent->getScratchProperty('syntacticRelation');
                   if ($syntacticDependency) {
-                    $entTag2GlossaryHtml[$entTag]['syntax'] = "<span class=\"syntaxDependency\">| $syntacticDependency</span";
+                    $entTag2GlossaryHtml[$entTag]['syntax'] = "<span class=\"syntaxDependency\">| $syntacticDependency</span>";
                   }
                   $attested2LemmaInfoMap[$entTag] = $entTag2GlossaryHtml[$entTag];
                   $attestedCommentary = "";
