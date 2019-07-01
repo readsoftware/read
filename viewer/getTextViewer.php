@@ -1122,7 +1122,7 @@
                         htmlLemma +=  '<span id="gd3form_hom" class="lemsuper">'+(popup.hom?popup.hom:'')+'</span>';
                         htmlLemma +=   '<span id="gd3form_lem" class="lemma">'+(lemLink?lemLink:'')+'</span>';
                         htmlLemma +=   '</span>';
-                        htmlLemma +=   '<span class="kharShow" id="nativeScript">'+(popup.native?popup.native:'')+'</span>';
+                        htmlLemma +=   '<span class="kharShow" id="nativeScript">'+((popup.native && popup.nativestate == "Show")?popup.native:'')+'</span>';
                         //    '<span class="id">'+
                         //      '<span id="lemID" value="'+popup.id?popup.id:''+'">['+popup.id?popup.id:''+']</span>'+
                         //    '</span>'+
