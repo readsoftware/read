@@ -1261,6 +1261,8 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
   $preBlnTag = null;
   $nextLineSequence = null;
   $physicalLinesHtml = '';
+  $freetextCnt = 0;
+  $freetextLines = array();
   //**************process each physical line
   for ($i = 0; $i < $cntLinePhysGID; $i++) {
     $linePhysSeqGID = $linePhysSeqIDs[$i];
@@ -1316,6 +1318,10 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
           }
           if (!$lineSclGIDs || count($lineSclGIDs) == 0) {
             error_log("warn, Found empty line physical sequence element $seqTag for edition ".$edition->getDescription()." id=".$edition->getID());
+            if ($seqType == "FreeText") {
+              $freetextCnt++;
+              array_push($freetextLines,$linePhysSequence);
+            }
             continue;
           }
           if ($nextLineSeqGID && strpos($nextLineSeqGID,'seq') === 0) {
@@ -1488,7 +1494,29 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
       continue;
     }
   }// end for physLineSeqIDs
+  if (!$physicalLinesHtml && $freetextCnt == $cntLinePhysGID) { // all FreeText means plain text edition
+    $physicalLinesHtml = getFreeTextHTML($freetextLines);
+  }
   return $physicalLinesHtml;
+}
+
+function getFreeTextHTML($freetextLines) {
+  $freetextHTML = "";
+  $cnt = 0;
+  foreach ($freetextLines as $freetextLine) {
+    $cnt++;
+    $seqID = $freetextLine->getID();
+    $label = $freetextLine->getLabel();
+    $freetext = $freetextLine->getScratchProperty('freetext');
+    
+    if (!$label) {
+      $label = "NL$cnt";
+    }
+    $freetextHTML .= '<div class="physicalLineDiv">'.
+                       '<span class="lineHeader seq'.$seqID.'">'.$label.'</span>'.
+                         '<div class="physicalLineWrapperDiv">'.$freetext.'</div></div>';
+  }
+  return $freetextHTML;
 }
 
 /**
@@ -1984,7 +2012,11 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
 
   $html = "";
   if (count($analysisSeqIDs) == 0 && count($textDivSeqIDs) == 0) {
-    array_push($warnings,"Warning no structural analysis found for edition id $ednID. Skipping.");
+    if (count($physicalLineSeqIDs) > 0) {
+      $html .= getPhysicalLinesHtml2($physicalLineSeqIDs, $graID2WordGID,$forceRecalc,true);
+    } else {
+      array_push($warnings,"Warning no structural analysis found for edition id $ednID. Skipping.");
+    }
   } else {//process analysis
     //calculate  post grapheme id to generate physical line label map
     $tokCnt = 0;
