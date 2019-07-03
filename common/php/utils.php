@@ -3750,7 +3750,7 @@ function updateWordLocationForLine($seqID) {
           
 function getTokLocQueryString($tokID){
   $strMatch = defined('CKNMATCHREGEXP')?CKNMATCHREGEXP:"'([a-z]+)0*(\d+)'";
-  $strReplace = defined('CKNREPLACEMENTEXP')?CKNREPLACEMENTEXP:"'\\1\\2'";
+  $strReplace = defined('CKNREPLACEMENTEXP')?CKNREPLACEMENTEXP:"'\\1 \\2'";
   $strFlags = defined('CKNREPLACEFLAGS')?CKNREPLACEFLAGS:"'i'";
   $linePhysicalTypeID = Entity::getIDofTermParentLabel('linephysical-textphysical');// warning!!! term dependency
 

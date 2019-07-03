@@ -73,84 +73,16 @@
                         <title>
                             <xsl:value-of select="$text/Title"/>
                         </title>
-                        <respStmt>
-                            <resp>editor</resp>
-                            <persName ref="#AS">
-                                <forename>Andrea</forename>
-                                <surname>Schlosser</surname>
-                            </persName>
-                        </respStmt>
                     </titleStmt>
                     <publicationStmt>
-                        <authority>Buddhist Manuscripts from Gandhāra</authority>
-                        <idno type="filename"><xsl:value-of select="$text/CKN"/>.xml</idno>
+                        <authority></authority>
                     </publicationStmt>
                     <sourceDesc>
                         <msDesc>
                             <msIdentifier>
-                                <institution>BAdW/LMU</institution>
-                                <idno><xsl:value-of select="$text/CKN"/></idno>
                             </msIdentifier>
-                            <msContents>
-                                <msItem>
-                                    <textLang xml:lang="en"><!-- fill in mainLang="pra-Brah" or mainLang="san-Brah" within <textLang> and supply corresponding descriptuve phrase. --></textLang>
-                                </msItem>
-                            </msContents>
-                            <physDesc>
-                                <objectDesc>
-                                    <supportDesc>
-                                        <support>
-                                            <p><!--objectType--><!-- fill me in --><!--/objectType-->
-                                                  <material><!-- fill me in --></material>
-                                                  <dimensions unit="cm">
-                                                  <!--[@unit must be verified]-->
-                                                  <!-- to be structured with <height>, <width>, <depth>, etc.] -->
-                                                </dimensions></p>
-                                        </support>
-                                    </supportDesc>
-                                    <layoutDesc>
-                                        <layout><!--Typically, something like this: <layout writtenLines="8">
-                                        <p>Eight lines covering four facets of the pillar.</p>
-                                        </layout>--></layout>
-                                    </layoutDesc>
-                                </objectDesc>
-                                <handDesc>
-                                    <handNote><!-- description of letters, possibly including <height>letter-heights</height> --></handNote>
-                                </handDesc>
-                                <decoDesc>
-                                    <decoNote><!-- description of decoration or iconography --></decoNote>
-                                </decoDesc>
-                            </physDesc>
-                            <history>
-                                <origin>
-                                    <origPlace><!-- fill me in --></origPlace>
-                                    <origDate>
-                                        <!--See http://www.stoa.org/epidoc/gl/latest/supp-historigdate.html-->
-                                    </origDate>
-                                </origin>
-                                <!--provenance type="found"
-                                    --><!-- Findspot and circumstances/context --><!--/provenance-->
-                                <!--provenance type="observed"
-                                --><!-- Modern location(s) (if different from repository, above); is used to encode information about subsequent modern observation --><!--/provenance-->
-                                <!--provenance type="not-observed"
-                                --><!-- information about a specific, unsuccessful attempt to locate an object in a presumed or previously recorded location --><!--/provenance-->
-                                <!--provenance type="transferred"
-                                --><!-- information about documentable modern relocations of the text-bearing object --><!--/provenance-->
-                            </history>
-                            <additional>
-                                <surrogates><!-- fill me in; use <bibl> for published facsimiles --></surrogates>
-                            </additional>
                         </msDesc>
                     </sourceDesc>
-                    <!--xsl:if test="/rml/entities/attribution[@id=$text/attributions/link/@id]/title">
-                    <sourceDesc>
-                        <xsl:for-each select="/rml/entities/attribution[@id=$text/attributions/link/@id]/title">
-                        <p>
-                            <xsl:value-of select="."  disable-output-escaping="yes" />
-                        </p>
-                        </xsl:for-each>
-                    </sourceDesc>
-                    </xsl:if-->
                 </fileDesc>
             </teiHeader>
             <xsl:if test="count(/rml/entities/baseline[Type/link/@value = 'Image']) > 0">

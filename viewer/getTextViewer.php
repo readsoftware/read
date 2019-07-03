@@ -1088,7 +1088,7 @@
                         $(this).text('+');
                       } else {
                         $extraInfoDiv.addClass('expanded');
-                        $(this).text('-');
+                        $(this).text('−');
                       }
                       e.stopImmediatePropagation();
                       return false;

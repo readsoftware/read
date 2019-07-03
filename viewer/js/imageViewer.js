@@ -124,7 +124,6 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
     this.$imgViewHeader.append(this.$imgMenu);
     this.$imgMenuPanel = $('<div id="images" class="menuPanel"/>');
     $('body').append(this.$imgMenuPanel);
-    this.$zoomDIV = $('<div class="zoomUI"><div id="zoomOut" title="Zoom Out" class="zoomButton">-</div><div id="zoomIn" title="Zoom In" class="zoomButton">+</div></div>').get(0);
     this.$imgViewHeader.append(this.$zoomDIV);
     this.initImageUI();
   }
@@ -446,7 +445,7 @@ VIEWERS.ImageViewer.prototype = {
     vpHeight = this.imgCanvas.height *100 / this.zoomFactor;
     this.vpSize = { width: vpWidth || 500, height: vpHeight };
     this.vpMaxLoc = { x: this.image.width, y: this.image.height };
-    this.vpLoc = { x: 0, y: this.vpMaxLoc.y/2 };
+    this.vpLoc = { x: 0, y: 0 };
     this.vpLastLoc =  { x: 0, y: 0 };
   },
 

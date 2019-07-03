@@ -1316,7 +1316,7 @@ scaleSelectPolygons: function (b) {
         } else {
           sfactor = sfactor * .95
         }
-        polygon = UTILITY.getTranslatedPoly(polygon,-xCtr,-yCtr,b);
+        polygon = UTILITY.getTranslatedPoly(polygon,-xCtr,-yCtr,sfactor);
         polygon = UTILITY.getTranslatedPoly(polygon,xCtr,yCtr);
         cntL--;
       }
@@ -1855,6 +1855,9 @@ selectPolygons: function () {
     };
     imgVE.imgCanvas.onkeydown = function(e) {
       var keyCode = (e.keyCode || e.which),
+          key = e.key?e.key :
+                (e.which == null?String.fromCharCode(e.keyCode):
+                ((e.which != 0 )?String.fromCharCode(e.which):null)),
           hasSelected = Object.keys(imgVE.selectedPolygons).length > 0;
       if (keyCode > 36 && keyCode <41) {
         switch (e.keyCode || e.which) {
@@ -1926,14 +1929,35 @@ selectPolygons: function () {
         imgVE.navDIV.hidden = !imgVE.navDIV.hidden; //toggle navPanel
         e.stopImmediatePropagation();
         return false;
+      } else if (key == '+' || key == '=') {
+        if (hasSelected ) { // && e.altKey && (e.ctrlKey || e.metaKey)) {
+          imgVE.scaleSelectPolygons(1.01)
+          e.stopImmediatePropagation();
+          return false;
+        } else {
+          imgVE.zoomCenter.call(imgVE,-1);
+        }
+      } else if (key == '-' || key == '−'){
+        if (hasSelected) { // && e.altKey && (e.ctrlKey || e.metaKey)) {
+          imgVE.scaleSelectPolygons(0.99)
+          e.stopImmediatePropagation();
+          return false;
+        } else {
+          imgVE.zoomCenter.call(imgVE,1);
+        }
+      } else if (key == 's' && (e.ctrlKey || e.metaKey)) {
+        imgVE.savePolygon();
+        e.stopImmediatePropagation();
+        return false;
       }
     };
+
     imgVE.imgCanvas.onkeypress = function(e) {
       var key = e.which == null?String.fromCharCode(e.keyCode):
                 (e.which != 0 )?String.fromCharCode(e.which):null,
           hasSelected = Object.keys(imgVE.selectedPolygons).length > 0;
 //      alert('-keypress img in imageVE '+key);
-      if (key == '+' || key == '=') {
+/*      if (key == '+' || key == '=') {
         if (hasSelected ) { // && e.altKey && (e.ctrlKey || e.metaKey)) {
           imgVE.scaleSelectPolygons(1.01)
           e.stopImmediatePropagation();
@@ -1953,7 +1977,7 @@ selectPolygons: function () {
         imgVE.savePolygon();
         e.stopImmediatePropagation();
         return false;
-      }
+      }*/
     };
 
 /*    // keydown
