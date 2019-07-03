@@ -886,10 +886,10 @@ class Parser {
               $replaceCmd = mb_strstr(mb_substr($script,$i+1),"~",true);
               //todo write test for posSep
               $posSep = mb_strpos($replaceCmd,",");
-              error_log("replacement = '$replaceCmd' and posSep = $posSep");
+              // error_log("replacement = '$replaceCmd' and posSep = $posSep");
               $matchGrapheme = mb_substr($replaceCmd,0,$posSep);
               $replacementString = mb_substr($replaceCmd,$posSep+1);
-              error_log("matchGrapheme = $matchGrapheme and replacementString = '$replacementString'");
+              // error_log("matchGrapheme = $matchGrapheme and replacementString = '$replacementString'");
               if (isset($matchGrapheme) && $matchGrapheme != $prevGrapheme) {//check marker is the same as previous grapheme
                 array_push($this->_errors,"replacement sequence at character $i of $ckn.$lineMask has marker grapheme $matchGrapheme that doesn't match previous grapheme $prevGrapheme"." cfg line # $cfgLnCnt");
               }
