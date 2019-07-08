@@ -438,6 +438,15 @@
     }
 
     /**
+    * Get Clarity id of the segment
+    *
+    * @return int id from a typology of terms for clarity of a segment
+    */
+    public function getClarityID() {
+      return $this->_clarity_id;
+    }
+
+    /**
     * Get Obscurations of the segment
     *
     * @param boolean $asString determines where to return as a string (default = false)
@@ -557,16 +566,16 @@
     }
 
     /**
-    * Set Clarity of the segment
+    * Set Clarity ID of the segment
     *
-    * @param string $clarity from a typology of terms for clarity of a segment
+    * @param string $clarityID from a typology of terms for clarity of a segment
     */
-    public function setClarity($clarity) {
-      if($this->_clarity_id!= $clarity) {
+    public function setClarityID($clarityID) {
+      if($this->_clarity_id!= $clarityID) {
         $this->_dirty = true;
-        $this->setDataKeyValuePair("seg_clarity_id",$clarity);
+        $this->setDataKeyValuePair("seg_clarity_id",$clarityID);
       }
-      $this->_clarity_id = $clarity;
+      $this->_clarity_id = $clarityID;
     }
 
     /**
