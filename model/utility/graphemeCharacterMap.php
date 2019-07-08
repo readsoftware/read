@@ -126,17 +126,27 @@ $graphemeCharacterMap = array(
       "srt"=>"474","typ"=>"I"),
     "srt"=>"473","typ"=>"I"),
   "srt"=>"472","typ"=>"I"),
-"srt"=>"471","typ"=>"I"),
+  "J"=>array(
+    "A"=>array(
+      "W"=>array("srt"=>"478","typ"=>"I"))),
+  "srt"=>"471","typ"=>"I"),
 "B"=>array(
-  "`"=>array(
+  "'"=>array(
+    "A"=>array(
+      ":"=>array(
+        "L"=>array(
+          "A"=>array(
+            "M"=>array("srt"=>"477","typ"=>"I"),
+            "srt"=>"476","typ"=>"I"),
+          "srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      "N"=>array("srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
     "E"=>array(
       "N"=>array("srt"=>"474","typ"=>"I"),
-    "srt"=>"473","typ"=>"I"),
-    "A"=>array(
-      "N"=>array("srt"=>"474","typ"=>"I"),
-    "srt"=>"473","typ"=>"I"),
-  "srt"=>"472","typ"=>"I"),
-"srt"=>"471","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+  "srt"=>"471","typ"=>"I"),
 "C"=>array(
   "H"=>array(
     "A"=>array(
@@ -160,6 +170,30 @@ $graphemeCharacterMap = array(
           "srt"=>"475","typ"=>"I"),
         "srt"=>"474","typ"=>"I"),
       "srt"=>"473","typ"=>"I"),
+    "W"=>array(
+      "A"=>array(
+        ":"=>array(
+          "J"=>array("srt"=>"476","typ"=>"I"),
+          "srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      "E"=>array(
+        ":"=>array(
+          "N"=>array("srt"=>"476","typ"=>"I"),
+          "srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+  "srt"=>"471","typ"=>"I"),
+"H"=>array(
+  "A"=>array(
+    "'"=>array("srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+  "I"=>array(
+    "N"=>array(
+      "A"=>array(
+        "J"=>array("srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
     "srt"=>"472","typ"=>"I"),
   "srt"=>"471","typ"=>"I"),
 "I"=>array(
@@ -169,30 +203,70 @@ $graphemeCharacterMap = array(
   "M"=>array(
     "I"=>array(
       "X"=>array("srt"=>"474","typ"=>"I"),
-    "srt"=>"473","typ"=>"I"),
-  "srt"=>"472","typ"=>"I"),
-"srt"=>"471","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+  "T"=>array(
+    "Z"=>array(
+      "A"=>array(
+        "M"=>array("srt"=>"475","typ"=>"I")))),
+  "srt"=>"471","typ"=>"I"),
 "K"=>array(
   "A"=>array(
     "B"=>array(
       "`"=>array(
         "A"=>array(
           "N"=>array("srt"=>"476","typ"=>"I"),
-        "srt"=>"475","typ"=>"I"),
-      "srt"=>"474","typ"=>"I"),
-    "srt"=>"473","typ"=>"I"),
+          "srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "M"=>array("srt"=>"473","typ"=>"I"),
     "W"=>array(
       "A"=>array(
-        "K"=>array(
-        "srt"=>"475","typ"=>"I"),
-      "srt"=>"474","typ"=>"I"),
-    "srt"=>"473","typ"=>"I"),
-  "srt"=>"472","typ"=>"I"),
-"srt"=>"471","typ"=>"I"),
+        "K"=>array("srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+    "E"=>array(
+      "L"=>array(
+        "E"=>array(
+          ":"=>array(
+            "M"=>array("srt"=>"476","typ"=>"I"),
+            "srt"=>"475","typ"=>"I"),
+          "srt"=>"474","typ"=>"I"),
+        "srt"=>"473","typ"=>"I"),
+      "srt"=>"472","typ"=>"I"),
+  "'"=>array(
+    "A"=>array(
+      "W"=>array(
+        "I"=>array(
+          ":"=>array(
+            "L"=>array("srt"=>"477","typ"=>"I"),
+            "srt"=>"476","typ"=>"I"),
+          "srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "I"=>array(
+      "N"=>array("srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "U"=>array(
+      "H"=>array("srt"=>"474","typ"=>"I"),
+      ":"=>array(
+        "C"=>array(
+          "H"=>array("srt"=>"476","typ"=>"I"),
+          "srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+  "srt"=>"471","typ"=>"I"),
 "L"=>array(
+  "O"=>array(
+    "B"=>array(
+      "'"=>array("srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
   "U"=>array(
-    "K"=>array("srt"=>"471","typ"=>"I"),
-    "srt"=>"471","typ"=>"I"),
+    "K"=>array("srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
   "srt"=>"471","typ"=>"I"),
 "M"=>array(
   "A"=>array(
@@ -210,15 +284,46 @@ $graphemeCharacterMap = array(
   "U"=>array(
     "L"=>array(
       "U"=>array(
-        "K"=>array(
-        "srt"=>"475","typ"=>"I"),
-      "srt"=>"474","typ"=>"I"),
-    "srt"=>"473","typ"=>"I"),
-  "srt"=>"472","typ"=>"I"),
-"srt"=>"471","typ"=>"I"),
+        "K"=>array("srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+  "srt"=>"471","typ"=>"I"),
+"N"=>array(
+  "A"=>array(
+    "L"=>array("srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+  "srt"=>"471","typ"=>"I"),
+"O"=>array(
+  ":"=>array(
+    "N"=>array("srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+  "srt"=>"471","typ"=>"I"),
+"T"=>array(
+  "E"=>array(
+    "'"=>array(
+      "srt"=>"473","typ"=>"I")),
+  "I"=>array(
+    "'"=>array(
+      "srt"=>"473","typ"=>"I")),
+  "U"=>array(
+    ":"=>array(
+      "N"=>array("srt"=>"474","typ"=>"I"))),
+  "Z"=>array(
+    "'"=>array(
+      "A"=>array(
+        "K"=>array("srt"=>"475","typ"=>"I"),
+        "M"=>array("srt"=>"475","typ"=>"I")))),
+  "srt"=>"471","typ"=>"I"),
+"U"=>array(
+  "H"=>array("srt"=>"471","typ"=>"I"),
+  "srt"=>"471","typ"=>"I"),
 "W"=>array(
   "A"=>array(
     "K"=>array("srt"=>"473","typ"=>"I"),
+    ":"=>array(
+      "J"=>array("srt"=>"474","typ"=>"I"),
+      "srt"=>"473","typ"=>"I"),
     "srt"=>"472","typ"=>"I"),
   "E"=>array(
     "N"=>array("srt"=>"473","typ"=>"I"),
@@ -230,8 +335,9 @@ $graphemeCharacterMap = array(
         "srt"=>"475","typ"=>"I"),
       "srt"=>"474","typ"=>"I"),
     "srt"=>"473","typ"=>"I"),
-  "srt"=>"472","typ"=>"I"),
-"srt"=>"471","typ"=>"I"),
+    "'"=>array("srt"=>"473","typ"=>"I"),
+    "srt"=>"472","typ"=>"I"),
+  "srt"=>"471","typ"=>"I"),
 
 "a"=>array("srt"=>"100","ssrt"=>"100","typ"=>"V"),
 "e"=>array("srt"=>"110","ssrt"=>"110","typ"=>"V"),
@@ -240,7 +346,7 @@ $graphemeCharacterMap = array(
 "u"=>array("srt"=>"140","ssrt"=>"140","typ"=>"V"),
 
 "b"=>array(
-    "`"=>array("srt"=>"300","ssrt"=>"520","typ"=>"C"),
+    "'"=>array("srt"=>"300","ssrt"=>"520","typ"=>"C"),
     "srt"=>"300","ssrt"=>"520","typ"=>"C"),
 "c"=>array(
     "h"=>array("srt"=>"320","ssrt"=>"300","typ"=>"C"),
@@ -261,7 +367,9 @@ $graphemeCharacterMap = array(
 "r"=>array("srt"=>"550","ssrt"=>"560","typ"=>"C"),
 "s"=>array("srt"=>"570","ssrt"=>"620","typ"=>"C"),
 "t"=>array(
-    "z"=>array("srt"=>"600","ssrt"=>"450","typ"=>"C"),
+    "z"=>array(
+      "'"=>array("srt"=>"601","ssrt"=>"281","typ"=>"C"),
+      "srt"=>"600","ssrt"=>"450","typ"=>"C"),
     "srt"=>"590","ssrt"=>"440","typ"=>"C"),
 "v"=>array("srt"=>"610","ssrt"=>"580","typ"=>"C"),
 "w"=>array("srt"=>"630","ssrt"=>"580","typ"=>"C"),
