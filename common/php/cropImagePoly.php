@@ -2,8 +2,8 @@
   require_once (dirname(__FILE__) . '/utils.php');//get utilities
 
 
-  $polygons = @$_REQUEST['polygons'] ? json_decode($_REQUEST['polygons'],true) : null;
-  $url = @$_REQUEST['url'] ? $_REQUEST['url'] : null;
+  $polygons = isset($_REQUEST['polygons']) ? json_decode($_REQUEST['polygons'],true) : null;
+  $url = isset($_REQUEST['url']) ? $_REQUEST['url'] : null;
   $transparency = array_key_exists('trans',$_REQUEST) ? intval($_REQUEST['trans']) : 80;
   if($transparency < 0) $transparency = 0;
   if($transparency > 100) $transparency = 100;

@@ -847,7 +847,7 @@ EDITORS.SearchVE.prototype = {
       baseline = entities[id];
       image = this.dataMgr.getEntity('img',baseline.imageID);
       resLabel = (image && image.value)? image.value:baseline.value;
-      thumbUrl = (baseline.thumbUrl?baseline.thumbUrl:((image && image.thumbUrl)? image.thumbUrl:(baseline.url?baseline.url:image.uploadUI)));
+      thumbUrl = ((baseline.thumbUrl && baseline.thumbUrl.match(/cropImagePoly/)===false)?baseline.thumbUrl:((image && image.thumbUrl)? image.thumbUrl:(baseline.url?baseline.url:image.uploadUI)));
       resLabel = resLabel.substr(resLabel.lastIndexOf("/")+1);
       resDiv =$('<div class="blnresource dragresource"><img src="'+thumbUrl+'" class="resImageIconBtn"/>' + resLabel +'</div>');
       resDiv.append($('<div id="'+blnGID+'" class="draghandle"/>'));
