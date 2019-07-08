@@ -98,7 +98,7 @@ $graphemeCharacterMap = array(
     "|"=>array("srt"=>"870","ssrt"=>"870","typ"=>"I"),
     "srt"=>"860","ssrt"=>"860","typ"=>"I"),
 "◯"=>array("srt"=>"821","ssrt"=>"821","typ"=>"I"),
-":"=>array("srt"=>"803","ssrt"=>"803","typ"=>"P"),
+//":"=>array("srt"=>"803","ssrt"=>"803","typ"=>"P"),
 "*"=>array("srt"=>"099","ssrt"=>"099","typ"=>"V"), // for sanskrit
 "·"=>array("srt"=>"000","ssrt"=>"099","typ"=>"M"), // virama {ASG: why both * and · for virama?
 "."=>array("srt"=>"189","ssrt"=>"189","typ"=>"V"),
@@ -242,6 +242,11 @@ $graphemeCharacterMap = array(
           ":"=>array(
             "L"=>array("srt"=>"477","typ"=>"I"),
             "srt"=>"476","typ"=>"I"),
+          "srt"=>"475","typ"=>"I"),
+        "srt"=>"474","typ"=>"I"),
+      ":"=>array(
+        "K"=>array(
+          "'"=>array("srt"=>"476","typ"=>"I"),
           "srt"=>"475","typ"=>"I"),
         "srt"=>"474","typ"=>"I"),
       "srt"=>"473","typ"=>"I"),
