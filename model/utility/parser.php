@@ -721,7 +721,7 @@ class Parser {
           }
 
           switch ($char) {
-            case "<"://quote
+/*            case "<"://quote
               //check if quote start <b>
               if (mb_substr($script,$i,3) == '<b>'){
                 if (isset($inQuote) && $inQuote) {
@@ -901,7 +901,11 @@ class Parser {
               // error_log("replacement = '$replaceCmd' and posSep = $posSep");
               $matchGrapheme = mb_substr($replaceCmd,0,$posSep);
               $replacementString = mb_substr($replaceCmd,$posSep+1);
+<<<<<<< HEAD
               // error_log("matchGrapheme = $matchGrapheme and replacementString = '$replacementString'");
+=======
+              error_log("matchGrapheme = $matchGrapheme and replacementString = '$replacementString'");
+>>>>>>> fix dashes and add Claudian letters
               if (isset($matchGrapheme) && $matchGrapheme != $prevGrapheme) {//check marker is the same as previous grapheme
                 array_push($this->_errors,"replacement sequence at character $i of $ckn.$lineMask has marker grapheme $matchGrapheme that doesn't match previous grapheme $prevGrapheme"." cfg line # $cfgLnCnt");
               }
@@ -1097,7 +1101,7 @@ class Parser {
                 $tcmState = $nextTCMS;
               }
               break;
-            case "=":// token break intra syllable or cross line token
+*/            case "=":// token break intra syllable or cross line token
               // set all current entity vars to null except segment and syllable
               $i++;
               if ($i >= $cnt) {// check if cross line
@@ -1146,15 +1150,15 @@ class Parser {
               break;
             case "-":// compound token separator U+002D  unicode minus  -
             case "‐":// compound token separator multiByte e28090 hyphen
-              if ($i == 0) {// at the start of a line and compound hyphens are not allowed
+              $dashSeq = false;
+              if (mb_substr($script,$i-1,1) == "-" || mb_substr($script,$i+1,1) == "-" || mb_substr($script,$i-1,1) == "‐" || mb_substr($script,$i+1,1) == "‐"){
+                $dashSeq = true;
+              }
+              if ($i == 0 && !$dashSeq) {// at the start of a line and compound hyphens are not allowed
                 array_push($this->_errors,"error - compound hyphen found character $i at start of line $lineMask of $ckn"." cfg line # $cfgLnCnt");
-                break;
-              } else if (mb_substr($script,$i-1,1) == " ") {//previous char is a space and is not allowed
+              } else if  (mb_substr($script,$i-1,1) == " "  && !$dashSeq){//previous char is a space and is not allowed
                 array_push($this->_errors,"error - compound hyphen following space found at character $i on line $lineMask of $ckn "." cfg line # $cfgLnCnt");
-                break;
-              } else if (mb_substr($script,$i-1,1) == "[" || mb_substr($script,$i-1,1) == "(") {//previous char is a bracket fall through to character map
-                //break; continue processing for ---  LATIN
-              } else if (!@$cmpIndex && @$tokIndex) {//must be first separator of this compound
+              } else if (!$dashSeq && (!isset($cmpIndex) || !$cmpIndex) && isset($tokIndex) && $tokIndex) {//must be first separator of this compound
                 $curCompound = new Compound();
                 $curCompound->setComponentIDs(array('tok:'.$tokTempID));
                 $curCompound->setVisibilityIDs($vis);
@@ -1590,7 +1594,11 @@ class Parser {
                   $graphemes = $this->_syllableClusters[$sclIndex-1]->getGraphemeIDs();
                   array_push($graphemes,$graTempID);
                   $this->_syllableClusters[$sclIndex-1]->setGraphemeIDs($graphemes);
+<<<<<<< HEAD
                   if (!isset($tokIndex) && !$tokIndex) {// no token so must be intra syllable split
+=======
+                  if (!isset($tokIndex) && $tokIndex) {// no token so must be intra syllable split
+>>>>>>> fix dashes and add Claudian letters
                     $curToken = new Token();
                     $curToken->setGraphemeIDs(array($graTempID));
                     $curToken->setToken($str);
