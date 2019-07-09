@@ -184,6 +184,10 @@ $graphemeCharacterMap = array(
       "srt"=>"473","typ"=>"I"),
     "srt"=>"472","typ"=>"I"),
   "srt"=>"471","typ"=>"I"),
+"E"=>array(
+  "K"=>array(
+    "'"=>array("srt"=>"473","typ"=>"I"))),
+  
 "H"=>array(
   "A"=>array(
     "'"=>array("srt"=>"473","typ"=>"I"),
@@ -236,16 +240,14 @@ $graphemeCharacterMap = array(
       "A"=>array(
         "M"=>array("srt"=>"475","typ"=>"I")))),
   "srt"=>"471","typ"=>"I"),
-
 "J"=>array(
   "A"=>array(
+    "L"=>array("srt"=>"473","typ"=>"I"),
     "N"=>array(
       "A"=>array(
         ":"=>array(
           "B"=>array(
             "'"=>array("srt"=>"477","typ"=>"I"))))))),
-  
-
 "K"=>array(
   "A"=>array(
     "B"=>array(
@@ -329,13 +331,8 @@ $graphemeCharacterMap = array(
         "srt"=>"474","typ"=>"I"),
       "srt"=>"473","typ"=>"I"),
     "srt"=>"472","typ"=>"I"),
-  "O"=>array(
-    "N"=>array(
-      "T"=>array(
-        "H"=>array("srt"=>"475","typ"=>"I"),
-        ),
-      ),
-    ),
+  "I"=>array(
+    "H"=>array("srt"=>"473","typ"=>"I"))
   ),
 "N"=>array(
   "A"=>array(
