@@ -709,7 +709,7 @@ EDITORS.WordlistVE.prototype = {
               if (locParts.length == 2) {
                 word.locTag = locParts[1]; // get label after ordinal
               } else if (!locParts[0].match(/sort/)) {
-                word.locTag = locParts[0]+":"+locParts[2]; // skip ordinal
+                word.locTag = locParts[0]+""+locParts[2]; // skip ordinal
               } else {
                 word.locTag = locParts[2];
               }
@@ -1533,7 +1533,7 @@ EDITORS.WordlistVE.prototype = {
             if (locParts.length == 2) {
               word.locTag = locParts[1]; // get label after ordinal
             } else if (!locParts[0].match(/sort/)) {
-              word.locTag = locParts[0]+":"+locParts[2]; // skip ordinal
+              word.locTag = locParts[0]+""+locParts[2]; // skip ordinal
             } else {
               word.locTag = locParts[2];
             }
@@ -1665,7 +1665,7 @@ EDITORS.WordlistVE.prototype = {
             if (locParts.length == 2) {
               locTag = locParts[1]; // get label after ordinal
             } else if (!locParts[0].match(/sort/)) {
-              locTag = locParts[0]+":"+locParts[2]; // skip ordinal
+              locTag = locParts[0]+""+locParts[2]; // skip ordinal
             } else {
               locTag = locParts[2];
             }
