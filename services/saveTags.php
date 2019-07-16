@@ -104,6 +104,36 @@ if (count($errors) == 0) {
     array_push($errors,"insufficient data to save tags");
   } else {//save entity's GID to or remove from tag annotation entities
     $tagsInfoChanged = false;
+    if (($tagRemoveFromGIDs && count($tagRemoveFromGIDs) > 0)) {
+      $anoIDs = join(",",$tagRemoveFromGIDs);
+      $anoIDs = str_replace(":","",$anoIDs);
+      $anoIDs = str_replace("ano","",$anoIDs);
+      $annotations = new Annotations("ano_id in ($anoIDs)",null,null,null);
+      if (!$annotations->getCount()) {
+        array_push($errors,"creating annotation set - ");
+      } else {
+        foreach ($annotations as $annotation) {
+          $linkedToIDs = array();
+          if ($annotation && !$annotation->hasError()) {
+            $linkedToIDs = $annotation->getLinkToIDs();
+          }
+          if ($linkedToIDs && count($linkedToIDs) > 0 && 
+              in_array($entGID,$linkedToIDs) && !$annotation->isReadonly()) {
+            $tagEntGIDIndex = array_search($entGID,$linkedToIDs);
+            array_splice($linkedToIDs,$tagEntGIDIndex,1);
+            $annotation->setLinkToIDs($linkedToIDs);
+            $annotation->save();
+            if ($annotation->hasError()) {
+              array_push($errors,"error creating annotation '".$annotation->getValue()."' - ".$annotation->getErrors(true));
+            }else{
+              addNewEntityReturnData('ano',$annotation);
+//              addUpdateEntityReturnData("ano",$annotation->getID(),'linkedToIDs', $annotation->getLinkToIDs());
+              $tagsInfoChanged = true;
+            }
+          }
+        }
+      }
+    }
     if (($tagAddToGIDs && count($tagAddToGIDs) > 0)) {
       foreach ($tagAddToGIDs as $tagGID) {
         $tagGID = str_replace(":","",$tagGID);
@@ -158,32 +188,6 @@ if (count($errors) == 0) {
           }
         } else {
           array_push($errors,"tagID $tagGID is invalid ");
-        }
-      }
-    }
-    if (($tagRemoveFromGIDs && count($tagRemoveFromGIDs) > 0)) {
-      $anoIDs = join(",",$tagRemoveFromGIDs);
-      $anoIDs = str_replace(":","",$anoIDs);
-      $anoIDs = str_replace("ano","",$anoIDs);
-      $annotations = new Annotations("ano_id in ($anoIDs)",null,null,null);
-      if (!$annotations->getCount()) {
-        array_push($errors,"creating annotation set - ");
-      } else {
-        foreach ($annotations as $annotation) {
-          $linkedToIDs = $annotation->getLinkToIDs();
-          if (in_array($entGID,$linkedToIDs) && !$annotation->isReadonly()) {
-            $tagEntGIDIndex = array_search($entGID,$linkedToIDs);
-            array_splice($linkedToIDs,$tagEntGIDIndex,1);
-            $annotation->setLinkToIDs($linkedToIDs);
-            $annotation->save();
-            if ($annotation->hasError()) {
-              array_push($errors,"error creating annotation '".$annotation->getValue()."' - ".$annotation->getErrors(true));
-            }else{
-              addNewEntityReturnData('ano',$annotation);
-//              addUpdateEntityReturnData("ano",$annotation->getID(),'linkedToIDs', $annotation->getLinkToIDs());
-              $tagsInfoChanged = true;
-            }
-          }
         }
       }
     }

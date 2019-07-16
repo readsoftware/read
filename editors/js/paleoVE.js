@@ -872,7 +872,7 @@ EDITORS.PaleoVE.prototype = {
     }
     if (sclCell) {
       sclStr = (sclCell.rLabel == "vowel"?"":sclCell.rLabel)+sclCell.cLabel;
-      defaultUrl = basepath+'/../Gandhari.org/images/karoshti_default/'+sclStr+'.jpg'
+      defaultUrl = imgbasepath+'/karoshti_default/'+sclStr+'.jpg'
       this.calcSclCellGroups(sclCell);
       //find the segment for each syllable
       for(i in sclCell.syllables) {
@@ -1190,7 +1190,7 @@ EDITORS.PaleoVE.prototype = {
       },
       error: function (xhr,status,error) {
         // add record failed.
-        errStr = "Error while trying to splitLine. Error: " + error;
+        errStr = "Error while trying to save tag for segment. Error: " + error;
         DEBUG.log("err",errStr);
         alert(errStr);
       }

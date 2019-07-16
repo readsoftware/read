@@ -97,6 +97,7 @@
           linkToSyllablePattern = '<?=defined("LINKSYLPATTERN")?LINKSYLPATTERN:""?>',
           progressInputName='<?php echo ini_get("session.upload_progress.name"); ?>',
           dbName = '<?=DBNAME?>', basepath="<?=SITE_BASE_PATH?>",
+          imgbasepath="<?=IMAGE_SITE_BASE_URL?>",
           EDITORS = EDITORS || {};
         if (!EDITORS.config){
           EDITORS.config = {};
