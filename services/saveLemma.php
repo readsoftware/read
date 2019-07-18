@@ -549,7 +549,7 @@ if (count($errors) == 0) {
           $lemma->save();
           //set update information
           addRemoveEntityReturnData('ano',$anoID);
-          addUpdateEntityReturnData('lem',$lemma->getID(),'annotationIDs',$annoIDs);
+          addUpdateEntityReturnData('lem',$lemma->getID(),'annotationIDs',$lemma->getAnnotationIDs());
           addUpdateEntityReturnData('lem',$lemma->getID(),'relatedEntGIDsByType',$lemma->getRelatedEntitiesByLinkType());
         }
       }
