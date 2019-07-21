@@ -34,7 +34,7 @@
   */
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
-  ob_start('ob_gzhandler');
+  ob_start();
 
   header("Content-type: text/javascript");
   header('Cache-Control: no-cache');
@@ -155,6 +155,7 @@
 
   if (!$jsonRetVal) {
     $imgIDs = array();
+    $img2blnIDs = array();
     $anoIDs = array();
     $atbIDs = array();
     if ($txtIDs && strlen($txtIDs)) {
@@ -227,6 +228,9 @@
     $baselines->setAutoAdvance(false); // make sure the iterator doesn't prefetch
     $blnIDs = array();
     foreach ($baselines as $baseline) {
+      if ($baseline->isMarkedDelete()) {
+        continue;
+      }
       $blnID = $baseline->getID();
       if ($blnID && !array_key_exists($blnID, $entities['update']['bln'])) {
         $url = $baseline->getURL();
@@ -259,6 +263,11 @@
         if ($bImgID) {
           $entities['update']['bln'][$blnID]['imageID'] = $bImgID;
           $imgIDs = array_unique(array_merge($imgIDs,array($bImgID)));
+          if(!array_key_exists($bImgID,$img2blnIDs)){
+            $img2blnIDs[$bImgID] = array($blnID);
+          } else {
+            $img2blnIDs[$bImgID] = array_unique(array_merge($img2blnIDs[$bImgID],array($blnID)));
+          }
         }
         $AnoIDs = $baseline->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {
@@ -292,6 +301,9 @@
           $info = pathinfo($url);
           $thumbUrl = $info['dirname']."/th".$info['basename'];
           $entities['update']['img'][$imgID]['thumbUrl'] = $thumbUrl;
+        }
+        if (isset($img2blnIDs[$imgID])) {
+          $entities['update']['img'][$imgID]['blnIDs'] = $img2blnIDs[$imgID];
         }
         $AnoIDs = $image->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {
@@ -506,7 +518,7 @@
   if (!$jsonRetVal){
     $jsonRetVal = json_encode(array("success"=>true));
   }
-
+  ob_clean();
   if (array_key_exists("callback",$_REQUEST)) {
     $cb = $_REQUEST['callback'];
     if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap

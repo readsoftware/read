@@ -454,6 +454,30 @@ function addLinkEntityReturnData($prefix,$entID,$key,$value) {
 *
 * @param mixed $prefix
 * @param mixed $entID
+* @param mixed $key
+* @param mixed $value
+*/
+
+function addUnlinkEntityReturnData($prefix,$entID,$key,$value) {
+  global $entities;
+  if (!array_key_exists('unlink',$entities)) {
+    $entities['unlink'] = array();
+  }
+  if (!array_key_exists($prefix,$entities['unlink'])) {
+    $entities['unlink'][$prefix] = array();
+  }
+  if (!array_key_exists($entID,$entities['unlink'][$prefix])) {
+    $entities['unlink'][$prefix][$entID] = array();
+  }
+  $entities['unlink'][$prefix][$entID][$key] = $value;
+}
+
+
+/**
+* put your comment there...
+*
+* @param mixed $prefix
+* @param mixed $entID
 */
 
 function addUpdateSwitchHashReturnData($prefix,$entID) {

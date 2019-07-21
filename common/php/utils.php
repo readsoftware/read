@@ -673,10 +673,6 @@ function getTermInfoForLangCode($langCode = 'en'){
   return $termInfo;
 }
 
-function getThumbFromFilename($filename) {
-  return "th".$filename;
-}
-
 /**
 * get UserGroup id for the "Marked for Delete" group
 */
@@ -4026,6 +4022,10 @@ $prefixToTableName = array(
           "era" => "era"
 );
 
+function getThumbFromFilename($filename) {
+  return "th".$filename;
+}
+
 function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $maxSizeX = 150, $maxSizeY = 150) {
   $sourcefile = $srcPath.$srcFilename;
   $thumbfile = $targetPath.getThumbFromFilename($srcFilename);
@@ -4072,7 +4072,7 @@ function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $
     }
     imagedestroy($thumbImage);
     imagedestroy($sourceImage);
-    if ($ret) {
+    if ($ret && $thumbBaseURL && $srcFilename) {
       return $thumbBaseURL.getThumbFromFilename($srcFilename);
     }
   }

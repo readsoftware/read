@@ -272,6 +272,24 @@ MANAGERS.DataManager.prototype = {
         }
       }
     }
+    //unlink data remove a link id or tag from a calculated array
+    if (retData.entities.unlink) {
+      var unlinks = retData.entities.unlink, prop,entTag;
+      for (prefix in unlinks) {
+        for (entID in unlinks[prefix]) {
+          for (prop in unlinks[prefix][entID]) {
+            if (this.entities[prefix] && this.entities[prefix][entID]) {
+              if (this.entities[prefix][entID][prop].indexOf(unlinks[prefix][entID][prop]) !== -1) {
+                index = this.entities[prefix][entID][prop].indexOf(unlinks[prefix][entID][prop]);
+                //remove from array
+                this.entities[prefix][entID][prop].splice(index,1);
+                DEBUG.log("data","unlink " + prefix + entID + " " + prop + " property value " + unlinks[prefix][entID][prop]);
+              }
+            }
+          }
+        }
+      }
+    }
     //remove entity from switch lookup
     if (retData.entities.removeswitchhashes) {
       var removeEntTags = retData.entities.removeswitchhashes,

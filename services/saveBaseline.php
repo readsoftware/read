@@ -156,7 +156,9 @@ if (count($errors) == 0) {
         addNewEntityReturnData('bln',$baseline);
       }
       $blnID = $baseline->getID();
-//      addLinkEntityReturnData('srf',$srfID,'blnIDs',$blnID);
+      if ($imgID && !$blnLinked) {
+        addLinkEntityReturnData('img',$imgID,'blnIDs',$blnID);
+      }
       $txtIDs = $surface->getTextIDs();
       foreach ($txtIDs as $txtID) {
         addLinkEntityReturnData('txt',$txtID,'blnIDs',$blnID);

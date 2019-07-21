@@ -950,6 +950,9 @@ EDITORS.SearchVE.prototype = {
                   }
                 }
                 srchVE.updateCursorInfoBar();
+                if (srchVE && srchVE.entPropVE && srchVE.entPropVE.tag == ("txt"+txtID)) {
+                  srchVE.entPropVE.showEntity();
+                }
               }
         },// end success cb
         error: function (xhr,status,error) {

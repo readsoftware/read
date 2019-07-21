@@ -31,7 +31,7 @@
 */
 define('ISSERVICE',1);
 ini_set("zlib.output_compression_level", 5);
-ob_start('ob_gzhandler');
+ob_start();
 
 header("Content-type: text/javascript");
 header('Cache-Control: no-cache');
@@ -86,6 +86,10 @@ if (count($errors) == 0) {
         $surface->markForDelete();
       }
     }
+    $imgID = $baseline->getImageID();
+    if ($imgID) {
+      addUnlinkEntityReturnData('img',$imgID,"blnIDs", $baseline->getID());
+    }
     addRemoveEntityReturnData("bln",$baseline->getID());
     $baseline->markForDelete();
 
@@ -97,7 +101,7 @@ if (count($errors) == 0) {
         } else if ($text->isReadonly()) {
           array_push($errors,"error text id $txtID - is readonly");
         } else {
-          addLinkEntityReturnData('txt',$txtID,'blnIDs',$text->getBaselineIDs());
+          addUpdateEntityReturnData('txt',$txtID,'blnIDs',$text->getBaselineIDs());
         }
       }
     }
@@ -117,6 +121,7 @@ if (count($warnings)) {
 if (count($entities)) {
   $retVal["entities"] = $entities;
 }
+ob_clean();
 if (array_key_exists("callback",$_REQUEST)) {
   $cb = $_REQUEST['callback'];
   if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap

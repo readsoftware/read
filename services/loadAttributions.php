@@ -30,7 +30,7 @@
   */
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
-  ob_start('ob_gzhandler');
+  ob_start();
 
   header("Content-type: text/javascript");
   header('Cache-Control: no-cache');
@@ -132,6 +132,7 @@
     $jsonCache->clearDirtyBit();
     $jsonCache->save();
   }
+  ob_clean();
   if (array_key_exists("callback",$_REQUEST)) {
     $cb = $_REQUEST['callback'];
     if (strpos("YUI",$cb) == 0) { // YUI callback need to wrap
