@@ -2723,12 +2723,13 @@ mergeLine: function (direction,cbError) {
 
   getFullContextFromGrapheme: function (graID) {
     var grapheme = this.dataMgr.getEntity('gra',graID),
-        sclID, context = null, chr;
+        sclID, context = null, chr, elemTxt;
     if (grapheme && grapheme.sclID){
       sclID = grapheme.sclID;
       chr = grapheme.value;
       $(".grpGra.scl"+sclID,this.editDiv).each(function(index,elem){
-        if (elem.innerHTML.indexOf(chr)>-1){
+        elemTxt = elem.innerHTML.replace(/ï/,'i').replace(/ü/,'u');
+        if (elemTxt.indexOf(chr)>-1){
           context = elem.className.replace(/grpGra/,"")
                                   .replace(/ord\d+/,"")
                                   .replace(/ordL\d+/,"")

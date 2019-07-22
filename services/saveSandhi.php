@@ -110,7 +110,7 @@ if (!$data) {
     $graTag = $data['graTag'];
     $graID = substr($graTag,3);
   } else {
-    array_push($errors,"missing parameter for save sandhi ");
+    array_push($errors,"missing tag parameter for save sandhi ");
   }
   $entTag = null;
   if ( isset($data['entTag'])) {//get reference Syllable or Token
@@ -134,7 +134,7 @@ if (!$data) {
       }
     }
   } else {
-    array_push($errors,"missing parameter for save sandhi ");
+    array_push($errors,"missing parameter decomp for save sandhi ");
   }
   $context = null;//required
   if ( isset($data['context'])) {//get context
@@ -154,7 +154,7 @@ if (!$data) {
       array_push($errors,"invalid parameter to save sandhi ");
     }
   } else {
-    array_push($errors,"missing parameter for save sandhi ");
+    array_push($errors,"missing context parameter for save sandhi ");
   }
   $tokIDs = null;
   if ( isset($data['tokIDs'])) {//get token ID (s) if passed
