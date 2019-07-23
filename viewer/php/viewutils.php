@@ -2369,6 +2369,9 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                         }
                       }
                     }
+                    if ($attestedCommentary) {
+                      $entTag2GlossaryHtml[$entTag]['glossaryCommentary'] = $attestedCommentary;
+                    }
                     if (is_numeric($refresh) && $refresh > 1) {//ensure label is current
                       $inflectionComponent->updateLocationLabel();
                     }
@@ -2425,6 +2428,9 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                         }
                       }
                     }
+                  }
+                  if ($attestedCommentary) {
+                    $entTag2GlossaryHtml[$entTag]['glossaryCommentary'] = $attestedCommentary;
                   }
                   if (is_numeric($refresh) && $refresh > 1) {//ensure label is current
                     $lemmaComponent->updateLocationLabel();

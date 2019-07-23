@@ -1029,6 +1029,9 @@
                       if (entGlossInfo['infHtml']) {
                         popupHtml += entGlossInfo['infHtml'];
                       }
+                      if (entGlossInfo['glossaryCommentary']) {
+                        popupHtml += " ("+entGlossInfo['glossaryCommentary']+")";
+                      }
                       if (entGlossInfo['syntax']) {
                         popupHtml += entGlossInfo['syntax'];
                       }
