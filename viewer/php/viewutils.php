@@ -1300,6 +1300,8 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
           $tcms = "";
           $prevGraIsVowelCarrier = false;
           $previousA = null;
+          $previousNum = false;
+          $typeIdNumber = Entity::getIDofTermParentLabel("numbersign-graphemetype");//term dependency
           // check for baseline change
           if (defined('SHOWBLNBOUNDARIES') && SHOWBLNBOUNDARIES && 
               isset($blnPosByEntTag) && isset($blnPosByEntTag['line']) &&
@@ -1385,6 +1387,8 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                       array_key_exists('fragLabel',$graID2PSnFMarkerMap[$graIDs[$l + 1]])) {// case where glottal starts line
                     $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[$l+1]]['fragLabel'];
                   }
+                  //track type for numbers
+                  $isNumber = ($grapheme->getType() == $typeIdNumber);
                   //check for TCM transition brackets
                   $tcms = $grapheme->getTextCriticalMark();
                   $postTCMBrackets = "";
@@ -1442,6 +1446,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   if ($grapheme->getValue() == "ʔ") {
                     $prevGraIsVowelCarrier = true;
                     $prevTCMS = $tcms;
+                    $previousNum = false;
                     continue;
                   }
                   //add grapheme
@@ -1454,6 +1459,9 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                     }
                   }
                   $prevTCMS = $tcms;
+                  if ($isNumber && $previousNum) {
+                    $physicalLineHtml .= " ";
+                  }
                   $physicalLineHtml .= $graTemp;
                   $prevGraID = $graID;
                   if ($graTemp == "a") {
@@ -1461,6 +1469,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   } else {
                     $previousA = false;
                   }
+                  $previousNum = $isNumber;
                   $prevGraIsVowelCarrier = false;
                 }
               }//end for graphIDs
@@ -1519,273 +1528,6 @@ function getFreeTextHTML($freetextLines) {
   return $freetextHTML;
 }
 
-/**
-* returns the html for tokenisation in physical line layout
-*
-* @param int array of text division $sequence ids containing global ids ordered words of the text
-* @param boolean $addBoundaryHtml determine whether to add boundary info for each edition in a multi edition calculation
-*/
-function getPhysicalLinesHTML($textDivSeqIDs, $refresh = false, $addBoundaryHtml = false) {
-  global $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
-
-  $wordCnt = 0;
-  $prevTCMS = "";
-  $nextTCMS = "";
-  $tcms = "";
-  $prevGraIsVowelCarrier = false;
-  $previousA = null;
-  $physicalLinesHtml = "";
-  //start to calculate HTML using each text division container
-  $cntTxtDivGID = count($textDivSeqIDs);
-  for ($i = 0; $i < $cntTxtDivGID; $i++) {
-    $seqGID = $textDivSeqIDs[$i];
-    if (strpos($seqGID,'seq') === 0) {
-      $txtDivSequence = new Sequence(substr($seqGID,4));
-      if (!$txtDivSequence || $txtDivSequence->hasError()) {//no sequence or unavailable so warn
-        error_log("warn, Warning inaccessible tokenisation sequence $seqGID skipped.");
-        continue;
-      } else {//process text division by physical line structure
-        $physicalLineHtml = $txtDivSequence->getScratchProperty("edn".$edition->getID()."physLineHtml");
-        if (!$physicalLineHtml || $refresh) {
-          $physicalLineHtml = "";
-          $fTxtDivSeq = ($i == 0);// also indicate first physical line and first word of this scope
-          $nextSeqGID = $i+1<$cntTxtDivGID?$textDivSeqIDs[$i+1]:null;
-          $seqEntGIDs = $txtDivSequence->getEntityIDs();
-          $seqType = $txtDivSequence->getType();
-          $seqTag = $txtDivSequence->getEntityTag();
-          //check for boundary entry for this seqTag
-          if ($addBoundaryHtml && array_key_exists($seqTag,$seqBoundaryMarkerHtmlLookup)) {
-            $physicalLineHtml .= $seqBoundaryMarkerHtmlLookup[$seqTag];
-          }
-          if (!$seqEntGIDs || count($seqEntGIDs) == 0) {
-            error_log("warn, Found empty tokenisation sequence element $seqTag for edition ".$edition->getDescription()." id=".$edition->getID());
-            continue;
-          }
-          $cntGID = count($seqEntGIDs);
-          for ($j = 0; $j < $cntGID; $j++) {//process the words of this text division
-            $wordGID = $seqEntGIDs[$j];
-            $prefix = substr($wordGID,0,3);
-            $wordID = substr($wordGID,4);
-            $nextToken = null;
-            //find next token for boundary determination
-            $nextEntGID = $j+1<$cntGID?$seqEntGIDs[$j+1]:null;
-            if (!$nextEntGID && $nextSeqGID) { //get next entGID from next text division
-              $nextTxtDivSequence = new Sequence(substr($nextSeqGID,4));
-              if (!$nextTxtDivSequence || $nextTxtDivSequence->hasError()) {//no sequence or unavailable so warn
-                error_log("warn, Warning inaccessible tokenisation sequence $nextSeqGID next entity set to null.");
-              } else {
-                $nextSeqEntGIDs = $nextTxtDivSequence->getEntityIDs();
-                if ($nextSeqEntGIDs && count($nextSeqEntGIDs) > 0) {
-                  $nextEntGID = $nextSeqEntGIDs[0];
-                }
-              }
-            }
-            if ( $nextEntGID ) {
-              switch (substr($nextEntGID,0,3)) {
-                case 'cmp':
-                  $nextToken = new Compound(substr($nextEntGID,4));
-                  if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
-                    error_log("Warning inaccessible entity id $nextEntGID skipped.");
-                    $nextToken = null;
-                    break;
-                  } else {//change to GID for first token of this compound
-                    $nextEntGID = $nextToken->getTokenIDs();
-                    if ($nextEntGID && count($nextEntGID)) {//found so change and fall through to token processing
-                      $nextEntGID = "tok:".$nextEntGID[0];
-                    } else {
-                      error_log("Warning inaccessible entity id ".$nextToken->getGlobalID()." skipped.");
-                      $nextToken = null;
-                      break;
-                    }
-                  }//fall through with GID pointing to first token of compound
-                case 'tok':
-                  $nextToken = new Token(substr($nextEntGID,4));
-                  if (!$nextToken || $nextToken->hasError()) {//no sequence or unavailable so warn
-                    error_log("Warning inaccessible entity id $nextEntGID skipped.");
-                    $nextToken = null;
-                    break;
-                  }
-              }
-            }
-            //process current word
-            $wordTag = null;
-            $tokIDs = null;
-            if ($prefix == 'cmp' || $prefix == 'tok' ) {
-              if ($prefix == 'cmp') {
-                $entity = new Compound($wordID);
-              } else {
-                $entity = new Token($wordID);
-              }
-              if (!$entity || $entity->hasError()) {//no word or unavailable so warn
-                error_log("Warning inaccessible word id $wordGID skipped.");
-              } else {
-                $wordTag = $entity->getEntityTag();
-                if ($entity && $prefix == 'cmp' && count($entity->getTokenIDs())) {
-                  $tokIDs = $entity->getTokenIDs();
-                } else if ($entity && $prefix == 'tok'){
-                  $tokIDs = array($wordID);
-                } else {
-                  error_log("err, rendering word for physical line and found invalid GID $wordGID");
-                  continue;
-                }
-                addWordToEntityLookups($entity, $refresh);
-                $footnoteHtml = "";
-                $wordHtml = '<span class="grpTok '.($seqTag?$seqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
-                $isLastWord = (($j+1 == $cntGID) && ($i+1 == $cntTxtDivGID));
-                if ($tokIDs) {
-                  ++$wordCnt;
-                  //for each token in word
-                  $tokCnt = count($tokIDs);
-                  $prevGraID = null;
-                  for($k =0; $k < $tokCnt; $k++) {
-                    $tokID = $tokIDs[$k];
-                    $firstT = ($k==0);
-                    $lastT = ($k == -1 + $tokCnt);
-                    $token = new Token($tokID);
-                    //new code ---- add code to get  linemarker from token scratch, possible for long words to cross multiple lines
-                    //$graID2LineHtmlMarkerlMap = $token->getScratchProperty("htmlLineMarkers");
-                    $graIDs = $token->getGraphemeIDs();
-                    //for each grapheme in token
-                    $graCnt = count($graIDs);
-                    for($l=0; $l<$graCnt; $l++) {
-                      $graID = $graIDs[$l];
-                      if ($prevGraID == $graID){//sandhi case of repeated grapheme
-                        continue;
-                      }
-                      $grapheme = new Grapheme($graID);
-                      if (!$grapheme) {
-                        error_log("err,calculating word html and grapheme not available for graID $graID");
-                        $prevGraIsVowelCarrier = false;
-                        continue;
-                      }
-                      if ($grapheme->getValue() == "ʔ") {
-                        $prevGraIsVowelCarrier = true;
-                        continue;
-                      }
-                      $isNewPhysicalLine = ($graID && array_key_exists($graID,$graID2LineHtmlMarkerlMap));
-                      $firstG = ($l==0 || $l==1 && $prevGraIsVowelCarrier);
-                      $lastG = (1+$l == $graCnt);
-                      //check for TCM transition brackets
-                      $tcms = $grapheme->getTextCriticalMark();
-                      $postTCMBrackets = "";
-                      $preTCMBrackets = "";
-                      if ($prevTCMS != $tcms) {
-                        list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($prevTCMS,$tcms,true);
-                      }
-                      if ($isNewPhysicalLine) {//grapheme marks physical line beginning so close previous and start new line
-                        $postTCMBrackets = getTCMTransitionBrackets($prevTCMS,"S");
-                        if ($postTCMBrackets && !($firstT && $firstG)) {
-                          $wordHtml .= $postTCMBrackets;
-                        }
-                        if ($footnoteHtml) {
-                          $wordHtml .= $footnoteHtml;
-                          $footnoteHtml = "";
-                        }
-                        $preTCMBrackets = getTCMTransitionBrackets("S",$tcms);
-                        //output current word HTML
-                        //if in a compound output hyphen
-                        //if not first physical line then close physical line div and start a new line
-                        $physicalLineHtml .= ((!$fTxtDivSeq && $wordHtml && !($firstT && $firstG))?$wordHtml."-</span>":"").
-                                              (!$fTxtDivSeq?"</div></div>":"")."<div class=\"physicalLineDiv\">".
-                                              $graID2LineHtmlMarkerlMap[$graID]."<div class=\"physicalLineWrapperDiv\">";
-                        //open word span
-                        $wordHtml = '<span class="grpTok '.($seqTag?$seqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
-                        $prevTCMS = "S";//at a new physical line so reset TCM//???need to recalc previous brackets???
-                        $previousA = null;
-                      } else if ($postTCMBrackets && !($firstT && $firstG)) {// lookahead will close previous token using postBrackets of this grapheme so skip if first of word
-                        $wordHtml .= $postTCMBrackets;
-                      }
-                      if ($footnoteHtml) {
-                        $wordHtml .= $footnoteHtml;
-                        $footnoteHtml = "";
-                      }
-                      if ($preTCMBrackets) {
-                        $wordHtml .= $preTCMBrackets;
-                      }
-                      //add grapheme
-                      $graTemp = $grapheme->getValue();
-                      if ($prevGraIsVowelCarrier && $previousA && ($prevTCMS == $tcms || (!$prevTCMS|| $prevTCMS == "S") && (!$tcms|| $tcms == "S"))) {
-                        if ($graTemp == 'i') {
-                          $graTemp = "ï";
-                        }else if ($graTemp == 'u') {
-                          $graTemp = "ü";
-                        }
-                      }
-                      $prevTCMS = $tcms;
-                      $wordHtml .= $graTemp;
-                      $prevGraID = $graID;
-                      if ($graTemp == "a") {
-                        $previousA = true;
-                      } else {
-                        $previousA = false;
-                      }
-                      $prevGraIsVowelCarrier = false;
-                    }//end for graphIDs
-                    $footnoteHtml = getEntityFootnotesHtml($token, $refresh);
-                  }//end for token IDs
-                  if ($nextToken) {//find tcm for first grapheme of next token to check for closing brackets
-                    $nextGraIDs = $nextToken->getGraphemeIDs();
-                    if (count($nextGraIDs) > 0) {
-                      $nextGraID = $nextGraIDs[0];
-                      $nextGrapheme = new Grapheme($nextGraID);
-                      if ($nextGrapheme->getValue() == "ʔ") {
-                        $nextGraID = $nextGraIDs[1];
-                        $nextGrapheme = new Grapheme($nextGraID);
-                      }
-                      $nextStartsOnNewLine = ($nextGraID && array_key_exists($nextGraID,$graID2LineHtmlMarkerlMap));
-                      $nextTCMS = $nextGrapheme->getTextCriticalMark();
-                      if ($nextStartsOnNewLine) {
-                        $postTCMBrackets = getTCMTransitionBrackets($tcms,"S");
-                        $wordHtml .= $postTCMBrackets;
-                      } else if ($nextTCMS != $tcms) {
-                        $postTCMBrackets = "";
-                        $preTCMBrackets = "";
-                        list($postTCMBrackets,$preTCMBrackets) = getTCMTransitionBrackets($tcms,$nextTCMS,true);
-                        $wordHtml .= $postTCMBrackets;
-                      }
-                    }
-                  }
-                  if ($isLastWord && $prevTCMS && $prevTCMS != "S") {//close off any TCM
-                    $tcmBrackets = getTCMTransitionBrackets($prevTCMS,"S");//reduce to S
-                    $prevTCMS = "";//reset since we closed off TCMs for the edition.
-                    //This will ensure next structures output will have opening TCMs
-                    if ($tcmBrackets) {
-                      $wordHtml .= $tcmBrackets;
-                    }
-                  }
-                  if ($prefix == "cmp") {//end of compound so add cmp entity footnotes
-                    $footnoteHtml .= getEntityFootnotesHtml($entity, $refresh, false);
-                  }
-                  if ($footnoteHtml) {
-                    $wordHtml .= $footnoteHtml;
-                    $footnoteHtml = "";
-                  }
-                  //$wordHtml = preg_replace('/\/\/\//',"",$wordHtml); // remove edge indicator
-                  $wordHtml = preg_replace('/_+/',"_",$wordHtml); // multple missing consonants
-                  $wordHtml = preg_replace('/_/',".",$wordHtml); // multple missing consonants
-                  $wordHtml .= "</span>";
-                  //      $wordRTF = preg_replace('/\.\./',".",$wordRTF); // multple missing consonants
-                }
-                $physicalLineHtml .= $wordHtml;
-              }
-            }else{
-              error_log("warn, Found unknown word element $wordGID for edition ".$edition->getDescription()." id="+$edition->getID());
-              continue;
-            }
-          }//end for cntGID
-          //store html to sequence for cache
-          $txtDivSequence->storeScratchProperty("edn".$edition->getID()."physLineHtml",$physicalLineHtml);
-          $txtDivSequence->save();
-        }// end  of process text division
-      }
-      $physicalLinesHtml .= $physicalLineHtml;
-    } else {
-      error_log("warn, Found unknown tokenisation element $seqGID for edition $ednID");
-      continue;
-    }
-  }// end for txtDivSeqIDs
-  return $physicalLinesHtml;
-}
 
 /**
 * gets the editions Structural layout html
