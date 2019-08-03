@@ -679,8 +679,8 @@ VIEWERS.ImageViewer.prototype = {
 */
 
   moveViewportRelative: function(deltaX, deltaY) {
-    this.vpLoc.x = Math.max(0, Math.min(this.vpLastLoc.x + deltaX, this.vpMaxLoc.x));
-    this.vpLoc.y = Math.max(0, Math.min(this.vpLastLoc.y + deltaY, this.vpMaxLoc.y));
+    this.vpLoc.x = Math.max(0, Math.min(this.vpLastLoc.x + deltaX, this.vpMaxLoc.x-this.vpSize.width));
+    this.vpLoc.y = Math.max(0, Math.min(this.vpLastLoc.y + deltaY, this.vpMaxLoc.y-this.vpSize.height));
     this.vpLastLoc.x = this.vpLoc.x;
     this.vpLastLoc.y = this.vpLoc.y;
   },
