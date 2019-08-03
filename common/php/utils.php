@@ -4030,6 +4030,9 @@ function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $
   $sourcefile = $srcPath.$srcFilename;
   $thumbfile = $targetPath.getThumbFromFilename($srcFilename);
   list($imageW,$imageH) = getimagesize($sourcefile);
+  if ($imageW <= $maxSizeX && $imageH <= $maxSizeY && preg_match("/^th/",$srcFilename)) { // small image or likely a thumbnail
+    return null;    
+  }
   //shrink and preserve aspect
   $percent = $maxSizeX/$imageW;
   if ($percent>1) {
@@ -4043,7 +4046,7 @@ function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $
 
   $thumbImage = imagecreatetruecolor($thumbW,$thumbH);
 
-  switch($ext){
+  switch(strtolower($ext)) {
     case 'png':
       $sourceImage = imagecreatefrompng($sourcefile);
       break;
