@@ -865,6 +865,7 @@ VIEWERS.ImageViewer.prototype = {
       e.preventDefault();
       return;
     }
+    delta = -delta;
     var xScaleFactor = e.layerX/this.imgCanvas.width,
         yScaleFactor = e.layerY/this.imgCanvas.height,
     xNavAllign = xScaleFactor * this.vpSize.width + this.vpLoc.x,

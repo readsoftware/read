@@ -61,6 +61,7 @@ if (!$data) {
 
  //check data entTag dbname
   $path = (array_key_exists('path',$data)? $data['path']:null);
+  $url = (array_key_exists('url',$data)? $data['url']:null);
   $subpath = (array_key_exists('subpath',$data)? $data['subpath']:null);
   $entTag = (array_key_exists('entTag',$data)? $data['entTag']:null);
   if (!$path && !$subpath && !$entTag) {
@@ -92,7 +93,9 @@ if (!$data) {
 
   if (!preg_match("/\/$/",$path)) {
     $path .= "/";
-    $url .= "/";
+    if ($url) {
+      $url .= "/";
+    }
 	}
 	$retVal['thumbUrls'] = array();
 	foreach ($iterator as $fileinfo) {

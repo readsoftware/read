@@ -48,6 +48,7 @@
                         ((isset($data['refresh']) && $data['refresh'])? $data['refresh']: false);//default (parameter missing) not multi edition
     $multiEdition = (!isset($data['multiEd']) || !$data['multiEd'])? false:true;//default (parameter missing) not multi edition
     $isStaticView = (!isset($data['staticView'])||$data['staticView']==0)?false:true;
+    $hAdjustPX = (!isset($data['hAdjustPX'])||$data['hAdjustPX']==0)?15:$data['hAdjustPX'];
     $txtID = null;
     $cfgEntityTag = null;
     if(!$isStaticView) {
@@ -244,6 +245,7 @@
     <script type="text/javascript">
       var dbName = '<?=DBNAME?>',imgViewer,
           srvbasepath="<?=SITE_ROOT?>",
+          hAdjustPX="<?=$hAdjustPX?>",
           basepath="<?=SITE_BASE_PATH?>",
 <?php
   if (!$isStaticView) {
@@ -684,7 +686,7 @@
 ?>
 ,
            cntPanels = <?=$cntPanels?>,
-           avgContentPanelHeight = ($(window).height()-$('.headline').height())/cntPanels - $textViewerHdr.height() -15
+           avgContentPanelHeight = (($(window).height()-$('.headline').height())/cntPanels - $textViewerHdr.height() - hAdjustPX)
 ;
           $epidocDownloadLink.html('<div class="epidownloadbtndiv"/>');
           if (editionIsPublic) {

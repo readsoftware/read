@@ -4077,6 +4077,8 @@ function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $
     imagedestroy($sourceImage);
     if ($ret && $thumbBaseURL && $srcFilename) {
       return $thumbBaseURL.getThumbFromFilename($srcFilename);
+    } else if ($ret && !$thumbBaseURL) {
+      return "no base url supplied!";
     }
   }
   return false;
