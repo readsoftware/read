@@ -61,6 +61,9 @@
   define("SHOWLEMMADECLENSION",0);
   define("DECLENSIONLIST",'OIADeclension');
   define('EDITCOLLISIONDETECTION',1);
+  define("EDITTOOLSOPENONSTART",1);
+  define("VIEWTOOLSOPENONSTART",1);
+  define("LAYOUTTOOLSOPENONSTART",1);
 
   //configure viewer defaults for site
   define("SHOWEXPORTBUTTON",false); // defaults to true so this is required to turn export off

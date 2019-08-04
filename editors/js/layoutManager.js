@@ -312,20 +312,20 @@ MANAGERS.LayoutManager.prototype = {
     this.layoutToolBarPanel = $('<div id="layoutToolBarPanel" class="toolPanel"/>');
     //attach header and panel to navbar
     viewToolNavBar.append(viewToolNavHdr).append( this.viewToolBarPanel);
-    this.viewToolNavBar = viewToolNavBar.jqxExpander({expanded:true,
+    this.viewToolNavBar = viewToolNavBar.jqxExpander({expanded:EDITORS.config.viewToolsOpenOnStart,
                                               expandAnimationDuration:50,
                                               collapseAnimationDuration:50});
     navBarExpHdr=this.viewToolNavBar.children().first();
     navBarExpHdr.addClass('navExpandableHeader');
     //attach editheader and editpanel to editNavBar
     editToolNavBar.append(editToolNavHdr).append( this.editToolBarPanel);
-    this.editToolNavBar = editToolNavBar.jqxExpander({expanded:true,
+    this.editToolNavBar = editToolNavBar.jqxExpander({expanded:EDITORS.config.editToolsOpenOnStart,
                                               expandAnimationDuration:50,
                                               collapseAnimationDuration:50});
     this.editToolBarHdr = this.editToolNavBar.children().first();
     this.editToolBarHdr.addClass('navExpandableHeader');
     layoutToolNavBar.append(layoutToolNavHdr).append( this.layoutToolBarPanel);
-    this.layoutToolNavBar = layoutToolNavBar.jqxExpander({expanded:true,
+    this.layoutToolNavBar = layoutToolNavBar.jqxExpander({expanded:EDITORS.config.layoutToolsOpenOnStart,
                                               expandAnimationDuration:50,
                                               collapseAnimationDuration:50});
     navBarExpHdr=this.layoutToolNavBar.children().first();
