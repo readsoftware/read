@@ -901,11 +901,7 @@ class Parser {
               // error_log("replacement = '$replaceCmd' and posSep = $posSep");
               $matchGrapheme = mb_substr($replaceCmd,0,$posSep);
               $replacementString = mb_substr($replaceCmd,$posSep+1);
-<<<<<<< HEAD
               // error_log("matchGrapheme = $matchGrapheme and replacementString = '$replacementString'");
-=======
-              error_log("matchGrapheme = $matchGrapheme and replacementString = '$replacementString'");
->>>>>>> fix dashes and add Claudian letters
               if (isset($matchGrapheme) && $matchGrapheme != $prevGrapheme) {//check marker is the same as previous grapheme
                 array_push($this->_errors,"replacement sequence at character $i of $ckn.$lineMask has marker grapheme $matchGrapheme that doesn't match previous grapheme $prevGrapheme"." cfg line # $cfgLnCnt");
               }
@@ -1596,11 +1592,7 @@ class Parser {
                   $graphemes = $this->_syllableClusters[$sclIndex-1]->getGraphemeIDs();
                   array_push($graphemes,$graTempID);
                   $this->_syllableClusters[$sclIndex-1]->setGraphemeIDs($graphemes);
-<<<<<<< HEAD
-                  if (!isset($tokIndex) && !$tokIndex) {// no token so must be intra syllable split
-=======
                   if (!isset($tokIndex) && $tokIndex) {// no token so must be intra syllable split
->>>>>>> fix dashes and add Claudian letters
                     $curToken = new Token();
                     $curToken->setGraphemeIDs(array($graTempID));
                     $curToken->setToken($str);
