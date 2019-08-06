@@ -79,7 +79,8 @@ MANAGERS.LayoutManager.prototype = {
 
   init: function() {
     DEBUG.traceEntry("layoutMgr.init","");
-    var layoutMgr = this, startPage = "landing", startFocus = null, focus, entTags, entTag, txtID, searchVE;
+    var layoutMgr = this, startPage = "landing", startFocus = null, toolsState = null, focus, 
+        entTags, entTag, txtID, searchVE;
     this.params = UTILITY.parseParams();//get URI parameters
     this.createUserNavBar();
     this.loadingPage = $('<div id="loadingPage"><h1>Loading ....</h1></div>');
@@ -89,21 +90,42 @@ MANAGERS.LayoutManager.prototype = {
     $(document.body).addClass(this.currentPage);
     this.createLandingPage();
     this.createSearchCtrlPanel();
-    this.createTextEditPanels();
-    this.createEditorToolPanels();
-    this.createLayoutTools();
     //parse params for start up
     if (this.params['f']) { //focus parameter
       focus = this.params['f'].split(",");
       startPage = focus[0];
-      if (focus.length == 2) {
+      if (focus.length > 1) {
         startFocus = focus[1];
+      }
+      if (focus.length > 2) {
+        toolsState = focus[2];
+        //override system defaults in config.php
+        EDITORS.config.editToolsOpenOnStart = false;
+        EDITORS.config.viewToolsOpenOnStart = false;
+        EDITORS.config.layoutToolsOpenOnStart = false;
+        for (char in toolsState) {
+          switch(toolsState[char]) {
+            case "E": //edit open
+              EDITORS.config.editToolsOpenOnStart = true;
+              break;
+            case "V": //view open
+              EDITORS.config.viewToolsOpenOnStart = true;
+              break;
+            case "L": //layout open
+              EDITORS.config.layoutToolsOpenOnStart = true;
+              break;
+
+          }
+        }
       }
     } else if (this.params['l']) {//there is a search so switch to search page
       startPage = "textEdit";
     } else if (this.params['q']) {//there is a search so switch to search page
       startPage = "search";
     }
+    this.createTextEditPanels();
+    this.createEditorToolPanels();
+    this.createLayoutTools();
     this.switchContentPage(startPage,startFocus);
     if (this.params['l']) { //layout parameter
       entTags = this.params['l'].split(',');
