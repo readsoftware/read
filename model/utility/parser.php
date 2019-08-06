@@ -1151,7 +1151,9 @@ class Parser {
             case "-":// compound token separator U+002D  unicode minus  -
             case "‐":// compound token separator multiByte e28090 hyphen
               $dashSeq = false;
-              if (mb_substr($script,$i-1,1) == "-" || mb_substr($script,$i+1,1) == "-" || mb_substr($script,$i-1,1) == "‐" || mb_substr($script,$i+1,1) == "‐"){
+              if (mb_substr($script,$i-1,1) == "-" || mb_substr($script,$i+1,1) == "-" ||
+                  mb_substr($script,$i-1,1) == "-" || mb_substr($script,$i+1,1) == "-" ||
+                  mb_substr($script,$i-1,1) == "[" || mb_substr($script,$i+1,1) == "]"){
                 $dashSeq = true;
               }
               if ($i == 0 && !$dashSeq) {// at the start of a line and compound hyphens are not allowed
