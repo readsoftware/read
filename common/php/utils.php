@@ -3618,7 +3618,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
       error_log("error for querying for wordGIDs row count is 0");
     } else {
       $graID2WordGID = array();
-      $wrdLastGraID = 0;
+      $prevWrdLastGraID = 0;
       while ($row = $dbMgr->fetchResultRow()) {
         $txtDivSeqID = trim($row['txtdiv_seqid']);
         $tdSeqTokCmpGIDs = explode(",",trim($row['ent_ids'],"{}"));

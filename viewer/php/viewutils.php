@@ -1362,13 +1362,17 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                 } else  if ($graCnt > 1 && array_key_exists($graIDs[1],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[1]])) {// case where glottal starts line
                   $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[1]]['sideMarker'];
                 }
-                $physicalLineHtml .= "<div class=\"physicalLineDiv\">";
+                $lineHtmlMarker = null;
                 if (array_key_exists($graIDs[0],$graID2LineHtmlMarkerlMap)) {
-                  $physicalLineHtml .= $graID2LineHtmlMarkerlMap[$graIDs[0]];
-                } else if (array_key_exists($graIDs[1],$graID2LineHtmlMarkerlMap)) { // case where glottal starts line
-                  $physicalLineHtml .= $graID2LineHtmlMarkerlMap[$graIDs[1]];
+                  $lineHtmlMarker = $graID2LineHtmlMarkerlMap[$graIDs[0]];
+                } else if ($graCnt > 1 && array_key_exists($graIDs[1],$graID2LineHtmlMarkerlMap)) { // case where glottal starts line
+                  $lineHtmlMarker = $graID2LineHtmlMarkerlMap[$graIDs[1]];
                 }
-                $physicalLineHtml .= "<div class=\"physicalLineWrapperDiv\">";
+                if ($lineHtmlMarker) {
+                  $physicalLineHtml .= "<div class=\"physicalLineDiv\">";
+                  $physicalLineHtml .= $lineHtmlMarker;
+                  $physicalLineHtml .= "<div class=\"physicalLineWrapperDiv\">";
+                }
               }
               //for each grapheme in syllable
               for($l=0; $l<$graCnt; $l++) {

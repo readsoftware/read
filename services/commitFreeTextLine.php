@@ -333,6 +333,7 @@
       Entity::getIDofTermParentLabel('linephysical-textphysical'),//warning!!! term dependency
       Entity::getIDofTermParentLabel('analysis-sequencetype'),//warning!!! term dependency
       Entity::getIDofTermParentLabel('chapter-analysis'),//warning!!! term dependency
+      Entity::getIDofTermParentLabel('section-chapter'),//warning!!! term dependency
       Entity::getIDofTermParentLabel('rootref-textreferences'),//warning!!! term dependency
       Entity::getIDofTermParentLabel('textreferences-sequencetype')//warning!!! term dependency
     );
