@@ -599,7 +599,7 @@
             $textViewerContent = $('#textViewerContent')
 <?php
   if (!$isStaticView && $showExportButton) {
-    //calculate static view configuration form initial values
+    //calculate static view configuration from initial values
     //save in session and use defaults if no session variable
     //todo  figure out a good place to save config based on live viewer context (text or edition or ??)
     if ($entityCfgStaticView) {
@@ -636,7 +636,7 @@
                               "cfgStaticLayout"=>$staticViewLayout);
       $_SESSION["cfgStaticView$cfgEntityTag"] = $staticViewSettings;
     }
-    $staticViewSettings["cfgStaticLayout"] = ($staticViewSettings["cfgStaticLayout"] & 127);
+    $staticViewSettings["cfgStaticLayout"] = ($staticViewSettings["cfgStaticLayout"] & 255);
 ?>
 ,
             $btnExportStatic = $('#btnExportStatic'),
@@ -780,17 +780,23 @@
                       staticViewSettings.fname = $('#fname').val();
                       staticViewSettings.title = $('#title').val();
                       var cfgLayout = 0;
+                      if ($('#refreshalldata').jqxCheckBox('checked')) {
+                        cfgLayout += 256;
+                        staticViewSettings['refresh'] = true;
+                      } else {
+                        delete staticViewSettings['refresh'];
+                      }
                       if ($('#overwritefiles').jqxCheckBox('checked')) {
                         cfgLayout += 128;
                       }
                       if ($('#fullGlossaryCheckBox').jqxCheckBox('checked')) {
                         cfgLayout += 64;
-                        if ((cfgLayoutOrig & 64) == 0) { //change from no glossary to full so refresh lookups
-                          staticViewSettings['refresh'] = true;
-                        }
-                      } else if ((cfgLayoutOrig & 64) == 64) { //change to no glossary from full so refresh lookups
-                          staticViewSettings['refresh'] = true;
-                      }
+//                        if ((cfgLayoutOrig & 64) == 0) { //change from no glossary to full so refresh lookups
+//                          staticViewSettings['refresh'] = true;
+//                        }
+                      }// else if ((cfgLayoutOrig & 64) == 64) { //change to no glossary from full so refresh lookups
+//                          staticViewSettings['refresh'] = true;
+//                      }
                       if ($('#dlImagesCheckBox').jqxCheckBox('checked')) {
                         cfgLayout += 32;
                       }
@@ -816,6 +822,7 @@
                   $('#btnCancel').jqxButton({ width: '80px', disabled: false });
                   $('#fname').val(staticViewSettings.fname);
                   $('#title').val(staticViewSettings.title);
+                  $('#refreshalldata').jqxCheckBox({ width: '150px', checked:(cfgLayout&256?true:false)});
                   $('#overwritefiles').jqxCheckBox({ width: '150px', checked:(cfgLayout&128?true:false)});
                   $('#fullGlossaryCheckBox').jqxCheckBox({ width: '150px', checked:(cfgLayout&64?true:false)});
                   $('#dlImagesCheckBox').jqxCheckBox({ width: '150px', checked:(cfgLayout&32?true:false)});
@@ -1060,14 +1067,14 @@
                           popupHtml += lemmaInfo['relatedHtml'];
                         }
                         popupHtml += '</div>';
-                      }
-                    }
-                  }
-                }
 <?php
     }
 ?>
 
+                      }
+                    }
+                  }
+                }
               $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[entTag]]);
               closeAllPopups();
               //TODO syntax add code to highlight root word in transcription
@@ -1116,7 +1123,7 @@
                   asynch: true,
                   success: function (data, status, xhr) {
                     if (typeof data == 'object' ) {
-                      var popup = data.popup, lemSearch = (popup.hom?popup.hom:'') + (popup.lem?popup.lem:''),
+                      var popup = data.popup, lemSearch = (popup.hom?popup.hom:'') + (popup.lem?popup.lem+'.':''),
                           lemLink, lemURL, htmlLemma, inflect;
                       if (popup.lem) {
                         lemURL = basepath+'/plugins/dictionary/?search='+lemSearch;
@@ -1434,6 +1441,7 @@
                 <span class="dlgOutputGroupLabel">update :</span>
                 <div id="outputOptions" >
                   <div id="overwritefiles"  class="dlgCheckBox bit128">Overwrite existing files</div>
+                  <div id="refreshalldata"  class="dlgCheckBox bit256">Refresh all data</div>
                 </div>
               </div>
               <div style="float: right">

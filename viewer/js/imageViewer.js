@@ -124,6 +124,7 @@ VIEWERS.ImageViewer =  function(imgVCfg) {
     this.$imgViewHeader.append(this.$imgMenu);
     this.$imgMenuPanel = $('<div id="images" class="menuPanel"/>');
     $('body').append(this.$imgMenuPanel);
+    this.$zoomDIV = $('<div class="zoomUI"><div id="zoomOut" title="Zoom Out" class="zoomButton">-</div><div id="zoomIn" title="Zoom In" class="zoomButton">+</div></div>').get(0);
     this.$imgViewHeader.append(this.$zoomDIV);
     this.initImageUI();
   }
