@@ -206,15 +206,16 @@ if (count($errors) == 0) {
     addUpdateEntityReturnData($linkFromEntity->getEntityTypeCode(),$linkFromEntity->getID(),'relatedEntGIDsByType', $linkFromEntity->getRelatedEntitiesByLinkType());
     //check for syntactic function and store scratch information
     if (Entity::getTermFromID(Entity::getParentIDFromID($linkTypeID)) == 'SyntacticFunction') {//warning!! term dependency
-      $dependecyWord = "";
+      $dependencyWord = "";
       if ($toGID) {
         $linkToEntity = EntityFactory::createEntityFromGlobalID($toGID);
         $prefix = $linkToEntity->getEntityTypeCode();
         if ($prefix == 'tok' || $prefix == 'cmp') {
-          $dependecyWord = $linkToEntity->getValue();
+          $tempWord = $linkToEntity->getValue();
+          $dependencyWord = preg_replace("/ʔ/","",$tempWord);
         }
       }
-      $linkFromEntity->storeScratchProperty('syntacticRelation',$linkType.' → '.$dependecyWord);
+      $linkFromEntity->storeScratchProperty('syntacticRelation',$linkType.' → '.$dependencyWord);
       $linkFromEntity->save();
     }
     $txtDivTypeID = Entity::getIDofTermParentLabel("textdivision-text"); //warning!! term dependency

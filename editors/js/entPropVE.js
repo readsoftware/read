@@ -377,7 +377,7 @@ EDITORS.EntityPropVE.prototype = {
                          (this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))),
         attrValue = null, value = this.entity.transcr ? this.entity.transcr : (this.entity.value ? this.entity.value : (this.entity.title ? this.entity.title : ""));
     DEBUG.traceEntry("createValueUI");
-    value = value.replace("ʔ","");
+    value = value.replace(/ʔ/g,"");
     if (this.entity.attributionIDs && this.entity.attributionIDs.length &&
           this.dataMgr.entities.atb &&
           this.dataMgr.entities.atb[this.entity.attributionIDs[0]]) {//attributions for now use first
@@ -868,7 +868,7 @@ EDITORS.EntityPropVE.prototype = {
         treeSfLinkTypeName = this.id+'sflinktypetree';
     DEBUG.traceEntry("createSynFuncUI");
     if (sfLinkToEntGID) {
-      sfLinkToEntValue = this.dataMgr.getEntityFromGID(sfLinkToEntGID).value;
+      sfLinkToEntValue = this.dataMgr.getEntityFromGID(sfLinkToEntGID).value.replace(/ʔ/g,"");
     }
     if (sfLinkTypeID) {
       sfValue = this.dataMgr.getTermFromID(sfLinkTypeID);
@@ -880,7 +880,7 @@ EDITORS.EntityPropVE.prototype = {
     this.sfLinkTypeUI.append($('<div class="propDisplayUI">'+
                           '<div class="valueLabelDiv propDisplayElement'+(sfLinkToEntGID?" linked":"")+(valueEditable?"":" readonly")+'">'+
                           sfValue+' → '+(sfLinkToEntValue?sfLinkToEntValue:"")+'</div>'+
-                          '<span class="addButton"><u>'+(sfLinkToEntGID?'Change':'Select')+' dependency</u></span></div>'+
+                          '<span class="addButton"><u>'+(sfLinkToEntGID?'Change':'Select')+' target</u></span></div>'+
                           '</div>'));
     //create input with selection tree
     this.sfLinkTypeUI.append($('<div class="propEditUI" style="border:none; background-color: inherit;">'+

@@ -1041,11 +1041,11 @@
                       if (entGlossInfo['glossaryCommentary']) {
                         popupHtml += " ("+entGlossInfo['glossaryCommentary']+")";
                       }
-                      if (entGlossInfo['syntax']) {
-                        popupHtml += entGlossInfo['syntax'];
-                      }
                       //TODO syntax  add code here to construct syntax html and add dblclick and root-highlite code below
                       popupHtml += '</div>';
+                      if (entGlossInfo['syntax']) {
+                        popupHtml +=    '<div class="syntaxDependency">'+entGlossInfo['syntax']+'</div>';
+                      }
                       if (lemmaInfo['attestedHtml'] || lemmaInfo['relatedHtml']) {
 <?php
     if (!defined('USELEMMAEXTRAINFO') || USELEMMAEXTRAINFO) {
@@ -1145,9 +1145,6 @@
                         htmlLemma +=      '<span id="gd3form_phonetic class="lemPhonetic">'+(popup.phonetic?' ['+popup.phonetic+'] ':'')+'</span>';
                         htmlLemma +=      '<span id="gd3form_pos" class="lemPos">'+(popup.pos?popup.pos:'')+'</span>';
                         htmlLemma +=      '<span id="gd3form_def class="lemGLoss">'+(popup.def?popup.def:'')+'</span>';
-                        if (popup.syntax) {
-                          htmlLemma +=    '<span class="syntaxDependency">| '+popup.syntax+'</span>';
-                        }
                         htmlLemma +=    '</p>';
                         htmlLemma +=  '</div>';
                         if (popup.morphology) {
@@ -1159,6 +1156,9 @@
                             htmlLemma +=     '</p>';
                             htmlLemma +=   '</div>';   
                           }
+                        }
+                        if (popup.syntax) {
+                          htmlLemma +=    '<div class="syntaxDependency">'+popup.syntax+'</div>';
                         }
                       }
                       $('.viewerContent').trigger('updateselection',[$textViewerContent.attr('id'),[entTag]]);
