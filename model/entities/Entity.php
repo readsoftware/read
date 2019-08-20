@@ -694,11 +694,13 @@
         $relatedEntGIDsByLinkType = array();
         $curType = null;
         foreach ($annotations as $annotation){
+          $linkToIDs = $annotation->getLinkToIDs();
           if ($curType != $annotation->getTypeID()){
             $curType = $annotation->getTypeID();
-            $relatedEntGIDsByLinkType[$curType] = $annotation->getLinkToIDs();
-          }else{
-            $relatedEntGIDsByLinkType[$curType] = array_merge($relatedEntGIDsByLinkType[$curType],$annotation->getLinkToIDs());
+            $relatedEntGIDsByLinkType[$curType] = array();
+          }
+          if ($linkToIDs && is_array($linkToIDs)) {
+            $relatedEntGIDsByLinkType[$curType] = array_merge($relatedEntGIDsByLinkType[$curType],$linkToIDs);
           }
         }
         return $relatedEntGIDsByLinkType;
