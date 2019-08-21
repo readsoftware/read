@@ -1464,7 +1464,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   }
                   $prevTCMS = $tcms;
                   if ($isNumber && $previousNum) {
-                    $physicalLineHtml .= " ";
+                    $physicalLineHtml .= "&nbsp;";
                   }
                   $physicalLineHtml .= $graTemp;
                   $prevGraID = $graID;
