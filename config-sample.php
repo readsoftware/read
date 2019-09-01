@@ -96,6 +96,8 @@
   define("SUBIMGTITLEFORPARTSIDELABEL",true);//allow image title to be used when not part side label is defined
   define("INCLUDEFRAGINPARTSIDELABEL",true);//include fragment label in the part side label is defined
   define("INLINEPARTSIDELABEL",true);//include fragment label in the part side label is defined
+  define("PARTFRAGSEPARATOR"," ");//separate part label from fragment label using this string
+  define("FRAGSIDESEPARATOR"," ");//separate fragment label from side label using this string
 
   if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer");
 // to export with separation of project databases use the line below. Also consider
