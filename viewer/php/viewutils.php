@@ -1925,11 +1925,12 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
               $isVerb = ($lemmaPos == 'v.');
             }
             $lemmaSposID = $lemma->getSubpartOfSpeech();
+            $lemmaSpos = $lemmaSposID && is_numeric($lemmaSposID) && Entity::getTermFromID($lemmaSposID) ? Entity::getTermFromID($lemmaSposID) : '';
             $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
             if ($lemmaGenderID && is_numeric($lemmaGenderID)) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
               $lemHtml .=  Entity::getTermFromID($lemmaGenderID).($lemmaCF[2]==2?'(?)':'');
-            } else if ($lemmaSposID && is_numeric($lemmaSposID)) {
-              $lemHtml .=  Entity::getTermFromID($lemmaSposID).($lemmaCF[1]==2?'(?)':'');
+            } else if ($lemmaSpos ) {
+              $lemHtml .=  $lemmaSpos.($lemmaCF[1]==2?'(?)':'');
             }else if ($lemmaPos) {
               $lemHtml .=  $lemmaPos.($lemmaCF[0]==2?'(?)':'');
             }
@@ -2255,7 +2256,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
                           }
                         } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 != '?') {
                           $attestedHtml .= "<span class=\"inflectdescript\">$key4</span>";
-                        } else if (!$lemmaGenderID){//handle noun supress infection gender output
+                        } else if (!$lemmaGenderID &&  $lemmaSpos != 'pers.'){//handle noun supress infection gender output
                           $attestedHtml .= "<span class=\"inflectdescript\">$key1</span>";
                         }
                       }
@@ -2500,15 +2501,16 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
         if ( $lemmaPos) {
           $isVerb = $termLookup[$lemmaPos] == 'v.';
         }
-        $lemmaSpos = $lemma->getSubpartOfSpeech();
+        $lemmaSposID = $lemma->getSubpartOfSpeech();
+        $lemmaSpos = $lemmaSposID && is_numeric($lemmaSposID) && Entity::getTermFromID($lemmaSposID) ? Entity::getTermFromID($lemmaSposID) : '';
         $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
         $posNode = null;
         if ($lemmaGenderID) {
           $posNode = $htmlDomDoc->createElement('span',$termLookup[$lemmaGenderID].($lemmaCF[2]==2?'(?)':''));
           $posNode->setAttribute('class','pos');
           $lemmaDefNode->appendChild($posNode);
-        } else if ($lemmaSpos) {
-          $posNode = $htmlDomDoc->createElement('span',$termLookup[$lemmaSpos].($lemmaCF[1]==2?'(?)':''));
+        } else if ($lemmaSposID) {
+          $posNode = $htmlDomDoc->createElement('span',$termLookup[$lemmaSposID].($lemmaCF[1]==2?'(?)':''));
           $posNode->setAttribute('class','pos');
           $lemmaDefNode->appendChild($posNode);
         }else if ($lemmaPos) {
@@ -2821,7 +2823,7 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
                       }
                     } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 != '?') {
                       $attestedHtml .= "<span class=\"inflectdescript\">$key4</span>";
-                    } else if (!$lemmaGenderID){//handle noun supress infection gender output
+                    } else if (!$lemmaGenderID && $lemmaSpos != 'pers.'){//handle noun supress infection gender output
                       $attestedHtml .= "<span class=\"inflectdescript\">$key1</span>";
                     }
                   } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {

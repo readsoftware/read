@@ -453,7 +453,7 @@
                       }
                     } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 != '?') {
                       $rtf .= $key4." ";
-                    } else if (!$lemmaGender){//handle noun supress infection gender output
+                    } else if (!$lemmaGender && $lemmaSpos != 'pers.'){//handle noun supress infection gender output
                       $rtf .= $key1." ";
                     }
                   } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {

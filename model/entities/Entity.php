@@ -699,7 +699,7 @@
             $curType = $annotation->getTypeID();
             $relatedEntGIDsByLinkType[$curType] = array();
           }
-          if ($linkToIDs && is_array($linkToIDs)) {
+          if ($curType && $linkToIDs && is_array($linkToIDs)) {
             $relatedEntGIDsByLinkType[$curType] = array_merge($relatedEntGIDsByLinkType[$curType],$linkToIDs);
           }
         }
