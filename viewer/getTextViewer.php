@@ -1038,7 +1038,7 @@
                       if (entGlossInfo['infHtml']) {
                         popupHtml += entGlossInfo['infHtml'];
                       }
-                      if (entGlossInfo['glossaryCommentary']) {
+                      if (entGlossInfo['glossaryCommentary'] && <?=((defined('USELEMMAEXTRAINFO') && !USELEMMAEXTRAINFO)?'1':'0')?>) {
                         popupHtml += " ("+entGlossInfo['glossaryCommentary']+")";
                       }
                       //TODO syntax  add code here to construct syntax html and add dblclick and root-highlite code below
