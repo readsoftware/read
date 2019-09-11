@@ -1885,7 +1885,7 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
           $lemGID = $lemma->getGlobalID();
           $lemTag = 'lem'.$lemma->getID();
           $lemHtml = $lemma->getScratchProperty('entry');//check for cache
-          if ($lemHtml && !$refresh) {
+          if ($lemHtml && !$refresh && USEVIEWERCACHING) {
             $entTag2GlossaryHtml[$lemTag] = array('entry' => $lemHtml);// lemma article
             $attestedHtml = $lemma->getScratchProperty('attestations');
             if ($attestedHtml){
