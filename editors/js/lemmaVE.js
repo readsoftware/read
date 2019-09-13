@@ -2133,7 +2133,7 @@ DEBUG.traceEntry("createPhonologicalUI");
             if (locParts.length == 2) {
               attested.locTag = locParts[1]; // get label after ordinal
             } else if (!locParts[0].match(/sort/)) {
-              attested.locTag = locParts[0]+":"+locParts[2]; // skip ordinal
+              attested.locTag = locParts[0]+EDITORS.config.attestedLocSep+locParts[2]; // skip ordinal
             } else {
               attested.locTag = locParts[2];
             }

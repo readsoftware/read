@@ -106,6 +106,7 @@
         EDITORS.config.showLemmaVEPhonologicalUI = ('<?=defined("SHOWLEMMAPHONOLOGY")?SHOWLEMMAPHONOLOGY:""?>' == "" || !'<?=defined("SHOWLEMMAPHONOLOGY")?SHOWLEMMAPHONOLOGY:""?>')?false:'<?=SHOWLEMMAPHONOLOGY?>';
         EDITORS.config.showLemmaDeclensionUI = ('<?=defined("SHOWLEMMADECLENSION")?SHOWLEMMADECLENSION:"0"?>' == "0" || !'<?=defined("SHOWLEMMADECLENSION")?SHOWLEMMADECLENSION:"0"?>')?false:true;
         EDITORS.config.declensionListName = '<?=defined("DECLENSIONLIST")?DECLENSIONLIST:"OIADeclension"?>';
+        EDITORS.config.attestedLocSep = '<?=defined("CKNLINENUMSEPARATOR")?CKNLINENUMSEPARATOR:""?>';
         EDITORS.config.editToolsOpenOnStart = ('<?=defined("EDITTOOLSOPENONSTART")?EDITTOOLSOPENONSTART:1?>' == "1") ;
         EDITORS.config.viewToolsOpenOnStart = ('<?=defined("VIEWTOOLSOPENONSTART")?VIEWTOOLSOPENONSTART:1?>' == "1") ;
         EDITORS.config.layoutToolsOpenOnStart = ('<?=defined("LAYOUTTOOLSOPENONSTART")?LAYOUTTOOLSOPENONSTART:1?>' == "1") ;
