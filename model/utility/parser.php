@@ -1680,7 +1680,7 @@ class Parser {
       //check last for a-f then split to stanza and pada
       if (preg_match("/[a-f]$/",$lastLabel)) {//stanza + pada label
         $verseLabel = substr($lastLabel,0,strlen($lastLabel)-1);
-        if (!$verseLabel) {
+        if (!$verseLabel && $verseLabel !== "0") {
           $verseLabel = "V1";
           $padaLabel = $lastLabel;
         } else {
@@ -1690,7 +1690,7 @@ class Parser {
           $verseLabel = $parentLabel.'.'.$verseLabel;
         }
         array_push($structLabelsAndTypes,array($verseLabel,$this->_stanzaID));
-        array_push($structLabelsAndTypes,array($padaLabel,$this->_padaID));
+        array_push($structLabelsAndTypes,array($verseLabel.$padaLabel,$this->_padaID));
       } else {
         $structLabel = $parentLabel?$parentLabel.'.'.$lastLabel:$lastLabel;
         array_push($structLabelsAndTypes,array($structLabel,$this->_sectionID));

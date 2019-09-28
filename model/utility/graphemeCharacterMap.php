@@ -187,7 +187,8 @@ $graphemeCharacterMap = array(
 "ḗ"=>array("srt"=>"202","ssrt"=>"202","typ"=>"V"),
 "ḕ"=>array("srt"=>"203","ssrt"=>"203","typ"=>"V"),
 "g"=>array(
-    "̱"=>array("srt"=>"291","ssrt"=>"291","typ"=>"C"),
+    "̱"=>array("srt"=>"291","ssrt"=>"291","typ"=>"C", 
+        "̄"=>array("srt"=>"293","ssrt"=>"293","typ"=>"C")), 
     "h"=>array("srt"=>"300","ssrt"=>"300","typ"=>"C"),
     "srt"=>"290","ssrt"=>"290","typ"=>"C"),
 "ḡ"=>array(
