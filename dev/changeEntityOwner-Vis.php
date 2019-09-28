@@ -138,7 +138,7 @@ if (!isSysAdmin()) {
       $tags = array_keys($prefixToTableName);
     }
     foreach ($tags as $prefix) {
-      if (!array_key_exists($prefix,$prefixToTableName)) {
+      if (!array_key_exists($prefix,$prefixToTableName) || $prefix == "ugr" || $prefix == "trm") {
         echo "skipping invalid tag $prefix, not found in lookup for table prefixes \n";
         continue;
       }
