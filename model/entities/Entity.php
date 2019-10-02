@@ -104,6 +104,17 @@
       return self::$_termInfo['parentIDByID'][$termID];
     }
 
+    public static function getTermList($termID) {
+      if (!self::$_termInfo) {
+        self::$_termInfo = getTermInfoForLangCode('en');
+      }
+       if (!$termID) {
+         error_log("call to retrieve term list with empty term id");
+         return "";
+       }
+      return self::idsStringToArray(self::$_termInfo['termByID'][$termID]['trm_list_ids']);
+    }
+
     public static function getTermFromID($termID) {
       if (!self::$_termInfo) {
         self::$_termInfo = getTermInfoForLangCode('en');

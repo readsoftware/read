@@ -86,7 +86,7 @@ class Parser {
             $_stanzaID,
             $_padaID,
             $_rootrefID,
-            $_textreferenceID,
+            $_textreferencesID,
             $_textphysicalID,
             $_linephysicalID,
             $_textID,
@@ -144,7 +144,7 @@ class Parser {
     $this->_stanzaID = $this->_termLookups['stanza-chapter'];//warning!!! term dependency
     $this->_padaID = $this->_termLookups['pāda-stanza'];//warning!!! term dependency
     $this->_rootrefID = $this->_termLookups['rootref-textreferences'];//warning!!! term dependency
-    $this->_textreferenceID = $this->_termLookups['textreferences-sequencetype'];//warning!!! term dependency
+    $this->_textreferencesID = $this->_termLookups['textreferences-sequencetype'];//warning!!! term dependency
     $this->_textphysicalID = $this->_termLookups['textphysical-sequencetype'];//warning!!! term dependency
     $this->_textID = $this->_termLookups['text-sequencetype'];//warning!!! term dependency
     $this->_textdivisionID = $this->_termLookups['textdivision-text'];
@@ -185,7 +185,7 @@ class Parser {
           $this->_analysisID,
           $this->_chapterID,
           $this->_rootrefID,
-          $this->_textreferenceID,
+          $this->_textreferencesID,
           $this->_textphysicalID,
           $this->_textID
         );
@@ -751,7 +751,7 @@ class Parser {
                     $txtRefSequence->setOwnerID($ownerID);
                     $txtRefSequence->setEntityIDs(array("seq:".$quoteSeqTempID));
                     $txtRefSequence->setLabel("text Reference Container for $ckn");
-                    $txtRefSequence->setTypeID($this->_textreferenceID);
+                    $txtRefSequence->setTypeID($this->_textreferencesID);
                     if (array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
                       foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
                         $txtRefSequence->storeScratchProperty($key,$value);
@@ -846,8 +846,18 @@ class Parser {
                   $curStructDivSequence = new Sequence();
                   $curStructDivSequence->setVisibilityIDs($vis);
                   $curStructDivSequence->setOwnerID($ownerID);
-                  $curStructDivSequence->setLabel($structLabel);
                   $curStructDivSequence->setTypeID($structType);
+                  $structLookupLbl = $structLabel;
+                  if ($structType == $this->_stanzaID) { // find verse number
+                    $labels = explode(".",$structLabel);
+                    $structLabel = array_pop($labels);
+                  } else  if ($structType == $this->_padaID) { // find verse number
+                    $labels = explode(".",$structLabel);
+                    $structLabel = array_pop($labels);
+                    preg_match("/[a-f]$/",$structLabel,$match);
+                    $structLabel = $match[0];
+                  }
+                  $curStructDivSequence->setLabel($structLabel);
                   if(array_key_exists("Sequence",$lnCfg) && array_key_exists("scratch",$lnCfg["Sequence"])) {
                     foreach ( $lnCfg["Sequence"]["scratch"] as $key => $value) {
                       $curStructDivSequence->storeScratchProperty($key,$value);
@@ -858,7 +868,7 @@ class Parser {
                   }
                   array_push($this->_sequences,$curStructDivSequence);
                   $curStructDivSeqIndex = count($this->_sequences);
-                  $structSeqLookup[$structLabel] = $curStructDivSeqIndex;
+                  $structSeqLookup[$structLookupLbl] = $curStructDivSeqIndex;
                   $curStructDivSeqTempID = 0 - $curStructDivSeqIndex;
                   $curStructDivSequence->storeScratchProperty("nonce","seq_".$curStructDivSeqTempID.$parseGUID);
                   $curStructDivSequence->storeScratchProperty("cknLine",$ckn.".$lineMask");

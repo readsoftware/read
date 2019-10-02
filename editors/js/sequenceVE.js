@@ -1169,6 +1169,7 @@ EDITORS.SequenceVE.prototype = {
     // open the context menu when the user presses the mouse right button.
     function mousedownHandler(e) {
         var target = $(e.target).parents('li:first')[0];
+        seqVE.$structTree.curTop = seqVE.$structTree.scrollTop();
         if ((e.which == 3 || e.button == 2) && target != null) {
           seqVE.$structTree.jqxTree('selectItem', target);
           seqVE.createContextMenu(e, seqVE.$structTree.jqxTree('getItem', target));
@@ -1503,10 +1504,11 @@ EDITORS.SequenceVE.prototype = {
       seqVE.linkTargetTag = null;
     });
     seqVE.$structTree.unbind("expand").bind("expand", function (e) {
-      var elem = e.args.element,
-        item = seqVE.$structTree.jqxTree('getItem', elem),
-        tag, entity, subItems, loadElement;
+      var elem = e.args.element, 
+          item = seqVE.$structTree.jqxTree('getItem', elem),
+          tag, entity, subItems, loadElement;
       if (item) {
+        seqVE.$structTree.curTop = seqVE.$structTree.scrollTop();
         tag = item.id;
         entity = seqVE.dataMgr.getEntityFromGID(tag);
         loadElement = null;
@@ -1523,7 +1525,15 @@ EDITORS.SequenceVE.prototype = {
             }
           }
         }
+        setTimeout(function(){
+            seqVE.$structTree.get(0).scrollTo(0,seqVE.$structTree.curTop);
+          },1);
       }
+    });
+    seqVE.$structTree.unbind("collapse").bind("collapse", function (e) {
+      setTimeout(function(){
+          seqVE.$structTree.get(0).scrollTo(0,seqVE.$structTree.curTop);
+        },1);
     });
     // disable the default browser's context menu.
     $(document).on('contextmenu', function (e) {

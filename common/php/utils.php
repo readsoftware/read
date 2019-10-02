@@ -882,6 +882,27 @@ function getLinkTypeInfo() {
 
 
 /**
+* validate child term is containable by parent term
+*
+* @param int $pTypeID Term id of container
+* @param int $cTypeID Term id of item
+* @return boolean
+*/
+
+function isValidContainment($pTypeID, $cTypeID) {
+  if ($pTypeID && $cTypeID && $pTypeID != $cTypeID){
+    $pTermList = Entity::getTermList($pTypeID);
+    if (isset($pTermList) &&
+        is_array($pTermList) &&
+        in_array($cTypeID,$pTermList) ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+/**
 * validate child term is decendant of parent term
 *
 * @param int $pTypeID Term id

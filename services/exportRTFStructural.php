@@ -483,7 +483,8 @@
     $overrideProseStyle = null;
     $seqLabel = $sequence->getLabel();
     $seqSup = $sequence->getSuperScript();
-    $label = ($seqSup?$seqSup.($seqLabel?" ".$seqLabel:""):($seqLabel?$seqLabel:""));
+    $label = ($seqSup?$seqSup.(($seqLabel || $seqLabel === "0")?" ".$seqLabel:""):
+                (($seqLabel  || $seqLabel === "0")?$seqLabel:""));
     $endStructRTF = "";
     switch($seqType) {
       case "List": //warning!!!! term dependency
@@ -578,7 +579,7 @@
           }
         }
         //if label then output as stanza id and/or meter header with hard return
-        if ($label) {
+        if ($label || $label === "0" ) {
           $rtf .= $stanzaHeaderStyle.utf8ToRtf($label).$endParaStyle.$eol;
         }
         $rtf .= $stanzaStyle;

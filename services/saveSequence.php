@@ -211,8 +211,8 @@ if (count($errors) == 0) {
       }
     } else if ($addSubSeqTypeID && $isSequenceUpdate) { // use $seqID to indicate existing parent sequence
       //todo check that type is a sequence type and a sub type of parent sequence
-      if (!isSubTerm($sequence->getTypeID(),$addSubSeqTypeID)) {
-        array_push($errors,"error creating new subsequence - types are not related");
+      if (!isValidContainment($sequence->getTypeID(),$addSubSeqTypeID)) {
+        array_push($errors,"error creating new subsequence - types are not compatible");
       } else {
         //create new subsequence
         $subSequence = new Sequence();
