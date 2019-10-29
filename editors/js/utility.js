@@ -129,12 +129,18 @@ var UTILITY = UTILITY || {};
           return -1;
         } else if (entA.sort > entB.sort) {
           return 1;
-        } else if (entA.sort2 && !isNaN(entA.sort2) && entB.sort2 && !isNaN(entB.sort2)) {//handle ptimary sort equal cases
+        } else if (entA.sort2 && !isNaN(entA.sort2) && entB.sort2 && !isNaN(entB.sort2)) {//handle primary sort equal cases
           if (entA.sort2 < entB.sort2) {
             return -1;
           } else if (entA.sort2 > entB.sort2) {
             return 1;
+          } else if (entA.order && !isNaN(entA.order) && entB.order && !isNaN(entB.order)) {//handle homograms
+          if (entA.order < entB.order) {
+            return -1;
+          } else if (entA.order > entB.order) {
+            return 1;
           }
+        }
         }else if (entA.sort2 && !isNaN(entA.sort2) && !entB.sort2) {//A has secondary B does not
           return 1;
         }else if (!entA.sort2 && entB.sort2 && !isNaN(entB.sort2)) {//B has secondary A does not

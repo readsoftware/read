@@ -2490,7 +2490,7 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
         $lemmaDefNode->setAttribute('class','lemmadef');
         $entryNode->appendChild($lemmaDefNode);
         if ($lemmaOrder = $lemma->getHomographicOrder()) {
-          $lemmaDefNode->appendChild($htmlDomDoc->createElement('superscript',$lemmaOrder));
+          $lemmaDefNode->appendChild($htmlDomDoc->createElement('sup',$lemmaOrder));
         }
         $lemmaValue = preg_replace('/ʔ/','',$lemma->getValue());
         $lemmaNode = $htmlDomDoc->createElement('span',$lemmaValue);
