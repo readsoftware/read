@@ -192,6 +192,7 @@ EDITORS.LemmaVE.prototype = {
       this.isLemma = (this.prefix == "lem");
       this.editDiv.html('');
       this.createValueUI();
+      this.createHomographicOrderUI();
       if (EDITORS.config.showLemmaVEPhoneticUI) {
 //        this.createPhoneticUI();
       }
@@ -262,8 +263,9 @@ EDITORS.LemmaVE.prototype = {
       });
       //blur to cancel
       $('div.valueInputDiv input',this.valueUI).unbind("blur").bind("blur",function(e) {
-        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-//          lemmaVE.valueUI.removeClass("edit");
+        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+            !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          lemmaVE.valueUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -369,8 +371,9 @@ EDITORS.LemmaVE.prototype = {
       });
       //blur to cancel
       $('div.valueInputDiv input',this.phonUI).unbind("blur").bind("blur",function(e) {
-        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-//          lemmaVE.phonUI.removeClass("edit");
+        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+            !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          lemmaVE.phonUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -771,8 +774,9 @@ DEBUG.traceEntry("createPhonologicalUI");
       });
       //blur to cancel
       $('div.valueInputDiv input',this.compUI).unbind("blur").bind("blur",function(e) {
-        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
-//          lemmaVE.compUI.removeClass("edit");
+        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+            !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          lemmaVE.compUI.removeClass("edit");
         }
       });
       //mark dirty on input
@@ -1142,7 +1146,8 @@ DEBUG.traceEntry("createPhonologicalUI");
       });
       //blur to cancel
       $('div.valueInputDiv input',this.descrUI).unbind("blur").bind("blur",function(e) {
-        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+            !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
 //          lemmaVE.descrUI.removeClass("edit");
         }
       });
@@ -1197,82 +1202,171 @@ DEBUG.traceEntry("createPhonologicalUI");
 *
 */
 
-  createDeclensionUI: function() {
-    var lemmaVE = this,
-        trmID = this.entity.decl ? this.entity.decl:null;
-    this.declensionList = this.getDeclensionList();
-    var source =
-            {
-                localdata: this.declensionList,
-                datatype: "array"
-            };
-    var dataAdapter = new $.jqx.dataAdapter(source);
-    DEBUG.traceEntry("lemmaVE.createDeclensionUI");
-    //create UI container
-    this.declUI = $('<div class="declUI"></div>');
-    this.editDiv.append(this.declUI);
-    //create label
-    this.declUI.append($('<div class="propDisplayUI">'+
-                          '<div class="valueLabelDiv propDisplayElement">'+
-                          '<span class="valueLabelDivHeader">Declension: </span>'+
-                          '<span class="valueLabelDivEditor"></span>'+
-                          '</div>'+
-                          '</div>'));
-    //create input with save button
-    this.declUI.append($('<div class="propEditUI">'+
-                    '<div class="declListDiv propEditElement"></div>'+
-                    '</div>'));
-    //attach event handlers
-      //click to edit
-      this.declUI.unbind("click").bind("click",function(e) {
-        if (lemmaVE.declUI.hasClass("edit")) {
-          lemmaVE.declUI.removeClass("edit");
-        } else {
-          lemmaVE.declUI.addClass("edit");
-        }
-        e.stopImmediatePropagation();
-        return false;
-      });
-      //blur to cancel
-      this.declUI.unbind("blur").bind("blur",function(e) {
-          lemmaVE.declUI.removeClass("edit");
-      });
-      this.declList = $('div.declListDiv',this.declUI);
-      // Create jqxListBox
-      this.declList.jqxListBox({  source: dataAdapter,
-                                  displayMember: "name",
-                                  valueMember: "id",
-                                  height: 300,
-                                  width: 200,
-          renderer: function (index, label, value) {
-              var datarecord = lemmaVE.declensionList[index];
-              return'<span title="'+datarecord.name + '" tag="'+datarecord.tag+'" >' + datarecord.name + '</span>';
-          }
-      });
-      //select cur Declention in list and make it visible
-      var curDecl;
-      if (trmID) {
-        curDecl = this.declList.jqxListBox('getItemByValue', trmID);
-        if (curDecl) {
-          this.declList.jqxListBox('selectItem', curDecl);
-          this.declList.jqxListBox('ensureVisible', curDecl);
-          $('.valueLabelDivEditor',lemmaVE.declUI).html(curDecl.label);
-        }
-      }
+/**
+* put your comment there...
+*
+*/
 
-      //handle editor select
-      this.declList.unbind("select").bind("select",function(e) {
-        var args = e.args, item = args.item,
-            declName = item.label, declTrmID = item.value,
-            lemProp = {};
-        lemProp["decl"] = declTrmID;
-        $('.valueLabelDivEditor',lemmaVE.declUI).html(declName);
+createHomographicOrderUI: function() {
+  var lemmaVE = this,
+      homNum = this.entity.order ? this.entity.order:null;
+  this.homographicOrdList = [
+    {'name':"1",'id':"1"},
+    {'name':"2",'id':"2"},
+    {'name':"3",'id':"3"},
+    {'name':"4",'id':"4"},
+    {'name':"5",'id':"5"},
+    {'name':"6",'id':"6"}
+  ];
+  var source =
+          {
+              localdata: this.homographicOrdList,
+              datatype: "array"
+          };
+  var dataAdapter = new $.jqx.dataAdapter(source);
+  DEBUG.traceEntry("lemmaVE.createHomographicOrderUI");
+  //create UI container
+  this.homUI = $('<div class="homUI"></div>');
+  this.editDiv.append(this.homUI);
+  //create label
+  this.homUI.append($('<div class="propDisplayUI">'+
+                        '<div class="valueLabelDiv propDisplayElement">'+
+                        '<span class="valueLabelDivHeader">Homographic Order: </span>'+
+                        '<span class="valueLabelDivEditor"></span>'+
+                        '</div>'+
+                        '</div>'));
+  //create input with save button
+  this.homUI.append($('<div class="propEditUI">'+
+                  '<div class="homListDiv propEditElement"></div>'+
+                  '</div>'));
+  //attach event handlers
+    //click to edit
+    this.homUI.unbind("click").bind("click",function(e) {
+      if (lemmaVE.homUI.hasClass("edit")) {
+        lemmaVE.homUI.removeClass("edit");
+      } else {
+        lemmaVE.homUI.addClass("edit");
+      }
+      e.stopImmediatePropagation();
+      return false;
+    });
+    //blur to cancel
+    this.homUI.unbind("blur").bind("blur",function(e) {
+        lemmaVE.homUI.removeClass("edit");
+    });
+    this.homList = $('div.homListDiv',this.homUI);
+    // Create jqxListBox
+    this.homList.jqxListBox({  source: dataAdapter,
+                                displayMember: "name",
+                                valueMember: "id",
+                                height: 300,
+                                width: 200,
+        renderer: function (index, label, value) {
+            var datarecord = lemmaVE.homographicOrdList[index];
+            return'<span title="'+datarecord.name +'" >' + datarecord.name + '</span>';
+        }
+    });
+    //select cur Homographic order from list list and make it visible
+    var curHom;
+    if (homNum) {
+      curHom = this.homList.jqxListBox('getItemByValue', homNum);
+      if (curHom) {
+        this.homList.jqxListBox('selectItem', curHom);
+        this.homList.jqxListBox('ensureVisible', curHom);
+        $('.valueLabelDivEditor',lemmaVE.homUI).html(curHom.label);
+      }
+    }
+
+    //handle editor select
+    this.homList.unbind("select").bind("select",function(e) {
+      var args = e.args, item = args.item,
+          homName = item.label, homNum = item.value,
+          lemProp = {};
+      lemProp["order"] = homNum;
+      $('.valueLabelDivEditor',lemmaVE.homUI).html(homName);
+      lemmaVE.homUI.removeClass("edit");
+      lemmaVE.saveLemma(lemProp);
+    });
+  DEBUG.traceExit("lemmaVE.createHomographicOrderUI");
+},
+
+
+createDeclensionUI: function() {
+  var lemmaVE = this,
+      trmID = this.entity.decl ? this.entity.decl:null;
+  this.declensionList = this.getDeclensionList();
+  var source =
+          {
+              localdata: this.declensionList,
+              datatype: "array"
+          };
+  var dataAdapter = new $.jqx.dataAdapter(source);
+  DEBUG.traceEntry("lemmaVE.createDeclensionUI");
+  //create UI container
+  this.declUI = $('<div class="declUI"></div>');
+  this.editDiv.append(this.declUI);
+  //create label
+  this.declUI.append($('<div class="propDisplayUI">'+
+                        '<div class="valueLabelDiv propDisplayElement">'+
+                        '<span class="valueLabelDivHeader">Declension: </span>'+
+                        '<span class="valueLabelDivEditor"></span>'+
+                        '</div>'+
+                        '</div>'));
+  //create input with save button
+  this.declUI.append($('<div class="propEditUI">'+
+                  '<div class="declListDiv propEditElement"></div>'+
+                  '</div>'));
+  //attach event handlers
+    //click to edit
+    this.declUI.unbind("click").bind("click",function(e) {
+      if (lemmaVE.declUI.hasClass("edit")) {
         lemmaVE.declUI.removeClass("edit");
-        lemmaVE.saveLemma(lemProp);
-        //if editor has changed then save tempory session preferences
-      });
-    DEBUG.traceExit("lemmaVE.createDeclensionUI");
-  },
+      } else {
+        lemmaVE.declUI.addClass("edit");
+      }
+      e.stopImmediatePropagation();
+      return false;
+    });
+    //blur to cancel
+    this.declUI.unbind("blur").bind("blur",function(e) {
+        lemmaVE.declUI.removeClass("edit");
+    });
+    this.declList = $('div.declListDiv',this.declUI);
+    // Create jqxListBox
+    this.declList.jqxListBox({  source: dataAdapter,
+                                displayMember: "name",
+                                valueMember: "id",
+                                height: 300,
+                                width: 200,
+        renderer: function (index, label, value) {
+            var datarecord = lemmaVE.declensionList[index];
+            return'<span title="'+datarecord.name + '" tag="'+datarecord.tag+'" >' + datarecord.name + '</span>';
+        }
+    });
+    //select cur Declention in list and make it visible
+    var curDecl;
+    if (trmID) {
+      curDecl = this.declList.jqxListBox('getItemByValue', trmID);
+      if (curDecl) {
+        this.declList.jqxListBox('selectItem', curDecl);
+        this.declList.jqxListBox('ensureVisible', curDecl);
+        $('.valueLabelDivEditor',lemmaVE.declUI).html(curDecl.label);
+      }
+    }
+
+    //handle editor select
+    this.declList.unbind("select").bind("select",function(e) {
+      var args = e.args, item = args.item,
+          declName = item.label, declTrmID = item.value,
+          lemProp = {};
+      lemProp["decl"] = declTrmID;
+      $('.valueLabelDivEditor',lemmaVE.declUI).html(declName);
+      lemmaVE.declUI.removeClass("edit");
+      lemmaVE.saveLemma(lemProp);
+      //if editor has changed then save tempory session preferences
+    });
+  DEBUG.traceExit("lemmaVE.createDeclensionUI");
+},
 
 /*************  radio button helper ****************/
 
@@ -1634,7 +1728,7 @@ DEBUG.traceEntry("createPhonologicalUI");
       });
       //click to cancel
       $('div.posEditUI input',this.posUI).unbind("blur").bind("blur",function(e) {
-//        lemmaVE.posUI.removeClass("edit");
+        lemmaVE.posUI.removeClass("edit");
       });
       //mark dirty on input
       $('div.posEditUI',this.posUI).unbind("input").bind("input",function(e) {
@@ -1688,7 +1782,8 @@ DEBUG.traceEntry("createPhonologicalUI");
       });
       //blur to cancel
       $('div.valueInputDiv input',this.transUI).unbind("blur").bind("blur",function(e) {
-        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+        if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+            !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
 //          lemmaVE.transUI.removeClass("edit");
         }
       });

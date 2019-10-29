@@ -223,7 +223,8 @@ EDITORS.ImgVE.prototype = {
         });
         //blur to cancel
         $('div.valueInputDiv input',this.valueUI).unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+              !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
             imgVE.valueUI.removeClass("edit");
             if ($('div.valueLabelDiv',imgVE.valueUI).val() != $(this).val()) {
               if (!$(this).parent().parent().hasClass("dirty")) {

@@ -399,7 +399,7 @@ EDITORS.EntityPropVE.prototype = {
     //create input with save button
     this.valueUI.append($('<div class="propEditUI">'+
                     '<div class="valueInputDiv propEditElement"><input class="valueInput" placeholder="entity has no value" value="'+value+'"/></div>'+
-                    '<button class="saveDiv propEditElement">Save</button>'+
+                    '<button class="saveDiv propEditElement" type="button">Save</button>'+
                     '</div>'));
     //attach event handlers
       //click to edit
@@ -416,7 +416,8 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $('div.valueInputDiv input',this.valueUI).unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+              !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
             entPropVE.valueUI.removeClass("edit");
           }
         });
@@ -548,7 +549,8 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $('div.valueInputDiv input',this.supUI).unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+          !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
             entPropVE.supUI.removeClass("edit");
           }
         });
@@ -627,7 +629,8 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $('div.valueInputDiv input',this.refUI).unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+          !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
             entPropVE.refUI.removeClass("edit");
           }
         });
@@ -700,7 +703,8 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $('div.valueInputDiv input',this.invUI).unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+          !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
             entPropVE.invUI.removeClass("edit");
           }
         });
@@ -1455,7 +1459,8 @@ removeLink: function(anoTag) {
           });
           //blur to cancel
           $('div.valueInputDiv input',sandhiUI).unbind("blur").bind("blur",function(e) {
-            if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv')) {//all but save button
+            if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
+            !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
               $(this).parent().parent().parent().removeClass("edit");
             }
           });
@@ -1785,7 +1790,9 @@ removeLink: function(anoTag) {
          '<span class="image">' +
          (thumbUrl? '<img class="resImageIconBtn img'+img.id+'" src="'+thumbUrl+'" alt="Thumbnail not available"/>':'')+
          img.title + '</span>'+
-         ((!img || img.readonly || img.blnIDs && img.blnIDs.length)?'':'<span class="removeimg '+img.tag+'" title="remove tag '+img.tag+'">X</span>')+
+         ((!img || img.readonly || img.blnIDs && img.blnIDs.length
+                || !img.editibility || !this.layoutMgr.userVE.isEditAsEditibilityMatch(img.editibility))?'':
+            '<span class="removeimg '+img.tag+'" title="remove tag '+img.tag+'">X</span>')+
          '</div>'));
     //create input with save button
   },

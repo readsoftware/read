@@ -37,11 +37,11 @@
 }
 .valueUI,.phonUI,.compUI,.descrUI,
 .declUI, .posUI, .supUI, .refUI,
-.invUI, .transUI {
+.homUI, .invUI, .transUI {
   color : black;
   background-color: inherit;
 }
-.declUI div.propEditUI {
+.declUI div.propEditUI, .homUI div.propEditUI {
   width:auto;
 }
 .valueLabelDivHeader{
@@ -146,6 +146,18 @@ div.descrUI .propEditUI {
   display:none;
 }
 div.descrUI.edit .propEditUI {
+  display:table;
+}
+div.homUI .propDisplayUI {
+  display:block;
+}
+div.homUI.edit .propDisplayUI {
+  display:none;
+}
+div.homUI .propEditUI {
+  display:none;
+}
+div.homUI.edit .propEditUI {
   display:table;
 }
 div.declUI .propDisplayUI {

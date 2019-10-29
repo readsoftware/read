@@ -818,7 +818,8 @@ EDITORS.WordlistVE.prototype = {
         displayValue = '';
       }
       html += '<span class="lemma '+lemma.tag+" "+(lemma.readonly?"readonly":"")+'"'+
-              ' srch="'+displayValue.replace(/ʔ/g,'')+'">' + displayValue + ' </span>' +
+              ' srch="'+displayValue.replace(/ʔ/g,'')+'">' + displayValue + 
+              (lemma.order?'<sup class="lemmahom">'+lemma.order + ' </sup>':"")+' </span>' +
               (lemma.gloss?'<span class="lemmagloss">'+lemma.gloss + ' </span>':"")+
               '<span class="POS">'+ tempLabel + ' </span>' +
               (lemma.trans? '<span class="lemmatrans">'+lemma.trans+'</span>':"") +
