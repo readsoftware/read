@@ -2474,7 +2474,7 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
     $glossaryAtbIDs = $catalog->getAttributionIDs();
 
     $glossaryCommentTypeID = Entity::getIDofTermParentLabel('Glossary-CommentaryType');//warning!!! term dependency
-    $lemmas = new Lemmas("lem_catalog_id = $catID and not lem_owner_id = 1","lem_sort_code,lem_sort_code2");
+    $lemmas = new Lemmas("lem_catalog_id = $catID and not lem_owner_id = 1","lem_sort_code,lem_sort_code2,lem_homographorder");
     if ($lemmas->getCount() > 0) {
       $lemIDs = array();
       $isVerb = false;

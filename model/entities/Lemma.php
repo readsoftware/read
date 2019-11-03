@@ -719,7 +719,7 @@
     * @param string $sort primary code for this lemma
     */
     public function setSortCode($sort) {
-      if(compareSortKeys($this->_sort_code, $sort) !== 0) {
+      if(strcmp($this->_sort_code, $sort)) {
         $this->_dirty = true;
         $this->setDataKeyValuePair("lem_sort_code",$sort);
       }
@@ -732,7 +732,7 @@
     * @param string $sort secondary code for this lemma
     */
     public function setSortCode2($sort2) {
-      if($this->_sort_code2 != $sort2) {
+      if(strcmp($this->_sort_code2, $sort2)) {
         $this->_dirty = true;
         $this->setDataKeyValuePair("lem_sort_code2",$sort2);
       }
