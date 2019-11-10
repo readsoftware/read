@@ -86,6 +86,7 @@
   define("CKNREPLACEMENTEXP","'\\1\\2'");//SQL replace is grp1 followed by grp2
   define("CKNREPLACEFLAGS","'i'");//SQL ignore case during match
   define("CKNLINENUMSEPARATOR",":");//separate txt label from line label using a space
+  define("DEFAULTTOVERSELABEL", false);//when true system uses token verse-pāda location if available 
 
   //viewer title formatting
   define("INVMATCHREGEXP","/([a-z]+)0*(\\d+)/i");//grp1 match starting non numeric characters followed by zero or more 0 grp2 match following numbers

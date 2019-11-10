@@ -3770,9 +3770,11 @@ function getTokLocQueryString($tokID){
   $strReplace = defined('CKNREPLACEMENTEXP')?CKNREPLACEMENTEXP:"'\\1 \\2'";
   $strFlags = defined('CKNREPLACEFLAGS')?CKNREPLACEFLAGS:"'i'";
   $linePhysicalTypeID = Entity::getIDofTermParentLabel('linephysical-textphysical');// warning!!! term dependency
+  $padaTypeID = Entity::getIDofTermParentLabel('pāda-stanza');// warning!!! term dependency
 
   return "select distinct  array_position( b.seq_entity_ids::text[],concat('seq:',c.cid)) as lineord, c.label as linelabel, ".
-         "case when txt_ref is not null and txt_ref != '' then txt_ref else regexp_replace(txt_ckn,$strMatch,$strReplace".($strFlags?",$strFlags":"").") end as txtlabel ".
+         "case when txt_ref is not null and txt_ref != '' then txt_ref else regexp_replace(txt_ckn,$strMatch,$strReplace".($strFlags?",$strFlags":"").") end as txtlabel, ".
+         (defined('DEFAULTTOVERSELABEL') && DEFAULTTOVERSELABEL?"vp.vloc ":"null ")."as vloc ".
          "from sequence b left join (select a.seq_id::text as cid, a.seq_label as label, a.seq_scratch::json->>'edOrd' as edord ".
                                     "from sequence a ".
                                     "where a.seq_type_id = $linePhysicalTypeID and ".
@@ -3783,6 +3785,12 @@ function getTokLocQueryString($tokID){
                               "on concat('seq:',c.cid) = ANY(b.seq_entity_ids) ".
                         "left join edition on b.seq_id = ANY(edn_sequence_ids) ".
                         "left join text on txt_id = edn_text_id ".
+                        "full join (select concat(v.seq_label,p.seq_label) as vloc ".
+                                    "from sequence p left join sequence v on concat('seq:',p.seq_id::text) = ANY(v.seq_entity_ids) ".
+                                    "where p.seq_type_id = $padaTypeID and ".
+                                          "concat('tok:','$tokID') = ANY(p.seq_entity_ids) and ".
+                                          "v.seq_owner_id != 1 and p.seq_owner_id != 1 ".
+                                    "order by v.seq_label,p.seq_label) vp on true ".
          "where c.cid is not null and txt_id is not null ".
          "order by lineord;";
 }
@@ -3793,6 +3801,7 @@ function getWordLocation($wordTag) {
   }
   $prefix = substr($wordTag,0,3);
   $wrdID = substr($wordTag,3);
+  $useVLabel = (defined('DEFAULTTOVERSELABEL') && DEFAULTTOVERSELABEL);
   $txtLabel = null;
   $labels = array();
   if ($prefix == 'cmp') {
@@ -3809,29 +3818,31 @@ function getWordLocation($wordTag) {
         error_log("error loading dataManager");
         return "zzz";
       }
-      $dbMgr->query(getTokLocQueryString($fTokID));
-      if ($dbMgr->getError()) {
-        error_log("error for querying first tok$fTokID of cmp$wrdID ".$dbMgr->getError());
-        return "zzz";
-      } else if ($dbMgr->getRowCount() < 1) {
-        error_log("error for querying first tok$fTokID of cmp$wrdID row count is 0");
-        return "zzz";
-      } else {
-        $row = $dbMgr->fetchResultRow();
-        $txtLabel = $row['txtlabel'];
-        $lineord = $row['lineord'];
-        array_push($labels,$row['linelabel']);
+      if (!$useVLabel) {//if using verse label skip first token      
+        $dbMgr->query(getTokLocQueryString($fTokID));
+        if ($dbMgr->getError()) {
+          error_log("error for querying first tok$fTokID of cmp$wrdID ".$dbMgr->getError());
+          return "zzz";
+        } else if ($dbMgr->getRowCount() < 1) {
+          error_log("error for querying first tok$fTokID of cmp$wrdID row count is 0");
+          return "zzz";
+        } else {
+          $row = $dbMgr->fetchResultRow();
+          $txtLabel = $row['txtlabel'];
+          $lineord = $row['lineord'];
+          array_push($labels, $row['linelabel']);
+        }
       }
       $dbMgr->query(getTokLocQueryString($lTokID));
       if ($dbMgr->getError()) {
-        error_log("error for querying first tok$lTokID of cmp$wrdID ".$dbMgr->getError());
+        error_log("error for querying last tok$lTokID of cmp$wrdID ".$dbMgr->getError());
         return "zzz";
       } else if ($dbMgr->getRowCount() < 1) {
-        error_log("error for querying first tok$lTokID of cmp$wrdID row count is 0");
+        error_log("error for querying last tok$lTokID of cmp$wrdID row count is 0");
         return "zzz";
       } else {
         $row = $dbMgr->fetchResultRow($dbMgr->getRowCount()-1);
-        array_push($labels,$row['linelabel']);
+        array_push($labels,(($row['vloc'] && $useVLabel)?$row['vloc']:$row['linelabel']));
       }
     }
   } else if ($prefix == 'tok') {
@@ -3849,12 +3860,12 @@ function getWordLocation($wordTag) {
       return "zzz";
     } else {
       $row = $dbMgr->fetchResultRow();
-      array_push($labels,$row['linelabel']);
+      array_push($labels,(($row['vloc'] && $useVLabel)?$row['vloc'] : $row['linelabel']));
       $txtLabel = $row['txtlabel'];
       $lineord = $row['lineord'];
       if ($dbMgr->getRowCount() > 1) {
         $row = $dbMgr->fetchResultRow($dbMgr->getRowCount()-1);
-        array_push($labels,$row['linelabel']);
+        array_push($labels,(($row['vloc'] && $useVLabel)?$row['vloc'] : $row['linelabel']));
       }
     }
   }

@@ -687,7 +687,7 @@ EDITORS.WordlistVE.prototype = {
                     sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]] != label) {
                   label += "-" + sclTagToLabel['scl'+lToken.syllableClusterIDs[lToken.syllableClusterIDs.length - 1]];
                 }
-                word.locTag = ednLabel + label;
+                word.locTag = (ednLabel?ednLabel + EDITORS.config.attestedLocSep:"") + label;
               } else {
                 word.locTag = defLabel;
               }
@@ -698,7 +698,7 @@ EDITORS.WordlistVE.prototype = {
                     sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]] != label) {
                   label += "-" + sclTagToLabel['scl'+word.syllableClusterIDs[word.syllableClusterIDs.length - 1]];
                 }
-                word.locTag = ednLabel + label;
+                word.locTag = (ednLabel?ednLabel + EDITORS.config.attestedLocSep:"") + label;
               } else {
                 word.locTag = defLabel;
               }
@@ -709,7 +709,7 @@ EDITORS.WordlistVE.prototype = {
               if (locParts.length == 2) {
                 word.locTag = locParts[1]; // get label after ordinal
               } else if (!locParts[0].match(/sort/)) {
-                word.locTag = locParts[0]+""+locParts[2]; // skip ordinal
+                word.locTag = locParts[0]+EDITORS.config.attestedLocSep+locParts[2]; // skip ordinal
               } else {
                 word.locTag = locParts[2];
               }
