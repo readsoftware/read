@@ -1405,9 +1405,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   }
                   //check for new word start
                   if (array_key_exists($graID,$graID2WordGID)){
-                      $word = EntityFactory::createEntityFromGlobalID($graID2WordGID[$graID][1]);
-                      addWordToEntityLookups($word, true);
-                    if ($j > 0 || $l > 0) {//not start of line so must be existing word to close
+                    if (isset($word) && ($j > 0 || $l > 0)) {//not start of line so must be existing word to close
                       $footnoteHtml = getEntityFootnotesHtml($word, $refresh);
                       if ($footnoteHtml) {
                         $physicalLineHtml .= $footnoteHtml;
@@ -1416,7 +1414,8 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                       $physicalLineHtml .= '</span>';
                       $previousA = false;
                     }
-                    // check for inline structure marker
+                    $word = EntityFactory::createEntityFromGlobalID($graID2WordGID[$graID][1]);
+                    addWordToEntityLookups($word, true);                    // check for inline structure marker
                     if (isset($graID2StructureInlineLabels) && !$prevGraIsVowelCarrier && 
                         array_key_exists($structLookupGraID,$graID2StructureInlineLabels)) {
                       $inlineHtmlLabels = $graID2StructureInlineLabels[$structLookupGraID];
