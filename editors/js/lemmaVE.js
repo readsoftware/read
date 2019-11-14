@@ -3345,7 +3345,7 @@ createDeclensionUI: function() {
     },
 
   // valid grapheme multibyte sequences with sort codes and types
-  _graphemeMap = {
+  _graphemeMap : {
     "0": { "srt": "700", "typ": "N" },
     "½": { "srt": "705", "typ": "N" },
     "1": { "srt": "710", "typ": "N" },
