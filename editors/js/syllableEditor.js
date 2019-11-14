@@ -2592,7 +2592,7 @@ EDITORS.sclEditor.prototype = {
 
 
   // valid grapheme multibyte sequences with sort codes and types
-  _graphemeMap = {
+  _graphemeMap : {
     "0": { "srt": "700", "typ": "N" },
     "½": { "srt": "705", "typ": "N" },
     "1": { "srt": "710", "typ": "N" },
@@ -2755,7 +2755,7 @@ EDITORS.sclEditor.prototype = {
     "ŷ": { "srt": "345", "csrt": "y", "typ": "I" },
     "ỵ": { "srt": "345", "csrt": "y", "typ": "I" },
     "z": { "̣": { "srt": "355", "csrt": "z", "typ": "I" },
-     "srt": "355", "csrt": "z", "typ": "I" },
+      "srt": "355", "csrt": "z", "typ": "I" },
     "ẓ": { "srt": "355", "csrt": "z", "typ": "I" },
     "Ἀ": { "srt": "400", "typ": "I" },
     "Α": { "srt": "400", "typ": "I" },
