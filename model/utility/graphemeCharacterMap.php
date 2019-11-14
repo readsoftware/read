@@ -72,12 +72,15 @@ $graphemeCharacterMap = array(
 	"?"=>array("srt"=>"850","typ"=>"P"),
 	"["=>array("srt"=>"860","typ"=>"I"), //Open - space before
 	"]"=>array("srt"=>"870","typ"=>"I"), //Close - space after
+	"{"=>array("srt"=>"860","typ"=>"I"), //Open - space before
+	"}"=>array("srt"=>"870","typ"=>"I"), //Close - space after
 	"("=>array("srt"=>"860","typ"=>"I"), //Open - space before
 	")"=>array("srt"=>"870","typ"=>"I"), //Close - space after
 	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
 	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
 	"ϴ"=>array("srt"=>"920","typ"=>"I"), //Theta nigrum
-	"⳩"=>array("srt"=>"921","typ"=>"I"), //Christogram
+	"☧"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ ☧ Chi Rho
+	"⳩"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ Coptic Khi Ro
 	// Other Symbols 
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	"-"=>array("srt"=>"910","typ"=>"I"), //Placeholder, not yet observed in data
@@ -161,6 +164,7 @@ $graphemeCharacterMap = array(
 		"̣"=>array("srt"=>"195","csrt"=>"j","typ"=>"I"),
     "srt"=>"195","csrt"=>"j","typ"=>"I"),
 	"ĵ"=>array("srt"=>"195","csrt"=>"j","typ"=>"I"),
+	"j̣"=>array("srt"=>"195","csrt"=>"j","typ"=>"I"),
 	"k"=>array(
 		"̣"=>array("srt"=>"205","csrt"=>"k","typ"=>"I"),
     "srt"=>"205","csrt"=>"k","typ"=>"I"),
@@ -193,6 +197,7 @@ $graphemeCharacterMap = array(
 	"q"=>array(
         "̣"=>array("srt"=>"265","csrt"=>"q","typ"=>"I"),
         "srt"=>"265","csrt"=>"q","typ"=>"I"),
+	"q̣"=>array("srt"=>"275","csrt"=>"r","typ"=>"I"),
 	"r"=>array(
         "̣"=>array("srt"=>"275","csrt"=>"r","typ"=>"I"),
 				"srt"=>"275","csrt"=>"r","typ"=>"I"),
