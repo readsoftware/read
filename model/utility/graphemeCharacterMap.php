@@ -65,7 +65,7 @@ $graphemeCharacterMap = array(
 	"9"=>array("srt"=>"790","typ"=>"N"),
 	// Punctuation and Intra-word Punctuation
 	","=>array("srt"=>"800","typ"=>"P"),
-	"."=>array("srt"=>"810","typ"=>"P"),
+	"."=>array("srt"=>"810","typ"=>"I"),
 	";"=>array("srt"=>"820","typ"=>"P"),
 	":"=>array("srt"=>"830","typ"=>"I"),
 	"!"=>array("srt"=>"840","typ"=>"P"),
@@ -76,8 +76,9 @@ $graphemeCharacterMap = array(
 	")"=>array("srt"=>"870","typ"=>"I"), //Close - space after
 	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
 	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
-	"ϴ"=>array("srt"=>"900","typ"=>"I"),
-	// Other Symbols
+	"ϴ"=>array("srt"=>"920","typ"=>"I"), //Theta nigrum
+	"⳩"=>array("srt"=>"921","typ"=>"I"), //Christogram
+	// Other Symbols 
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	"-"=>array("srt"=>"910","typ"=>"I"), //Placeholder, not yet observed in data
 	// Latin
@@ -109,6 +110,7 @@ $graphemeCharacterMap = array(
 	"Z"=>array("srt"=>"350","typ"=>"I"),
 	"a"=>array(
 	    "̣"=>array("srt"=>"105","csrt"=>"a","typ"=>"I"),
+			"᷃"=>array("srt"=>"275","csrt"=>"r","typ"=>"I"),//use upsidedown tilde stands for r
       "̂"=>array("srt"=>"105","csrt"=>"a","typ"=>"I"),
       "srt"=>"105","csrt"=>"a","typ"=>"I"),
     "á"=>array("srt"=>"105","csrt"=>"a","typ"=>"I"),
