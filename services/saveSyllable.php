@@ -363,9 +363,9 @@ if (count($errors) == 0) {
       $postSplitTokenChanged = false;
       $prevVowelCarrierGrapheme = null;
       foreach ($parsedGraData as $graData) {//map in order new grapheme to old for reuse
-        $gra = $graData['gra_grapheme'];
+        $gra = $graData['gra_grapheme']; 
         for ($index = $lastFindIndex+1; $index < $cnt; $index++) {//TODO check assumption that no duplicate character cases exist
-          if ($oldSylGra[$index]->getValue() == $gra) {
+          if ($oldSylGra[$index]->getValue() == $gra && $graphemeIsUpper == $oldSylGra[$index]->isUpperCase()) {
             break;
           }
         }

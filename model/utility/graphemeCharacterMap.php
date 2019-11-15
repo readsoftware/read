@@ -81,6 +81,8 @@ $graphemeCharacterMap = array(
 	"ϴ"=>array("srt"=>"920","typ"=>"I"), //Theta nigrum
 	"☧"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ ☧ Chi Rho
 	"⳩"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ Coptic Khi Ro
+	"⸱"=>array("srt"=>"922","typ"=>"P"), //Word Sep Middle Dot
+	"·"=>array("srt"=>"922","typ"=>"P"), //Middle Dot
 	// Other Symbols 
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	"-"=>array("srt"=>"910","typ"=>"I"), //Placeholder, not yet observed in data
