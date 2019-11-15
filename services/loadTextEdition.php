@@ -132,7 +132,7 @@
   if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
     array_push($warnings,"Warning no edition available for id $ednID .");
   } else if ($edition->isReadonly() && !$edition->isMarkedDelete()){// edition non owner check cached snapshot
-    $publicOnly = $edition->isPublic();
+    $publicOnly = $edition->isPublic() && !isLoggedIn();
     $userOnly = isLoggedIn();
     if (USECACHE) {
       $retString = getCachedEdition($ednID);//get user or public cached edition if there is one.
