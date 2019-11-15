@@ -228,10 +228,19 @@
     /**
     * Get Grapheme's value in Case form
     *
-    * @return string value pf this grapheme
+    * @return string value of this grapheme
     */
     public function getValue() {
       return $this->_uppercase?$this->_uppercase:$this->_grapheme;
+    }
+
+    /**
+    * Get Grapheme's uppercase state
+    *
+    * @return boolean value of this grapheme uppercase state
+    */
+    public function isUpperCase() {
+      return $this->_uppercase != false;
     }
 
      /**
