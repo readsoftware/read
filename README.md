@@ -22,7 +22,7 @@ The current READ development team was formed in 2013, but the defining features 
 
 The acronym ‘READ’ for ‘Research Environment for Ancient Documents’ was suggested by Stefan Baums in August 2013, in order to emphasize the wide range of possible applications of this software system outside the field of South Asian manuscript studies and epigraphy that was its first target. The name ‘READ’ has the advantage of being easy to remember, and the disadvantage of being hard to find in a web search engine. We recommend that when discussing this software, it is always first introduced as ‘Research Environment for Ancient Documents (READ)’ before referring to it simply as ‘READ’ later in a text.
 
-From 2013 until 2016, basic development of READ was funded by coordination betwen the Bavarian Academy of Sciences and Humanities, the University of Lausanne, the University of Washington and the Prakaś Foundation. After basic development reached completion, the code was released online in March 2017 under the GNU General Public License. Development continues as an open-source project, with primary funding by the Bavarian Academy of Sciences and Humanities. Contributions of funding, work or ideas are always welcome.
+From 2013 until 2016, basic development of READ was funded by coordination betwen the Bavarian Academy of Sciences and Humanities, the University of Lausanne, the University of Washington and the Prakaś Foundation. After basic development reached completion, the code was released online in March 2017. Development continues as an open-source project, with primary funding from the Bavarian Academy of Sciences and Humanities. Other contributions of work, ideas or funding are always welcome.
 
 ## Screenshots
 
