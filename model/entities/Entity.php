@@ -793,7 +793,7 @@
     * @return boolean indicating that this object is readonly
     */
     public function isReadonly() {
-      if ($this->_visibility_ids && $this->getVisibilityIDs() && in_array(2,$this->getVisibilityIDs()) && !in_array(6,$this->getVisibilityIDs()) ||
+      if ( $this->getVisibilityIDs() && in_array(2,$this->getVisibilityIDs()) && !in_array(6,$this->getVisibilityIDs()) ||
            $this->getOwnerID() == 2 ||
           ($this->getOwnerID() &&
             $this->getOwnerID()!= getUserDefEditorID())) {  //&&//Todo: review for clone edition
@@ -815,7 +815,7 @@
     /**
     * Query public
     *
-    * @return boolean indicating that this object is public
+    * @return boolean indicating that this object is publicly visible
     */
     public function isPublic() {
       return (in_array(2,$this->getVisibilityIDs()) || in_array(6,$this->getVisibilityIDs()));
