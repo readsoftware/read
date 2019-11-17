@@ -105,7 +105,7 @@ $graphemeCharacterMap = array(
 		"̂"=>array("srt"=>"181","typ"=>"I"),
 		"srt"=>"180","typ"=>"I"),
 	"Î"=>array("srt"=>"181","typ"=>"I"),
-	"Ī"=>array("srt"=>"182","typ"=>"I"),
+	"Ī"=>array("srt"=>"187","typ"=>"I"),
 	"J"=>array("srt"=>"190","typ"=>"I"),
 	"K"=>array(
 		"̂"=>array("srt"=>"201","typ"=>"I"),
