@@ -166,7 +166,7 @@
           $recColDataPairs[$prefix.'_owner_id'] = getUserDefEditorID();
         }
         if (!array_key_exists($prefix.'_visibility_ids',$recColDataPairs) && isLoggedIn()) {//check for visibility if not use logged in user
-          $recColDataPairs[$prefix.'_visibility_ids'] = getUserDefVisibilityIDs();
+          $recColDataPairs[$prefix.'_visibility_ids'] =  '{'.join(',',getUserDefVisibilityIDs()).'}';
         }
         $recID = $dbMgr->insert($table,$recColDataPairs,$prefix.'_id');
         if (!$recID){
