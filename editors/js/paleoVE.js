@@ -1289,9 +1289,6 @@ function getRowColumnInfo(syllable) {
     // space 885, _ 559, . 189, ʔ 195,
     sclSort = syllable.sort;
     sort2 = syllable.sort2.substring(2);
-    sclSort = sclSort.replace(/01$/,"");//remove vowel modifier sort code
-    sclSort = sclSort.replace(/24$/,"");//remove vowel modifier sort code
-    sclSort = sclSort.replace(/25$/,"");//remove vowel modifier sort code
       vSort = "";
       cSort = (sclSort.indexOf('0.') == 0 ? sclSort.substring(2): sclSort);
       columnLabel = " ";
@@ -1303,6 +1300,8 @@ function getRowColumnInfo(syllable) {
       // punctuation cases require sort2 code
       if (lkIndex >= 70 || lkIndex == "09") {//don't group numbers, symbols or *
         lkIndex += sort2[0];
+      } else if ( lkIndex == "18" && sort2[0] == "7") {//separate I with macron
+        lkIndex += "187";
       } else {//group in primary sort
         lkIndex += "0";
       }
@@ -1435,7 +1434,8 @@ sortCodeToCharLookup = {
         "ị"
     ],
     "187": [
-        "i͞",
+      "Ī",
+      "i͞",
         "ī"
     ],
     "188": [

@@ -2702,7 +2702,7 @@ EDITORS.sclEditor.prototype = {
     "I": { "̂": { "srt": "181", "typ": "I" },
            "srt": "180", "typ": "I" },
     "Î": { "srt": "181", "typ": "I" },
-    "Ī": { "srt": "182", "typ": "I" },
+    "Ī": { "srt": "187", "typ": "I" },
     "J": { "srt": "190", "typ": "I" },
     "K": { "̂": { "srt": "201", "typ": "I" },
            "srt": "200", "typ": "I" },
