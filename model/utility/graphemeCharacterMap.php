@@ -87,19 +87,33 @@ $graphemeCharacterMap = array(
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	"-"=>array("srt"=>"910","typ"=>"I"), //Placeholder, not yet observed in data
 	// Latin
-	"A"=>array("srt"=>"100","typ"=>"I"),
+	"A"=>array(
+		"̂"=>array("srt"=>"101","typ"=>"I"),
+		"srt"=>"100","typ"=>"I"),
+	"Â"=>array("srt"=>"101","typ"=>"I"),
 	"B"=>array("srt"=>"110","typ"=>"I"),
 	"C"=>array("srt"=>"120","typ"=>"I"),
 	"D"=>array("srt"=>"130","typ"=>"I"),
 	"E"=>array("srt"=>"140","typ"=>"I"),
 	"F"=>array("srt"=>"150","typ"=>"I"),
 	"G"=>array("srt"=>"160","typ"=>"I"),
-	"H"=>array("srt"=>"170","typ"=>"I"),
-	"I"=>array("srt"=>"180","typ"=>"I"),
+	"H"=>array(
+		"̂"=>array("srt"=>"171","typ"=>"I"),
+		"srt"=>"170","typ"=>"I"),
+	"Ĥ"=>array("srt"=>"171","typ"=>"I"),
+	"I"=>array(
+		"̂"=>array("srt"=>"181","typ"=>"I"),
+		"srt"=>"180","typ"=>"I"),
+	"Î"=>array("srt"=>"181","typ"=>"I"),
+	"Ī"=>array("srt"=>"182","typ"=>"I"),
 	"J"=>array("srt"=>"190","typ"=>"I"),
-	"K"=>array("srt"=>"200","typ"=>"I"),
+	"K"=>array(
+		"̂"=>array("srt"=>"201","typ"=>"I"),
+		"srt"=>"200","typ"=>"I"),
 	"L"=>array("srt"=>"210","typ"=>"I"),
-	"M"=>array("srt"=>"220","typ"=>"I"),
+	"M"=>array(
+		"̂"=>array("srt"=>"221","typ"=>"I"),
+		"srt"=>"220","typ"=>"I"),
 	"N"=>array("srt"=>"230","typ"=>"I"),
 	"O"=>array("srt"=>"240","typ"=>"I"),
 	"P"=>array("srt"=>"250","typ"=>"I"),

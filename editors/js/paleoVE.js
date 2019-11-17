@@ -1213,7 +1213,7 @@ function getRowColumnInfo(syllable) {
   if (syllable && syllable.sort &&
       syllable.sort.length &&
       (syllable.sort >= 0 && syllable.sort < 0.8 ||  
-      syllable.sort >= 0.9)  && // skip TCMs
+      syllable.sort >= 0.92)  && // skip TCMs
       !syllable.value.match(/\./) &&
       !syllable.value.match(/_/)) {
     //check for non paleographic cases
