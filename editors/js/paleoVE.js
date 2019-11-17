@@ -1282,7 +1282,7 @@ function getRowColumnInfo(syllable) {
   if (syllable && syllable.sort &&
       syllable.sort.length &&
       (syllable.sort >= 0 && syllable.sort < 0.8 ||  
-      syllable.sort >= 0.9)  && // skip TCMs
+      syllable.sort >= 0.92)  && // skip TCMs
       !syllable.value.match(/\./) &&
       !syllable.value.match(/_/)) {
     //check for non paleographic cases
@@ -1292,50 +1292,11 @@ function getRowColumnInfo(syllable) {
     sclSort = sclSort.replace(/01$/,"");//remove vowel modifier sort code
     sclSort = sclSort.replace(/24$/,"");//remove vowel modifier sort code
     sclSort = sclSort.replace(/25$/,"");//remove vowel modifier sort code
-<<<<<<< HEAD
-    if (sclSort == "0." && sktSort) {
-      sclSort = syllable.sort;
-    }
-    if (!sktSort) {
-      cOffsetMap = {"a":1,"i":2,"u":3,"e":4,"o":5};
-    } else {
-      cOffsetMap = {" ":1,"a":2,"ā":3,"i":4,"ī":5,"u":6,"ū":7,"ṛ":8,"e":9,"ai":10,"o":11,"au":12};
-    }
-    if (sclSort.length > 4 && sclSort[2] != '7') {//multi character syllable so has vowel
-      vSort = sclSort.substring(sclSort.length-2);
-      if (vSort == "09" || vSort == "01") {//map virama to first column
-        columnLabel = sortCodeToCharLookup[(sktSort?"000":"100")][0];
-      } else {
-        columnLabel = sortCodeToCharLookup[vSort+'0'][0];
-      }
-      columnOffset = cOffsetMap[columnLabel];
-      //get everything but the vowel sort
-      cSort = (sclSort.indexOf('0.') == 0 ? sclSort.substring(2,sclSort.length-2): sclSort.substring(0,sclSort.length-2));
-    } else { // map all single symbol graphemes P, N, O to first column with no header value
-=======
->>>>>>> 5bf69251 (Update for GCM and paleoVE for Latin)
       vSort = "";
       cSort = (sclSort.indexOf('0.') == 0 ? sclSort.substring(2): sclSort);
       columnLabel = " ";
       columnOffset = 1;
     }
-<<<<<<< HEAD
-    if (!cSort.length || cSort == '19') {// vowel only case
-      rowLabel = 'vowel';
-    } else {
-      while(cSort && cSort.length) {
-        lkIndex = cSort.substring(0,2);
-        // punctuation cases require sort2 code
-        if (lkIndex >= 70 || lkIndex == "09") {//don't group numbers, symbols or *
-          lkIndex += sort2[0];
-        } else {//group in primary sort
-          lkIndex += "0";
-        }
-        rowLabel += sortCodeToCharLookup[lkIndex][0];
-        gSort += lkIndex;
-        cSort = cSort.substring(2);
-        sort2 = sort2.substring(1);
-=======
     while(cSort && cSort.length) {
       //lkIndex = cSort + "0";
       lkIndex = cSort.substring(0,2);
@@ -1344,7 +1305,6 @@ function getRowColumnInfo(syllable) {
         lkIndex += sort2[0];
       } else {//group in primary sort
         lkIndex += "0";
->>>>>>> 5bf69251 (Update for GCM and paleoVE for Latin)
       }
       if (sortCodeToCharLookup[lkIndex]) {
       rowLabel += sortCodeToCharLookup[lkIndex][0];
