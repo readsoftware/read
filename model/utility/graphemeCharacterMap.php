@@ -72,6 +72,19 @@ $graphemeCharacterMap = array(
 	")"=>array("srt"=>"870","typ"=>"P"), //Close - space after
 	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
 	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
+	"["=>array("srt"=>"860","typ"=>"I"), //Open - space before
+	"]"=>array("srt"=>"870","typ"=>"I"), //Close - space after
+	"{"=>array("srt"=>"860","typ"=>"I"), //Open - space before
+	"}"=>array("srt"=>"870","typ"=>"I"), //Close - space after
+	"("=>array("srt"=>"860","typ"=>"I"), //Open - space before
+	")"=>array("srt"=>"870","typ"=>"I"), //Close - space after
+	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
+	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
+	"ϴ"=>array("srt"=>"920","typ"=>"I"), //Theta nigrum
+	"☧"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ ☧ Chi Rho
+	"⳩"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ Coptic Khi Ro
+	"⸱"=>array("srt"=>"922","typ"=>"P"), //Word Sep Middle Dot
+	"·"=>array("srt"=>"922","typ"=>"P"), //Middle Dot
 	// Other Symbols
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	// Latin
@@ -101,27 +114,44 @@ $graphemeCharacterMap = array(
 	"X"=>array("srt"=>"330","typ"=>"I"),
 	"Y"=>array("srt"=>"340","typ"=>"I"),
 	"Z"=>array("srt"=>"350","typ"=>"I"),
-	"a"=>array("srt"=>"105","typ"=>"I"),
-	"b"=>array("srt"=>"115","typ"=>"I"),
+	"a"=>array(
+		"̉"=>array("srt"=>"106","csrt"=>"a","typ"=>"I"),
+		"srt"=>"105","csrt"=>"a","typ"=>"I"),
+	"b"=>array(
+		"̄"=>array("srt"=>"116","typ"=>"I"),
+		"srt"=>"115","typ"=>"I"),
 	"c"=>array("srt"=>"125","typ"=>"I"),
 	"d"=>array("srt"=>"135","typ"=>"I"),
-	"e"=>array("srt"=>"145","typ"=>"I"),
+	"e"=>array(
+    "̨"=>array("srt"=>"146","typ"=>"I"),
+		"̉"=>array("srt"=>"147","typ"=>"I"),
+    "srt"=>"145","typ"=>"I"),
+	"ę"=>array("srt"=>"146","typ"=>"I"),
 	"f"=>array("srt"=>"155","typ"=>"I"),
 	"g"=>array("srt"=>"165","typ"=>"I"),
 	"h"=>array("srt"=>"175","typ"=>"I"),
 	"i"=>array("srt"=>"185","typ"=>"I"),
 	"j"=>array("srt"=>"195","typ"=>"I"),
 	"k"=>array("srt"=>"205","typ"=>"I"),
-	"l"=>array("srt"=>"215","typ"=>"I"),
+	"l"=>array(
+		"̄"=>array("srt"=>"216","typ"=>"I"),
+		"srt"=>"215","typ"=>"I"),
 	"m"=>array("srt"=>"225","typ"=>"I"),
 	"n"=>array("srt"=>"235","typ"=>"I"),
 	"o"=>array("srt"=>"245","typ"=>"I"),
 	"p"=>array("srt"=>"255","typ"=>"I"),
+	"ꝓ"=>array("srt"=>"256","typ"=>"I"),
+	"ꝑ"=>array("srt"=>"257","typ"=>"I"),
 	"q"=>array("srt"=>"265","typ"=>"I"),
+	"ꝗ"=>array("srt"=>"266","typ"=>"I"),
 	"r"=>array("srt"=>"275","typ"=>"I"),
 	"s"=>array("srt"=>"285","typ"=>"I"),
-	"t"=>array("srt"=>"295","typ"=>"I"),
-	"u"=>array("srt"=>"305","typ"=>"I"),
+	"t"=>array(
+		"̄"=>array("srt"=>"296","typ"=>"I"),
+		"srt"=>"295","typ"=>"I"),
+	"u"=>array(
+		"̉"=>array("srt"=>"306","csrt"=>"u","typ"=>"I"),
+		"srt"=>"305","typ"=>"I"),
 	"v"=>array("srt"=>"315","typ"=>"I"),
 	"w"=>array("srt"=>"325","typ"=>"I"),
 	"x"=>array("srt"=>"335","typ"=>"I"),

@@ -52,7 +52,7 @@
   } else {
     $freetext = $_POST['freetext'];
     $parserConfigs = array(
-      createParserConfig(2,"{2}",'{1}',"TEST","guest",null,null,"1",1,null,$freetext)
+      createParserConfig(6,"{6}",'{1}',"TEST","guest",null,null,"1",1,null,$freetext)
     );
     $parser = new Parser($parserConfigs);
     $parser->setBreakOnError(true);

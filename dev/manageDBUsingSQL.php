@@ -37,7 +37,7 @@
 */
 define('ISSERVICE', 1);
 ini_set("zlib.output_compression_level", 5);
-ob_start('ob_gzhandler');
+ob_start();
 
 
 require_once dirname(__FILE__) . '/../config.php';//get system config info
