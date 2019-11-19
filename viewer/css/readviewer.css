@@ -1,13 +1,12 @@
 .headline {
-  display: flex;
-  align-items: center; /* align vertical */
-  background-color:  white; /*Gandhari.org theme*/
-  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";  /*Gandhari.org theme*/
-  font-size: 17pt; /*Gandhari.org theme*/
-  font-weight: bold;
-  height: 40px;
-  border: 1px solid white;
-  margin-bottom: 18pt;
+	display: flex;
+	align-items: center; /* align vertical */
+	background-color:  rgb(214,214,204);
+	font-size: x-large;
+	font-weight: bold;
+	height: 40px;
+	border: 1px solid white;
+	margin-bottom: 18pt;
 }
 
 .expStaticButton, .btnExportDlg {
@@ -15,7 +14,7 @@
     font-size: 10pt;
     padding: 4px;
     padding-top: 4px;
-    background-color: #e6ebf1; /*Gandhari.org theme*/
+	background-color: rgb(240,240,230);
     border: 1px solid gray;
     width: 110px;
     cursor: pointer;
@@ -35,82 +34,77 @@
     color: rgba(0, 0, 0, 0.60);
 }
 .viewerHeaderLabel {
-  display: inline-flex;
-  justify-content: left; /* align horizontal */
-  align-items: center; /* align vertical */
-  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";  /*Gandhari.org theme*/
-  font-size: 14pt;
-  font-weight: bold;
-  background-color: inherit;
-  height: 40px;
-  padding-left: 15px;
+	display: inline-flex;
+	justify-content: left; /* align horizontal */
+	align-items: center; /* align vertical */
+	font-size: 14pt;
+	font-weight: bold;
+	background-color: inherit;
+	height: 40px;
+	padding-left: 15px;
 }
 
 .viewerHeader, #imageViewerHdr {
-  background-color: #e6ebf1; /*Gandhari.org theme*/
-  height: 40px;
-  width: 100%;
-  border: none;
-  padding: 0px;
-  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";  /*Gandhari.org theme*/
+	background-color: rgb(240,240,230);
+	height: 40px;
+	width: 100%;
+	border: none;
+	padding: 0px;
+	font-family: serif;
 }
 
 .viewerContent {
-  border: 1px solid white;
-  overflow: hidden;
-  overflow-y: auto;
-  min-height:150px;
-  font-size: 10pt; /*Gandhari.org theme*/
-  resize: vertical;
-  padding-left: 20px;
-  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";  /*Gandhari.org theme*/
+	border: 1px solid white;
+	overflow: hidden;
+	overflow-y: auto;
+	min-height:150px;
+	font-size: large;
+	resize: vertical;
+	padding-left: 20px;
+	font-family: serif; 
 }
 
 .physicalLineDiv {
-  font-size: 12pt;
-  line-height: 1.5;
+	font-size: 12pt;
+	line-height: 1.5;
 }
 
 .jqx-widget {
-  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";  /*Gandhari.org theme*/
+	font-family: serif;
 }
 
-.jqx-fill-state-normal {
-  background-color: #e5e5e5; /*Gandhari.org theme*/
-}
+.jqx-fill-state-normal { }
 
 .viewer {
-  border: 1px solid white;  /*Gandhari.org theme*/
-  padding-left: 1em;  /*Gandhari.org theme*/
-  padding-right: 1em;  /*Gandhari.org theme*/
-  overflow: hidden;
+	border: 1px solid white;
+	overflow: hidden;
 }
 #resultsDialog, #resultsDialogContent {
-  min-height: 300px;
-  overflow: unset!important;
+	min-height: 300px;
+	overflow: unset!important;
 }
 #settingsDialogContent{
-  background-color: rgb(250,250,250);
-  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";  /*Gandhari.org theme*/
+	background-color: rgb(250,250,250);
+	font-family: serif; 
 }
 .dlgInputBox{
-  vertical-align: top;
-  height: 30px;
+	vertical-align: top;
+	height: 30px;
 }
 .dlgResourceBox{
-  vertical-align: top;
-  height: auto;
-  width: 100%;
-  margin-bottom: 5px;
+	vertical-align: top;
+	height: auto;
+	width: 100%;
+	margin-bottom: 5px;
 }
 .dlgOptionsGroupLabel,
 .dlgViewOptionsGroupLabel,
 .dlgOutputGroupLabel{
-  vertical-align: top;
-  float: left;
-  width: 4.7em;
-  margin-right: 0.1em;
-  text-align: right;
+	vertical-align: top;
+	float: left;
+	width: 4.7em;
+	margin-right: 0.1em;
+	text-align: right;
 }
 #resourceOptions, #viewOptions, #outputOptions{
     margin-bottom: 2px;
@@ -120,96 +114,96 @@
     margin-bottom: 2px;
 }
 .dlgInput{
-  margin-bottom: 2px;
-  width: 250px;
-  border: 1px solid #aaa;
+	margin-bottom: 2px;
+	width: 250px;
+	border: 1px solid #aaa;
 }
 .dlgInputLabel{
-  width: 30px;
-  margin-bottom: 2px;
-  vertical-align: top;
-  float: left;
-  width: 4.9em;
-  margin-right: 0.1em;
-  text-align: right;
+	width: 30px;
+	margin-bottom: 2px;
+	vertical-align: top;
+	float: left;
+	width: 4.9em;
+	margin-right: 0.1em;
+	text-align: right;
 }
 #contentDockFrame {
-  border: 1px solid white;
-  overflow-x: hidden;
-  overflow-y: auto;
+	border: 1px solid white;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 .linelabel, .sideMarker, .structMarker{
-  color: #a5a5a5; /*Gandhari.org theme*/
-  padding-right: 5px;
+	color: rgb(160,160,160);
+	padding-right: 5px;
 }
 
 .grpTok .linelabel,.grpTok .sideMarker, .grpTok .structMarker{
-  padding-right: 0px;
+	padding-right: 0px;
 }
 .secHeader.Paragraph{
-  color: rgb(100,210,210);
+	color: rgb(100,210,210);
 }
 .secMarker.Pāda{
-  color: rgb(100,210,210);
-/*  display: inline-flex; */
-  display: none;
-  margin-left: 5px;
-  margin-right: 5px;
+	color: rgb(100,210,210);
+	/*  display: inline-flex; */
+	display: none;
+	margin-left: 5px;
+	margin-right: 5px;
 }
 .prose.Pāda{
-  display: inline-flex;
-  padding-bottom: 0px;
+	display: inline-flex;
+	padding-bottom: 0px;
 }
 .source {
-  margin-top: 20px;
-  font-style: regular;
+	margin-top: 20px;
+	font-style: regular;
 }
 .secHeader{
-margin-bottom: 1px;
-margin-top: 15px;
-color: rgb(30,140,170);
-font-weight: bold;
+	margin-bottom: 1px;
+	margin-top: 15px;
+	color: rgb(30,140,170);
+	font-weight: bold;
 }
 .section{
-margin-bottom: 10px;
-line-height: 1.3;
+	margin-bottom: 10px;
+	line-height: 1.3;
 }
 .secTitle{
-margin-bottom: 10px;
-color: rgb(30,140,170);
-font-weight: bold;
+	margin-bottom: 10px;
+	color: rgb(30,140,170);
+	font-weight: bold;
 }
 .grpTok:after{
-  content: " ";
-  padding-right: 5px;
+	content: " ";
+	padding-right: 5px;
 }
 .grpTok.sandhi1:after{
-  content: "";
-  padding-right: 0px;
+	content: "";
+	padding-right: 0px;
 }
 .grpTok{
-  user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-user-select: none;
+	user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
 }
 .footnote,.reconstruction {
-  color:darkcyan;
-  background: lightgrey;
-  cursor: pointer;
+	color:darkcyan;
+	background: lightgrey;
+	cursor: pointer;
 }
 .popupwrapperdiv{
-  max-width: 450px;
-  text-align: left;
-  display: table;
-  font-size: 16px;
-  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";  /*Gandhari.org theme*/
+	max-width: 450px;
+	text-align: left;
+	display: table;
+	font-size: 16px;
+	font-family: serif; 
 }
 sup.showing {
   background: lightgreen !important;
 }
 .grpTok.showing {
-  color: #ba4200 !important; /*Gandhari.org theme*/
+	color: rgb(50,200,50) !important;
 }
 .prose {
   padding-bottom: 10px;
@@ -413,13 +407,12 @@ body.showTOC .tocNavPanel {
 }
 
 .zoomButton {
-  width: 10px;
-  height: auto;
-  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";  /*Gandhari.org theme*/
-  font-size: 20pt;
-  font-weight: bold;
-  display: inline-flex;
-  margin-left: 15px;
+	width: 10px;
+	height: auto;
+	font-size: 20pt;
+	font-weight: bold;
+	display: inline-flex;
+	margin-left: 15px;
 }
 
 .zoomUI {
@@ -493,13 +486,12 @@ body.showTOC .tocNavPanel {
 }
 
 .menuLabelDiv {
-  display: none;
-  justify-content: left;
-  align-items: center; /* align vertical */
-  height: 100%;
-  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif, "Gandhari Unicode";  /*Gandhari.org theme*/
-  font-size: 14pt;
-  padding-left: 25px;
+	display: none;
+	justify-content: left;
+	align-items: center; /* align vertical */
+	height: 100%;
+	font-size: 14pt;
+	padding-left: 25px;
 }
 .glossExtraInfoDiv{
   display: none;
@@ -537,66 +529,3 @@ body.showTOC .tocNavPanel {
   font-size: larger;
   cursor: pointer;
 }
-
-/*********************from dictionary.js plugin***************************/
-a {
-  text-decoration: none;
-  color: black;
-}
-
-  a:hover {
-    color: #ba4200;
-    text-decoration: underline;
-    cursor: pointer;
-  }
-
-div.lemma {
-  font-size: 16pt;
-  line-height: 18pt;
-  text-decoration: none;
-}
-
-span.lemsuper {
-  font-size: 10pt;
-  letter-spacing: 2px;
-  position: relative;
-  bottom: 5pt;
-}
-
-span.kharShow {
-  font-family: "Segoe UI Historic", "Kharosthi Unicode", "Noto Sans Kharoshthi";
-  direction:rtl;
-  unicode-bidi: bidi-override;
-  letter-spacing: 1px;
-  padding-left: 5px;
-}
-
-span.kharHide {
-  display: none;
-}
-
-span.deva {
-  font-family: "Sanskrit Text", "Kokila";
-}
-
-div.morphology {
-  font-size: 10pt;
-}
-
-span.morph {
-  font-style: italic;  
-}
-
-span.morph:after{
-  content: " ";
-}
-
-
-span.lemEtym,
-span.lemPhonetic,
-span.lemPos,
-span.lemGLoss {
-  padding-left: 5px
-}
-
-
