@@ -145,18 +145,24 @@ $graphemeCharacterMap = array(
 	"ĉ"=>array("srt"=>"127","csrt"=>"c","typ"=>"I"),
 	"d"=>array(
 		"̣"=>array("srt"=>"136","csrt"=>"d","typ"=>"I"),
-				"srt"=>"135","typ"=>"I"),
+		"̲"=>array("srt"=>"136","csrt"=>"f","typ"=>"I"),
+		"͟"=>array("srt"=>"136","csrt"=>"f","typ"=>"I"),
+		"srt"=>"135","typ"=>"I"),
 	"ḍ"=>array("srt"=>"136","csrt"=>"d","typ"=>"I"),
 	"e"=>array(
 		"̂"=>array("srt"=>"148","csrt"=>"e","typ"=>"I"),
 		"᷃"=>array("srt"=>"147","csrt"=>"e","typ"=>"I"),//use upsidedown tilde
     "̣"=>array("srt"=>"146","csrt"=>"e","typ"=>"I"),
+		"̲"=>array("srt"=>"146","csrt"=>"f","typ"=>"I"),
+		"͟"=>array("srt"=>"146","csrt"=>"f","typ"=>"I"),
     "srt"=>"145","csrt"=>"e","typ"=>"I"),
 	"ẹ"=>array("srt"=>"146","csrt"=>"e","typ"=>"I"),
 	"é"=>array("srt"=>"149","csrt"=>"e","typ"=>"I"),
 	"ê"=>array("srt"=>"148","csrt"=>"e","typ"=>"I"),
 	"f"=>array(
 		"̣"=>array("srt"=>"156","csrt"=>"f","typ"=>"I"),
+		"̲"=>array("srt"=>"156","csrt"=>"f","typ"=>"I"),
+		"͟"=>array("srt"=>"156","csrt"=>"f","typ"=>"I"),
 		"srt"=>"155","typ"=>"I"),
 	"g"=>array(
 		"̣"=>array("srt"=>"166","csrt"=>"g","typ"=>"I"),
@@ -169,6 +175,8 @@ $graphemeCharacterMap = array(
 	"i"=>array(
 		"͞"=>array("srt"=>"187","csrt"=>"i","typ"=>"I"),
     "̣"=>array("srt"=>"186","csrt"=>"i","typ"=>"I"),
+		"̲"=>array("srt"=>"186","csrt"=>"f","typ"=>"I"),
+		"͟"=>array("srt"=>"186","csrt"=>"f","typ"=>"I"),
     "srt"=>"185","csrt"=>"i","typ"=>"I"),
 	"ị"=>array("srt"=>"186","csrt"=>"i","typ"=>"I"),
 	"í"=>array("srt"=>"189","csrt"=>"i","typ"=>"I"),
@@ -186,6 +194,8 @@ $graphemeCharacterMap = array(
 	"ḳ"=>array("srt"=>"206","csrt"=>"k","typ"=>"I"),
 	"l"=>array(
 		"̣"=>array("srt"=>"216","csrt"=>"l","typ"=>"I"),
+		"̲"=>array("srt"=>"216","csrt"=>"f","typ"=>"I"),
+		"͟"=>array("srt"=>"216","csrt"=>"f","typ"=>"I"),
     "srt"=>"215","csrt"=>"l","typ"=>"I"),
 	"ḷ"=>array("srt"=>"216","csrt"=>"l","typ"=>"I"),
 	"m"=>array(
@@ -220,6 +230,8 @@ $graphemeCharacterMap = array(
 	"s"=>array(
 		"̂"=>array("srt"=>"288","csrt"=>"n","typ"=>"I"),
 		"̣"=>array("srt"=>"286","csrt"=>"s","typ"=>"I"),
+		"̲"=>array("srt"=>"286","csrt"=>"f","typ"=>"I"),
+		"͟"=>array("srt"=>"286","csrt"=>"f","typ"=>"I"),
 		"srt"=>"285","csrt"=>"s","typ"=>"I"),
 	"ŝ"=>array("srt"=>"288","csrt"=>"s","typ"=>"I"),
 	"ṣ"=>array("srt"=>"286","csrt"=>"s","typ"=>"I"),
@@ -231,7 +243,9 @@ $graphemeCharacterMap = array(
 	"u"=>array(
         "̂"=>array("srt"=>"308","csrt"=>"u","typ"=>"I"),
         "̣"=>array("srt"=>"306","csrt"=>"u","typ"=>"I"),
-        "srt"=>"305","csrt"=>"u","typ"=>"I"),
+				"̲"=>array("srt"=>"306","csrt"=>"f","typ"=>"I"),
+				"͟"=>array("srt"=>"306","csrt"=>"f","typ"=>"I"),
+						"srt"=>"305","csrt"=>"u","typ"=>"I"),
 	"ú"=>array("srt"=>"309","csrt"=>"u","typ"=>"I"),
 	"û"=>array("srt"=>"309","csrt"=>"u","typ"=>"I"),
 	"ụ"=>array("srt"=>"306","csrt"=>"u","typ"=>"I"),
