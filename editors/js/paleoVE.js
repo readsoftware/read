@@ -1226,7 +1226,6 @@ function getRowColumnInfo(syllable) {
       columnOffset = 1;
     }
     while(cSort && cSort.length) {
-      //lkIndex = cSort + "0";
       lkIndex = cSort.substring(0,2);
       // punctuation cases require sort2 code
       if (lkIndex >= 70 || lkIndex == "09") {//don't group numbers, symbols or *
