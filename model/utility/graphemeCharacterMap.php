@@ -163,6 +163,7 @@ $graphemeCharacterMap = array(
 	"ê"=>array("srt"=>"148","csrt"=>"e","typ"=>"I"),
 	"f"=>array(
 		"̣"=>array("srt"=>"156","csrt"=>"f","typ"=>"I"),
+		"̂"=>array("srt"=>"158","csrt"=>"e","typ"=>"I"),
 		"̲"=>array("srt"=>"156","csrt"=>"f","typ"=>"I"),
 		"͟"=>array("srt"=>"156","csrt"=>"f","typ"=>"I"),
 		"srt"=>"155","typ"=>"I"),
@@ -229,6 +230,7 @@ $graphemeCharacterMap = array(
 	"q̣"=>array("srt"=>"266","csrt"=>"r","typ"=>"I"),
 	"r"=>array(
         "̣"=>array("srt"=>"276","csrt"=>"r","typ"=>"I"),
+				"̂"=>array("srt"=>"278","csrt"=>"m","typ"=>"I"),
 				"srt"=>"275","csrt"=>"r","typ"=>"I"),
 	"ṛ"=>array("srt"=>"276","csrt"=>"r","typ"=>"I"),
 	"s"=>array(
