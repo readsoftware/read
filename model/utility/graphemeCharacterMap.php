@@ -141,10 +141,12 @@ $graphemeCharacterMap = array(
 	"ḅ"=>array("srt"=>"116","csrt"=>"b","typ"=>"I"),
 	"c"=>array(
 		"̣"=>array("srt"=>"126","csrt"=>"c","typ"=>"I"),
-        "srt"=>"125","typ"=>"I"),
+		"͞"=>array("srt"=>"127","csrt"=>"i","typ"=>"I"),
+		"srt"=>"125","typ"=>"I"),
 	"ĉ"=>array("srt"=>"127","csrt"=>"c","typ"=>"I"),
 	"d"=>array(
 		"̣"=>array("srt"=>"136","csrt"=>"d","typ"=>"I"),
+		"͞"=>array("srt"=>"137","csrt"=>"i","typ"=>"I"),
 		"̲"=>array("srt"=>"136","csrt"=>"f","typ"=>"I"),
 		"͟"=>array("srt"=>"136","csrt"=>"f","typ"=>"I"),
 		"srt"=>"135","typ"=>"I"),
@@ -194,6 +196,7 @@ $graphemeCharacterMap = array(
 	"ḳ"=>array("srt"=>"206","csrt"=>"k","typ"=>"I"),
 	"l"=>array(
 		"̣"=>array("srt"=>"216","csrt"=>"l","typ"=>"I"),
+		"͞"=>array("srt"=>"217","csrt"=>"i","typ"=>"I"),
 		"̲"=>array("srt"=>"216","csrt"=>"f","typ"=>"I"),
 		"͟"=>array("srt"=>"216","csrt"=>"f","typ"=>"I"),
     "srt"=>"215","csrt"=>"l","typ"=>"I"),
@@ -257,6 +260,7 @@ $graphemeCharacterMap = array(
 	"Ⱶ"=>array("srt"=>"308","csrt"=>"u","typ"=>"I"),//claudiane letter
 	"v"=>array(
         "̂"=>array("srt"=>"318","csrt"=>"v","typ"=>"I"),
+				"͞"=>array("srt"=>"317","csrt"=>"i","typ"=>"I"),
         "̣"=>array("srt"=>"316","csrt"=>"v","typ"=>"I"),
 				"srt"=>"315","csrt"=>"v","typ"=>"I"),
   "ṿ"=>array("srt"=>"316","csrt"=>"v","typ"=>"I"),
@@ -267,6 +271,7 @@ $graphemeCharacterMap = array(
 	"ẉ"=>array("srt"=>"326","csrt"=>"w","typ"=>"I"),
 	"x"=>array(
         "̣"=>array("srt"=>"336","csrt"=>"x","typ"=>"I"),
+				"͞"=>array("srt"=>"337","csrt"=>"i","typ"=>"I"),
         "srt"=>"335","csrt"=>"x","typ"=>"I"),
 	"y"=>array(
         "̣"=>array("srt"=>"346","csrt"=>"y","typ"=>"I"),
