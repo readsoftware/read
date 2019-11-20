@@ -2800,6 +2800,7 @@ EDITORS.sclEditor.prototype = {
     "ḷ": { "srt": "215", "csrt": "l", "typ": "I" },
     "m": { "̂": { "srt": "225", "csrt": "m", "typ": "I" },
       "̣": { "srt": "225", "csrt": "m", "typ": "I" },
+      "͞": { "srt": "227", "csrt": "e", "typ": "I" },
       " ̄": { "srt": "225", "csrt": "m", "typ": "I" },
       "srt": "225", "csrt": "m", "typ": "I" },
     "ṃ": { "srt": "225", "csrt": "m", "typ": "I" },
