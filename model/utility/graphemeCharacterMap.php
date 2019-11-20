@@ -204,7 +204,8 @@ $graphemeCharacterMap = array(
 	"m"=>array(
 		"̂"=>array("srt"=>"228","csrt"=>"m","typ"=>"I"),
 		"̣"=>array("srt"=>"226","csrt"=>"m","typ"=>"I"),
-		" ̄"=>array("srt"=>"227","csrt"=>"m","typ"=>"I"),
+		"͞"=>array("srt"=>"227","csrt"=>"i","typ"=>"I"),
+		"̄"=>array("srt"=>"227","csrt"=>"m","typ"=>"I"),
 		"srt"=>"225","csrt"=>"m","typ"=>"I"),
 	"ṃ"=>array("srt"=>"226","csrt"=>"m","typ"=>"I"),
 	"n"=>array(
