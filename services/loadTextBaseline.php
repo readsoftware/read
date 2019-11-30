@@ -189,6 +189,7 @@
                                             'baselineIDs' => $segment->getBaselineIDs(),
                                             'layer' => $segment->getLayer(),
                                             'readonly' => $segment->isReadonly(),
+                                            'editibility' => $segment->getOwnerID(),
                                             'center' => $segment->getCenter(),
                                             'value' => 'seg'.$segID);
           $sclIDs = $segment->getSyllableIDs();
@@ -247,6 +248,7 @@
                                                      'id' => $imgID,
                                                      'value'=> ($title?$title:substr($url,strrpos($url,'/')+1)),
                                                      'readonly' => $image->isReadonly(),
+                                                     'editibility' => $image->getOwnerID(),
                                                      'url' => $url,
                                                      'type' => $image->getType(),
                                                      'boundary' => $image->getBoundary());

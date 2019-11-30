@@ -172,6 +172,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'segIDs' => $segIDs,
         'type' => $baseline->getType(),
         'value' => ($baseline->getURL()?$baseline->getURL():$baseline->getTranscription()),
+        'editibility' => $baseline->getOwnerID(),
         'readonly' => $baseline->isReadonly(),
         'transcription' => $baseline->getTranscription());
       $boundary = $baseline->getImageBoundary();
@@ -191,6 +192,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'id' => $entID,
         'baselineIDs' => $segment->getBaselineIDs(),
         'layer' => $segment->getLayer(),
+        'editibility' => $segment->getOwnerID(),
         'readonly' => $segment->isReadonly(),
         'center' => $segment->getCenter(),
         'value' => 'seg'.$entID);
@@ -267,6 +269,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'id' => $entID,
         'value'=> $catalog->getTitle(),
         'readonly' => $catalog->isReadonly(),
+        'editibility' => $catalog->getOwnerID(),
         'ednIDs' => $catalog->getEditionIDs(),
         'typeID' => $catalog->getTypeID());
         $attrIDs = $catalog->getAttributionIDs();
@@ -298,6 +301,7 @@ function addNewEntityReturnData($prefix,$entity) {
          'value'=> $text->getTitle(),
          'title'=> $text->getTitle(),
          'readonly' => $text->isReadonly(),
+         'editibility' => $text->getOwnerID(),
          'typeIDs' => $text->getTypeIDs(),
          'ref' => $text->getRef(),
          'imageIDs' => $text->getImageIDs());
@@ -316,6 +320,7 @@ function addNewEntityReturnData($prefix,$entity) {
          'id' => $entID,
          'value'=> ($title?$title:substr($url,strrpos($url,'/')+1)),
          'readonly' => $image->isReadonly(),
+         'editibility' => $image->getOwnerID(),
          'url' => $url,
          'type' => $image->getType(),
          'boundary' => $image->getBoundary());

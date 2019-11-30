@@ -1791,7 +1791,7 @@ removeLink: function(anoTag) {
          (thumbUrl? '<img class="resImageIconBtn img'+img.id+'" src="'+thumbUrl+'" alt="Thumbnail not available"/>':'')+
          img.title + '</span>'+
          ((!img || img.readonly || img.blnIDs && img.blnIDs.length
-                || !img.editibility || !this.layoutMgr.userVE.isEditAsEditibilityMatch(img.editibility))?'':
+                || !img.editibility || !this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(img.editibility))?'':
             '<span class="removeimg '+img.tag+'" title="remove tag '+img.tag+'">X</span>')+
          '</div>'));
     //create input with save button

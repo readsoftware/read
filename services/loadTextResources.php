@@ -117,8 +117,9 @@
   $txtIDs = (array_key_exists('ids',$_REQUEST)? $_REQUEST['ids']:null);
   $updateCache = (array_key_exists('update',$_REQUEST)? $_REQUEST['update']:null);
   $removeTextFromCache = (array_key_exists('remove',$_REQUEST)? $_REQUEST['remove']:null);
-  $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
-                  (defined('DEFAULTSEARCHREFRESH')?DEFAULTSEARCHREFRESH:1));
+  $refresh = (isset($data['refresh'])?$data['refresh']:
+              (isset($_REQUEST['refresh'])?$_REQUEST['refresh']:
+                (defined('DEFAULTTEXTRESOURCEREFRESH')?DEFAULTTEXTRESOURCEREFRESH:0)));
   $jsonRetVal = "";
   $jsonCache = null;
   $isLoadAll = false;
@@ -177,6 +178,7 @@
       if ($txtID && !array_key_exists($txtID, $entities['update']['txt'])) {//skip duplicates if any
         $entities['update']['txt'][$txtID] = array('tmdIDs' => array(),
                                                    'ednIDs' => array(),
+                                                   'editibility' => $text->getOwnerID(),
                                                    'imageIDs' => array(),
                                                    'blnIDs' => array());
         $txtImgIDs = $text->getImageIDs();
@@ -241,6 +243,7 @@
                                                    'value' => ($url?$url:$baseline->getTranscription()),
                                                    'segCount' => ($segIDs?count($segIDs):0),
                                                    'segIDs' => $segIDs,
+                                                   'editibility' => $baseline->getOwnerID(),
                                                    'readonly' => $baseline->isReadonly(),
                                                    'transcription' => $baseline->getTranscription(),
                                                    'boundary' => $baseline->getImageBoundary());
@@ -294,6 +297,7 @@
                                                    'id' => $imgID,
                                                    'value'=> ($title?$title:substr($url,strrpos($url,'/')+1)),
                                                    'readonly' => $image->isReadonly(),
+                                                   'editibility' => $image->getOwnerID(),
                                                    'url' => $url,
                                                    'type' => $image->getType(),
                                                    'boundary' => $image->getBoundary());
@@ -330,6 +334,7 @@
                                'id' => $tmdID,
                                'ednIDs' => array(),
                                'readonly' => $textMetadata->isReadonly(),
+                               'editibility' => $textMetadata->getOwnerID(),
                                'typeIDs' => $textMetadata->getTypeIDs());
         array_push($entities['update']['txt'][$textMetadata->getTextID()]['tmdIDs'],$tmdID);
         $tmRefIDs =$textMetadata->getReferenceIDs();
@@ -377,6 +382,7 @@
                                                        'id' => $catID,
                                                        'value'=> $catalog->getTitle(),
                                                        'readonly' => $catalog->isReadonly(),
+                                                       'editibility' => $catalog->getOwnerID(),
                                                        'ednIDs' => $catalog->getEditionIDs(),
                                                        'typeID' => $catalog->getTypeID());
           }

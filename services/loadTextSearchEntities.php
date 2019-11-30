@@ -115,7 +115,7 @@
                      'srf' => array(),
                      'ano' => array(),
                      'atb' => array());
-  $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):null);
+  $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):$_REQUEST);
   $strSearch = (array_key_exists('search',$_REQUEST)? $_REQUEST['search']:null);
   if (!$data && !$strSearch) {
     array_push($warnings," no search passed querying for all text data");
@@ -157,15 +157,9 @@
       $condition .= "txt_title ilike '%$strSearch%'";
     }
   }
-  $refresh = (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
-                  (defined('DEFAULTSEARCHREFRESH')?DEFAULTSEARCHREFRESH:0));
-  $refresh = false;
-  if ( isset($data['refresh'])) {
-    $refresh = $data['refresh'];
-  }
-  if ( isset($_REQUEST['refresh'])) {
-    $refresh = $_REQUEST['refresh'];
-  }
+  $refresh = (isset($data['refresh'])?$data['refresh']:
+              (isset($_REQUEST['refresh'])?$_REQUEST['refresh']:
+                (defined('DEFAULTSEARCHREFRESH')?DEFAULTSEARCHREFRESH:0)));
   $jsonRetVal = "";
   $jsonCache = null;
   $isSearchAll = ($condition === "");
@@ -193,6 +187,11 @@
 
   $termInfo = getTermInfoForLangCode('en');
   if (!$jsonRetVal) {//if not cached value for search all
+    if (!$condition) {
+      $condition = "not (5 = ANY(txt_visibility_ids))";
+    } else {
+      $condition .= " and not (5 = ANY(txt_visibility_ids))";
+    }
     $imgIDs = array();
     $anoIDs = array();
     $atbIDs = array();
@@ -208,6 +207,7 @@
                                  'id' => $catID,
                                  'value'=> $catalog->getTitle(),
                                  'readonly' => $catalog->isReadonly(),
+                                 'editibility' => $catalog->getOwnerID(),
                                  'ednIDs' => $catalog->getEditionIDs(),
                                  'typeID' => $catalog->getTypeID());
           $AnoIDs = $catalog->getAnnotationIDs();
@@ -237,9 +237,11 @@
                                'ednIDs' => array(),
                                'blnIDs' => array(),
                                'value' => $text->getTitle(),
-                               'ref' => $text->getRef(),
+                               'title' => $text->getTitle(),
                                'readonly' => $text->isReadonly(),
-                               'title' => $text->getTitle());
+                               'editibility' => $text->getOwnerID(),
+                               'typeIDs' => $text->getTypeIDs(),
+                               'ref' => $text->getRef());
         $cknLookup[$ckn] = $txtID;
         $tImgIDs = $text->getImageIDs();
         if ($tImgIDs && count($tImgIDs) > 0) {

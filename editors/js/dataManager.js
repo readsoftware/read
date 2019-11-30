@@ -581,7 +581,8 @@ MANAGERS.DataManager.prototype = {
           if (entity['syllableClusterIDs']) {
             startSclID = entity['syllableClusterIDs'][0];
             endSclID = entity['syllableClusterIDs'][entity['syllableClusterIDs'].length-1];
-            if (startSclID && this.entities['scl'][startSclID] && this.entities['scl'][startSclID]['segID']) {
+            if (startSclID && this.entities['scl'] && this.entities['scl'][startSclID] && 
+                this.entities['scl'][startSclID]['segID']) {
               startID = this.entities['scl'][startSclID]['segID'];
               split = this.checkForSplit(entity.id,startSclID,false);
               if (split){
@@ -590,7 +591,8 @@ MANAGERS.DataManager.prototype = {
             } else {
               DEBUG.log("error",'in dataManager.calcSwitchHash token id ' + entID + ' start syllable invalid or missing segment id.');
             }
-            if (endSclID && this.entities['scl'][endSclID] && this.entities['scl'][endSclID]['segID']) {
+            if (endSclID && this.entities['scl'] && this.entities['scl'][endSclID] && 
+                this.entities['scl'][endSclID]['segID']) {
               endID = this.entities['scl'][endSclID]['segID'];
               split = this.checkForSplit(entity.id,endSclID,true);
               if (split){

@@ -2195,22 +2195,31 @@ function checkEditionHealth($ednID, $verbose = true) {
           if ($sequence->isMarkedDelete()) {
             array_push($hltherrors,"Error edition (edn:$ednID) has sequence ($seqLabel/seq:$seqID) that is marked for delete.");
             //ToDo  add code to add <a> for a service to correct the issue.
+            continue;
           }
           if ($seqTypeID == $textSeqTypeID){
             // get all the child IDs
             $txtSeqGID = $sequence->getGlobalID();
             $txtDivSeqGIDs = $sequence->getEntityIDs();
-            $txtDivSeqIDs = preg_replace("/seq\:/","",$txtDivSeqGIDs);
-            if (strpos(join(' ',$txtDivSeqIDs),":") !== false) {
-              array_push($hltherrors,"Error Text Sequence ($seqLabel/seq:$seqID) not all entity GIDs are sequence type. (".join(',',$txtDivSeqGIDs).").");
+            if (!$txtDivSeqGIDs) {
+              array_push($hltherrors,"Error Text Sequence ($seqLabel/seq:$seqID) has no entity GIDs.");             
+            } else {
+              $txtDivSeqIDs = preg_replace("/seq\:/","",$txtDivSeqGIDs);
+              if (strpos(join(' ',$txtDivSeqIDs),":") !== false) {
+                array_push($hltherrors,"Error Text Sequence ($seqLabel/seq:$seqID) not all entity GIDs are sequence type. (".join(',',$txtDivSeqGIDs).").");
+              }
             }
           } else if ($seqTypeID == $textPhysSeqTypeID){
             // get all the child IDs
             $physSeqGID = $sequence->getGlobalID();
             $linePhysSeqGIDs = $sequence->getEntityIDs();
-            $linePhysSeqIDs = preg_replace("/seq\:/","",$linePhysSeqGIDs);
-            if (strpos(join(' ',$linePhysSeqIDs),":") !== false) {
-              array_push($hltherrors,"Error Physical Sequence ($seqLabel/seq:$seqID) not all entity GIDs are sequence type. (".join(',',$linePhysSeqGIDs).").");
+            if (!$linePhysSeqGIDs) {
+              array_push($hltherrors,"Error Physical Sequence ($seqLabel/seq:$seqID) has no entity GIDs.");             
+            } else {
+              $linePhysSeqIDs = preg_replace("/seq\:/","",$linePhysSeqGIDs);
+              if (strpos(join(' ',$linePhysSeqIDs),":") !== false) {
+                array_push($hltherrors,"Error Physical Sequence ($seqLabel/seq:$seqID) not all entity GIDs are sequence type. (".join(',',$linePhysSeqGIDs).").");
+              }
             }
           } else {//other structural definitions
             array_push($structuralSeqIDs,$seqID);

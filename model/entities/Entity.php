@@ -885,8 +885,10 @@
       }
       $this->storeScratchProperty("old_owner_id",$this->_owner_id);
       $this->storeScratchProperty("old_visibility_ids",$this->_visibility_ids);
-      $this->setVisibilityIDs(array(5));
-      $this->setOwnerID(1);
+      $this->setVisibilityIDs(array(5)); //assumes usergroup 5 is delete group
+      if ($this->getGlobalPrefix() != "srf") {
+        $this->setOwnerID(1);
+      }
       if (!@$dbMgr ) {
         $dbMgr = new DBManager();
       }

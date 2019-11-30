@@ -307,7 +307,7 @@
     */
     public function getImages($autoExpand = false) {
       if (!$this->_images && $autoExpand && count($this->getImageIDs())>0) {
-        $this->_images = new Images("img_id in (".join(",",$this->getImageIDs()).")",null,null,null);
+        $this->_images = new Images("not (5 = ANY(img_visibility_ids)) and img_id in (".join(",",$this->getImageIDs()).")",null,null,null);
         $this->_images->setAutoAdvance(false);
       }
       return $this->_images;
@@ -330,9 +330,9 @@
     */
     public function getTextMetadatas() {
       if (count($this->getReplacementIDs())>0) {
-        $condition = "tmd_text_id in (".join(",",$this->getReplacementIDs()).")";
+        $condition = "not (5 = ANY(tmd_visibility_ids)) and tmd_text_id in (".join(",",$this->getReplacementIDs()).")";
       }else{
-        $condition = "tmd_text_id = ".$this->_id;
+        $condition = "not (5 = ANY(tmd_visibility_ids)) and tmd_text_id = ".$this->_id;
       }
       $this->_textmetadatas = new TextMetadatas($condition,null,null,null);
       $this->_textmetadatas->setAutoAdvance(false);
@@ -346,9 +346,9 @@
     */
     public function getEditions() {
       if (count($this->getReplacementIDs())>0) {
-        $condition = "edn_text_id in (".join(",",$this->getReplacementIDs()).")";
+        $condition = "not (5 = ANY(edn_visibility_ids)) and edn_text_id in (".join(",",$this->getReplacementIDs()).")";
       }else{
-        $condition = "edn_text_id = ".$this->_id;
+        $condition = "not (5 = ANY(edn_visibility_ids)) and edn_text_id = ".$this->_id;
       }
       $this->_editions = new Editions($condition,null,null,null);
       $this->_editions->setAutoAdvance(false);
@@ -365,7 +365,7 @@
         // TODO correct this for getting intersection.
         //$condition = "srf_text_ids in (".join(",",$this->getReplacementIDs()).")";
       }else{
-        $condition = "".$this->_id." = ANY (srf_text_ids) and not srf_owner_id = 1";
+        $condition = "".$this->_id." = ANY (srf_text_ids) and  not (5 = ANY(sfr_visibility_ids));";
       }
       $this->_surfaces = new Surfaces($condition,null,null,null);
       $this->_surfaces->setAutoAdvance(false);
@@ -380,7 +380,7 @@
     public function getSurfaceIDs() {
       $dbMgr = new DBManager();
       $dbMgr->query("select array_agg(srf_id) from surface ".
-                    "where ".$this->_id." = ANY (srf_text_ids) and not srf_owner_id = 1;");
+                    "where ".$this->_id." = ANY (srf_text_ids) and not (5 = ANY(sfr_visibility_ids));");
       if ($dbMgr->getRowCount()) {
         $row = $dbMgr->fetchResultRow();
         $srfIDs = explode(',',trim($row[0],"\"{}"));

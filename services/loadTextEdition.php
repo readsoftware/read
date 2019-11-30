@@ -742,6 +742,7 @@
                                                   'id' => $segID,
                                                   'baselineIDs' => $segment->getBaselineIDs(),
                                                   'readonly' => $segment->isReadonly(),
+                                                  'editibility' => $segment->getOwnerID(),
                                                   'center' => $segment->getCenter(),
                                                   'value' => 'seg'.$segID);
                 $boundary = $segment->getImageBoundary();

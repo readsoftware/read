@@ -114,18 +114,13 @@ if (!$data) {
          $editions->getCount()>0 && !$forceTextDelete){
       array_push($errors,"status of text editions is preventing text deletion");
     }
-    $surfaces = $text->getSurfaces();
-    if (!$surfaces || $surfaces->getError() ||
-         $surfaces->getCount()>0 && !$forceTextDelete){
-      array_push($errors,"status of text surfaces is preventing text deletion");
-    }
     $textMetadatas = $text->getTextMetadatas();
     if (!$textMetadatas || $textMetadatas->getError() ||
          $textMetadatas->getCount()>0 && !$forceTextDelete){
       array_push($errors,"status of text textMetadatas is preventing text deletion");
     }
     $imgIDs = $text->getImageIDs();
-    if (count($imgIDs)>0 && !$forceTextDelete) {
+    if ($imgIDs && count($imgIDs)>0 && !$forceTextDelete) {
       array_push($errors,"linked images is preventing text deletion");
     }
   }
@@ -136,6 +131,21 @@ if (!$data) {
 }
 
 if (count($errors) == 0 && $text ) {
+  $surfaces = $text->getSurfaces();
+  if ($surfaces && !$surfaces->getError() && $surfaces->getCount()>0){
+    foreach($surfaces as $surface) {
+      $textIDs = $surface->getTextIDs();
+      if (($index = array_search($txtID,$textIDs)) !== false) {
+        array_splice($textIDs,$index,1);
+      }
+      $surface->setTextIDs($textIDs);
+      if (count($textIDs) == 0) {
+        $surface->markForDelete();
+      } else {
+        $surface->save();
+      }
+    }
+  }
   //delete text
   $text->markForDelete();
   // and remove from local cache

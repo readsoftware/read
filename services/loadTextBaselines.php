@@ -102,6 +102,7 @@
                                'value' => $text->getTitle(),
                                'ref' => $text->getRef(),
                                'readonly' => $text->isReadonly(),
+                               'editibility' => $text->getOwnerID(),
                                'title' => $text->getTitle());
       $cknLookup[$ckn] = $txtID;
       foreach ($text->getSurfaces(true) as $surface) {
@@ -121,6 +122,7 @@
                                          'txtID' => $txtID,
                                          'srfID' => $srfID,
                                          'url' => $image->getURL(),
+                                         'editibility' => $image->getOwnerID(),
                                          'type' => $image->getType(),
                                          'boundary' => $image->getBoundary());
                 }// if imgID
@@ -147,6 +149,7 @@
                                      'segCount' => count($segIDs),
                                      'segIDs' => $segIDs,
                                      'transcription' => $baseline->getTranscription(),
+                                     'editibility' => $baseline->getOwnerID(),
                                      'boundary' => $baseline->getImageBoundary(),
                                      'imageID' => $baseline->getImageID());
             }// if blnID
@@ -159,6 +162,7 @@
                                         'layer' => $segment->getLayer(),
                                         'id' => $segID,
                                         'readonly' => $segment->isReadonly(),
+                                        'editibility' => $segment->getOwnerID(),
                                         'center' => $segment->getCenter(),
                                         'value' => 'seg'.$segID);
                 $boundary = $segment->getImageBoundary();
@@ -211,6 +215,7 @@
           $entities['tmd'][$tmdID] = array( 'txtID'=> $textMetadata->getTextID(),
                                  'refIDs' => $textMetadata->getReferenceIDs(),
                                  'ednIDs' => array(),
+                                 'editibility' => $textMetadata->getOwnerID(),
                                  'attrIDs' => $textMetadata->getAttributionIDs(),
                                  'typeIDs' => $textMetadata->getTypeIDs());
           if (count($textMetadata->getReferenceIDs()) > 0) {
@@ -275,6 +280,7 @@
           $entities['seq'][$entID] = array( 'label'=> $entity->getLabel(),
                                  'attrIDs' => $entity->getAttributionIDs(),
                                  'superscript' => $entity->getSuperScript(),
+                                 'editibility' => $entity->getOwnerID(),
                                  'typeID' => $entity->getTypeID(),
                                  'entityIDs' => $entity->getEntityIDs());
           if (count($entity-getEntityIDs())) {
@@ -353,6 +359,7 @@
               'baselineIDs' => $segment->getBaselineIDs(),
               'layer' => $segment->getLayer(),
               'readonly' => $segment->isReadonly(),
+              'editibility' => $segment->getOwnerID(),
               'center' => $segment->getCenter(),
               'value' => 'seg'.$entID);
           $sclIDs = $segment->getSyllableIDs();

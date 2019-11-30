@@ -101,6 +101,7 @@
                                                'id' => $catID,
                                                'value'=> $catalog->getTitle(),
                                                'readonly' => $catalog->isReadonly(),
+                                               'editibility' => $catalog->getOwnerID(),
                                                'ednIDs' => $catalog->getEditionIDs(),
                                                'typeID' => $catalog->getTypeID());
     $AnoIDs = $catalog->getAnnotationIDs();
@@ -243,6 +244,7 @@
                                      'id' => $seqID,
                                      'value'=> $sequence->getLabel(),
                                      'readonly' => $sequence->isReadonly(),
+                                     'editibility' => $sequence->getOwnerID(),
                                      'superscript' => $sequence->getSuperScript(),
                                      'typeID' => $sequence->getTypeID());
               $sEntIDs = $sequence->getEntityIDs();

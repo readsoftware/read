@@ -5708,17 +5708,17 @@ mergeLine: function (direction,cbError) {
     prevState = curState = nextState = "";
     //calc state trasition variables
     if (prevGraID ) {
-      if (entities.gra[prevGraID] && entities.gra[prevGraID].txtcrit){
+      if (entities.gra && entities.gra[prevGraID] && entities.gra[prevGraID].txtcrit){
         prevState = entities.gra[prevGraID].txtcrit;
       }
     }
     if (nextGraID ) {
-      if (entities.gra[nextGraID] && entities.gra[nextGraID].txtcrit){
+      if (entities.gra && entities.gra[nextGraID] && entities.gra[nextGraID].txtcrit){
         nextState = entities.gra[nextGraID].txtcrit;
       }
     }
     if (graID ) {
-      if (entities.gra[graID] && entities.gra[graID].txtcrit){
+      if (entities.gra && entities.gra[graID] && entities.gra[graID].txtcrit){
         curState = entities.gra[graID].txtcrit;
       }
     }
@@ -5797,9 +5797,9 @@ mergeLine: function (direction,cbError) {
   calcLineGraphemeLookups : function(physLineSeqID) {
     DEBUG.traceEntry("editionVE.calcLineGraphemeLookups","physLseqID = " + physLineSeqID);
     var  entities = this.dataMgr.entities, physLineSeq = entities.seq[physLineSeqID],
-        isNumber, sclID,sclIDs,graID,graIDs,i,j, prevGraID = null, nextGraID,
+        isNumber, sclID,sclIDs,graID = null,graIDs,i,j, prevGraID = null, nextGraID,
         nextSclID, entFootnote, physLineTag, physLineLabel;
-    if (physLineSeq && physLineSeq.entityIDs && physLineSeq.entityIDs.length) {
+    if (physLineSeq && physLineSeq.entityIDs && physLineSeq.entityIDs.length && entities.scl) {
       sclIDs = physLineSeq.entityIDs;
       physLineTag = 'seq' + physLineSeq.id;
       if (physLineSeq.label) {
@@ -5810,16 +5810,20 @@ mergeLine: function (direction,cbError) {
       // for each syllable
       for(i=0; i<sclIDs.length; i++) {
         sclID = sclIDs[i].substr(4);
-        graIDs = entities['scl'][sclID].graphemeIDs;
+        graIDs = entities['scl'][sclID]?entities['scl'][sclID].graphemeIDs:null;
+        if (!graIDs) {
+          DEBUG.log("err","calculating graLookups and syllable sclID "+sclID+" is not available ");
+          continue;
+        }
         nextSclID = (i+1 == sclIDs.length)? null : sclIDs[i+1].substr(4);
         // for each grapheme
         for(j=0; j<graIDs.length; j++) {
           graID = graIDs[j];
-          if (!entities.gra[graID]) {
+          if (!entities.gra || !entities.gra[graID]) {
             DEBUG.log("err","calculating graLookups and grapheme not available for graID "+graID);
             continue;
           }
-          if (entities.gra[graID].value == 'ʔ') {//skip vowel carrier
+          if (entities.gra && entities.gra[graID].value == 'ʔ') {//skip vowel carrier
             continue;
           }
           nextGraID = (j+1 < graIDs.length)? graIDs[j+1] :
@@ -5849,22 +5853,25 @@ mergeLine: function (direction,cbError) {
           delete this.lookup.gra[graID].fnMarker['scl'+sclID];
         }
       }
-      // update last grapheme boundary to appropriate linebreak
-      // compoundtoken split linebreak, linebreak or split token linebreak
-      boundary = this.lookup.gra[graID].boundary;
-      if (!entities.gra[graID] || !entities.gra[graID].type) {
-        isNumber = false;
-        DEBUG.log("warn","grapheme id "+graID +" or type not found for sclID "
-              +sclID+" physLine "+ physLineTag);
-      } else {
-        isNumber = (this.dataMgr.getTermFromID(entities.gra[graID].type) == "NumberSign");
-      }
-      if (!boundary) {//must be in the middle of token so split token linebreak
-        this.lookup.gra[graID].boundary = '<span class="linebreak toksplit">-</span><br/>';
-      } else if (boundary.search(/toksep/) > -1) {// at compound token boundary so split compound linebreak
-        this.lookup.gra[graID].boundary = '<span class="linebreak cmpsplit">'+(isNumber?"":"-")+'</span><br/>';
-      } else if (boundary.search(/linebreak/) == -1){// all the rest goes to regular linebreak
-        this.lookup.gra[graID].boundary = '<span class="linebreak"></span><br/>';
+
+      if (graID){
+        // update last grapheme boundary to appropriate linebreak
+        // compoundtoken split linebreak, linebreak or split token linebreak
+        boundary = this.lookup.gra[graID].boundary;
+        if (!entities.gra || !entities.gra[graID] || !entities.gra[graID].type) {
+          isNumber = false;
+          DEBUG.log("warn","grapheme id "+graID +" or type not found for sclID "
+                +sclID+" physLine "+ physLineTag);
+        } else {
+          isNumber = (this.dataMgr.getTermFromID(entities.gra[graID].type) == "NumberSign");
+        }
+        if (!boundary) {//must be in the middle of token so split token linebreak
+          this.lookup.gra[graID].boundary = '<span class="linebreak toksplit">-</span><br/>';
+        } else if (boundary.search(/toksep/) > -1) {// at compound token boundary so split compound linebreak
+          this.lookup.gra[graID].boundary = '<span class="linebreak cmpsplit">'+(isNumber?"":"-")+'</span><br/>';
+        } else if (boundary.search(/linebreak/) == -1){// all the rest goes to regular linebreak
+          this.lookup.gra[graID].boundary = '<span class="linebreak"></span><br/>';
+        }
       }
       entFootnote = this.getEntFootnoteHtml('seq'+physLineSeqID);
       if (entFootnote) {
@@ -6043,7 +6050,7 @@ mergeLine: function (direction,cbError) {
                 delete this.lookup.gra[graID].fnMarker[context+' tok'+entID];
               }
               isCmpTokenSeparator = (!isLastEnt && context.search(/cmp/)>-1);
-              if (!entities.gra[graID] || !entities.gra[graID].type) {
+              if (!entities.gra || !entities.gra[graID] || !entities.gra[graID].type) {
                 isNumber = false;
                 DEBUG.log("warn","grapheme id "+graID +" or type not found for entGID "
                       +entGID+" with context "+context);
@@ -6054,7 +6061,7 @@ mergeLine: function (direction,cbError) {
               this.lookup.gra[graID].boundary = '<span class="boundary'+
                                                 ((isCmpTokenSeparator && !isNumber)?' toksep':'')+
                                                 '">'+((isCmpTokenSeparator && !isNumber)?'-':'&nbsp;')+'</span>';
-              if (entities.gra[graID] && entities.gra[graID].decomp) {//sandhi grapheme at end of token
+              if (entities.gra && entities.gra[graID] && entities.gra[graID].decomp) {//sandhi grapheme at end of token
                 entities.gra[graID].tokIDs =[entID];
               }
             }else{//in the case where the boundary changes it's necessary to erase the old boundary HTML

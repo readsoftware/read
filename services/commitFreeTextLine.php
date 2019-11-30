@@ -513,6 +513,7 @@
     $edition->storeScratchProperty("lastModified",$edition->getModified());
     $edition->setStatus('changed');
     $edition->save();
+    invalidateCachedSeqEntities($freetextLine->getID(),$edition->getID());
     invalidateCachedEditionEntities($edition->getID());
     invalidateCachedEditionViewerHtml($edition->getID());
     invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
