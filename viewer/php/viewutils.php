@@ -2892,6 +2892,7 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
         $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
         $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LemmaLinkage');
         $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LemmaLinkage');
+        $altLinkTypeID = Entity::getIDofTermParentLabel('Alternate-LemmaLinkage');
         $relatedHtml = "";
         if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;
@@ -2956,6 +2957,41 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
             $relatedHtml .= "<div class=\"lemmaCfLinks $lemTag\">";
             uksort($cfLinks,"compareSortKeys");
             foreach ($cfLinks as $sort => $linkHtml) {
+              if ($isFirst) {
+                $isFirst = false;
+                $relatedHtml .= $linksHeader." ".$linkHtml;
+              }else{
+                $relatedHtml .= ",".$linkHtml;
+              }
+            }
+            $relatedHtml .= ".</div>";
+          }
+        }
+        $altLinks = array();
+        if ($relatedGIDsByLinkType && array_key_exists($altLinkTypeID,$relatedGIDsByLinkType)) {
+          $isFirst = true;
+          $linksHeader = "<span class=\"lemmaLinksHeader altLinksHeader\">Alt.</span>";
+          foreach ($relatedGIDsByLinkType[$altLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            $linkTag = str_replace(':','',$linkGID);
+            if ($entity && !$entity->hasError()) {
+              if (method_exists($entity,'getValue')) {
+                $value = preg_replace($pattern,$replacement,$entity->getValue());
+              } else {
+                continue;
+              }
+              if (method_exists($entity,'getSortCode')) {
+                $sort = $entity->getSortCode();
+              } else {
+                $sort = substr($linkGID,4);
+              }
+              $altLinks[$sort] = "<span class=\"cfLink $linkTag\"><a href=\"#$linkTag\">$value</a></span>";
+            }
+          }
+          if (count($altLinks)) {
+            $relatedHtml .= "<div class=\"lemmaAltLinks $lemTag\">";
+            uksort($altLinks,"compareSortKeys");
+            foreach ($altLinks as $sort => $linkHtml) {
               if ($isFirst) {
                 $isFirst = false;
                 $relatedHtml .= $linksHeader." ".$linkHtml;

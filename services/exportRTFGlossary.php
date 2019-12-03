@@ -524,6 +524,7 @@
         $relatedGIDsByLinkType = $lemma->getRelatedEntitiesByLinkType();
         $seeLinkTypeID = Entity::getIDofTermParentLabel('See-LemmaLinkage');
         $cfLinkTypeID = Entity::getIDofTermParentLabel('Compare-LemmaLinkage');
+        $altLinkTypeID = Entity::getIDofTermParentLabel('Alternate-LemmaLinkage');
         $relatedNode = null;
         if ($relatedGIDsByLinkType && array_key_exists($seeLinkTypeID,$relatedGIDsByLinkType)) {
           $isFirst = true;
@@ -598,7 +599,41 @@
           }
           $rtf .= $fullstop.$eol;
         }
-        $rtf .= $hardReturn.$eol;//end paragraph
+        $altLinks = array();
+        if ($relatedGIDsByLinkType && array_key_exists($altLinkTypeID,$relatedGIDsByLinkType)) {
+          $isFirst = true;
+          $linkText = 'Alt.';
+          $rtf .= $softReturn.$eol;
+          foreach ($relatedGIDsByLinkType[$altLinkTypeID] as $linkGID) {
+            $entity = EntityFactory::createEntityFromGlobalID($linkGID);
+            if ($entity && !$entity->hasError()) {
+              if (method_exists($entity,'getValue')) {
+                $value = utf8ToRtf(preg_replace('/ʔ/','',$entity->getValue()));
+              } else {
+                $value = $linkGID;
+              }
+              if (method_exists($entity,'getSortCode')) {
+                $sort = $entity->getSortCode();
+              } else {
+                $sort = substr($linkGID,4);
+              }
+              $altLinks[$sort] = $value;
+            }
+          }
+          if (count($altLinks)) {
+            uksort($altLinks,"compareSortKeys");
+            foreach ($altLinks as $sort => $value) {
+              if ($isFirst) {
+                $isFirst = false;
+                $rtf .= $linkStyle.$linkText.$endStyle.$eol;
+                $rtf .= $space.$eol.$relatedStyle.$value.$endStyle.$eol;
+              }else{
+                $rtf .= $comma.$eol.$space.$eol.$relatedStyle.$value.$endStyle.$eol;
+              }
+            }
+          }
+          $rtf .= $fullstop.$eol;
+        }        $rtf .= $hardReturn.$eol;//end paragraph
       }
       $rtf .= '}';
     } // else
