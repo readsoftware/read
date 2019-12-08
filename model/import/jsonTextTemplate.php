@@ -95,9 +95,9 @@
   $textImageBaselines = array(
     "bln1" => array(
       "imgID" => "img1",
-      //"polygon" => new Polygon("(55,65),(34,63),(45,95)) //cropping polygon
-      "surface_id" => "srf1",
-      "scriptLanguage" => "" //temporary storage location
+      // "polygon" => new Polygon("(55,65),(34,63),(45,95)) //cropping polygon
+      "surface_id" => "srf1", // link to surface this baseline represents
+      // "scriptLanguage" => "" // code to identify the language on this baseline
     )
   );
 

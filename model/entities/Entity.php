@@ -567,10 +567,10 @@
     /**
     * getScratchPropertiesJsonString - retrieves all scratch properties as a json string
     *
-    * @return string the value of the property or NULL
+    * @return string the value of the properties or NULL
     */
     public function getScratchPropertiesJsonString() {
-      return (count($this->_scratchProperties) > 0 ? json_encode($this->_scratchProperties):NULL);
+      return (($this->_scratchProperties && count($this->_scratchProperties) > 0) ? json_encode($this->_scratchProperties):NULL);
     }
 
     /**

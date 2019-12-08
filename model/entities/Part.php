@@ -185,7 +185,13 @@
     * @return int term id from a typology of terms for artefacts
     */
     public function getType() {
-      return $this->_type_id;
+      $type = "unknown";
+      if ($this->_type_id && $this->getTermFromID($this->_type_id)) {
+        $type = $this->_type_id;
+      } else if ($this->getScratchProperty('type')) {
+        $state = $this->getScratchProperty('type');
+      }
+      return $type;
     }
     
     /**
@@ -219,7 +225,13 @@
     * @return string specifiying the shape of the part
     */
     public function getShape() {
-      return $this->_shape_id;
+      $shape = "unknown";
+      if ($this->_shape_id && $this->getTermFromID($this->_shape_id)) {
+        $shape = $this->_shape_id;
+      } else if ($this->getScratchProperty('shape')) {
+        $shape = $this->getScratchProperty('shape');
+      }
+      return $shape;
     }
 
     /**
@@ -379,6 +391,19 @@
         $this->setDataKeyValuePair("prt_shape_id",$shape);
       }
       $this->_shape_id = $shape;
+    }
+
+    /**
+    * Set the shape of this part
+    *
+    * @param string $shape for this part
+    */
+    public function setShapeID($shapeID) {
+      if($this->_shape_id != $shapeID) {
+        $this->_dirty = true;
+        $this->setDataKeyValuePair("prt_shape_id",$shapeID);
+      }
+      $this->_shape_id = $shapeID;
     }
 
     /**

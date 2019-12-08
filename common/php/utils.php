@@ -4215,9 +4215,18 @@ function flushLog($wrapHeader = true, $jsonEncode = false) {
 }
 
 function createAnnotation($visibilityIDs, $ownerID, $defAttrIDs, $annoTypeTerm = "comment", $annoText = "", $fromGID = null, $toGID = null) {
-  //global $visibilityIDs,$ownerID,$defAttrIDs;
+  
   $annotation = new Annotation();
   $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-commentarytype');//term dependency
+  if (!$typeID) {
+    $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-workflowtype');//term dependency
+  }
+  if (!$typeID) {
+    $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-footnotetype');//term dependency
+  }
+  if (!$typeID) {
+    $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-linkagetype');//term dependency
+  }
   if ($typeID) {
     $typeID = $annotation->getIDofTermParentLabel('comment-commentarytype');//term dependency
   }
@@ -4265,8 +4274,7 @@ function createAttribution($title, $description, $visibilityIDs, $ckn_Key, $bibl
   if ($typeID){
     $attribution->setTypes(array($typeID));
     $nonce .= $typeID;   
-  }
-  else {
+  }  else if ($ckn_Key) {
     $attribution->storeScratchProperty($ckn_Key."_editions:ed_cmty",$type);
   }
   if (isset($detail)) {
@@ -4282,7 +4290,7 @@ function createAttribution($title, $description, $visibilityIDs, $ckn_Key, $bibl
       $attribution->storeScratchProperty("nonce",$nonce);
     }
   }
-  if ($aEdId) {
+  if ($aEdId && $ckn_Key) {
     $attribution->storeScratchProperty($ckn_Key."_editions:id",$aEdId);
   }
   $attribution->Save();

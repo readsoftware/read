@@ -182,7 +182,13 @@
     * @return string from a typology of terms for artefacts
     */
     public function getType() {
-      return $this->_type_id;
+      $type = "unknown";
+      if ($this->_type_id && $this->getTermFromID($this->_type_id)) {
+        $type = $this->_type_id;
+      } else if ($this->getScratchProperty('type')) {
+        $state = $this->getScratchProperty('type');
+      }
+      return $type;
     }
 
     /**
@@ -200,6 +206,21 @@
     */
     public function getShapeID() {
       return $this->_shape_id;
+    }
+
+    /**
+    * Get Shape for this artefact
+    *
+    * @return string specifiying the shape of the item
+    */
+    public function getShape() {
+      $shape = "unknown";
+      if ($this->_shape_id && $this->getTermFromID($this->_shape_id)) {
+        $shape =  $this->getTermFromID($this->_shape_id);
+      } else if ($this->getScratchProperty('shape')) {
+        $shape = $this->getScratchProperty('shape');
+      }
+      return $shape;
     }
 
     /**

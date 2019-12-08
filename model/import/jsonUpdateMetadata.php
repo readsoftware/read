@@ -16,11 +16,38 @@
   include_once dirname(__FILE__) . '/../entities/Texts.php';
   include_once dirname(__FILE__) . '/../utility/parser.php';
 
-  if (!@$_REQUEST['txtImportFilename']) {
+  if (!isset($_REQUEST['txtImportFilename'])) {
+    include_once dirname(__FILE__) . '/'.$_REQUEST['txtImportFilename'];
+  } else if (isset($_REQUEST['data'])) {
+    $data = json_decode($_REQUEST['data']);
+    if (isset($data['textCKN'])) {
+      $textCKN = $data['textCKN'];
+    }
+    if (isset($data['imageDefs'])) {
+      $imageDefs = $data['imageDefs'];
+    }
+    if (isset($data['textItem'])) {
+      $textItem = $data['textItem'];
+    }
+    if (isset($data['textParts'])) {
+      $textParts = $data['textParts'];
+    }
+    if (isset($data['materialContexts'])) {
+      $materialContexts = $data['materialContexts'];
+    }
+    if (isset($data['textFragments'])) {
+      $textFragments = $data['textFragments'];
+    }
+    if (isset($data['textSurfaces'])) {
+      $textSurfaces = $data['textSurfaces'];
+    }
+    if (isset($data['textImageBaselines'])) {
+      $textImageBaselines = $data['textImageBaselines'];
+    }
+  } else {
     echo "no filename supplied";
     exit;
   }
-  include_once dirname(__FILE__) . '/'.$_REQUEST['txtImportFilename'];
 
   if (!isset($textCKN)) {
     echo "invalid import file supplied";
@@ -525,6 +552,15 @@ function createAnnotation($annoTypeTerm = "comment", $annoText = "", $fromGID = 
   global $visibilityIDs,$ownerID,$defAttrIDs;
   $annotation = new Annotation();
   $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-commentarytype');//term dependency
+  if (!$typeID) {
+    $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-workflowtype');//term dependency
+  }
+  if (!$typeID) {
+    $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-footnotetype');//term dependency
+  }
+  if (!$typeID) {
+    $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-linkagetype');//term dependency
+  }
   if ($typeID) {
      $typeID = $annotation->getIDofTermParentLabel('comment-commentarytype');//term dependency
   }

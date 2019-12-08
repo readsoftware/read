@@ -17,7 +17,7 @@
   include_once dirname(__FILE__) . '/../../entities/Text.php';
   include_once dirname(__FILE__) . '/../../utility/parser.php';
 
-  if (!@$_REQUEST['txtImportFilename']) {
+  if (!isset($_REQUEST['txtImportFilename'])) {
     echo "no filename supplied";
     exit;
   }
@@ -37,7 +37,7 @@
   //Create Images
   $images = array();
   $txtImageIDs = array();
-  if (@$imageDefs && count($imageDefs) >0) {
+  if (isset($imageDefs) && count($imageDefs) >0) {
     foreach ($imageDefs as $imgNonce => $imgMetadata) {
       $image = new Image();
       if (!array_key_exists('url',$imgMetadata)) {
@@ -84,7 +84,7 @@
     return;
   }
   $txtID = $text->getID();
-  if (@$textnotes && count($textnotes) > 0 ) {
+  if (isset($textnotes) && count($textnotes) > 0 ) {
     $annoIDs = array();
     //create annotations for this text
     foreach ($textnotes as $anoType => $anoText) {
@@ -99,7 +99,7 @@
 
   //ITEM
   $itmID = null;
-  if(@$textItem && array_key_exists('title',$textItem)) {
+  if(isset($textItem) && array_key_exists('title',$textItem)) {
     $item = new Item();
     $item->setTitle($textItem['title']);
     if (array_key_exists('type',$textItem)) {
@@ -146,7 +146,7 @@
 
   //PARTS
   $parts = array();
-  if(@$textParts && count($textParts) > 0) {
+  if(isset($textParts) && count($textParts) > 0) {
     foreach ($textParts as $prtNonce => $prtMetadata) {
       $part = new Part();
       if (array_key_exists('label',$prtMetadata)) {
@@ -207,7 +207,7 @@
 
   //MATERIALCONTEXT
   $mtxs = array();
-  if(@$materialContexts && count($materialContexts) > 0) {
+  if(isset($materialContexts) && count($materialContexts) > 0) {
     foreach ($materialContexts as $mtxNonce => $mtxMetadata) {
       $materialContext = new MaterialContext();
       if (array_key_exists('arch_context',$mtxMetadata)) {
@@ -238,7 +238,7 @@
 
   //FRAGMENT
   $fragments = array();
-  if(@$textFragments && count($textFragments) > 0) {
+  if(isset($textFragments) && count($textFragments) > 0) {
     foreach ($textFragments as $fraNonce => $fraMetadata) {
       $fragment = new Fragment();
       if (array_key_exists('label',$fraMetadata)) {
@@ -302,7 +302,7 @@
 
   //SURFACE
   $surfaces = array();
-  if(@$textSurfaces && count($textSurfaces) > 0) {
+  if(isset($textSurfaces) && count($textSurfaces) > 0) {
     foreach ($textSurfaces as $srfNonce => $srfMetadata) {
       $surface = new Surface();
       $surface->setTextIDs(array($txtID));
@@ -363,7 +363,7 @@
 
   //BASELINE
   $baselines = array();
-  if(@$textImageBaselines && count($textImageBaselines) > 0) {
+  if(isset($textImageBaselines) && count($textImageBaselines) > 0) {
     foreach ($textImageBaselines as $blnNonce => $blnMetadata) {
       $baseline = new Baseline();
       $typeID = $baseline->getIDofTermParentLabel('image-baselinetype');//term dependency
@@ -397,7 +397,7 @@
   //RUN
 
   //EDITIONS
-  if (@$editionDef && array_key_exists('TranscriptionLines', $editionDef) && count($editionDef['TranscriptionLines']) > 0) {
+  if (isset($editionDef) && array_key_exists('TranscriptionLines', $editionDef) && count($editionDef['TranscriptionLines']) > 0) {
     $description = null;
     if (array_key_exists('Description', $editionDef)) {
       $description = $editionDef['Description'];
@@ -428,7 +428,7 @@
     $parser->parse();
     $parser->saveParseResults();
     // add text comments to edition for now
-    if (@$editionNotes && count($editionNotes) > 0 ) {
+    if (isset($editionNotes) && count($editionNotes) > 0 ) {
       $annoIDs = array();
       $editions = $parser->getEditions();
       $edition = $editions[0];
@@ -512,8 +512,18 @@ function createAnnotation($annoTypeTerm = "comment", $annoText = "", $fromGID = 
   $annotation = new Annotation();
   $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-commentarytype');//term dependency
   if (!$typeID) {
-     $typeID = $annotation->getIDofTermParentLabel('comment-commentarytype');//term dependency
+     $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-workflowtype');//term dependency
   }
+  if (!$typeID) {
+    $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-footnotetype');//term dependency
+  }
+  if (!$typeID) {
+    $typeID = $annotation->getIDofTermParentLabel(strtolower($annoTypeTerm).'-linkagetype');//term dependency
+  }
+  if (!$typeID) {
+    $typeID = $annotation->getIDofTermParentLabel('comment-commentarytype');//term dependency
+  }
+
   if ($fromGID) {
     $annotation->setLinkFromIDs(array($fromGID));
   }

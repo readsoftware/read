@@ -247,6 +247,21 @@
     }
 
     /**
+    * Get Fragment's Restoration State
+    *
+    * @return int restoration state term for this fragment
+    */
+    public function getRestoreState() {
+      $state = "unknown";
+      if ($this->_restore_state_id && $this->getTermFromID($this->_restore_state_id)) {
+        $state = $this->getTermFromID($this->_restore_state_id);
+      } else if ($this->getScratchProperty('restore_state')) {
+        $state = $this->getScratchProperty('restore_state');
+      }
+      return $state;
+    }
+
+    /**
     * Gets the measure for this Fragment
     * @return string identifying the measure of this fragment
     */

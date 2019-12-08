@@ -148,19 +148,69 @@ function addNewEntityReturnData($prefix,$entity) {
            $entities['insert']['seq'][$entID]['validationMsg'] = $validationMsg;
         }
       break;
-    case 'srf':
+      case 'srf':
       $surface = $entity;
       $entities['insert']['srf'][$entID] = array(
         'fragmentID'=>$surface->getFragmentID(),
         'id' => $entID,
         'number' => $surface->getNumber(),
-        'value' => $surface->getDescription(),
+        'value' => $surface->getLabel(),
+        'label' => $surface->getLabel(),
         'description' => $surface->getDescription(),
         'layer' => $surface->getLayerNumber(),
+        'scripts' => $surface->getScripts(),
         'textIDs' => $surface->getTextIDs(),
         'imageIDs' => $surface->getImageIDs(),
         'readonly' => $surface->isReadonly(),
         'attributionIDs' => $surface->getAttributionIDs());
+      break;
+      case 'frg':
+      $fragment = $entity;
+      $entities['insert']['frg'][$entID] = array(
+        'partID'=>$fragment->getPartID(),
+        'id' => $entID,
+        'label' => $fragment->getLabel(),
+        'value' => $fragment->getLabel(),
+        'description' => $fragment->getDescription(),
+        'measure' => $fragment->getMeasure(),
+        'status' => $fragment->getRestoreState(),
+        'locRefs' => $fragment->getLocationRefs(),
+        'mtxIDs' => $fragment->getMaterialContextIDs(),
+        'imageIDs' => $fragment->getImageIDs(),
+        'readonly' => $fragment->isReadonly(),
+        'attributionIDs' => $fragment->getAttributionIDs());
+      break;
+      case 'prt':
+      $part = $entity;
+      $entities['insert']['prt'][$entID] = array(
+        'itemID'=>$part->getItemID(),
+        'id' => $entID,
+        'type' => $part->getType(),
+        'label' => $part->getLabel(),
+        'value' => $part->getLabel(),
+        'description' => $part->getDescription(),
+        'sequence' => $part->getSequence(),
+        'shape' => $part->getShape(),
+        'mediums' => $part->getMediums(),
+        'measure' => $part->getMeasure(),
+        'imageIDs' => $part->getImageIDs(),
+        'readonly' => $part->isReadonly(),
+        'attributionIDs' => $part->getAttributionIDs());
+      break;
+      case 'itm':
+      $item = $entity;
+      $entities['insert']['itm'][$entID] = array(
+        'id' => $entID,
+        'type' => $item->getType(),
+        'title' => $item->getTitle(),
+        'value' => $item->getTitle(),
+        'idno' => $item->getIdNo(),
+        'description' => $item->getDescription(),
+        'shape' => $item->getShape(),
+        'measure' => $item->getMeasure(),
+        'imageIDs' => $item->getImageIDs(),
+        'readonly' => $item->isReadonly(),
+        'attributionIDs' => $item->getAttributionIDs());
       break;
     case 'bln':
       $baseline = $entity;
