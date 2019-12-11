@@ -184,6 +184,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
     this.image = new Image();
   }
 //  this.image.crossOrigin = 'anonymous';//allow cross origin images
+// CORS issue which affects getImageData for smooth and fast redraw and clipping of images
   this.crossSize = 10;
   if (this.image.width == 0 || this.image.height == 0) { // image not loaded
     this.image.onload = function(e) {
@@ -2291,12 +2292,16 @@ selectPolygons: function () {
         imgVE.rbRect[1] = [Math.abs(pt[0]-imgVE.drgStart[0]), Math.abs(pt[1]-imgVE.drgStart[1])];
         //if rect large enough capture pixels and draw rect
         if (imgVE.rbRect[1][0] >2 && imgVE.rbRect[1][1] > 2 ) {
-          imgVE.rbImageData = imgVE.imgContext.getImageData(imgVE.rbRect[0][0],imgVE.rbRect[0][1],imgVE.rbRect[1][0],imgVE.rbRect[1][1]);
-          var lw = imgVE.imgContext.lineWidth;
-          imgVE.imgContext.strokeRect(imgVE.rbRect[0][0]+lw,
-                                          imgVE.rbRect[0][1]+lw,
-                                          imgVE.rbRect[1][0]-2*lw,
-                                          imgVE.rbRect[1][1]-2*lw);
+          try {
+            imgVE.rbImageData = imgVE.imgContext.getImageData(imgVE.rbRect[0][0],imgVE.rbRect[0][1],imgVE.rbRect[1][0],imgVE.rbRect[1][1]);
+            var lw = imgVE.imgContext.lineWidth;
+            imgVE.imgContext.strokeRect(imgVE.rbRect[0][0]+lw,
+                                            imgVE.rbRect[0][1]+lw,
+                                            imgVE.rbRect[1][0]-2*lw,
+                                            imgVE.rbRect[1][1]-2*lw);
+          } catch (error) {
+            // ignore
+          }
         }
       }
     });

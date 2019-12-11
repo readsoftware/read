@@ -255,6 +255,17 @@
     }
     
     /**
+    * Get 0 or 1 segment object attached to this baseline
+    *
+    * @return int 0 or 1 to indicate segments exist linked to this baseline
+    */
+    public function isLinked() {
+      $dbMgr = new DBManager();
+      $dbMgr->query("select count(seg_id) from segment where ".$this->_id." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1 limit 1");
+      return $dbMgr->getRowCount();
+    }
+
+    /**
     * Get number of segment objects attached to this baseline
     *
     * @return int count all segments linked to this baseline
@@ -295,7 +306,7 @@
     */
     public function getSegments() {
       if (!$this->_segments) {
-        $condition = $this->_id." = ANY (\"seg_baseline_ids\") ";
+        $condition = $this->_id." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1";
         $this->_segments = new Segments($condition,"seg_id",null,null);
         $this->_segments->setAutoAdvance(false);
       }

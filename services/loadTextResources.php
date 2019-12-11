@@ -161,13 +161,13 @@
     $atbIDs = array();
     if ($txtIDs && strlen($txtIDs)) {
       if (is_array($txtIDs)){
-        $condition = "txt_id in (".join(',',$txtIDs).")";
+        $condition = "txt_id in (".join(',',$txtIDs).") and not txt_owner_id = 1";
       } else {
-        $condition = "txt_id in ($txtIDs)";
+        $condition = "txt_id in ($txtIDs) and not txt_owner_id = 1";
       }
       $texts = new Texts($condition,"txt_id",null,null);
     } else {
-      $texts = new Texts("","txt_id",null,null);
+      $texts = new Texts("not txt_owner_id = 1","txt_id",null,null);
       $isLoadAll = true;
     }
     $termInfo = getTermInfoForLangCode('en');
@@ -183,7 +183,7 @@
                                                    'blnIDs' => array());
         $txtImgIDs = $text->getImageIDs();
         if ($txtImgIDs && count($txtImgIDs) > 0) {
-          $imgIDs = array_unique(array_merge($imgIDs,$txtImgIDs));
+          $imgIDs = array_merge($imgIDs,$txtImgIDs);
           $entities['update']['txt'][$txtID]['imageIDs'] = $txtImgIDs;
         }
       }
@@ -191,7 +191,7 @@
     $txtIDs = array_keys($entities['update']['txt']);
     $strTxtIDs = join(",",$txtIDs);
     //find surfaces for all texts
-    $surfaces = new Surfaces("srf_text_ids && ARRAY[".$strTxtIDs."]",null,null,null);
+    $surfaces = new Surfaces("srf_text_ids && ARRAY[".$strTxtIDs."] and not 5 = ANY(srf_visibility_ids)",null,null,null);
     $surfaces->setAutoAdvance(false); // make sure the iterator doesn't prefetch
     $srfIDs = array();
     foreach ($surfaces as $surface) {
@@ -209,7 +209,7 @@
         $sImgIDs = $surface->getImageIDs();
         if ($sImgIDs && count($sImgIDs) > 0) {
           $entities['update']['srf'][$srfID]['imageIDs'] = $sImgIDs;
-          $imgIDs = array_unique(array_merge($imgIDs,$sImgIDs));
+          $imgIDs = array_merge($imgIDs,$sImgIDs);
         }
         $AnoIDs = $surface->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {
@@ -226,7 +226,10 @@
 
     $srfIDs = array_unique($srfIDs);
     //find all baselines for all surfaces
-    $baselines = new Baselines("bln_surface_id in (".join(",",$srfIDs).")",null,null,null);
+
+    $imageBaselineTypeID = $termInfo['idByTerm_ParentLabel']['image-baselinetype'];//term dependency
+//    $baselines = new Baselines("not bln_owner_id = 1 and bln_surface_id in (".join(",",$srfIDs).")",null,null,2800);
+    $baselines = new Baselines("bln_type_id = $imageBaselineTypeID and not bln_owner_id = 1 and bln_surface_id in (".join(",",$srfIDs).")",null,null,null);
     $baselines->setAutoAdvance(false); // make sure the iterator doesn't prefetch
     $blnIDs = array();
     foreach ($baselines as $baseline) {
@@ -236,13 +239,14 @@
       $blnID = $baseline->getID();
       if ($blnID && !array_key_exists($blnID, $entities['update']['bln'])) {
         $url = $baseline->getURL();
-        $segIDs = $baseline->getSegIDs();
+//        $segIDs = $baseline->getSegIDs();
         $entities['update']['bln'][$blnID] = array('url' => $url,
                                                    'id' => $blnID,
                                                    'type' => $baseline->getType(),
                                                    'value' => ($url?$url:$baseline->getTranscription()),
-                                                   'segCount' => ($segIDs?count($segIDs):0),
-                                                   'segIDs' => $segIDs,
+                                                   'isLinked' => $baseline->isLinked(),
+//                                                   'segCount' => $baseline->getSegmentCount(),
+//                                                   'segIDs' => $segIDs,
                                                    'editibility' => $baseline->getOwnerID(),
                                                    'readonly' => $baseline->isReadonly(),
                                                    'transcription' => $baseline->getTranscription(),
@@ -265,7 +269,7 @@
         $bImgID = $baseline->getImageID();
         if ($bImgID) {
           $entities['update']['bln'][$blnID]['imageID'] = $bImgID;
-          $imgIDs = array_unique(array_merge($imgIDs,array($bImgID)));
+          $imgIDs = array_merge($imgIDs,array($bImgID));
           if(!array_key_exists($bImgID,$img2blnIDs)){
             $img2blnIDs[$bImgID] = array($blnID);
           } else {
@@ -286,7 +290,8 @@
     }// for baseline
 
     //find images for all entities with imageIDs
-    $images = new Images("img_id in (".join(",",$imgIDs).")",null,null,null);
+    $imgIDs = array_unique($imgIDs);
+    $images = new Images("img_id in (".join(",",$imgIDs).") and not img_owner_id = 1",null,null,null);
     $images->setAutoAdvance(false); // make sure the iterator doesn't prefetch
     foreach ($images as $image) {
       $imgID = $image->getID();
@@ -323,7 +328,7 @@
     }//for images
 
     //find textmetadata for all texts
-    $textMetadatas = new TextMetadatas("tmd_text_id in (".join(",",$txtIDs).")",null,null,null);
+    $textMetadatas = new TextMetadatas("tmd_text_id in (".join(",",$txtIDs).") and not tmd_owner_id = 1",null,null,null);
     $textMetadatas->setAutoAdvance(false); // make sure the iterator doesn't prefetch
     $tmdIDs = array();
     foreach ($textMetadatas as $textMetadata) {
@@ -356,7 +361,7 @@
     } // for textMetadata
 
     //find editions for all textmetadatas
-    $editions = new Editions("edn_text_id in (".join(",",$txtIDs).")",null,null,null);
+    $editions = new Editions("edn_text_id in (".join(",",$txtIDs).") and not edn_owner_id = 1",null,null,null);
     $editions->setAutoAdvance(false); // make sure the iterator doesn't prefetch
     foreach ($editions as $edition) {
       if ($edition->isMarkedDelete()) {

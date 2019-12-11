@@ -134,17 +134,17 @@
         $sImgIDs = $surface->getImageIDs();
         if ($sImgIDs && count($sImgIDs) > 0) {
           $entities["insert"]['srf'][$srfID]['imageIDs'] = $sImgIDs;
-          $imgIDs = array_unique(array_merge($imgIDs,$sImgIDs));
+          $imgIDs = array_merge($imgIDs,$sImgIDs);
         }
         $AnoIDs = $surface->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {
           $entities["insert"]['srf'][$srfID]['annotationIDs'] = $AnoIDs;
-          $anoIDs = array_unique(array_merge($anoIDs,$AnoIDs));
+          $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
         $AtbIDs = $surface->getAttributionIDs();
         if ($AtbIDs && count($AtbIDs) > 0) {
           $entities["insert"]['srf'][$srfID]['attributionIDs'] = $AtbIDs;
-          $atbIDs = array_unique(array_merge($atbIDs,$AtbIDs));
+          $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
         $frgID = $surface->getFragmentID();
         if ($frgID) {
@@ -159,17 +159,17 @@
             $fImgIDs = $fragment->getImageIDs();
             if ($fImgIDs && count($fImgIDs) > 0) {
               $entities["insert"]['frg'][$frgID]['imageIDs'] = $fImgIDs;
-              $imgIDs = array_unique(array_merge($imgIDs,$fImgIDs));
+              $imgIDs = array_merge($imgIDs,$fImgIDs);
             }
             $AnoIDs = $fragment->getAnnotationIDs();
             if ($AnoIDs && count($AnoIDs) > 0) {
               $entities["insert"]['frg'][$frgID]['annotationIDs'] = $AnoIDs;
-              $anoIDs = array_unique(array_merge($anoIDs,$AnoIDs));
+              $anoIDs = array_merge($anoIDs,$AnoIDs);
             }
             $AtbIDs = $fragment->getAttributionIDs();
             if ($AtbIDs && count($AtbIDs) > 0) {
               $entities["insert"]['frg'][$frgID]['attributionIDs'] = $AtbIDs;
-              $atbIDs = array_unique(array_merge($atbIDs,$AtbIDs));
+              $atbIDs = array_merge($atbIDs,$AtbIDs);
             }
           }
         }
@@ -217,12 +217,12 @@
           $AnoIDs = $segment->getAnnotationIDs();
           if ($AnoIDs && count($AnoIDs) > 0) {
             $entities["insert"]['seg'][$segID]['annotationIDs'] = $AnoIDs;
-            $anoIDs = array_unique(array_merge($anoIDs,$AnoIDs));
+            $anoIDs = array_merge($anoIDs,$AnoIDs);
           }
           $AtbIDs = $segment->getAttributionIDs();
           if ($AtbIDs && count($AtbIDs) > 0) {
             $entities["insert"]['seg'][$segID]['attributionIDs'] = $AtbIDs;
-            $atbIDs = array_unique(array_merge($atbIDs,$AtbIDs));
+            $atbIDs = array_merge($atbIDs,$AtbIDs);
           }
         }// if segID
       } // for segment
@@ -230,12 +230,17 @@
   }
 
   $entities["update"]['bln'][$blnID]=array();
-  $entities["update"]['bln'][$blnID]['segCount'] = count($segIDs);
   if ($segIDs && count($segIDs) > 0) {
-    $entities["update"]['bln'][$blnID]['segIDs'] = array_unique($segIDs);
+    $segIDs = array_unique($segIDs);
+    $entities["update"]['bln'][$blnID]['isLinked'] = (count($segIDs)>0?1:0);
+    $entities["update"]['bln'][$blnID]['segCount'] = count($segIDs);
+    $entities["update"]['bln'][$blnID]['segIDs'] = $segIDs;
+  } else {
+    $entities["update"]['bln'][$blnID]['segCount'] = count($segIDs);
   }
 
   if ($imgIDs && count($imgIDs) > 0) {
+    $imgIDs = array_unique($imgIDs);
     $images = new Images('img_id in ('.join(",",$imgIDs).')',null,null.null);
     if($images->getCount()>0) {
       $images->setAutoAdvance(false); // make sure the iterator doesn't prefetch
@@ -260,12 +265,12 @@
         $AnoIDs = $image->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {
           $entities["insert"]['img'][$imgID]['annotationIDs'] = $AnoIDs;
-          $anoIDs = array_unique(array_merge($anoIDs,$AnoIDs));
+          $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
         $AtbIDs = $image->getAttributionIDs();
         if ($AtbIDs && count($AtbIDs) > 0) {
           $entities["insert"]['img'][$imgID]['attributionIDs'] = $AtbIDs;
-          $atbIDs = array_unique(array_merge($atbIDs,$AtbIDs));
+          $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
         }// if imgID
       }//for images
@@ -273,10 +278,10 @@
   }// if count
 
   if (count( $atbIDs) > 0) {
-    $entityIDs['atb'] = $atbIDs;
+    $entityIDs['atb'] = array_unique($atbIDs);
   }
   if (count( $anoIDs) > 0) {
-    $entityIDs['ano'] = $anoIDs;
+    $entityIDs['ano'] = array_unique($anoIDs);
   }
   if (count( $entityIDs) > 0) {
     getRelatedEntities($entityIDs);
