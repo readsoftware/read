@@ -1893,11 +1893,11 @@ createBaselineEntry: function(bln) {
   DEBUG.trace("createBaselineEntry");
   //create Annotation Entry
   return($('<div class="baselineentry '+blnType+' '+bln.tag+'" title="Baseline has '+
-       (bln.segCount >0?bln.segCount:0) + ' segments defined">' +
+       (bln.isLinked > 0? "":"no ") + 'linked segments">' +
        (img ? '<span class="baseline">' +
               (img.thumbUrl ? '<img class="resImageIconBtn bln'+bln.id+'" src="'+img.thumbUrl+'" alt="Thumbnail not available"/>':'') +
               (img.title ? img.title:'Untitled Image') + '</span>':'') +
-       ((bln.readonly || bln.segCount > 0)?'':'<span class="removebln '+bln.tag+'" title="remove tag '+bln.tag+'">X</span>')+
+       ((bln.readonly || bln.isLinked > 0)?'':'<span class="removebln '+bln.tag+'" title="remove tag '+bln.tag+'">X</span>')+
        '</div>'));
   //create input with save button
 },

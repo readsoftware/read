@@ -261,7 +261,7 @@
     */
     public function isLinked() {
       $dbMgr = new DBManager();
-      $dbMgr->query("select count(seg_id) from segment where ".$this->_id." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1 limit 1");
+      $dbMgr->query("select seg_id from segment where ".$this->getID()." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1 limit 1");
       return $dbMgr->getRowCount();
     }
 
@@ -272,7 +272,7 @@
     */
     public function getSegmentCount() {
       $dbMgr = new DBManager();
-      $dbMgr->query("select count(seg_id) from segment where ".$this->_id." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1");
+      $dbMgr->query("select count(seg_id) from segment where ".$this->getID()." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1");
       if ($dbMgr->getRowCount()) {
         $row = $dbMgr->fetchResultRow();
         return $row[0];
@@ -287,7 +287,7 @@
     */
     public function getSegIDs() {
       $dbMgr = new DBManager();
-      $dbMgr->query("select array_agg(seg_id) from segment where ".$this->_id." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1");
+      $dbMgr->query("select array_agg(seg_id) from segment where ".$this->getID()." = ANY (\"seg_baseline_ids\") and not seg_owner_id = 1");
       if ($dbMgr->getRowCount()) {
         $row = $dbMgr->fetchResultRow();
         $segIDs = explode(',',trim($row[0],"\"{}"));

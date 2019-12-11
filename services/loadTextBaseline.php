@@ -103,12 +103,12 @@
   $entities = array( 'insert' => array(),
                      'update' => array());
   $entities["insert"] = array( 'seg' => array(),
-                               'img' => array(),
                                'srf' => array(),
                                'frg' => array(),
                                'ano' => array(),
                                'atb' => array());
-  $entities["update"] = array( 'bln' => array());
+  $entities["update"] = array( 'bln' => array(),
+                               'img' => array());
   $blnID = (array_key_exists('blnID',$_REQUEST)? $_REQUEST['blnID']:(array_key_exists('bln',$_REQUEST)? $_REQUEST['bln']:null));
   $baseline = null;
   if ($blnID) {
@@ -237,6 +237,7 @@
     $entities["update"]['bln'][$blnID]['segIDs'] = $segIDs;
   } else {
     $entities["update"]['bln'][$blnID]['segCount'] = count($segIDs);
+    $entities["update"]['bln'][$blnID]['isLinked'] = 0;
   }
 
   if ($imgIDs && count($imgIDs) > 0) {
@@ -246,10 +247,10 @@
       $images->setAutoAdvance(false); // make sure the iterator doesn't prefetch
       foreach ($images as $image) {
         $imgID = $image->getID();
-        if ($imgID && !array_key_exists($imgID, $entities["insert"]['img'])) {
+        if ($imgID && !array_key_exists($imgID, $entities["update"]['img'])) {
           $title = $image->getTitle();
           $url = $image->getURL();
-          $entities["insert"]['img'][$imgID] = array('title'=> $image->getTitle(),
+          $entities["update"]['img'][$imgID] = array('title'=> $image->getTitle(),
                                                      'id' => $imgID,
                                                      'value'=> ($title?$title:substr($url,strrpos($url,'/')+1)),
                                                      'readonly' => $image->isReadonly(),
@@ -260,16 +261,16 @@
         if ($url) {
           $info = pathinfo($url);
           $thumbUrl = $info['dirname']."/th".$info['basename'];
-          $entities['insert']['img'][$imgID]['thumbUrl'] = $thumbUrl;
+          $entities['update']['img'][$imgID]['thumbUrl'] = $thumbUrl;
         }
         $AnoIDs = $image->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {
-          $entities["insert"]['img'][$imgID]['annotationIDs'] = $AnoIDs;
+          $entities["update"]['img'][$imgID]['annotationIDs'] = $AnoIDs;
           $anoIDs = array_merge($anoIDs,$AnoIDs);
         }
         $AtbIDs = $image->getAttributionIDs();
         if ($AtbIDs && count($AtbIDs) > 0) {
-          $entities["insert"]['img'][$imgID]['attributionIDs'] = $AtbIDs;
+          $entities["update"]['img'][$imgID]['attributionIDs'] = $AtbIDs;
           $atbIDs = array_merge($atbIDs,$AtbIDs);
         }
         }// if imgID
