@@ -101,6 +101,7 @@
   define("PARTFRAGSEPARATOR"," ");//separate part label from fragment label using this string
   define("FRAGSIDESEPARATOR"," ");//separate fragment label from side label using this string
 
+//  if(!defined("READVIEWER_CSS_PATH")) define("READVIEWER_CSS_PATH","../mydirpath/css/myreadviewer.css"); // must be relative to getTextViewer.php directory
   if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer");
 // to export with separation of project databases use the line below. Also consider
 // symbolic links to READ's viewer support subdirectories css and js in viewer export

@@ -211,7 +211,17 @@
     <title><?=$title?></title>
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.base.css" type="text/css" />
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.energyblue.css" type="text/css" />
+    <?php
+     if (!defined('READVIEWER_CSS_PATH')) {
+    ?>
     <link rel="stylesheet" href="./css/readviewer.css" type="text/css" />
+    <?php
+     } else {
+    ?>
+    <link rel="stylesheet" href="<?=READVIEWER_CSS_PATH?>" type="text/css" />
+    <?php
+     }
+    ?>
     <script src="/jquery/jquery-1.11.1.min.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtouch.js"></script>
