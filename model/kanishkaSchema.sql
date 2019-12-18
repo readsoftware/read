@@ -383,6 +383,7 @@ CREATE TABLE propernoun
   "prn_id" serial NOT NULL PRIMARY KEY,
   "prn_labels" text NOT NULL DEFAULT 'Need Labels',
   "prn_type_id" int NULL,
+  "prn_parent_id" int NULL,
   "prn_evidences" text NULL,
   "prn_description" text NULL,
   "prn_url" text NULL,
@@ -405,6 +406,7 @@ COMMENT ON TABLE propernoun IS 'Contains a record for each propernoun.';
 COMMENT ON COLUMN propernoun."prn_id" IS 'Uniquely identifies a propernoun object.';
 COMMENT ON COLUMN propernoun."prn_labels" IS 'ISO Language code : label pairs for this propernoun.';
 COMMENT ON COLUMN propernoun."prn_type_id" IS 'Link to propernoun identifying the type of this propernoun.';
+COMMENT ON COLUMN propernoun."prn_parent_id" IS 'Link to propernoun that conceptually contains this propernoun.';
 COMMENT ON COLUMN propernoun."prn_description" IS 'Description of the propernoun.';
 COMMENT ON COLUMN propernoun."prn_evidences" IS 'Array of semantic pairs identifying the evidence';
 COMMENT ON COLUMN propernoun."prn_url" IS 'URL to definition of this propernoun.';
