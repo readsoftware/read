@@ -96,7 +96,7 @@
         $this->_id=@$arg['prt_id'] ? $arg['prt_id']:NULL;
         $this->_type_id=@$arg['prt_type_id'] ? $arg['prt_type_id']:NULL;
         $this->_label=@$arg['prt_label'] ? $arg['prt_label']:NULL;
-        $this->_title=@$arg['prt_description'] ? $arg['prt_description']:NULL;
+        $this->_description=@$arg['prt_description'] ? $arg['prt_description']:NULL;
         $this->_sequence=@$arg['prt_sequence'] ? $arg['prt_sequence']:NULL;
         $this->_shape_id=@$arg['prt_shape_id'] ? $arg['prt_shape_id']:NULL;
         $this->_mediums=@$arg['prt_mediums'] ? $arg['prt_mediums']:NULL;

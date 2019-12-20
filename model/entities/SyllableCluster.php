@@ -387,8 +387,11 @@
     * @param string $sc sort code of this syllablecluster
     */
     public function setSortCode2($sc) {
+      if($this->_sort_code != $sc) {
+        $this->_dirty = true;
+        $this->setDataKeyValuePair("scl_sort_code2",$sc);
+      }
       $this->_sort_code2 = $sc;
-      //todo add code here Phase 2 of model upgrade.
     }
 
     //*******************************PRIVATE FUNCTIONS************************************
