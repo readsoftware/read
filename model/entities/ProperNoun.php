@@ -54,9 +54,10 @@
     * @access private
     */
     private   $_labels,
-              $_evidences,
               $_type_id,
               $_type,
+              $_parent_id,
+              $_evidences,
               $_description,
               $_url;
 
@@ -86,14 +87,14 @@
         $this->initializeBaseEntity($arg);
         $this->_id=@$arg['prn_id'] ? $arg['prn_id']:NULL;
         $this->_labels=@$arg['prn_labels'] ? $arg['prn_labels']:NULL;
-        $this->_evidences=@$arg['prn_evidences'] ? $arg['prn_evidences']:NULL;
         $this->_type_id=@$arg['prn_type_id'] ? $arg['prn_type_id']:NULL;
+        $this->_parent_id=@$arg['prn_parent_id'] ? $arg['prn_parent_id']:NULL;
+        $this->_evidences=@$arg['prn_evidences'] ? $arg['prn_evidences']:NULL;
         $this->_description=@$arg['prn_description'] ? $arg['prn_description']:NULL;
         $this->_url=@$arg['prn_url'] ? $arg['prn_url']:NULL;
         if (!array_key_exists('prn_id',$arg)) {// must be a new record
           //ensure everything is encoded for save
           if (array_key_exists('prn_labels',$arg))$arg['prn_labels'] = $this->kvPairsToString($arg['prn_labels']);
-          if (array_key_exists('prn_list_ids',$arg))$arg['prn_list_ids'] = $this->idsToString($arg['prn_list_ids']);
           $this->_data = $this->prepBaseEntityData($arg);
           $this->_dirty = true;
         }
@@ -126,6 +127,9 @@
       }
       if ($this->_type_id) {
         $this->_data['prn_type_id'] = $this->_type_id;
+      }
+      if ($this->_parent_id) {
+        $this->_data['prn_parent_id'] = $this->_parent_id;
       }
       if (count($this->_description)) {
         $this->_data['prn_description'] = $this->_description;
@@ -207,6 +211,15 @@
     }
 
     /**
+    * Get ParentID  of the propernoun
+    *
+    * @return int indentifying the propernoun parent or conceptual container of this propernoun
+    */
+    public function getParentID() {
+      return $this->_parent_id;
+     }
+ 
+    /**
     * Gets the Description for this propernoun
     * @return string for the Description
     */
@@ -241,7 +254,7 @@
     /**
     * Set TypeID of the propernoun
     *
-    * @param string  $typeID from a typology of propernouns for Type for propernoun
+    * @param int  $typeID from a typology of propernouns for Type for propernoun
     * @todo add code to lookup id for propernoun also check if type is numeric
     */
     public function setTypeID($typeID) {
@@ -252,6 +265,19 @@
       $this->_type_id = $typeID;
     }
 
+    /**
+    * Set ParentID  of the propernoun
+    *
+    * @param int indentifying the propernoun parent or conceptual container of this propernoun
+    */
+    public function setParentID($parentID) {
+      if($this->_parent_id != $parentID) {
+        $this->_dirty = true;
+        $this->setDataKeyValuePair("prn_parent_id",$parentID);
+      }
+      $this->_parent_id = $parentID;
+     }
+ 
     /**
     * Sets the Evidences for this propernoun
     * @param string $evids describing the evidence for the propernoun
