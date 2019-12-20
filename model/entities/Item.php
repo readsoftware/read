@@ -92,8 +92,8 @@
         $this->initializeBaseEntity($arg);
         $this->_id=@$arg['itm_id'] ? $arg['itm_id']:NULL;
         $this->_title=@$arg['itm_title'] ? $arg['itm_title']:NULL;
-        $this->_title=@$arg['itm_description'] ? $arg['itm_description']:NULL;
-        $this->_title=@$arg['itm_idno'] ? $arg['itm_idno']:NULL;
+        $this->_description=@$arg['itm_description'] ? $arg['itm_description']:NULL;
+        $this->_idno=@$arg['itm_idno'] ? $arg['itm_idno']:NULL;
         $this->_type_id=@$arg['itm_type_id'] ? $arg['itm_type_id']:NULL;
         $this->_measure=@$arg['itm_measure'] ? $arg['itm_measure']:NULL;
         $this->_shape_id=@$arg['itm_shape_id'] ? $arg['itm_shape_id']:NULL;
