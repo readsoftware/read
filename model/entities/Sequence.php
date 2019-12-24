@@ -88,7 +88,7 @@
         $this->initializeBaseEntity($arg);
         $this->_id=@$arg['seq_id'] ? $arg['seq_id']:NULL;
         $this->_label=@$arg['seq_label']|| @$arg['seq_label'] == 0 ? $arg['seq_label']:NULL;
-        $this->seq_ord=@$arg['seq_ord'] ? $arg['seq_ord']:NULL;
+        $this->_ord=@$arg['seq_ord'] ? $arg['seq_ord']:NULL;
         $this->_entity_ids=@$arg['seq_entity_ids'] ? $arg['seq_entity_ids']:NULL;
         $this->_type_id=@$arg['seq_type_id'] ? $arg['seq_type_id']:NULL;
         $this->_superscript=@$arg['seq_superscript'] ? $arg['seq_superscript']:NULL;
