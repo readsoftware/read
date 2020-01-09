@@ -1173,19 +1173,11 @@ EDITORS.sclEditor.prototype = {
       UTILITY.beep();
       return false;
     }
-//    if (key == "c" && ctrl) {
-//      DEBUG.log("warn","BEEP! Copy not implemented yet!");
-      //return false;
-//    }
     if (key == "x" && ctrl) {
       DEBUG.log("warn","BEEP! Cut not implemented yet!");
       UTILITY.beep();
       return false;
     }
-//    if (key == "v" && ctrl) {
-//      DEBUG.log("warn","BEEP! VSE Paste not implemented yet!");
-      //return false;
-//    }
     if (key == "Backspace" || key == "Del" || key == "Delete") {
       //**********selection cases**********
       if (selection) {
@@ -1196,49 +1188,7 @@ EDITORS.sclEditor.prototype = {
           return "error";
         } else if ( posStart == 0 && posEnd == this.state.length - 1 ) {// fully selected
           //vowel only cases
-          if (posV > -1 && posM == -1 && posLastC == -1 && posLastH == -1) {
-            if (this.curSyl == ".") {//fullstop
-              //degrade to ?
-              this.replaceText("?","all","select");
-              return false;
-            } else { // normal vowel
-              //degrade to full stop
-              this.replaceText(".","all","select");
-              return false;
-            }
-          } else if (this.curSyl == "?") {//question mark
-            //degrade to +
-            this.replaceText("+","all","select");
-            return false;
-          } else if (this.curSyl == "+") {//plus
-            //delete for now just stop
-            DEBUG.log("warn","BEEP! Syllable delete not implemented yet!");
-            return "error";
-          } else {//default
-            //degrade to ?
-            this.replaceText("?","all","select");
-            return false;
-          }
-        } else if (posStart < posV && posV < posEnd) {//vowel in selection
-          if (this.curSyl.indexOf(".") > -1 && //fullstop
-              posStart == (posV - 1) && posV == (posEnd - 1)) { //only full stop selected
-            DEBUG.log("warn","BEEP! deleting vowel placeholder not allowed for partial selection like "+this.curSyl+" with state "+this.state);
-            return "error";
-          } else {//replace selection with selected full stop
-            this.replaceText(".","selected","select");
-            return false;
-          }
-        } else if (posStart < posM && posM < posEnd && posT < posEnd) {// modifier only since no vowel in selection, include virāma if exist
-          this.replaceText("","selected","end");
-          return false;
-        } else if (posEnd < posV) {// consonants only since no vowel in selection
-          //selected all characters before split
-          if (this.isSplitSyllable() &&  posStart == posC-1 && posEnd == Math.max(posLastC,posLastH)+1 && posS == posEnd+1) {
-            DEBUG.log("warn","BEEP! Deleting of all characters before split on a split syllable is currently not allowed");
-            UTILITY.beep();
-            return "error";
-          }
-          this.replaceText("","selected","before");
+          this.replaceText("[–]","all","select");
           return false;
         }
       } else {//*********cursor cases**********
@@ -2450,6 +2400,12 @@ EDITORS.sclEditor.prototype = {
   	")" :"P", //Close - space after
   	"«" :"P", //Open - space before
   	"»" :"P", //Close - space after
+    "ϴ": "I",
+    "☧": "I",
+    "⳩": "I",
+    "⸱": "P",
+    "·": "P",
+    "–" :"O",
     "+" :"O",
 	// Latin
 	  "A" :"I",
@@ -2483,6 +2439,7 @@ EDITORS.sclEditor.prototype = {
 	  "c" :"I",
 	  "d" :"I",
 	  "e" :"I",
+	  "ę" :"I",
 	  "f" :"I",
 	  "g" :"I",
 	  "h" :"I",
@@ -2494,7 +2451,10 @@ EDITORS.sclEditor.prototype = {
 	  "n" :"I",
 	  "o" :"I",
 	  "p" :"I",
+	  "ꝓ" :"I",
+	  "ꝑ" :"I",
 	  "q" :"I",
+	  "ꝗ" :"I",
 	  "r" :"I",
 	  "s" :"I",
 	  "t" :"I",
@@ -2590,6 +2550,9 @@ EDITORS.sclEditor.prototype = {
 	  "ר" :"I", //RESH
 	  "ש" :"I", //SHIN
 	  "ת" :"I", //TAV
+    "̨" :"D",
+    "̄" :"D",
+    "̉" :"D"
   },
 
   // valid grapheme multibyte sequences with sort codes and types
@@ -2613,10 +2576,20 @@ EDITORS.sclEditor.prototype = {
 	  ":" : {"srt":"830","typ":"P"},
 	  "!" : {"srt":"840","typ":"P"},
 	  "?" : {"srt":"850","typ":"P"},
+    "[": { "srt": "860", "typ": "I" },
+    "]": { "srt": "870", "typ": "I" },
+    "{": { "srt": "860", "typ": "I" },
+    "}": { "srt": "870", "typ": "I" },
 	  "(" : {"srt":"860","typ":"P"}, //Open - space before
 	  ")" : {"srt":"870","typ":"P"}, //Close - space after
 	  "«" : {"srt":"880","typ":"P"}, //Open - space before
 	  "»" : {"srt":"890","typ":"P"}, //Close - space after	// Other Symbols
+    "ϴ": { "srt": "920", "typ": "I" },
+    "☧": { "srt": "921", "typ": "I" },
+    "⳩": { "srt": "921", "typ": "I" },
+    "⸱": { "srt": "922", "typ": "P" },
+    "·": { "srt": "922", "typ": "P" },
+    "–": { "srt": "910", "typ": "O" },
     "+" : {"srt":"900","typ":"O"}, //Placeholder, not yet observed in data	
     // Latin
 	  "A" : {"srt":"100","typ":"I"},
@@ -2645,27 +2618,44 @@ EDITORS.sclEditor.prototype = {
 	  "X" : {"srt":"330","typ":"I"},
 	  "Y" : {"srt":"340","typ":"I"},
 	  "Z" : {"srt":"350","typ":"I"},
-	  "a" : {"srt":"105","typ":"I"},
-	  "b" : {"srt":"115","typ":"I"},
+	  "a" : {
+      "̉": { "srt": "106", "typ": "I" },
+      "srt":"105","typ":"I"},
+	  "b" : {
+      "̄": { "srt": "116", "typ": "I" },
+      "srt":"115","typ":"I"},
 	  "c" : {"srt":"125","typ":"I"},
 	  "d" : {"srt":"135","typ":"I"},
-	  "e" : {"srt":"145","typ":"I"},
-	  "f" : {"srt":"155","typ":"I"},
+	  "e" : {
+      "̨": { "srt": "146", "typ": "I" },
+      "̉": { "srt": "147", "typ": "I" },
+      "srt":"145","typ":"I"},
+    "ę" : {"srt":"146","typ":"I"},
+    "f" : {"srt":"155","typ":"I"},
 	  "g" : {"srt":"165","typ":"I"},
 	  "h" : {"srt":"175","typ":"I"},
 	  "i" : {"srt":"185","typ":"I"},
 	  "j" : {"srt":"195","typ":"I"},
 	  "k" : {"srt":"205","typ":"I"},
-	  "l" : {"srt":"215","typ":"I"},
+	  "l" : {
+      "̄": { "srt": "216", "typ": "I" },
+      "srt":"215","typ":"I"},
 	  "m" : {"srt":"225","typ":"I"},
 	  "n" : {"srt":"235","typ":"I"},
 	  "o" : {"srt":"245","typ":"I"},
 	  "p" : {"srt":"255","typ":"I"},
+	  "ꝓ" : {"srt":"256","typ":"I"},
+	  "ꝑ" : {"srt":"257","typ":"I"},
 	  "q" : {"srt":"265","typ":"I"},
+	  "ꝗ" : {"srt":"266","typ":"I"},
 	  "r" : {"srt":"275","typ":"I"},
 	  "s" : {"srt":"285","typ":"I"},
-	  "t" : {"srt":"295","typ":"I"},
-	  "u" : {"srt":"305","typ":"I"},
+	  "t" : {
+      "̄": { "srt": "2916", "typ": "I" },
+      "srt":"295","typ":"I"},
+	  "u" : {
+      "̉": { "srt": "306", "typ": "I" },
+      "srt":"305","typ":"I"},
 	  "v" : {"srt":"315","typ":"I"},
 	  "w" : {"srt":"325","typ":"I"},
 	  "x" : {"srt":"335","typ":"I"},

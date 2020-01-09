@@ -76,16 +76,13 @@ $graphemeCharacterMap = array(
 	"]"=>array("srt"=>"870","typ"=>"I"), //Close - space after
 	"{"=>array("srt"=>"860","typ"=>"I"), //Open - space before
 	"}"=>array("srt"=>"870","typ"=>"I"), //Close - space after
-	"("=>array("srt"=>"860","typ"=>"I"), //Open - space before
-	")"=>array("srt"=>"870","typ"=>"I"), //Close - space after
-	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
-	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
 	"ϴ"=>array("srt"=>"920","typ"=>"I"), //Theta nigrum
 	"☧"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ ☧ Chi Rho
 	"⳩"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ Coptic Khi Ro
 	"⸱"=>array("srt"=>"922","typ"=>"P"), //Word Sep Middle Dot
 	"·"=>array("srt"=>"922","typ"=>"P"), //Middle Dot
 	// Other Symbols
+	"–"=>array("srt"=>"910","typ"=>"O"), //en dash
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	// Latin
 	"A"=>array("srt"=>"100","typ"=>"I"),

@@ -698,7 +698,7 @@ addTextReference: function () {
         match = classes.match(/seq(\d+)/);
         if (match && match.length > 1) {
           txtDivSeqID = match[1];
-          ednVE.calcTextDivGraphemeLookups(txtDivSeqID);
+          ednVE.calcTextDivGraphemeLookups(txtDivSeqID,null);
         }
         match = classes.match(/ordL\d+/);
         if (match) {
@@ -1536,10 +1536,10 @@ addTextReference: function () {
                               //update seqID
                               elem.className = elem.className.replace(oldSeqIDTag,newSegIDTag);
                   });
-                  ednVE.calcTextDivGraphemeLookups(data.alteredTextDivSeqID);
+                  ednVE.calcTextDivGraphemeLookups(data.alteredTextDivSeqID,null);
                   DEBUG.log("data","after splitToken sequence dump \n" + DEBUG.dumpSeqData(data.alteredTextDivSeqID,0,1,ednVE.lookup.gra));
                 } else {
-                  ednVE.calcTextDivGraphemeLookups(refDivSeqID);
+                  ednVE.calcTextDivGraphemeLookups(refDivSeqID,null);
                   DEBUG.log("data","after splitToken sequence dump \n" + DEBUG.dumpSeqData(refDivSeqID,0,1,ednVE.lookup.gra));
                 }
 
@@ -1903,10 +1903,10 @@ mergeLine: function (direction,cbError) {
                               //update seqID
                               elem.className = elem.className.replace(oldSeqIDTag,newSeqIDTag);
                   });
-                  ednVE.calcTextDivGraphemeLookups(data.alteredTextDivSeqID);
+                  ednVE.calcTextDivGraphemeLookups(data.alteredTextDivSeqID,null);
                   DEBUG.log("data","after createCompound dump sequence \n" + DEBUG.dumpSeqData(data.alteredTextDivSeqID,0,1,ednVE.lookup.gra));
                 } else {
-                  ednVE.calcTextDivGraphemeLookups(refDivSeqID);
+                  ednVE.calcTextDivGraphemeLookups(refDivSeqID,null);
                   DEBUG.log("data","after createCompound dump sequence \n" + DEBUG.dumpSeqData(refDivSeqID,0,1,ednVE.lookup.gra));
                 }
                 // calcLineGraphemeLookups
@@ -2095,7 +2095,7 @@ mergeLine: function (direction,cbError) {
                                   //update seqID
                                   elem.className = elem.className.replace(oldSeqIDTag,newSeqIDTag);
                       });
-                      ednVE.calcTextDivGraphemeLookups(data.alteredTextDivSeqIDs[i]);
+                      ednVE.calcTextDivGraphemeLookups(data.alteredTextDivSeqIDs[i],null);
                       DEBUG.log("data","after combineTokens dump sequence \n" + DEBUG.dumpSeqData(data.alteredTextDivSeqIDs[i],0,1,ednVE.lookup.gra));
                     }
                   }
@@ -2105,14 +2105,14 @@ mergeLine: function (direction,cbError) {
                       for (seqID in data.entities.update.seq) {
                         updatedSeq = entities.seq[seqID];
                         if ( ednVE.trmIDtoLabel[updatedSeq.typeID] == "TextDivision") {
-                          ednVE.calcTextDivGraphemeLookups(seqID);
+                          ednVE.calcTextDivGraphemeLookups(seqID,null);
                           DEBUG.log("data","after combineTokens dump sequence \n" + DEBUG.dumpSeqData(seqID,0,1,ednVE.lookup.gra));
                         }
                       }
                     }
                   }
                   if (txtDivSeqID) {
-                    ednVE.calcTextDivGraphemeLookups(txtDivSeqID);
+                    ednVE.calcTextDivGraphemeLookups(txtDivSeqID,null);
                     DEBUG.log("data","after combineTokens dump sequence \n" + DEBUG.dumpSeqData(txtDivSeqID,0,1,ednVE.lookup.gra));
                   }
                   // calcLineGraphemeLookups
@@ -5440,7 +5440,7 @@ mergeLine: function (direction,cbError) {
                 }
                 if (data.success) {
                   //remove freetext and replace with New line physical
-                  ednVE.calcTextDivGraphemeLookups(data.newTextDivSeqID);
+                  ednVE.calcTextDivGraphemeLookups(data.newTextDivSeqID,null);
                   ednVE.calcLineGraphemeLookups(freeTextLineSeqID);
                   ednVE.reRenderPhysLine('ordL'+ord,freeTextLineSeqID);
                   //refresh property display
@@ -5558,7 +5558,11 @@ mergeLine: function (direction,cbError) {
       for (var j=0; j<cnt; j++) {
         if (textDivSeqIDs[j] && textDivSeqIDs[j].indexOf('seq:') == 0) {//validate that this is a sequence
           textDivSeqID = (textDivSeqIDs[j]).substr(4);
-          this.calcTextDivGraphemeLookups(textDivSeqID);
+          nextTextDivSeqID = null;
+          if (j+1 < cnt && textDivSeqIDs[j+1].indexOf('seq:') == 0) {
+            nextTextDivSeqID = (textDivSeqIDs[j+1].substr(4));
+          }
+          this.calcTextDivGraphemeLookups(textDivSeqID, nextTextDivSeqID);
         }
       }
     }
@@ -5681,14 +5685,18 @@ mergeLine: function (direction,cbError) {
   *
   * @param textDivSeqID int ID identifying the sequence for this text division
   */
-  calcTextDivGraphemeLookups : function(textDivSeqID) {
-    var textDiv = this.dataMgr.entities['seq'][textDivSeqID],
+  calcTextDivGraphemeLookups : function(textDivSeqID,nextTextDivSeqID) {
+    var textDiv = this.dataMgr.entities['seq'][textDivSeqID], nextTextDivEntID = null,
         i, textDivTag, textDivGID, textDivGIDs;
+    if (nextTextDivSeqID) {
+      nextTextDivEntID = this.dataMgr.entities['seq'][nextTextDivSeqID].entityIDs[0];
+    }
     if (textDiv && textDiv.entityIDs) {
       textDivGIDs = textDiv.entityIDs;
       for (i=0; i<textDivGIDs.length; i++) {//iterate through the entities of this sequence
         textDivGID = textDivGIDs[i];
-        this.walkTokenContext(textDivGID,'seq'+textDivSeqID,true,null);
+        nextTextDivGID = (i+1<textDivGIDs.length?textDivGIDs[i+1]:nextTextDivEntID)
+        this.walkTokenContext(textDivGID,'seq'+textDivSeqID,true,null,nextTextDivGID);
       }
     } else {
       DEBUG.log("warn", "warnings Calculating Text Division lookup entity not available - skipping seq:" + textDivSeqID);
@@ -5976,13 +5984,14 @@ mergeLine: function (direction,cbError) {
 * @param footnoteHtml string encoding footnote for this token's location
 */
 
-  walkTokenContext : function (entGID, context, isLastEnt, footnoteHtml) {
+  walkTokenContext : function (entGID, context, isLastEnt, footnoteHtml, nextEntGID) {
     var  entities = this.dataMgr.entities, entID = entGID.split(":",2), entType, isCmpTokenSeparator,
         k, ctxt, entIDs, graID, graIDs, isNumber, compound = null,
         entFootnote = null, isProperNoun, pos, cmpntGID;
 
     entType = entID[0];
     entID = entID[1];
+
     //guard for undefined context
     if (!context) {
       DEBUG.log("error","invalid context for entitiy "+entGID);
@@ -5998,7 +6007,7 @@ mergeLine: function (direction,cbError) {
           entFootnote = (entFootnote?entFootnote:"")+(footnoteHtml?footnoteHtml:"");
           for (k=0; k<entIDs.length; k++) {
             cmpntGID = entIDs[k];
-            this.walkTokenContext(cmpntGID,ctxt,(k+1 == entIDs.length)? isLastEnt:false, (k+1 == entIDs.length && entFootnote)?entFootnote:null);
+            this.walkTokenContext(cmpntGID,ctxt,(k+1 == entIDs.length)? isLastEnt:false, (k+1 == entIDs.length && entFootnote)?entFootnote:null,nextEntGID);
           }
         }
         break;
@@ -6034,6 +6043,7 @@ mergeLine: function (direction,cbError) {
               this.lookup.gra[graID].tokctx = context+' tok'+entID;
             }
             if ((k+1) == graIDs.length) { // last grapheme of this token create the HTML boundary marker
+              //create a footnote marker if needed
               if (entFootnote) {
                 if (!this.lookup.gra[graID].fnMarker) {
                   this.lookup.gra[graID].fnMarker = {};
@@ -6042,6 +6052,7 @@ mergeLine: function (direction,cbError) {
               } else if (this.lookup.gra[graID].fnMarker && this.lookup.gra[graID].fnMarker[context+' tok'+entID]) {
                 delete this.lookup.gra[graID].fnMarker[context+' tok'+entID];
               }
+              //check intra compound token boundary
               isCmpTokenSeparator = (!isLastEnt && context.search(/cmp/)>-1);
               if (!entities.gra[graID] || !entities.gra[graID].type) {
                 isNumber = false;
@@ -6050,10 +6061,31 @@ mergeLine: function (direction,cbError) {
               } else {
                 isNumber = (this.dataMgr.getTermFromID(entities.gra[graID].type) == "NumberSign");//term dependency
               }
+              //check for adhere
+              isAdhere = false;
+              if (isLastEnt) { 
+                // single grapheme token and opening bracket
+                if (graIDs.length == 1 && '(«'.indexOf(entities.gra[graID].value) > -1 ) {
+                  isAdhere = true;
+                } else if (nextEntGID) {
+                  // or next entity is single grapheme token of closing bracket
+                  nextEntID = nextEntGID.split(":",2)
+                  nextEntType = nextEntID[0];
+                  nextEntID = nextEntID[1];
+                  if (nextEntType == 'tok' && entities.tok && entities.tok[nextEntID]) {
+                    nextGraIDs = entities.tok[nextEntID].graphemeIDs;
+                    if (nextGraIDs.length == 1 && entities.gra && 
+                        (nextGra = entities.gra[nextGraIDs[0]]) &&
+                         '»):;,.?!'.indexOf(nextGra.value) > -1) {
+                      isAdhere = true;
+                    }
+                  }
+                }
+              }
               //store in the lookup for this grapheme
               this.lookup.gra[graID].boundary = '<span class="boundary'+
                                                 ((isCmpTokenSeparator && !isNumber)?' toksep':'')+
-                                                '">'+((isCmpTokenSeparator && !isNumber)?'-':'&nbsp;')+'</span>';
+                                                '">'+((isCmpTokenSeparator && !isNumber)?'-':(isAdhere?'':'&nbsp;'))+'</span>';
               if (entities.gra[graID] && entities.gra[graID].decomp) {//sandhi grapheme at end of token
                 entities.gra[graID].tokIDs =[entID];
               }

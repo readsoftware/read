@@ -1128,7 +1128,7 @@ MANAGERS.LayoutManager.prototype = {
         case 'bln':
           if (this.dataMgr.checkEntityType(entity,'Image')) {
             this.editors[paneID] = new EDITORS.ImageVE(
-                                                   { initViewPercent:80,
+                                                   { initViewPercent:150,
                                                      entGID: entGID,
                                                      txtID: txtID,
                                                      eventMgr: layoutMgr,

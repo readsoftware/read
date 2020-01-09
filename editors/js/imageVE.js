@@ -87,7 +87,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
   this.blnEntity = imgVECfg['baseline']?imgVECfg['baseline']: null;
   this.imgEntity = imgVECfg['imgEntity']?imgVECfg['imgEntity']: null;
   this.navParent = imgVECfg['imageEditDiv']?imgVECfg['imageEditDiv']: document.getElementById('body');
-  this.zoomFactorRange = { min:20,max:150,inc:2 };
+  this.zoomFactorRange = { min:50,max:300,inc:2 };
   this.polygons = [];
   this.polygonLookup = {};
   this.fadeColors = {};
@@ -217,8 +217,8 @@ EDITORS.ImageVE.prototype = {
     this.imgAspectRatio = this.image.width/this.image.height;
     this.initHeight = this.imgEditContainer.clientHeight;
     this.initWidth = this.imgEditContainer.clientWidth;
-    this.imgCanvas.width = Math.min((this.imgEditContainer && this.imgEditContainer.clientWidth?this.imgEditContainer.clientWidth:this.imgCanvas.width),this.image.width);
-    this.imgCanvas.height = Math.min((this.imgEditContainer && this.imgEditContainer.clientHeight?this.imgEditContainer.clientHeight:this.imgCanvas.height),this.image.height);
+    this.imgCanvas.width = (this.imgEditContainer && this.imgEditContainer.clientWidth?this.imgEditContainer.clientWidth:this.imgCanvas.width);
+    this.imgCanvas.height = (this.imgEditContainer && this.imgEditContainer.clientHeight?this.imgEditContainer.clientHeight:this.imgCanvas.height);
     var width = Math.floor(this.imgCanvas.width  * (this.navSizePercent/100)),
         height = Math.floor(this.imgCanvas.width  * (this.navSizePercent/100) /this.imgAspectRatio);
     this.addEventHandlers();
@@ -1057,7 +1057,7 @@ savePolygons: function () {
     }
     this.vpMaxLoc = { x: this.navCanvas.width - vpWidth, y: this.navCanvas.height - vpHeight };
 //    this.vpLoc = { x: Math.min(this.vwOffset.x * this.zoomFactor, this.vpMaxLoc.x) || 0,
-    this.vpLoc = { x:  this.vpMaxLoc.x,
+    this.vpLoc = { x: 0, // this.vpMaxLoc.x,
       y: Math.min( this.vwOffset.y * this.zoomFactor, this.vpMaxLoc.y) || 0 };
     this.vpSize = { width: vpWidth || 50, height: vpHeight || 50 };
     this.vpLastLoc =  { x: 0, y: 0 };
