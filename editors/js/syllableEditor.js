@@ -1187,8 +1187,15 @@ EDITORS.sclEditor.prototype = {
           UTILITY.beep();
           return "error";
         } else if ( posStart == 0 && posEnd == this.state.length - 1 ) {// fully selected
-          //vowel only cases
-          this.replaceText("[–]","all","select");
+          // character case
+          if (this.curSyl != "+" && this.curSyl != "[–]") {
+            this.replaceText("+","all","select");
+          } else if (this.curSyl == "+") {
+          // + case
+            this.replaceText("[–]","all","select");
+          } else {
+            UTILITY.beep();
+          }
           return false;
         }
       } else {//*********cursor cases**********
