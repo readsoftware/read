@@ -387,7 +387,9 @@ MANAGERS.DataManager.prototype = {
         tokIDs = [], graIDs = [],i,entity;
     if (prefix == "cmp") { // get tok IDs
       entity = this.getEntity(prefix,entID);
-      tokIDs = entity.tokenIDs;
+      if (entity && entity.tokenIDs) {
+        tokIDs = entity.tokenIDs;
+      }
     } else if (prefix == "tok") {
       tokIDs.push(entID);
     }
@@ -402,7 +404,7 @@ MANAGERS.DataManager.prototype = {
     if (graIDs.length > 0) {
       for (i in graIDs) {
         entity = this.getEntity("gra",graIDs[i]);
-        if (entity.decomp && entity.decomp.length) {
+        if (entity && entity.decomp && entity.decomp.length) {
           return true;
         }
       }

@@ -100,7 +100,7 @@
           $this->_data = $this->prepBaseEntityData($arg);
           $this->_dirty = true;
         } else {
-          $this->_dirty = $this->getScratchProperty("dirtyBit") == 1;
+          $this->_dirty = ($this->getScratchProperty("dirtyBit") == 1);
         }
       }
     }

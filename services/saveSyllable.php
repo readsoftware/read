@@ -61,6 +61,7 @@ if (!$data) {
   $defAttrIDs = getUserDefAttrIDs();
   $defVisIDs = getUserDefVisibilityIDs();
   $defOwnerID = getUserDefEditorID();
+  $ednID = null;
   if ( isset($data['ednID'])) {//get edition
     $edition = new Edition($data['ednID']);
     if ($edition->hasError()) {
@@ -68,6 +69,7 @@ if (!$data) {
     } else if ($edition->isReadonly()) {
       array_push($errors,"edition readonly");
     } else {
+      $ednID = $edition->getID();
       $ednOwnerID = $edition->getOwnerID();
       //get default attribution from edition if needed
       if (!$defAttrIDs || count($defAttrIDs) == 0) {
@@ -542,8 +544,8 @@ if (count($errors) == 0) {
           addUpdateEntityReturnData('scl',$syllable->getID(),'sort2',$syllable->getSortCode2());
         }
 
-        if (@$physLineSeq && $physLineSeq->getID()) {
-          invalidateCachedSeqEntities($physLineSeq->getID(), $edition->getID());
+        if (isset($physLineSeq) && $physLineSeq->getID() && isset($edition) && $edition->getID()) {
+          invalidateSequenceCache($physLineSeq, $edition->getID());
         }
 
         //find syllable's location within the token(s) for split syllable case
@@ -903,7 +905,7 @@ if (count($errors) == 0) {
             }
           }
         }
-        invalidateCachedSeqEntities($textDivSeq->getID(), $edition->getID());
+        invalidateSequenceCache($textDivSeq, $edition->getID());
         // update Text (Text Division Container) Sequence if needed
         if (count($errors) == 0 && $oldTxtDivSeqGID && $oldTxtDivSeqGID != $newTxtDivSeqGID){//cloned so update container
           //clone text sequence if not owned
@@ -953,6 +955,7 @@ if (count($errors) == 0) {
           }
           $edition->save();
           invalidateCachedEditionEntities($edition->getID());
+          invalidateCachedEditionViewerInfo($edition);
           invalidateCachedEditionViewerHtml($edition->getID());
           invalidateCachedViewerLemmaHtmlLookup(null,$edition->getID());
           if ($edition->hasError()) {

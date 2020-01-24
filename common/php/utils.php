@@ -1518,6 +1518,7 @@ function invalidateLemma($lemma = null) { // setDirty flag
     if ($lemma->getScratchProperty("entry")) { //clear cached entry html
       $lemma->storeScratchProperty("entry",null);
       $lemma->save();
+      //  error_log("lemma scratch 'entry'");
     }
     $catID = $lemma->getCatalogID();
     if ($catID) {
@@ -1538,6 +1539,7 @@ function invalidateCachedCatalogEntities($catID = null) { // setDirty flag
   }
   $cacheKey = "cat$catID"."cachedEntities";
   invalidateCache($cacheKey);
+  //  error_log("invalidateCache($cacheKey)");
 }
 
 /**
@@ -1552,7 +1554,8 @@ function invalidateCachedEditionEntities($ednID = null) { // setDirty flag
   }
   $cacheKey = "edn$ednID"."cachedEntities";
   invalidateCache($cacheKey);
-}
+  //  error_log("invalidateCache($cacheKey)");
+  }
 
 /**
 * invalidate cache edition lookup
@@ -1566,6 +1569,7 @@ function invalidateCachedEditionViewerInfo($edition = null) { // setDirty flag
   } else {
     $edition->storeScratchProperty('lookupInfo',null);
     $edition->save();
+    //  error_log("edn scratch 'lookupInfo'");
   }
 }
 
@@ -1577,6 +1581,7 @@ function invalidateCachedEditionViewerInfo($edition = null) { // setDirty flag
 function invalidateAllTextResources() { // setDirty flag
   $cacheKey = 'AllTextResources';
   invalidateCache($cacheKey);
+  //  error_log("invalidateCache($cacheKey)");
 }
 
 /**
@@ -1587,6 +1592,7 @@ function invalidateAllTextResources() { // setDirty flag
 function invalidateSearchAllResults() { // setDirty flag
   $cacheKey = 'SearchAllResults';
   invalidateCache($cacheKey);
+  //  error_log("invalidateCache($cacheKey)");
 }
 
 /**
@@ -1599,6 +1605,7 @@ function invalidateCachedEditionViewerHtml($ednID = null) { // setDirty flag
   if ($ednID ) {
     $cacheKey = "edn$ednID".'structviewHTML';
     invalidateCache($cacheKey);
+    //  error_log("invalidateCache($cacheKey)");
   }
 }
 
@@ -1612,6 +1619,7 @@ function invalidateCachedEditionViewerHtml($ednID = null) { // setDirty flag
 function invalidateCachedViewerLemmaHtmlLookup($catID = null,$ednID = null) { // setDirty flag
   $cacheKey = "glosscat".($catID?$catID:'%')."edn".($ednID?$ednID:'%');
   invalidateCache($cacheKey);
+  //  error_log("invalidateCache($cacheKey)");
 }
 
 /**
@@ -1624,6 +1632,7 @@ function invalidateCachedViewerLemmaHtmlLookup($catID = null,$ednID = null) { //
 function invalidateCachedSeqEntities($seqID = null,$ednID = null) { // setDirty flag
   $cacheKey = "seq".($seqID?$seqID:'%')."edn".($ednID?$ednID:'%');
   invalidateCache($cacheKey);
+  //  error_log("invalidateCache($cacheKey)");
 }
 
 
@@ -1656,16 +1665,21 @@ function invalidateParentCache($seqGID,$ednSeqIDs,$ednID) {
 
 function invalidateSequenceCache($sequence,$ednID) { // setDirty flag
   $seqID = $sequence->getID();
-  if ($sequence->getScratchProperty("edn".$ednID."physLineHtml")) { //clear cached viewer html
-    $sequence->storeScratchProperty("edn".$ednID."physLineHtml",null);
+  $scratchKey = "edn".$ednID."physLineHtml";
+  if ($sequence->getScratchProperty($scratchKey)) { //clear cached viewer html
+    $sequence->storeScratchProperty($scratchKey,null);
+    //  error_log("edn scratch '$scratchKey'");
   }
-  if ($sequence->getScratchProperty("edn".$ednID."structHtml")) { //clear cached viewer html
-    $sequence->storeScratchProperty("edn".$ednID."structHtml",null);
+  $scratchKey = "edn".$ednID."structHtml";
+  if ($sequence->getScratchProperty($scratchKey)) { //clear cached viewer html
+    $sequence->storeScratchProperty($scratchKey,null);
+    //  error_log("edn scratch '$scratchKey'");
   }
   $sequence->save();
   if ($seqID){
     $cacheKey = "seq".$seqID."edn".($ednID?$ednID:'%');
     invalidateCache($cacheKey);
+    //  error_log("invalidateCache($cacheKey)");
   }
 }
 
