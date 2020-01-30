@@ -3826,6 +3826,7 @@ function getWordLocation($wordTag) {
   $wrdID = substr($wordTag,3);
   $useVLabel = (defined('DEFAULTTOVERSELABEL') && DEFAULTTOVERSELABEL);
   $txtLabel = null;
+  $lineord = null;
   $labels = array();
   if ($prefix == 'cmp') {
     $compound = new Compound($wrdID);

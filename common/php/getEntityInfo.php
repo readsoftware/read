@@ -1,6 +1,6 @@
 <?php
   ini_set("zlib.output_compression_level", 5);
-  ob_start('ob_gzhandler');
+  ob_start();
 
   require_once ('userAccess.php');//get access control utilities
   require_once ('utils.php');//get utilities
@@ -287,7 +287,7 @@
     }
     $columnGroupInfo[$prefix] = $colGroup;
   }
-
+  ob_clean();
   print  "var mainMenuSource = ".json_encode($mainMenuSource,true)." ;\n";//to be deprecated used for entity UI tool
 
   print  "var entityInfo = ".json_encode($entityInfo,true)." ;\n";
