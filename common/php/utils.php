@@ -3802,6 +3802,7 @@ function getWordLocation($wordTag) {
   $prefix = substr($wordTag,0,3);
   $wrdID = substr($wordTag,3);
   $useVLabel = (defined('DEFAULTTOVERSELABEL') && DEFAULTTOVERSELABEL);
+  $lineord = null;
   $txtLabel = null;
   $labels = array();
   if ($prefix == 'cmp') {
