@@ -54,6 +54,8 @@
     * @access private
     */
     private $_dbHandle,
+            $_psqlInfo,
+            $_ver,
             $_conn,
             $_dbName,
             $_query,
@@ -70,6 +72,8 @@
      */
     private static $_dbSharedName = null;
     private static $_dbSharedHandle = null;
+    private static $_dbSharedPsqlInfo = null;
+    private static $_dbSharedVer = null;
     private static $_dbSharedConn = null;
 
 
@@ -85,12 +89,15 @@
         $this->_conn = self::$_dbSharedConn;
         $this->_dbName = self::$_dbSharedName;
         $this->_dbHandle = self::$_dbSharedHandle;
+        $this->_psqlInfo = self::$_dbSharedPsqlInfo;
+        $this->_ver = self::$_dbSharedVer;
+        
         return;
       }
       // Resolve DB name.
       if (empty($dbname)) {
         if (empty(self::$_dbSharedName)) {
-          $dbname = defined('DBNAME') ? DBNAME : "kanishka";
+          $dbname = defined('DBNAME') ? DBNAME : "default";
         } else {
           $dbname = self::$_dbSharedName;
         }
@@ -262,8 +269,16 @@
       for($i=2; $i<=count($values);$i++) {
         $paramList .= ',$'.$i;
       }
-      $query = "UPDATE $table SET ($keys) = ROW($paramList) WHERE $condition ;";
+      if ($this->_ver >= 10) {
+        $query = "UPDATE $table SET ($keys) = ROW($paramList) WHERE $condition ;";
+      } else {
+        $query = "UPDATE $table SET ($keys) = ($paramList) WHERE $condition ;";
+      }
       $res = pg_query_params($this->_dbHandle,$query,$values);
+      if (!$res) {// failed, store last error in _error
+        $this->_error = pg_last_error($this->_dbHandle);
+        return false;
+      }
       return $res;
     }
 
@@ -401,6 +416,8 @@
     public function useCommonConnect() {
       self::$_dbSharedConn = $this->_conn;
       self::$_dbSharedHandle = $this->_dbHandle;
+      self::$_dbSharedPsqlInfo = $this->_psqlInfo;
+      self::$_dbSharedVer = $this->_ver;
     }
 
     /**
@@ -412,6 +429,8 @@
     public static function removeCommonConnect() {
       self::$_dbSharedConn = null;
       self::$_dbSharedHandle = null;
+      self::$_dbSharedPsqlInfo = null;
+      self::$_dbSharedVer = null;
     }
 
     /**
@@ -440,6 +459,17 @@
         $this->_error = "Unable to connect to database using ".$this->_conn;
         error_log($this->_error);
         $this->_conn = null;
+      } else {
+        $res = pg_query($this->_dbHandle,"select version();");
+        if ($res) {
+          $row = pg_fetch_row($res);
+          $this->_psqlInfo = $row[0];
+          list($sqlType,$ver) = explode(" ",substr($row[0], 0, strpos($row[0],','))); //warning depends on "select version()" format
+          if (strtolower($sqlType) != "postgresql" ) {
+            $this->_error = "This system require PostgreSql";
+          }
+          $this->_ver = $ver;
+        }
       }
     }
   }

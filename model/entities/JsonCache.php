@@ -146,7 +146,7 @@
     */
     public function save($dbMgr = null) {
       if ($this->_dirty && count($this->_data)) {
-        if (!@$dbMgr ) {
+        if (!isset($dbMgr)) {
           $dbMgr = new DBManager();
         }
         if ($this->_id){ // update
