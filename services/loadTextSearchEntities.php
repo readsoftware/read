@@ -233,9 +233,9 @@
       if ($txtID && !array_key_exists($txtID, $entities['txt'])) {
         $entities['txt'][$txtID] = array( 'CKN' => $ckn,
                                'id' => $txtID,
-                               'tmdIDs' => array(),
-                               'ednIDs' => array(),
-                               'blnIDs' => array(),
+                               'tmdIDs' => $text->getTextMetadataIDs(),
+                               'ednIDs' => $text->getEditionIDs(),
+                               'blnIDs' => $text->getBaselineIDs(),
                                'value' => $text->getTitle(),
                                'title' => $text->getTitle(),
                                'readonly' => $text->isReadonly(),

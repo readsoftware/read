@@ -330,13 +330,33 @@
     */
     public function getTextMetadatas() {
       if (count($this->getReplacementIDs())>0) {
-        $condition = "not (5 = ANY(tmd_visibility_ids)) and tmd_text_id in (".join(",",$this->getReplacementIDs()).")";
+        $condition = "not tmd_owner_id = 1 and tmd_text_id in (".join(",",$this->getReplacementIDs()).")";
       }else{
-        $condition = "not (5 = ANY(tmd_visibility_ids)) and tmd_text_id = ".$this->_id;
+        $condition = "not tmd_owner_id = 1 and tmd_text_id = ".$this->_id;
       }
       $this->_textmetadatas = new TextMetadatas($condition,null,null,null);
       $this->_textmetadatas->setAutoAdvance(false);
       return $this->_textmetadatas;
+    }
+
+   /**
+    * Get ids of all textmetadatas attached to this text
+    *
+    * @return int[] array of textmetadata ids for all textmetadatas linked to this text
+    */
+    public function getTextMetadataIDs() {
+      $dbMgr = new DBManager();
+      $dbMgr->query("select array_agg(tmd_id) from textmetadata ".
+                    "where ".$this->_id." = ANY (tmd_text_ids) and not tmd_owner_id = 1;");
+      if ($dbMgr->getRowCount()) {
+        $row = $dbMgr->fetchResultRow();
+        $tmdIDs = explode(',',trim($row[0],"\"{}"));
+        if ($tmdIDs[0] == "" ) {
+          return array();
+        } 
+        return $tmdIDs;
+      }
+      return array();
     }
 
      /**
@@ -346,13 +366,33 @@
     */
     public function getEditions() {
       if (count($this->getReplacementIDs())>0) {
-        $condition = "not (5 = ANY(edn_visibility_ids)) and edn_text_id in (".join(",",$this->getReplacementIDs()).")";
+        $condition = "not edn_owner_id = 1 and edn_text_id in (".join(",",$this->getReplacementIDs()).")";
       }else{
-        $condition = "not (5 = ANY(edn_visibility_ids)) and edn_text_id = ".$this->_id;
+        $condition = "not edn_owner_id = 1 and edn_text_id = ".$this->_id;
       }
       $this->_editions = new Editions($condition,null,null,null);
       $this->_editions->setAutoAdvance(false);
       return $this->_editions;
+    }
+
+   /**
+    * Get ids of all editions attached to this text
+    *
+    * @return int[] array of edition ids for all editions linked to this text
+    */
+    public function getEditionIDs() {
+      $dbMgr = new DBManager();
+      $dbMgr->query("select array_agg(edn_id) from edition ".
+                    "where ".$this->_id." = edn_text_id and not edn_owner_id = 1;");
+      if ($dbMgr->getRowCount()) {
+        $row = $dbMgr->fetchResultRow();
+        $ednIDs = explode(',',trim($row[0],"\"{}"));
+        if ($ednIDs[0] == "" ) {
+          return array();
+        } 
+        return $ednIDs;
+      }
+      return array();
     }
 
     /**
