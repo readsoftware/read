@@ -548,7 +548,7 @@ EDITORS.AnnoVE.prototype = {
 
 
 /**
-* put your comment there...
+* get the anchor entity if applying annotation to sequence of entities
 *
 */
 
@@ -560,8 +560,9 @@ EDITORS.AnnoVE.prototype = {
       extRefTypeID = annoVE.dataMgr.termInfo.idByTerm_ParentLabel["externalreference-textreferences"];//term dependency
       if (sequence.typeID == extRefTypeID) {
         entGIDs = sequence.entityIDs;
-        anchTag = entGIDs[entGIDs.length - 1];
+        anchTag = entGIDs[entGIDs.length - 1]; // take last entity in sequence
       }
+      // todo check for need to expand this for other sequence types
     }
     return anchTag;
     DEBUG.traceExit("getAnchorEntityTag");

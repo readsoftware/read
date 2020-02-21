@@ -365,7 +365,7 @@
     * @return Editions iterator with all editions linked to this text
     */
     public function getEditions() {
-      if (count($this->getReplacementIDs())>0) {
+      if ($this->getReplacementIDs() && count($this->getReplacementIDs())>0) {
         $condition = "not edn_owner_id = 1 and edn_text_id in (".join(",",$this->getReplacementIDs()).")";
       }else{
         $condition = "not edn_owner_id = 1 and edn_text_id = ".$this->_id;

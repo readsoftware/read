@@ -1480,6 +1480,87 @@ function addSwitchInfo($entGID,&$entities,&$gra2SclMap,&$switchInfo,&$errors,&$w
 }
 
 /**
+* find the editions containing teh given gid
+*
+* @param string $gid global id of target entity
+*/
+
+function getEdnIDsFromGID($gid = null) {
+  if (!$gid){
+    return array();
+  }
+  $query =
+   "select array_agg(distinct edn_id) 
+    from edition left join 
+     (WITH RECURSIVE seqs AS (
+       SELECT
+           seq_id,
+           seq_entity_ids,
+           seq_label
+       FROM
+           sequence
+       WHERE
+           '$gid' = any(seq_entity_ids) and not seq_owner_id = 1
+       UNION
+           SELECT
+             c.seq_id,
+             c.seq_entity_ids,
+             c.seq_label
+           FROM
+             sequence c
+           INNER JOIN seqs s ON concat('seq:',s.seq_id) = any(c.seq_entity_ids)
+       WHERE NOT c.seq_owner_id = 1
+     ) SELECT * FROM seqs) a 
+    on a.seq_id = any(edn_sequence_ids) 
+    where a.seq_id is not null;";
+  
+  $dbMgr = new DBManager();
+  if (!$dbMgr || $dbMgr->getError()) {
+    error_log("error loading dataManager");
+    return array();
+  }
+  $dbMgr->query($query);
+  if ($dbMgr->getError()) {
+    error_log("error querying for edn for entity ".$gid.' '.$dbMgr->getError());
+    return array();
+  } else if ($dbMgr->getRowCount() < 1) {
+    error_log("error no editions found for entity $gid");
+  } else {
+    $row = $dbMgr->fetchResultRow();
+  }
+  return explode(",",trim($row[0],"{}"));
+}
+
+function getSequenceIDsForGID($gid){
+  $linePhysicalTypeID = Entity::getIDofTermParentLabel('linephysical-textphysical');// warning!!! term dependency
+  $textDivisionTypeID = Entity::getIDofTermParentLabel('textdivision-text');// warning!!! term dependency
+
+  $query = 
+    "SELECT array_agg(DISTINCT seq_id)
+     FROM sequence
+     WHERE NOT seq_owner_id = 1
+           AND seq_type_id IN ($linePhysicalTypeID,$textDivisionTypeID)
+           AND '$gid' = ANY(seq_entity_ids);";
+  
+  $dbMgr = new DBManager();
+  if (!$dbMgr || $dbMgr->getError()) {
+    error_log("error loading dataManager");
+    return array();
+  }
+  $dbMgr->query($query);
+  if ($dbMgr->getError()) {
+    error_log("error querying for seqID for entity ".$gid.' '.$dbMgr->getError());
+    return array();
+  } else if ($dbMgr->getRowCount() < 1) {
+    error_log("error no seqIDs found for entity $gid");
+  } else {
+    $row = $dbMgr->fetchResultRow();
+  }
+  return explode(",",trim($row[0],"{}"));
+}
+
+
+/**
 * invalidate lemma for this word
 *
 * @param string $wordGID global id of word
@@ -1556,6 +1637,73 @@ function invalidateCachedEditionEntities($ednID = null) { // setDirty flag
   invalidateCache($cacheKey);
   //  error_log("invalidateCache($cacheKey)");
   }
+
+/**
+* invalidate all caches containing entity info 
+*
+* @param Entity object $entity
+*/
+
+function invalidateCachedEntityInfo($entity = null) {
+  if (!$entity) {
+    return;
+  } else {
+    $entType = $entity->getEntityTypeCode();
+    $entGID = $entity->getGlobalID();
+    $ednIDs = getEdnIDsFromGID($entGID);
+    $seqIDs = null;
+    switch ($entType){
+      case 'tok':
+        $seqIDs = getSequenceIDsForGID($entGID);
+        $sclIDs = $entity->getSyllableClusterIDs();
+        if ($sclIDs) {
+          $firstSclGID = 'scl:'.$sclIDs[0];
+          $seqIDs = array_merge($seqIDs,getSequenceIDsForGID($firstSclGID));
+          if (count($sclIDs) > 1) {
+            $lastSclGID = $sclIDs[count($sclIDs)-1];
+            $seqIDs = array_merge($seqIDs,getSequenceIDsForGID($lastSclGID));
+          }
+        }
+        break;
+      case 'cmp':
+        $seqIDs = getSequenceIDsForGID($entGID);
+        $tokIDs = $entity->getTokenIDs();
+        $firstToken = new Token($tokIDs[0]);
+        if ($firstToken && !$firstTokon->hasError()) {
+          $sclIDs = $firstToken->getSyllableClusterIDs();
+          $seqIDs = array_merge($seqIDs,getSequenceIDsForGID($sclIDs[0]));
+        }
+        $lastToken = new Token($tokIDs[count($tokIDs)-1]);
+        if ($lastToken && !$lastToken->hasError()) {
+          $sclIDs = $lastToken->getSyllableClusterIDs();
+          $seqIDs = array_merge($seqIDs,getSequenceIDsForGID($sclIDs[count($sclIDs)-1]));
+        }
+        break;
+      case 'scl':
+        // find text division and physical line sequences to invalidate
+        $seqIDs = getSequenceIDsForGID($entGID);
+        break;
+      case 'seq':
+        $seqIDs = array($entGID);
+    }
+    if ($ednIDs && count($ednIDs) > 0 && //ensure we have an edition
+        $seqIDs && count($seqIDs) > 0) { //ensure we have a sequence
+      $seqIDs = array_unique($seqIDs);
+      foreach ($ednIDs as $ednID) {
+        foreach ($seqIDs as $seqID) {
+          $sequence = new Sequence($seqID);
+          if (!$sequence->hasError()) {
+            invalidateSequenceCache($sequence,$ednID);
+          } else {
+            invalidateCachedSeqEntities($seqID,$ednID);
+          }
+        }
+        invalidateCachedEditionEntities($ednID);
+        invalidateCachedEditionViewerHtml($ednID);
+      }
+    }
+  }
+}
 
 /**
 * invalidate cache edition lookup
@@ -1660,7 +1808,7 @@ function invalidateParentCache($seqGID,$ednSeqIDs,$ednID) {
 * invalidate all sequence caching
 *
 * @param Sequence entity $sequence
-* @param int $usrID UserGroup id
+* @param int $ednID Edition id
 */
 
 function invalidateSequenceCache($sequence,$ednID) { // setDirty flag
@@ -3334,6 +3482,7 @@ function getEntityFootnoteInfo($entity, $fnTypeIDs, $refresh = false) {
       $fnInfo = array('fnHtml' => $fnHtml, 'fnTextByAnoTag' => $fnTextByAnoTag);
       $entity->storeScratchProperty('fnHtml',$fnHtml);
       $entity->storeScratchProperty('fnTextByAnoTag',$fnTextByAnoTag);
+      $entity->save();
     }
   } else {
     $fnInfo = array('fnHtml' => $fnHtml, 'fnTextByAnoTag' => $fnTextByAnoTag);

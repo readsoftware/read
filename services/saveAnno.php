@@ -102,11 +102,11 @@ if (!$data) {
     }
   }
   $text = null;
-  if ( isset($data['text'])) {//get text
+  if ( isset($data['text'])) {//get annotation text/commentary
     $text = $data['text'];
   }
   $url = null;
-  if ( isset($data['url'])) {//get url
+  if ( isset($data['url'])) {//get url external link to information
     $url = $data['url'];
   }
   $anoTag = null;
@@ -114,35 +114,31 @@ if (!$data) {
     $anoTag = $data['anoTag'];
   }
   $typeID = null;
-  if ( isset($data['typeID'])) {//get typeID
+  if ( isset($data['typeID'])) {//get termID for type of annotation 
     $typeID = $data['typeID'];
   }
   $vis = null;
   if ( isset($data['vis'])) {//get vis
     if ( $data['vis'] == "User"){
-      $vis = array(3);
+      $vis = array(3);  //logged in users
     }
     if ( $data['vis'] == "Public"){
-      $vis = array(6);
+      $vis = array(6); //no loggin required to view annotation
     }
     if ( $data['vis'] == "Private"){
       $vis =getUserDefVisibilityIDs();
     }
   }
-  $url = null;
-  if ( isset($data['url'])) {//get url
-    $url = $data['url'];
-  }
   $linkedFromEntity = null;
   $linkedFromAnchorEntity = null;
-  if ( isset($data['linkFromGID']) && $data['linkFromGID']) {//get entity
+  if ( isset($data['linkFromGID']) && $data['linkFromGID']) {//get entity being annotated
     $linkedFromEntity = EntityFactory::createEntityFromGlobalID($data['linkFromGID']);
     if ($linkedFromEntity->hasError()) {
-      array_push($errors,"creating linked entity - ".join(",",$linkedFromEntity->getErrors()));
+      array_push($errors,"error creating linked entity - ".join(",",$linkedFromEntity->getErrors()));
     } else if (isset($data['linkFromGIDAnchor']) && $data['linkFromGIDAnchor']) {
       $linkedFromAnchorEntity = EntityFactory::createEntityFromGlobalID($data['linkFromGIDAnchor']);
       if ($linkedFromAnchorEntity->hasError()) {
-        array_push($errors,"creating linked entity anchor- ".join(",",$linkedFromAnchorEntity->getErrors()));
+        array_push($errors,"error creating linked anchor entity- ".join(",",$linkedFromAnchorEntity->getErrors()));
       }      
     }
   }
@@ -190,13 +186,13 @@ if (count($errors) == 0) {
         $linkedFromGIDs = array($linkedFromEntity->getGlobalID());
         if ($linkedFromAnchorEntity) {
           array_push($linkedFromGIDs,$linkedFromAnchorEntity->getGlobalID());
-          if (!$typeID){
+          if (!$typeID){ // use paraphrase as default for sequence - todo consider making configurable
             $typeID = Entity::getIDofTermParentLabel("paraphrase-textreflinkage");//term dependency
            }
         }
-        $annotation->setLinkFromIDs($linkedFromGIDs);
-        if (!$typeID){
-         $typeID = Entity::getIDofTermParentLabel("footnotetype-annotationtype");//term dependency
+        $annotation->setLinkFromIDs($linkedFromGIDs); //save annotation's linked context entities
+        if (!$typeID){ // use footnote as default type - todo consider making configurable
+         $typeID = Entity::getIDofTermParentLabel("footnote-footnotetype");//term dependency
         }
         $annotation->setTypeID($typeID);
         $annotation->setOwnerID(getUserDefEditorID());
@@ -217,6 +213,7 @@ if (count($errors) == 0) {
         }else{
           $annotation = new Annotation($annotation->getID());//reread anotation from DB
           addNewEntityReturnData('ano',$annotation);
+          //update $linked from entity
         }
       }
       break;
@@ -251,9 +248,10 @@ if (count($errors) == 0) {
           } else {
             array_push($errors,"error deleting annotation unable to find linked entity (".$linkedFromEntity->getGlobalID().") in linkFromIDs of ".$annotation->getGlobalID());
           }
+          //todo add code for linkedFromAnchor case
         }
         if (count($errors) == 0 && !$linkedFromEntity->isReadonly()) {
-          if (Entity::getIDofTermParentLabel("footnotetype-annotationtype") == $annotation->getTypeID($typeID)) {//term dependency
+          if (Entity::getIDofTermParentLabel("footnote-footnotetype") == $annotation->getTypeID($typeID)) {//term dependency
             $annoIDs = $linkedFromEntity->getAnnotationIDs();
             $anoIndex = array_search($annotation->getID(),$annoIDs);
             array_splice($annoIDs,$anoIndex,1);
@@ -309,9 +307,13 @@ if (count($errors) == 0) {
       array_push($errors,"unknown command");
   }
 }
-if ($typeID == Entity::getIDofTermParentLabel("footnotetype-annotationtype") &&//term dependency
+//if footnote then if possible append anoID into the list of annotations in the linked from entity
+if ($typeID == Entity::getIDofTermParentLabel("footnote-footnotetype") &&//term dependency
   $linkedFromEntity && !$linkedFromEntity->isReadonly()){//entity is owned and footnote is publishable
   $entityAnoIDs = $linkedFromEntity->getAnnotationIDs();
+  if (!$entityAnoIDs) {
+    $entityAnoIDs = array();
+  }
   if (!in_array($annotation->getID(),$entityAnoIDs)){
     array_push($entityAnoIDs, $annotation->getID());
     $linkedFromEntity->setAnnotationIDs($entityAnoIDs);
@@ -328,14 +330,18 @@ if ((count($errors) == 0) && $linkedFromEntity) {//update all annotations for th
   if ($linkedAnoIDsByType && count($linkedAnoIDsByType) > 0){
     addUpdateEntityReturnData(substr($linkedFromEntity->getGlobalID(),0,3),$linkedFromEntity->getID(),'linkedAnoIDsByType',$linkedAnoIDsByType);
   }
+  clearEntityAnnoCache($linkedFromEntity);
+  invalidateCachedEntityInfo($linkedFromEntity);
 }
 if ((count($errors) == 0) && $linkedFromAnchorEntity) {//update all annotations for the linked anchor entity
   $linkedAnoIDsByType = $linkedFromAnchorEntity->getLinkedAnnotationsByType();
   if ($linkedAnoIDsByType && count($linkedAnoIDsByType) > 0){
     addUpdateEntityReturnData(substr($linkedFromAnchorEntity->getGlobalID(),0,3),$linkedFromAnchorEntity->getID(),'linkedAnoIDsByType',$linkedAnoIDsByType);
   }
+  clearEntityAnnoCache($linkedFromAnchorEntity);
+  invalidateCachedEntityInfo($linkedFromAnchorEntity);
 }
-if ((count($errors) == 0) && $linkedToEntity) {//update all annotations for the linked entity
+if ((count($errors) == 0) && $linkedToEntity) {//update all annotations for the linked to entity
   $linkedByAnoIDsByType = $linkedToEntity->getLinkedByAnnotationsByType();
   if ($linkedByAnoIDsByType && count($linkedByAnoIDsByType) > 0){
     addUpdateEntityReturnData(substr($linkedToEntity->getGlobalID(),0,3),$linkedToEntity->getID(),'linkedByAnoIDsByType',$linkedByAnoIDsByType);
@@ -363,5 +369,13 @@ if (array_key_exists("callback",$_REQUEST)) {
   }
 } else {
   print json_encode($retVal);
+}
+function clearEntityAnnoCache ($entity) {
+  if ($entity->getScratchProperty('fnTextByAnoTag') ||
+      $entity->getScratchProperty('fnHtml')) {
+    $entity->storeScratchProperty('fnTextByAnoTag',null);
+    $entity->storeScratchProperty('fnHtml',null);
+    $entity->save();
+  }
 }
 ?>

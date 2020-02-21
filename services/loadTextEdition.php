@@ -541,6 +541,10 @@
                 if ($related && count($related) > 0) {
                   $entities['cmp'][$cmpID]['relatedEntGIDsByType'] = $related;
                 }
+                $linkedAnoIDsByType = $compound->getLinkedAnnotationsByType();
+                if ($linkedAnoIDsByType && count($linkedAnoIDsByType) > 0) {
+                  $entities['cmp'][$cmpID]['linkedAnoIDsByType'] = $linkedAnoIDsByType;
+                }
                 $AnoIDs = $compound->getAnnotationIDs();
                 if ($AnoIDs && count($AnoIDs) > 0) {
                   $entities['cmp'][$cmpID]['annotationIDs'] = $AnoIDs;
@@ -597,6 +601,10 @@
                 $related = $token->getRelatedEntitiesByLinkType();
                 if ($related && count($related) > 0) {
                   $entities['tok'][$tokID]['relatedEntGIDsByType'] = $related;
+                }
+                $linkedAnoIDsByType = $token->getLinkedAnnotationsByType();
+                if ($linkedAnoIDsByType && count($linkedAnoIDsByType) > 0) {
+                  $entities['tok'][$tokID]['linkedAnoIDsByType'] = $linkedAnoIDsByType;
                 }
                 $AnoIDs = $token->getAnnotationIDs();
                 if ($AnoIDs && count($AnoIDs) > 0) {

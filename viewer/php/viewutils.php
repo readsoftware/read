@@ -311,7 +311,6 @@ function getEntityTranslation($entity) {
 * @return string Html representing the translation of $entity or empty string
 */
 function getWordTransHtml($entity) {
-  $footnoteHtml = "";
   $entGID = $entity->getGlobalID();
   $prefix = substr($entGID,0,3);
   $entID = substr($entGID,4);
@@ -862,19 +861,22 @@ function getEntityBoundaryHtml($entity,$classList = "") {
 * @param object $entity that can be annotated
 */
 function getSubEntityFootnotesHtml($entity, $refresh = false, $drillDown = true) {
-  global $fnRefTofnText, $typeIDs;
+//  global $fnRefTofnText;
   $fnHtml = "";
+  $fnTextByAnoTag = array();
   if (!method_exists($entity,"getComponents")) {
-    return "";
+    return array('fnHtml' => "", 'fnTextByAnoTag' => array());
   }
   $subEntities = $entity->getComponents(true);
   if ($subEntities->getCount() == 0) {
-    return "";
+    return array('fnHtml' => "", 'fnTextByAnoTag' => array());
   }
   foreach ($subEntities as $subEntity){
-    $fnHtml .= getEntityFootnotesHtml($subEntity, $refresh, $drillDown);
+    $fnInfo = getEntityFootnotesHtml($subEntity, $refresh, $drillDown);
+    $fnHtml .= $fnInfo['fnHtml'];
+    $fnTextByAnoTag = array_merge($fnTextByAnoTag,$fnInfo['fnTextByAnoTag']);
   }
-  return $fnHtml;
+  return array('fnHtml' => $fnHtml, 'fnTextByAnoTag' => $fnTextByAnoTag);
 }
 
 /**
@@ -883,18 +885,15 @@ function getSubEntityFootnotesHtml($entity, $refresh = false, $drillDown = true)
 * @param object $entity that can be annotated
 */
 function getEntityFootnotesHtml($entity, $refresh = false, $drillDown = true) {
-  global $fnRefTofnText, $typeIDs;
+  global $typeIDs;
   $fnInfo = getEntityFootnoteInfo($entity, $typeIDs, $refresh);
   if (is_null($fnInfo)) {
     if ($entity->getEntityTypeCode() == "cmp" && $drillDown && method_exists($entity,"getComponents")) {
       return getSubEntityFootnotesHtml($entity, $refresh);
     }
-      return "";
+      return array('fnHtml' => "", 'fnTextByAnoTag' => array());
   }
-  foreach ($fnInfo['fnTextByAnoTag'] as $anoTag => $anoText){
-    $fnRefTofnText[$anoTag] = $anoText;
-  }
-  return $fnInfo['fnHtml'];
+  return $fnInfo;
 }
 
 /**
@@ -927,7 +926,7 @@ function addWordToEntityLookups($entity, $refresh = false) {
 * @return string Html representing the $entity
 */
 function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh = false, $ctxClass = '') {
-  global $prevTCMS, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $wordCnt;
+  global $prevTCMS, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $fnRefTofnText, $wordCnt;
   $footnoteHtml = "";
   $entGID = $entity->getGlobalID();
   $prefix = substr($entGID,0,3);
@@ -1033,7 +1032,13 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
         }
         $prevGraIsVowelCarrier = false;
       }//end for graphIDs
-      $footnoteHtml = getEntityFootnotesHtml($token, $refresh);
+      $fnInfo = getEntityFootnotesHtml($token, $refresh);
+      $fnHtml = $fnInfo['fnHtml'];
+      $fnTextByAnoTag = $fnInfo['fnTextByAnoTag'];
+      if ($fnHtml) {
+        $footnoteHtml .= $fnHtml;
+        $fnRefTofnText = array_merge($fnRefTofnText,$fnTextByAnoTag);
+      }
     }//end for token IDs
     if ($nextToken) {//find tcm for first grapheme of next token to check for closing brackets
       $nextGraIDs = $nextToken->getGraphemeIDs();
@@ -1057,7 +1062,13 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
       }
     }
     if ($prefix == "cmp") {//end of compound so add cmp entity footnotes
-      $footnoteHtml .= getEntityFootnotesHtml($entity, $refresh,false);
+      $fnInfo = getEntityFootnotesHtml($entity, $refresh, false);
+      $fnHtml = $fnInfo['fnHtml'];
+      $fnTextByAnoTag = $fnInfo['fnTextByAnoTag'];
+      if ($fnHtml) {
+        $footnoteHtml .= $fnHtml;
+        $fnRefTofnText = array_merge($fnRefTofnText,$fnTextByAnoTag);
+      }
     }
     if ($footnoteHtml) {
       $wordHtml .= $footnoteHtml;
@@ -1081,7 +1092,8 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
 * @param int $level indicate the level of nest in the structural hierarchy
 */
 function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
-  global $edition, $editionTOCHtml, $seqBoundaryMarkerHtmlLookup, $blnPosByEntTag, $curStructHeaderbyLevel;
+  global $edition, $editionTOCHtml, $seqBoundaryMarkerHtmlLookup,
+         $fnRefTofnText,$blnPosByEntTag, $curStructHeaderbyLevel;
   // check sequence for cached html by edition keying
   $structureHtml = $sequence->getScratchProperty("edn".$edition->getID()."structHtml");
   if (defined("USEVIEWERCACHING") && !USEVIEWERCACHING || $refresh || !$structureHtml ) {
@@ -1130,7 +1142,13 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
     if ($label) {//output header div and toc info
       if ($seqType != "Pāda" && $seqType != "Item") {//warning!!!! term dependency
         $structureHtml .= '<div id="'.$seqTag.'" class="secHeader level'.$level.' '.$seqType.' '.$seqTag.'">'.$label;
-        $structureHtml .= getEntityFootnotesHtml($sequence, $refresh);
+        $fnInfo = getEntityFootnotesHtml($sequence, $refresh);
+        $fnHtml = $fnInfo['fnHtml'];
+        $fnTextByAnoTag = $fnInfo['fnTextByAnoTag'];
+        if ($fnHtml) {
+          $structureHtml .= $fnHtml;
+          $fnRefTofnText = array_merge($fnRefTofnText,$fnTextByAnoTag);
+        }
         $structureHtml .= '</div>';
       }
       if ($seqType == "Chapter" || $seqType == "Section" || 
@@ -1230,8 +1248,14 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
       }
     }
     if (!$label) {//output header div
-      $structureHtml .= getEntityFootnotesHtml($sequence, $refresh);
-    }
+      $fnInfo = getEntityFootnotesHtml($sequence, $refresh);
+      $fnHtml = $fnInfo['fnHtml'];
+      $fnTextByAnoTag = $fnInfo['fnTextByAnoTag'];
+      if ($fnHtml) {
+        $structureHtml .= $fnHtml;
+        $fnRefTofnText = array_merge($fnRefTofnText,$fnTextByAnoTag);
+      }
+}
     $structureHtml .= '</div>';
     //cache html to sequence cache
     if (defined("USEVIEWERCACHING") && USEVIEWERCACHING) {
@@ -1250,7 +1274,7 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
 */
 function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false, $addBoundaryHtml = false) {
   global  $edition, $editionTOCHtml, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, 
-          $blnPosByEntTag, $blnInfobyBlnTag, $graID2StructureInlineLabels, 
+          $blnPosByEntTag, $blnInfobyBlnTag, $graID2StructureInlineLabels, $fnRefTofnText,
           $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel;
 
   $wordCnt = 0;
@@ -1259,10 +1283,13 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
   $wordTag = null;
   $tdSeqTag = null;
   $preBlnTag = null;
+  $word = null;
   $nextLineSequence = null;
   $physicalLinesHtml = '';
   $freetextCnt = 0;
+  $fnRefTofnText = array();
   $freetextLines = array();
+  $fnRefTofnTextByLine = array();
   //**************process each physical line
   for ($i = 0; $i < $cntLinePhysGID; $i++) {
     $linePhysSeqGID = $linePhysSeqIDs[$i];
@@ -1281,17 +1308,20 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
         //check for cached value
         if (USEVIEWERCACHING) {
           $physicalLineHtml = $linePhysSequence->getScratchProperty("edn".$edition->getID()."physLineHtml");
+          $fnRefTofnTextByLine = $linePhysSequence->getScratchProperty("edn".$edition->getID()."fnTextByAnoTag");
         }
         if ($physicalLineHtml && !$refresh) {
           $physicalLinesHtml .= $physicalLineHtml;
           $nextLineSequence = null;
           $wordTag = $linePhysSequence->getScratchProperty("wrappedWordTag");
+          $fnRefTofnText = array_merge($fnRefTofnText,$fnRefTofnTextByLine);
           continue;
         } else { // calculate physical line HTML
           $physicalLineHtml = '';
           $lineSclGIDs = $linePhysSequence->getEntityIDs();
           $seqType = $linePhysSequence->getType();
           $seqTag = $linePhysSequence->getEntityTag();
+          $fnRefTofnTextByLine = array();
           $nextLineSclGID = null;
           $nextLineSequence = null;
           $hasWrappingWord = false;
@@ -1345,18 +1375,19 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
               }
             }
           }
+          //**************process the syllables of this line
           $cntGID = count($lineSclGIDs);
-          for ($j = 0; $j < $cntGID; $j++) {//process the syllables of this line
+          for ($j = 0; $j < $cntGID; $j++) {
             $sclGID = $lineSclGIDs[$j];
             $sclID = substr($sclGID,4);
             $syllable = new SyllableCluster($sclID);
-            if (!$syllable || $syllable->hasError()) {//no word or unavailable so warn
+            if (!$syllable || $syllable->hasError()) {//no syllable or unavailable so warn
               error_log("Warning inaccessible syllable $sclGID skipped.");
             } else {
               $graIDs = $syllable->getGraphemeIDs();
               $graCnt = count($graIDs);
               //check for start of line headers
-              if ($j == 0 && $graCnt) {//start of physical line
+              if ($j == 0 && $graCnt) { //start of physical line
                 if (array_key_exists($graIDs[0],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[0]])) {
                   $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[0]]['sideMarker'];
                 } else  if ($graCnt > 1 && array_key_exists($graIDs[1],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[1]])) {// case where glottal starts line
@@ -1365,7 +1396,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                 $lineHtmlMarker = null;
                 if (array_key_exists($graIDs[0],$graID2LineHtmlMarkerlMap)) {
                   $lineHtmlMarker = $graID2LineHtmlMarkerlMap[$graIDs[0]];
-                } else if ($graCnt > 1 && array_key_exists($graIDs[1],$graID2LineHtmlMarkerlMap)) { // case where glottal starts line
+                } else if ($graCnt > 1 && array_key_exists($graIDs[1],$graID2LineHtmlMarkerlMap)) { //case where glottal starts line
                   $lineHtmlMarker = $graID2LineHtmlMarkerlMap[$graIDs[1]];
                 }
                 if ($lineHtmlMarker) {
@@ -1374,7 +1405,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   $physicalLineHtml .= "<div class=\"physicalLineWrapperDiv\">";
                 }
               }
-              //for each grapheme in syllable
+              //************** process each grapheme in syllable
               for($l=0; $l<$graCnt; $l++) {
                 $graID = $graIDs[$l];
                 $grapheme = new Grapheme($graID);
@@ -1388,7 +1419,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   if (array_key_exists($graID,$graID2PSnFMarkerMap) && array_key_exists('fragLabel',$graID2PSnFMarkerMap[$graID])) {
                     $physicalLineHtml .= $graID2PSnFMarkerMap[$graID]['fragLabel'];
                   } else  if ($grapheme->getSortCode() == "195" and array_key_exists($graIDs[$l + 1],$graID2PSnFMarkerMap) && 
-                      array_key_exists('fragLabel',$graID2PSnFMarkerMap[$graIDs[$l + 1]])) {// case where glottal starts line
+                      array_key_exists('fragLabel',$graID2PSnFMarkerMap[$graIDs[$l + 1]])) { //case where glottal starts line
                     $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[$l+1]]['fragLabel'];
                   }
                   //track type for numbers
@@ -1403,19 +1434,27 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   if ($postTCMBrackets && !($j==0 && $l == 0)) {//ignore post brackets at beginning of line, should not exist
                     $physicalLineHtml .= $postTCMBrackets;
                   }
-                  //check for new word start
-                  if (array_key_exists($graID,$graID2WordGID)){
+                  //check for new word start - current grapheme starts new word
+                  if (array_key_exists($graID,$graID2WordGID)) {
                     if (isset($word) && ($j > 0 || $l > 0)) {//not start of line so must be existing word to close
-                      $footnoteHtml = getEntityFootnotesHtml($word, $refresh);
-                      if ($footnoteHtml) {
-                        $physicalLineHtml .= $footnoteHtml;
-                        $footnoteHtml = "";
+                      $fnInfo = getEntityFootnotesHtml($word, $refresh);
+                      $fnHtml = $fnInfo['fnHtml'];
+                      $fnTextByAnoTag = $fnInfo['fnTextByAnoTag'];
+                      if ($fnHtml) {
+                        $physicalLineHtml .= $fnHtml;
+                        foreach ($fnTextByAnoTag as $anoTag => $anoText){
+                          $fnRefTofnTextByLine[$anoTag] = $anoText;
+                        }
+                        $fnHtml = "";
                       }
                       $physicalLineHtml .= '</span>';
                       $previousA = false;
                     }
-                    $word = EntityFactory::createEntityFromGlobalID($graID2WordGID[$graID][1]);
-                    addWordToEntityLookups($word, true);                    // check for inline structure marker
+                    // switch to new word
+                    if (array_key_exists($graID,$graID2WordGID)) {
+                      $word = EntityFactory::createEntityFromGlobalID($graID2WordGID[$graID][1]);
+                      addWordToEntityLookups($word, true);  // check for inline structure marker
+                    }
                     if (isset($graID2StructureInlineLabels) && !$prevGraIsVowelCarrier && 
                         array_key_exists($structLookupGraID,$graID2StructureInlineLabels)) {
                       $inlineHtmlLabels = $graID2StructureInlineLabels[$structLookupGraID];
@@ -1488,12 +1527,29 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
           }
           if ($hasWrappingWord){
             $physicalLineHtml .= "-";
+          } else if (isset($word)) {// word ends at EOL so check for footnote
+            $fnInfo = getEntityFootnotesHtml($word, $refresh);
+            $fnHtml = $fnInfo['fnHtml'];
+            $fnTextByAnoTag = $fnInfo['fnTextByAnoTag'];
+            if ($fnHtml) {
+              $physicalLineHtml .= $fnHtml;
+              foreach ($fnTextByAnoTag as $anoTag => $anoText){
+                $fnRefTofnTextByLine[$anoTag] = $anoText;
+              }
+              $fnHtml = "";
+              $word = null; //signal already processed footnote
+            }
+            //$physicalLineHtml .= '</span>';
+            $previousA = false;
           }
           $physicalLineHtml .= "</span></div></div>";
           $physicalLineHtml = preg_replace('/_+/',"_",$physicalLineHtml); // multple missing consonants
           $physicalLineHtml = preg_replace('/_/',".",$physicalLineHtml); // multple missing consonants
           //store html to sequence for cache
           $linePhysSequence->storeScratchProperty("edn".$edition->getID()."physLineHtml",$physicalLineHtml);
+          $linePhysSequence->storeScratchProperty("edn".$edition->getID()."fnTextByAnoTag",$fnRefTofnTextByLine);
+          //transfer annotation text lookup from line to global for global caching.
+          $fnRefTofnText = array_merge($fnRefTofnText,$fnRefTofnTextByLine);
           if ($hasWrappingWord && $wordTag) {
             $linePhysSequence->storeScratchProperty("wrappedWordTag",$wordTag);
           }
@@ -1600,7 +1656,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
           array_push($warnings,"Warning need valid accessible edition id $ednIDs[0]. Skipping.".
             ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
           $jsonCache = null;
-        } else {
+        } else { //align with edition editability and visibility
           $jsonCache->setVisibilityIDs($edition->getVisibilityIDs());
           $jsonCache->setOwnerID($edition->getOwnerID());
         }
