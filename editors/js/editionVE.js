@@ -43,7 +43,6 @@ var EDITORS = EDITORS || {};
 */
 
 EDITORS.EditionVE =  function(editionVECfg) {
-  var that = this;
   //read configuration and set defaults
   this.config = editionVECfg;
   this.type = "EditionVE";
@@ -3631,6 +3630,30 @@ mergeLine: function (direction,cbError) {
 
 
 /**
+* helper function for pageup and pagedown scrolling
+*
+* @param boolean isPgUp identifying the direction
+*/
+
+    function pageScrollHelper(isPgUp) {
+      var scrollDiv = ednVE.contentDiv.get(0), maxScrollTop,
+          curTop, divHeight, pageHeight, contentHeight;
+
+      divHeight = scrollDiv.clientHeight;
+      pageHeight = divHeight - 5;
+      contentHeight = scrollDiv.scrollHeight;
+      curTop = scrollDiv.scrollTop;
+      maxScrollTop = Math.max((contentHeight - divHeight -1),0);
+
+      if (isPgUp && curTop > 0) { // page up and not at top
+        scrollDiv.scrollTop = Math.max((curTop - pageHeight),0);
+      } else if (curTop < maxScrollTop) { // page down and not scrolled to max
+        scrollDiv.scrollTop = Math.min((curTop + pageHeight),maxScrollTop);
+      }
+    };
+
+
+/**
 * handle 'keydown' event for content div element
 *
 * @param object e System event object
@@ -3910,7 +3933,7 @@ mergeLine: function (direction,cbError) {
                 e.stopImmediatePropagation();
                 return false;//eat all other keys
               }
-            } else if (sclEditor.caretAtEOL()){ //simple del at end of line so try to merge with next line
+            } else if (sclEditor.caretAtEOL()) { //simple del at end of line so try to merge with next line
                 $adjNode = sclEditor.nextAdjacent();
                 //move over TCM so we check beyond TCM
                 if ($adjNode.hasClass('TCM')){
@@ -3952,6 +3975,14 @@ mergeLine: function (direction,cbError) {
         }
       } else if (ednVE.editMode == "tcm"  && tcmEditor ) {
         switch (e.keyCode || e.which) {
+          case 33://"Page Up":
+            DEBUG.log("nav","Call to page up keydown ");
+            pageScrollHelper(true);
+            break;
+          case 34://"Page Down":
+            DEBUG.log("nav","Call to page down keydown ");
+            pageScrollHelper(false);
+            break;
           case 38://'Up':
             DEBUG.log("nav","Call to up arrow keydown ");
             tcmEditor.moveLine('up');
@@ -3990,6 +4021,14 @@ mergeLine: function (direction,cbError) {
 //        return false;//eat all other keys
       } else {
         switch (e.keyCode || e.which) {
+          case 33://"Page Up":
+            DEBUG.log("nav","Call to page up keydown ");
+            pageScrollHelper(true);
+            break;
+          case 34://"Page Down":
+            DEBUG.log("nav","Call to page down keydown ");
+            pageScrollHelper(false);
+            break;
           case 38://'Up':
             DEBUG.log("nav","Call to up arrow keydown ");
             break;
@@ -4016,6 +4055,7 @@ mergeLine: function (direction,cbError) {
 
     //assign handler for all syllable elements
     $(this.contentDiv).unbind('keydown').bind('keydown', keyDownHandler);
+
 
 
 /**
