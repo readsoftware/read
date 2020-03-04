@@ -103,6 +103,7 @@ MANAGERS.LayoutManager.prototype = {
         EDITORS.config.editToolsOpenOnStart = false;
         EDITORS.config.viewToolsOpenOnStart = false;
         EDITORS.config.layoutToolsOpenOnStart = false;
+        EDITORS.config.toolSidebarOpenOnStart = true;
         for (char in toolsState) {
           switch(toolsState[char]) {
             case "E": //edit open
@@ -114,11 +115,13 @@ MANAGERS.LayoutManager.prototype = {
             case "L": //layout open
               EDITORS.config.layoutToolsOpenOnStart = true;
               break;
-
+            case "C": //layout open
+              EDITORS.config.toolSidebarOpenOnStart = false;
+              break;
           }
         }
       }
-    } else if (this.params['l']) {//there is a search so switch to search page
+    } else if (this.params['l']) {//there is an editor layout so switch to textEdit page
       startPage = "textEdit";
     } else if (this.params['q']) {//there is a search so switch to search page
       startPage = "search";
@@ -150,6 +153,11 @@ MANAGERS.LayoutManager.prototype = {
         }
       }
     }
+    if (!EDITORS.config.toolSidebarOpenOnStart) {
+      this.hideSideBar();
+    }
+    this.navPanel.unbind('keydown').bind('keydown', this.panelKeydownHandler);
+    this.contentDiv.unbind('keydown').bind('keydown', this.panelKeydownHandler);
     this.createNewEditionWizard();// placed here due to unknown interaction bug with toolbar, leave after load
     DEBUG.traceExit("layoutMgr.init","");
   },
@@ -298,11 +306,66 @@ MANAGERS.LayoutManager.prototype = {
   },
 
 
+
+/**
+* put your comment there...
+*
+* @param object e System event object
+*
+* @returns true|false
+*/
+
+panelKeydownHandler: function (e) {
+var key = e.key?e.key :
+  (e.which == null?String.fromCharCode(e.keyCode):
+  ((e.which != 0 )?String.fromCharCode(e.which):null));
+if (key && key == "T") {// toggle sidebar
+  this.toggleSideBar();
+  e.stopImmediatePropagation();
+  return false;//eat all other keys
+}
+},
+
+
+/**
+* toggle tool panel opens or closes the side toolbar panel
+*/
+
+toggleSideBar: function(){
+  $('#textEditPage').toggleClass('hideSidebar');
+  $('#frameContentPanel').toggleClass('hideSidebar');
+  $('#frameNavPanel').toggleClass('hideSidebar');
+  this.resizeHandler();
+},
+
+
+/**
+* hide side toolbar panel
+*/
+
+hideSideBar: function(){
+  $('#textEditPage').addClass('hideSidebar');
+  $('#frameContentPanel').addClass('hideSidebar');
+  $('#frameNavPanel').addClass('hideSidebar');
+},
+
+
+/**
+* show side toolbar panel
+*/
+
+showSideBar: function(){
+  $('#textEditPage').removeClass('hideSidebar');
+  $('#frameContentPanel').removeClass('hideSidebar');
+  $('#frameNavPanel').removeClass('hideSidebar');
+},
+
+
 /**
 * create search control panel
 */
 
-  createSearchCtrlPanel: function(){
+createSearchCtrlPanel: function(){
     var layoutMgr = this;
     this.searchNavBar = $('<div id="searchNavBar"/>');
     this.searchPage = $('<div id="searchPage"/>');

@@ -43,6 +43,10 @@ body {
   right: 0px;
 }
 
+#frameContentPanel.hideSidebar {
+  left: 0;
+}
+
 #frameNavPanel {
   width: 265px;
   display: inline-block;
@@ -52,6 +56,9 @@ body {
   left:0;
 }
 
+#frameNavPanel.hideSidebar {
+  width: 0px;
+}
 /**************************************Nav Panel************************************************/
 #navBar {
   height: 100%;
@@ -591,9 +598,13 @@ sup{
   height: 100%;
   display: none;
   position: fixed;
-  top:0;
-  left:265px;
+  top: 0;
+  left: 265px;
   right: 0px;
+}
+
+#textEditPage.hideSidebar {
+  left: 0px;
 }
 
 .editPlaceholder {

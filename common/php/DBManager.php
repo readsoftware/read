@@ -466,7 +466,7 @@
           $this->_psqlInfo = $row[0];
           list($sqlType,$ver) = explode(" ",substr($row[0], 0, strpos($row[0],','))); //warning depends on "select version()" format
           if (strtolower($sqlType) != "postgresql" ) {
-            $this->_error = "This system require PostgreSql";
+            $this->_error = "This system requires PostgreSql";
           }
           $this->_ver = $ver;
         }

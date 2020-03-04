@@ -110,6 +110,7 @@
         EDITORS.config.editToolsOpenOnStart = ('<?=defined("EDITTOOLSOPENONSTART")?EDITTOOLSOPENONSTART:1?>' == "1") ;
         EDITORS.config.viewToolsOpenOnStart = ('<?=defined("VIEWTOOLSOPENONSTART")?VIEWTOOLSOPENONSTART:1?>' == "1") ;
         EDITORS.config.layoutToolsOpenOnStart = ('<?=defined("LAYOUTTOOLSOPENONSTART")?LAYOUTTOOLSOPENONSTART:1?>' == "1") ;
+        EDITORS.config.toolSidebarOpenOnStart = ('<?=defined("TOOLSIDEBAROPENONSTART")?TOOLSIDEBAROPENONSTART:1?>' == "1") ;
     </script>
     <script src="./editors/js/utility.js"></script>
     <script src="./editors/js/debug.js"></script>
