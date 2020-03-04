@@ -121,7 +121,7 @@ EDITORS.EditionVE.prototype = {
 
 
 /**
-* set focu to the first grapheme group of the display
+* set focus to the first grapheme group of the display
 *
 */
 
@@ -3852,7 +3852,7 @@ mergeLine: function (direction,cbError) {
             if ((e.ctrlKey || e.metaKey) && (sclEditor.caretAtBoundary('left') || sclEditor.caretAtBoundary('right')) ) {
               sclEditor.insertNew();
             } else {
-              DEBUG.log("nav","Call to ctrl Insert for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" curson not at boundary");
+              DEBUG.log("nav","Call to ctrl Insert for '"+sclEditor.curSyl+"' with state "+sclEditor.state+" cursor not at boundary");
             }
             e.stopImmediatePropagation();
             return false;
@@ -4003,7 +4003,16 @@ mergeLine: function (direction,cbError) {
             DEBUG.log("nav","Call to right arrow keydown ");
             break;
           default:
-            if (e.ctrlKey || e.metaKey) {// copy or paste so let it pass
+            if (e.ctrlKey || e.metaKey) {
+              key = e.key?e.key :
+                    (e.which == null?String.fromCharCode(e.keyCode):
+                    ((e.which != 0 )?String.fromCharCode(e.which):null));
+              if (key && key.toLowerCase() == "t") {// toggle sidebar
+                ednVE.layoutMgr.toggleSideBar();
+                e.stopImmediatePropagation();
+                return false;//eat all other keys
+              }
+              // ctrl so meta command like copy or paste so let it pass to keypress
               DEBUG.log("event","Call to keydown with ctrl key");
               return;
             }
@@ -4100,13 +4109,19 @@ mergeLine: function (direction,cbError) {
         //tcmEditor.processKey(key,e.ctrlKey,e.shiftKey,e.altKey,e);
 //        e.stopImmediatePropagation();
 //        return false;//eat all other keys
-       } else {
-        if ((e.ctrlKey || e.metaKey) && key && key.toLowerCase() == "v") {// paste so eat it
-          DEBUG.log("event","Call to keypress with paste");
-          e.stopImmediatePropagation();
-          return false;//eat all other keys
+      } else {
+        if ((e.ctrlKey || e.metaKey) && key) {
+          if (key.toLowerCase() == "v") {// paste so eat it
+            DEBUG.log("event","Call to keypress with paste");
+            e.stopImmediatePropagation();
+            return false;//eat all other keys
+          } else if (key.toLowerCase() == "t") {// toggle sidebar
+            ednVE.layoutMgr.toggleSideBar();
+            e.stopImmediatePropagation();
+            return false;//eat all other keys
+          }
         }
-       }
+      }
     };
 
     //assign handler for all syllable elements

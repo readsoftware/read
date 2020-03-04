@@ -440,6 +440,17 @@
         $this->_error = "Unable to connect to database using ".$this->_conn;
         error_log($this->_error);
         $this->_conn = null;
+      } else {
+        $res = pg_query($this->_dbHandle,"select version();");
+        if ($res) {
+          $row = pg_fetch_row($res);
+          $this->_psqlInfo = $row[0];
+          list($sqlType,$ver) = explode(" ",substr($row[0], 0, strpos($row[0],','))); //warning depends on "select version()" format
+          if (strtolower($sqlType) != "postgresql" ) {
+            $this->_error = "This system requires PostgreSql";
+          }
+          $this->_ver = $ver;
+        }
       }
     }
   }

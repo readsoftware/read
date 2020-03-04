@@ -1949,6 +1949,10 @@ selectPolygons: function () {
         imgVE.savePolygon();
         e.stopImmediatePropagation();
         return false;
+      } else if (key == 'T' && (e.ctrlKey || e.metaKey)) {
+        imgVE.layoutMgr.toggleSideBar();
+        e.stopImmediatePropagation();
+        return false;
       }
     };
 
