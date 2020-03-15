@@ -328,7 +328,7 @@
           edStructHtml = edStructHtmlByEdn[<?=$defaultEdnID?>],//get first edition
           edGlossaryLookup = edGlossaryLookupByEdn[<?=$defaultEdnID?>]//get first edition
 <?php
-  } else if ($ednIDs && count($ednIDs) > 1) {
+  } else if ($ednIDs && count($ednIDs) > 1) { //case for multipart text
 ?>
           edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs,$refreshLookUps)?>,
           multiEdition = false,

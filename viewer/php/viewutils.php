@@ -1876,6 +1876,11 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
     $jsonCache->clearDirtyBit();
     $jsonCache->save();
   }
+  if (count($warnings) > 0) {
+    foreach ($warnings as $msg) {
+      error_log("warning - $msg");
+    }
+  }
   $ret = json_encode($html);
   error_log(substr($ret,0,200));
   return $ret;
@@ -1893,7 +1898,9 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
     if ($scopeEdnID){
       $textTypeID = Entity::getIDofTermParentLabel('text-sequencetype');// warning!!! term dependency
       //find the text division sequence ids for the scoped edition as a comma separated list
-      $query = "select regexp_replace(array_to_string(seq_entity_ids,','),'seq:','','g') from edition left join sequence on seq_id = ANY(edn_sequence_ids) where edn_id = $scopeEdnID and seq_type_id = $textTypeID;";
+      $query = "select regexp_replace(array_to_string(seq_entity_ids,','),'seq:','','g')".
+              " from edition left join sequence on seq_id = ANY(edn_sequence_ids)".
+              " where edn_id = $scopeEdnID and seq_type_id = $textTypeID;";
       $dbMgr = new DBManager();
       $dbMgr->query($query);
       if ($dbMgr->getRowCount()==0) {

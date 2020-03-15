@@ -242,7 +242,6 @@
     * Fetches an array of all result rows of data from the result set
     *
     * @param boolean $autoSynch the result set with the stored query if out of synch
-    * @param int $type indicates the type of PSQL array fetch default is PGSQL_BOTH
     * @return array returns a zero based indexed array all result rows for a given query or FALSE on no more results or error
     * @link http://php.net/manual/en/function.pg-fetch-all.php‎
     */
