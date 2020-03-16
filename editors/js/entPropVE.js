@@ -2768,7 +2768,8 @@ removeBln: function(blnTag) {
                     entPropVE.controlVE.refreshSeqMarkers([seqID]);
                   }
 //                  if (entPropVE.controlVE && entPropVE.controlVE.refreshPhysLineHeader) {
-                  if (params && params.label && needsRefresh && seqtype == "LinePhysical") { // warning!! Term Dependency
+                  if (params && params.label && needsRefresh && 
+                      (seqtype == "LinePhysical" || seqtype == "FreeText")) { // warning!! Term Dependency
                     var entTags = [], entLabels = [], updates = data.entities.update;
                     for (prefix in updates) {
                       for (entID in updates[prefix]) {
