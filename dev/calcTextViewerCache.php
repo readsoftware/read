@@ -30,6 +30,12 @@
   * to recalculate cache for editions of a single text
   * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&ckn=all
   * to recalculate cache for editions of all text
+  * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&ednids=1,2
+  * to recalculate cache for editions 1 and 2
+  * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&ednids=1
+  * to recalculate cache for editions 1
+  * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&catid=1
+  * to recalculate cache for editions of catalog id = 1
   * @author      Stephen White  <stephenawhite57@gmail.com>
   * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
   * @link        https://github.com/readsoftware
@@ -57,6 +63,8 @@
     }
     if (@$ARGV['-db']) $_REQUEST["db"] = $ARGV['-db'];
     if (@$ARGV['-ckn']) $_REQUEST['ckn'] = $ARGV['-ckn'];
+    if (@$ARGV['-ednids']) $_REQUEST['ednids'] = $ARGV['-ednids'];
+    if (@$ARGV['-catid']) $_REQUEST['catid'] = $ARGV['-catid'];
     if (@$ARGV['-userID']) $userID = $ARGV['-userID'];
   }
 
@@ -75,31 +83,51 @@
   $retVal = array();
 
   $ckn = (array_key_exists('ckn',$_REQUEST)? $_REQUEST['ckn']:null);
-	if (!$ckn) {
-		echo "insufficient information to update cache";
-  } else {
+  $catID = (array_key_exists('catid',$_REQUEST)? $_REQUEST['catid']:null);
+  $ednIDs = (array_key_exists('ednids',$_REQUEST)? $_REQUEST['ednids']:null);
+	if (!$ckn && !$ednIDs && !$catid) {
+		print "insufficient information to update cache";
+  } else if ($ckn) {
 		$extraCondition = "";
 		if (strtolower($ckn) != 'all') { // single text case
 			$extraCondition = " and txt_ckn = '$ckn'";
 		}
-		$query = "select edn_id from edition".
-						" where edn_text_id in (select txt_id from text ".
-																		"where txt_owner_id != 1$extraCondition".
-																	 " order by txt_id) order by edn_id;";
+		$query = "select edn_id from edition ".
+             "where edn_owner_id != 1 and ".
+                   "edn_text_id in (select txt_id from text ".
+																		"where txt_owner_id != 1 $extraCondition".
+																	  "order by txt_id) order by edn_id;";
 		$dbMgr->query($query);
 		$ednIDs = null;
 		if ($dbMgr->getError() || $dbMgr->getRowCount() == 0) {
 			print "error updating viewer cache for $ckn";
 		} else {
 			$ednIDs = $dbMgr->fetchAllResultRows();
-		}
-		if ($ednIDs && count($ednIDs) > 0) {
-			foreach ($ednIDs as $ednID) {
-				$ednID = $ednID['edn_id'];
-				getEditionsStructuralViewHtml(array($ednID), true);
-				print "cache updated for $ckn, edn$ednID";
-			}
-		}
+      if ($ednIDs && count($ednIDs) > 0) {
+        $tempIDs = array();
+        foreach ($ednIDs as $ednID) {
+          $tempIDs = array();
+          array_push($tempIDs,$ednID['edn_id']);
+        }
+        $ednIDs = $tempIDs;
+      }
+    }
+  } else if ($catID) {
+    $catalog = new Catalog($catID);
+    if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
+      print "unable to open catalog $catID aborting cache updated for $ckn, edn$ednID";
+    } else {
+      $ednIDs = $catalog->getEditionIDs();
+    }
+  } else {
+    $ednIDs = explode(",",$ednIDs);
+  }
+  if ($ednIDs && count($ednIDs) > 0) {
+    foreach ($ednIDs as $ednID) {
+      $ednID = $ednID['edn_id'];
+      getEditionsStructuralViewHtml(array($ednID), true);
+      print "cache updated for $ckn, edn$ednID";
+    }
   }
 
 ?>
