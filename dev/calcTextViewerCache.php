@@ -21,13 +21,17 @@
   *  A script that recalculates the cache for editions use for the READ Viewer and
 	* it can be called from the command line or browser.
 	* terminal:
-  * php read/dev/calcTextViewerCache.php -d testdb -ckn CKI0001 -userID 4
+  * php read/dev/calcTextViewerCache.php -d testdb -ckn CKI0001.1 -userID 4
   * to recalculate cache for editions of a single text
   * php read/dev/calcTextViewerCache.php -d testdb -ckn all -userID 4
   * to recalculate cache for editions of all text
 	* browser:  (must be logged in)
-  * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&ckn=CKI0001
+  * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&ckn=CKI0001.1
   * to recalculate cache for editions of a single text
+  * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&ckn=CKI0001
+  * to recalculate cache for editions of all texts of an item
+  * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&ckn=CKI1_CKI15
+  * to recalculate cache for editions of all texts of items 1 thru 15
   * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&ckn=all
   * to recalculate cache for editions of all text
   * http://localhost/read/dev/calcTextViewerCache.php?db=testdb&ednids=1,2
@@ -68,7 +72,6 @@
     if (@$ARGV['-userID']) $userID = $ARGV['-userID'];
   }
 
-
   if (!$isCmdLineLaunch) { //browser case
 		header("Content-type: text/javascript");
 		header('Cache-Control: no-cache');
@@ -78,55 +81,138 @@
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
   require_once (dirname(__FILE__) . '/../viewer/php/viewutils.php');//get viewer utilities
 
-
   $dbMgr = new DBManager();
   $retVal = array();
 
   $ckn = (array_key_exists('ckn',$_REQUEST)? $_REQUEST['ckn']:null);
   $catID = (array_key_exists('catid',$_REQUEST)? $_REQUEST['catid']:null);
   $ednIDs = (array_key_exists('ednids',$_REQUEST)? $_REQUEST['ednids']:null);
-	if (!$ckn && !$ednIDs && !$catid) {
-		print "insufficient information to update cache";
+  $ckns = null;
+	if (!$ckn && !$ednIDs && !$catID) {
+		print "insufficient information to update cache \n";
   } else if ($ckn) {
 		$extraCondition = "";
-		if (strtolower($ckn) != 'all') { // single text case
-			$extraCondition = " and txt_ckn = '$ckn'";
-		}
-		$query = "select edn_id from edition ".
-             "where edn_owner_id != 1 and ".
-                   "edn_text_id in (select txt_id from text ".
-																		"where txt_owner_id != 1 $extraCondition".
-																	  "order by txt_id) order by edn_id;";
-		$dbMgr->query($query);
-		$ednIDs = null;
-		if ($dbMgr->getError() || $dbMgr->getRowCount() == 0) {
-			print "error updating viewer cache for $ckn";
-		} else {
-			$ednIDs = $dbMgr->fetchAllResultRows();
-      if ($ednIDs && count($ednIDs) > 0) {
-        $tempIDs = array();
-        foreach ($ednIDs as $ednID) {
+    if (strtolower($ckn) == 'all') { 
+      $query = "select edn_id from edition ".
+              "where edn_owner_id != 1 and ".
+                    "edn_text_id in (select txt_id from text ".
+                                      "where txt_owner_id != 1 ".
+                                      "order by txt_id) order by edn_id;";
+      $dbMgr->query($query);
+      $ednIDs = null;
+      if ($dbMgr->getError() || $dbMgr->getRowCount() == 0) {
+        print "error updating viewer cache for $ckn \n";
+      } else {
+        $ednIDs = $dbMgr->fetchAllResultRows();
+        if ($ednIDs && count($ednIDs) > 0) {
           $tempIDs = array();
-          array_push($tempIDs,$ednID['edn_id']);
+          foreach ($ednIDs as $ednID) {
+            $tempIDs = array();
+            array_push($tempIDs,$ednID['edn_id']);
+          }
+          $ednIDs = $tempIDs;
         }
-        $ednIDs = $tempIDs;
+      }
+    } else { // parse ckn param, could be list and could contain ranges
+      if (strpos(',',$ckn) !== false) { // comma delimited list of ckn or ckn ranges
+        $ckns = explode(',',$ckns);
+      } else { // single ckn or ckn range
+        $ckns = array($ckn);
+      }
+      $cknList = array();
+      $id2 = $ckn2 = null;
+      foreach ($ckns as $ckn) {
+        if (strpos($ckn,'_') !== false && strpos($ckn,'_') == strrpos($ckn,'_')) { // ckn range
+          list($ckn, $ckn2) = explode('_',$ckn);
+        }
+        if (strlen($ckn)>7 || $ckn2 && strlen($ckn2)>7 ) { //unknown format !!dependency
+          print "illegal format using $ckn"."_$ckn2 \n";
+          continue;
+        } else { //ensure ckns are formatted
+          if (preg_match("/(ck[cdim])(\d+)/i",$ckn,$match)) {
+            $prefix = strtoupper($match[1]);
+            $id = $match[2];
+            $ckn = $prefix.str_pad($id,4,"0",STR_PAD_LEFT);//zero fill
+            array_push($cknList, $ckn);
+          }
+          if ($ckn2 && preg_match("/(ck[cdim])(\d+)/i",$ckn2,$match)) {//range so expand 
+            $prefix = strtoupper($match[1]);
+            $id2 = $match[2];
+            $ckn2 = $prefix.str_pad($id2,4,"0",STR_PAD_LEFT);//zero fill
+            $id = intval($id);
+            $id2 = intval($id2);
+            if ( $id + 1 < $id2) {
+              for ($i = $id+1; $i < $id2; $i++) {
+                $id = strval($i);
+                $rangeCkn = $prefix.str_pad($id,4,"0",STR_PAD_LEFT);//zero fill
+                array_push($cknList, $rangeCkn); //add computed ckn to list
+              }
+            }
+            array_push($cknList, $ckn2);//add end of range ckn to list
+          }
+        }
+      }
+      $ednIDs = array();
+      foreach ($cknList as $ckn) {
+        $query = "select edn_id from edition ".
+                 "where edn_owner_id != 1 and ".
+                       "edn_text_id in (select txt_id from text ".
+                                        "where txt_owner_id != 1 and ".
+                                              "txt_ckn like '$ckn%' ".
+                                        "order by txt_id) order by edn_id;";
+        $dbMgr->query($query);
+        if ($dbMgr->getError()) {
+          print "error updating viewer cache for $ckn - error: $dbMgr->getError() \n";
+        } else if ($dbMgr->getRowCount() == 0) {
+          print "warning no editions found for $ckn \n";
+        } else {
+          $tempIDs = $dbMgr->fetchAllResultRows();
+          if ($tempIDs && count($tempIDs) > 0) {
+            foreach ($tempIDs as $ednID) {
+              array_push($ednIDs,$ednID['edn_id']);
+            }
+          }
+        }
       }
     }
   } else if ($catID) {
     $catalog = new Catalog($catID);
     if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
-      print "unable to open catalog $catID aborting cache updated for $ckn, edn$ednID";
+      print "unable to open catalog $catID aborting cache updated for $ckn, edn$ednID \n";
     } else {
       $ednIDs = $catalog->getEditionIDs();
     }
   } else {
+    $ednList = array();
     $ednIDs = explode(",",$ednIDs);
+    foreach ($ednIDs as $ednID) {
+      $ednID2 = null;
+      if (strpos($ednID,'_') !== false && strpos($ednID,'_') == strrpos($ednID,'_')) { // ckn range
+        list($ednID, $ednID2) = explode('_',$ednID);
+      }
+      if (strlen($ednID)>7 || $ednID2 && strlen($ednID2)>7 ) { //unknown format !!dependency
+        print "illegal format using $ednID"."_$ednID2 \n";
+        continue;
+      } else { //expand ranges
+        array_push($ednList, intval($ednID));
+        if ($ednID2) {//range so expand 
+          $id = intval($ednID);
+          $id2 = intval($ednID2);
+          if ( $id + 1 < $id2) {
+            for ($i = $id+1; $i < $id2; $i++) {
+              array_push($ednList, $i); //add computed ednID to list
+            }
+          }
+          array_push($ednList, $id2);//add end of range ednID to list
+        }
+      }
+    }
+    $ednIDs = $ednList;
   }
   if ($ednIDs && count($ednIDs) > 0) {
     foreach ($ednIDs as $ednID) {
-      $ednID = $ednID['edn_id'];
-      getEditionsStructuralViewHtml(array($ednID), true);
-      print "cache updated for $ckn, edn$ednID";
+//      getEditionsStructuralViewHtml(array($ednID), true);
+      print "cache updated for edn$ednID \n";
     }
   }
 
