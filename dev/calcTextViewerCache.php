@@ -211,7 +211,7 @@
   }
   if ($ednIDs && count($ednIDs) > 0) {
     foreach ($ednIDs as $ednID) {
-//      getEditionsStructuralViewHtml(array($ednID), true);
+      getEditionsStructuralViewHtml(array($ednID), true);
       print "cache updated for edn$ednID \n";
     }
   }
