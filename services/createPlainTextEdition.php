@@ -156,7 +156,8 @@ if (count($errors) == 0) {
   if ($defAttrIDs){
     $edition->setAttributionIDs($defAttrIDs);
 	}
-	if (isset($data['ednTitle']) && count($data['ednTitle'])) {
+	$description = null;
+	if (isset($data['ednTitle']) && is_String($data['ednTitle']) && strlen($data['ednTitle'])) {
 		$description = $data['ednTitle'];
 	}
   if (!$description) {

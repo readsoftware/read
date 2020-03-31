@@ -1026,8 +1026,11 @@
     * @return iterator that contains annotation objects for this Entity or NULL
     */
     public function getAnnotations($autoExpand = false) {
-      if (!$this->_annotations && $autoExpand && count($this->getAnnotationIDs())>0) {
-        $this->_annotations = new Annotations("ano_id in (".join(",",$this->getAnnotationIDs()).")",null,null,false);
+      if (!$this->_annotations && $autoExpand) {
+        $anoIDs = $this->getAnnotationIDs();
+        if ($anoIDs && count($anoIDs) > 0) {
+          $this->_annotations = new Annotations("ano_id in (".join(",",$anoIDs.")",null,null,false));
+        }
       }
       return $this->_annotations;
     }

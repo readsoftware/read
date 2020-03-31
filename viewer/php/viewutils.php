@@ -400,14 +400,21 @@ function getEditionAnnotationTypes($ednIDs) {
     } else {
       $edSeqs = $edition->getSequences(true);
       $textAnalysisSeq = null;
+      $textPhysicalSeq = null;
       foreach ($edSeqs as $edSequence) {
         $seqType = $edSequence->getType();
         if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
           $textAnalysisSeq = $edSequence;
         }
+        if (!$textPhysicalSeq && $seqType == "TextPhysical"){//warning!!!! term dependency
+          $textPhysicalSeq = $edSequence;
+        }
       }
       if ($textAnalysisSeq && $textAnalysisSeq->getEntityIDs() && count($textAnalysisSeq->getEntityIDs()) > 0) {
         getSequenceAnnotationTypes($textAnalysisSeq);
+      }
+      if ($textPhysicalSeq && $textPhysicalSeq->getEntityIDs() && count($textPhysicalSeq->getEntityIDs()) > 0) {
+        getSequenceAnnotationTypes($textPhysicalSeq);
       }
     }
   }
@@ -1235,7 +1242,7 @@ function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
             $structureHtml .= getWordHtml($entity,$i+1 == $cntGID, $nextToken, $refresh);
           }
         }else{
-          error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
+          error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id=".$edition->getID());
           continue;
         }
         if ($i == 0 && array_key_exists($entTag,$blnPosByEntTag[$entType])) {// first contained entity so if baseline position then copy for sequence.
@@ -1308,7 +1315,13 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
         //check for cached value
         if (USEVIEWERCACHING) {
           $physicalLineHtml = $linePhysSequence->getScratchProperty("edn".$edition->getID()."physLineHtml");
+          if (!$physicalLineHtml) {
+            $physicalLineHtml = $linePhysSequence->getScratchProperty("physLineHtml");
+          }
           $fnRefTofnTextByLine = $linePhysSequence->getScratchProperty("edn".$edition->getID()."fnTextByAnoTag");
+          if (count($fnRefTofnTextByLine) == 0) {
+            $fnRefTofnTextByLine = $linePhysSequence->getScratchProperty("fnTextByAnoTag");
+          }
         }
         if ($physicalLineHtml && !$refresh) {
           $physicalLinesHtml .= $physicalLineHtml;
@@ -1356,6 +1369,14 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
             }
             continue;
           }
+          // check for annotation anotext for this line if exist
+          $fnInfo = getEntityFootnotesHtml($linePhysSequence, $refresh);
+          $fnTextByAnoTag = $fnInfo['fnTextByAnoTag'];
+          if (count($fnTextByAnoTag)>0) {
+            foreach ($fnTextByAnoTag as $anoTag => $anoText){
+              $fnRefTofnTextByLine[$anoTag] = $anoText;
+            }
+          }
           if ($nextLineSeqGID && strpos($nextLineSeqGID,'seq') === 0) {
             $nextLineSequence = new Sequence(substr($nextLineSeqGID,4));
             if (!$nextLineSequence || $nextLineSequence->hasError()) {//no sequence or unavailable so warn
@@ -1363,7 +1384,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
               $nextLineSequence = null;
             } else {//determine if this line has a wrapping word at the end
               $nextSclGIDs = $nextLineSequence->getEntityIDs();
-              if (count($nextSclGIDs) > 0) {
+              if ($nextSclGIDs &&  count($nextSclGIDs) > 0) {
                 $nextLineSclGID = $nextSclGIDs[0];
                 $nextLineSyllable = new SyllableCluster(substr($nextLineSclGID,4));
                 if (!$nextLineSyllable || $nextLineSyllable->hasError()) {//no syllable or unavailable so warn

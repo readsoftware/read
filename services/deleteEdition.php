@@ -172,7 +172,7 @@ if (count($errors) == 0 && $seqIDs && count($seqIDs) > 0 ) {
             }
           }
         }
-        if (count($seqAnnoIDs)) {
+        if ($seqAnnoIDs && count($seqAnnoIDs)) {
           array_push($warnings,"readonly annotations found for sequence id $seqID : ".join(',',$seqAnnoIDs));
         }
         addUpdateEntityReturnData('seq',$seqID,'annotationIDs',$seqAnnoIDs);
