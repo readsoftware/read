@@ -511,7 +511,7 @@ function getStructTransHtml($sequence, $addBoundaryHtml = false) {
           $structureHtml .= getWordTransHtml($entity);
         }
       }else{
-        error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
+        error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id=".$edition->getID());
         continue;
       }
     }
@@ -785,7 +785,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
           $html .= getWordTransHtml($entity,false);
         }
       }else{
-        error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id="+$edition->getID());
+        error_log("warn, Found unknown structural element $entGID for edition ".$edition->getDescription()." id=".$edition->getID());
         continue;
       }
     }

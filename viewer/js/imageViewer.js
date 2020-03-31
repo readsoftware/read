@@ -535,9 +535,9 @@ VIEWERS.ImageViewer.prototype = {
 
   addImagePolygon: function (polygons,label,visible,linkIDs,center,ordinal) {
     //todo add code to validate the polygon
-    var clr = "blue";
+    var clr = "cyan";
     if (!linkIDs){
-      clr = "red";
+      clr = "magenta";
     }
     this.polygons.push({polygons:polygons,
                         center: center,
