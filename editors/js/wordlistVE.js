@@ -781,9 +781,9 @@ EDITORS.WordlistVE.prototype = {
         displayValue = '', wordAnnoTag, wordAnno, lemma, lemmaAnnoTag, lemmaAnno;
     if (this.dataMgr.entities && this.dataMgr.entities.lem && this.dataMgr.entities.lem[lemID]) {
       lemma = this.dataMgr.entities.lem[lemID];
-      if (!lemma.tag) {
+//      if (!lemma.tag) {
         lemma.tag = "lem" + lemID;
-      }
+//      }
       cf = lemma.certainty?lemma.certainty:[3,3,3,3,3];
       pos = this.dataMgr.getTermFromID(lemma.pos);
       isNoun = pos == 'noun';

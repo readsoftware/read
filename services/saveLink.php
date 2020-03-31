@@ -80,14 +80,14 @@ if (!$data) {
   }
   if ( isset($data['linkType'])) {//todo: this assumes direct decendent of linkagetype need a way to specify terms under linkage
     $linkType = $data['linkType'];
-    if ($linkType || count($linkType)) {
+    if ($linkType && strlen($linkType)) {
       $linkTypeID = Entity::getIDofTermParentLabel(strtolower($linktype)."-linkagetype");
     }
   }
-  if (!$fromGID || count($fromGID) == 0) {
+  if (!$fromGID || strlen($fromGID) == 0) {
     array_push($errors,"saveLink must have a 'from' entity GID");
   }
-  if (!$toGID || count($toGID) == 0) {
+  if (!$toGID || strlen($toGID) == 0) {
 //    array_push($errors,"saveLink must have a 'to' entity GID");
   }
   $linkageTypeID = ENTITY::getIDofTermParentLabel("linkagetype-annotationtype");//warning!!!! term dependency
@@ -169,7 +169,7 @@ if (count($errors) == 0) {
     }
   }
   $toLinkGIDs = $link->getLinkToIDs();
-  if (count($toLinkGIDs) > 0 && !$unique) {
+  if ($toLinkGIDs && count($toLinkGIDs) > 0 && !$unique) {
     if ($toGID && !in_array($toGID,$toLinkGIDs)) {// no duplicates
       array_push($toLinkGIDs,$toGID);
     }
@@ -179,12 +179,12 @@ if (count($errors) == 0) {
   $link->setTypeID($linkTypeID);
   $link->setLinkToIDs($toLinkGIDs);
   $fromLinkGIDs = $link->getLinkFromIDs();
-  if (count($fromLinkGIDs) > 0 && !$unique) {
+  if ($fromLinkGIDs && count($fromLinkGIDs) > 0 && !$unique) {
     if (!in_array($fromGID,$fromLinkGIDs)) {
       array_push($fromLinkGIDs,$fromGID);
     }
   } else {
-    if (count($fromLinkGIDs) > 0) {
+    if ($fromLinkGIDs && count($fromLinkGIDs) > 0) {
     array_push($warnings,"warning replacing(".join(',',$fromLinkGIDs).") $linkType links with $fromGID in".$link->getEntityTag());
     }
     $fromLinkGIDs = array($fromGID);
