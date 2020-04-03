@@ -76,15 +76,15 @@ EDITORS.ImgVE.prototype = {
   init: function() {
     DEBUG.traceEntry("init","init img editor");
     if (this.dataMgr){
-      this.typeIDs = [this.dataMgr.termInfo.idByTerm_ParentLabel["eyecopy-imagetype"],//term dependency
-                      this.dataMgr.termInfo.idByTerm_ParentLabel["inscriptioneyecopy-imagetype"],//term dependency
-                      this.dataMgr.termInfo.idByTerm_ParentLabel["inscriptionphotograph-imagetype"],//term dependency
-                      this.dataMgr.termInfo.idByTerm_ParentLabel["inscriptionphotographinfrared-imagetype"],//term dependency
-                      this.dataMgr.termInfo.idByTerm_ParentLabel["inscriptionrubbing-imagetype"],//term dependency
-                      this.dataMgr.termInfo.idByTerm_ParentLabel["manuscriptconserved-imagetype"],//term dependency
-                      this.dataMgr.termInfo.idByTerm_ParentLabel["manuscriptreconstruction-imagetype"],//term dependency
-                      this.dataMgr.termInfo.idByTerm_ParentLabel["reconstructedsurface-imagetype"],//term dependency
-                      this.dataMgr.termInfo.idByTerm_ParentLabel["reliquaryphotograph-imagetype"]];//term dependency
+      this.typeIDs = [this.dataMgr.termInfo.idByTerm_ParentLabel["digital-imagetype"],//term dependency
+                      this.dataMgr.termInfo.idByTerm_ParentLabel["drawing-imagetype"],//term dependency
+                      this.dataMgr.termInfo.idByTerm_ParentLabel["infrared-imagetype"],//term dependency
+                      this.dataMgr.termInfo.idByTerm_ParentLabel["lithograph-imagetype"],//term dependency
+                      this.dataMgr.termInfo.idByTerm_ParentLabel["painting-imagetype"],//term dependency
+                      this.dataMgr.termInfo.idByTerm_ParentLabel["photograph-imagetype"],//term dependency
+                      this.dataMgr.termInfo.idByTerm_ParentLabel["print-imagetype"],//term dependency
+                      this.dataMgr.termInfo.idByTerm_ParentLabel["reconstruction-imagetype"],//term dependency
+                      this.dataMgr.termInfo.idByTerm_ParentLabel["rubbing-imagetype"]];//term dependency
     }
     this.showImg();
     DEBUG.traceExit("init","init img editor");
