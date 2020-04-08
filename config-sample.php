@@ -155,7 +155,7 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   define("LEMMALINKTEMPLATE",READ_DIR."/plugins/dictionary/?search=%lemval%");
 
 //location label formatting
-  // regular expression string for pattern match on text CKN used in attestform location labelling
+  // regular expression string for pattern match on text number used in attestform location labelling
   define("CKNMATCHREGEXP","'([a-z]+)0*(\\d+)'");// grp1 match starting non numeric characters followed by zero or more 0 grp2 match 1 or more following numbers
   // replacement string for creating text ref part of attestedform location label
   define("CKNREPLACEMENTEXP","'\\1\\2'");//replacement string is grp1 match followed by grp2 match
@@ -167,9 +167,9 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   define("DEFAULTTOVERSELABEL", false); 
 
 //viewer title formatting
-  // String for matching used to reformating of text CKN to calculate title for READViewer
+  // String for matching used to reformating of text number to calculate title for READViewer
   define("INVMATCHREGEXP","/([a-z]+)0*(\\d+)/i");//grp1 match starting non numeric characters followed by zero or more 0 grp2 match following numbers
-  // String for replacement used to reformating of text CKN to calculate title for READViewer
+  // String for replacement used to reformating of text number to calculate title for READViewer
   define("INVREPLACEMENTEXP","\\1 \\2");//replace is grp1 followed by grp2
   // String to insert between the text inv and text title
   define("VIEWERINVTITLESEP",": ");//separate txt label from line label using a space
@@ -197,9 +197,6 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   if(!defined("VIEWER_EXPORT_PATH")) define("VIEWER_EXPORT_PATH",DOCUMENT_ROOT.VIEWER_EXPORT_SUBDIR);
   // 
   if(!defined("VIEWER_BASE_URL")) define("VIEWER_BASE_URL",SITE_ROOT.VIEWER_EXPORT_SUBDIR);
-
-  // READ Workbench
-  if(!defined("WORKBENCH_BASE_URL")) define("WORKBENCH_BASE_URL", REQSCHEMA . "://import-read-corpus.sydney.edu.au");
 
   $info = new SplFileInfo(SEGMENT_CACHE_BASE_PATH);
   if (!$info->isDir()) {
