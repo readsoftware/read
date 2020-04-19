@@ -3177,10 +3177,14 @@ function validateTokCmp ($tokCmpGID, $ctxMessage, $topTokCmpGID) {
       }
       $newCtxMessage = "$ctxMessage, token/compound ($label/$tokCmpGID)";
       $prefix = $entity->getEntityTypeCode();
+      $id = $entity->getID();
       if ($prefix == "cmp") {//process components
         $componentGIDs = $entity->getComponentIDs();
         if (count($componentGIDs)) {
           foreach ($componentGIDs as $componentGID) {
+            if ($componentGID == "cmp:$id") {
+               continue;
+            }
             validateTokCmp($componentGID,$newCtxMessage,$topTokCmpGID);//**********RECURSION*********
           }
         } else {

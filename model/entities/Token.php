@@ -456,7 +456,7 @@
     * @return Grapheme iterator for the graphemes of this token or NULL
     */
     public function getGraphemes($autoExpand = false) {
-      if (!$this->_graphemes && $autoExpand && count($this->getGraphemeIDs())>0) {
+      if (!$this->_graphemes && $this->_grapheme_ids && $autoExpand && count($this->getGraphemeIDs())>0) {
         if (strpos($this->idsToString($this->_grapheme_ids),"-") !== false){ //found temp id
           $this->_graphemes = null;
         }else{

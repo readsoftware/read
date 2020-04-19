@@ -214,7 +214,7 @@
                                         '"readonly":'.($sequence->isReadonly()?'true':'false').','.
                                         '"editibility":"'.$sequence->getOwnerID().'",'.
                                         '"typeID":"'.$seqTypeID.'",'.
-                                        '"entityIDs":['.(count($sequence->getEntityIDs())?'"'.join('","',$sequence->getEntityIDs()).'"':'').']';
+                                        '"entityIDs":['.($sequence->getEntityIDs() && count($sequence->getEntityIDs())?'"'.join('","',$sequence->getEntityIDs()).'"':'').']';
           $superscript = $sequence->getSuperScript();
           if ($superscript && count($superscript) > 0) {
             $seqRetString .= ',"sup":"'.$superscript.'"';
@@ -257,7 +257,7 @@
                                             '"children":'.getSeqData($sequence, $refresh).','.
                                             '"entityIDs":['.((isset($seqEntityIDs) && count($seqEntityIDs))?'"'.join('","',$seqEntityIDs).'"':'').']';
               $superscript = $sequence->getSuperScript();
-              if ($superscript && count($superscript) > 0) {
+              if ($superscript && strlen($superscript) > 0) {
                 $seqRetString .= ',"sup":"'.$superscript.'"';
               }
               $freetext = $sequence->getScratchProperty('freetext');

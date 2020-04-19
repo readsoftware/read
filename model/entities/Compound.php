@@ -168,8 +168,16 @@
           list($prefix,$id) = explode( ":", $gid);
           switch ($prefix){
            case "cmp":
+              if ($this->getID() == $id) {
+                break;
+              }
               $compound = new Compound($id);
-              $tokenIDs = array_merge($tokenIDs, $compound->getTokenIDs());
+              $cmpEntIds = $compound->getTokenIDs($id);
+              $index = array_search("cmp:$id",$cmpEntIds);
+              if ($index !== false){
+                array_splice($cmpEntIds,$index,1);
+              }
+              $tokenIDs = array_merge($tokenIDs, $cmpEntIds);
               if (count($compound->getErrors())) {
                 array_merge($this->_errors,$compound->getErrors());
               }
