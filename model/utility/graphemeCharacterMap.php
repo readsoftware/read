@@ -103,6 +103,7 @@ $graphemeCharacterMap = array(
 "⚂"=>array("srt"=>"920","ssrt"=>"920","typ"=>"P"),
 "⚃"=>array("srt"=>"930","ssrt"=>"930","typ"=>"P"),
 "⚄"=>array("srt"=>"940","ssrt"=>"940","typ"=>"P"),
+"▩"=>array("srt"=>"950","ssrt"=>"950","typ"=>"P"),
 "*"=>array("srt"=>"099","ssrt"=>"099","typ"=>"V"), // for sanskrit
 "∙"=>array("srt"=>"000","ssrt"=>"099","typ"=>"M"), // 2019 virama {ASG: why both * and · for virama?
 "."=>array("srt"=>"189","ssrt"=>"189","typ"=>"V"),
@@ -272,6 +273,7 @@ $graphemeCharacterMap = array(
     "srt"=>"360","ssrt"=>"360","typ"=>"C"),
 "ṇ"=>array(
     "̄"=>array("srt"=>"432","ssrt"=>"432","typ"=>"C"),
+    "̱"=>array("srt"=>"431","ssrt"=>"431","typ"=>"C"),
     "srt"=>"430","ssrt"=>"430","typ"=>"C"),
 "o"=>array(
     "͚"=>array("srt"=>"228","ssrt"=>"228","typ"=>"V"),
