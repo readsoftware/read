@@ -2469,6 +2469,7 @@ EDITORS.sclEditor.prototype = {
     "⚂" :"P",
     "⚃" :"P",
     "⚄" :"P",
+    "▩" :"P",
     "?" :"O",
     "+" :"O",
     "#" :"O",
@@ -2654,6 +2655,7 @@ EDITORS.sclEditor.prototype = {
     "⚂": {"srt": "920","ssrt": "920","typ": "P"},
     "⚃": {"srt": "930","ssrt": "930","typ": "P"},
     "⚄": {"srt": "940","ssrt": "940","typ": "P"},
+    "▩": {"srt": "950","ssrt": "950","typ": "P"},
     "*": { "srt": "000", "typ": "V" },
     ".": { "srt": "189", "typ": "V" },
     "_": { "srt": "599", "typ": "C" },
@@ -2818,6 +2820,7 @@ EDITORS.sclEditor.prototype = {
       "srt": "360", "typ": "C" },
     "ṇ": {
       "̄": { "srt": "432", "typ": "C" },
+      "̱": { "srt": "431", "typ": "C" },
       "srt": "430", "typ": "C" },
     "o": {
       "͚": { "srt": "228", "typ": "V" },
