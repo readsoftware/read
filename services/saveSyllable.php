@@ -361,7 +361,11 @@ if (count($errors) == 0) {
       $lastFindIndex = -1;//keep track of location in oldSylGra set at -1 so first time check is index 0
       $cnt = count($oldSylGra);
 //      $dbGraphemes->rewind(); //   $data['prevTCM'];
-      $prevTCM = $oldSylGra[0]->getTextCriticalMark();
+      if ($cnt > 0) {
+        $prevTCM = $oldSylGra[0]->getTextCriticalMark();
+      } else {
+        $prevTCM = "S";
+      }
       $iGraData = 0;
       $preSplitTokenChanged = false;
       $postSplitTokenChanged = false;

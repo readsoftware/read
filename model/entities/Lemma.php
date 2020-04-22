@@ -363,7 +363,7 @@
     * @return Lemma iterator for the components of this lemma or NULL
     */
     public function getComponents($autoExpand = false) {
-      if (!$this->_components && $autoExpand && count($this->getComponentIDs())>0) {
+      if (!$this->_components && $autoExpand && $this->_component_ids && count($this->getComponentIDs())>0) {
         $this->_components = new OrderedSet();
         $this->_components->loadEntities($this->getComponentIDs());
       }

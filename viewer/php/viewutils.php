@@ -536,6 +536,7 @@ function getMultiEditionHeaderHtml($ednIDs) {
   $researchSortKeys = array();
   $defaultEditionFound = false;
   $defaultEditionHTML = null;
+  $eIndex = 0;
   foreach ($ednIDs as $ednID) {//accumulate in order all subsequence for text, text physical and analysis
     $edition = new Edition($ednID);
     if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
@@ -572,10 +573,11 @@ function getMultiEditionHeaderHtml($ednIDs) {
       } else {
         if ($ord && is_numeric($ord)) {
           $sort = intval($ord);
-        } else if ($date) {
-          $sort = $date;
+//        } else if ($date) {
+//          $sort = $date;
         } else {
-          $sort = intval($ednID)*10000;
+          $sort = $eIndex;
+//          $sort = intval($ednID)*10000;
         }
         if ($edition->isResearchEdition()) {
           $researchEditionsHTML[$ednID] = "<button id=\"edn$ednID\" class=\"textEdnButton research\" title=\"$descr\">$hdrText</button>";
@@ -585,6 +587,7 @@ function getMultiEditionHeaderHtml($ednIDs) {
           $pubSortKeys[$sort] = $ednID;
         }
       }
+      $eIndex++;
     }
   }
   //create headerDiv Html

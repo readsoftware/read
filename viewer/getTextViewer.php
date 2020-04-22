@@ -68,6 +68,8 @@
       $ednID = intval($ednIDs[0]); //first id is primary
       if (!is_int($ednID)) {
         $ednIDs = $ednID = null;
+      } else {
+        $edition = new Edition($ednID);
       }
     }
     if ( isset($data['catID'])) {//optional override
@@ -76,7 +78,7 @@
       $catID = intval($catIDs[0]); //first id is primary
       if (!is_int($catID)) {
         $catIDs = $catID = null;
-      } else if (!$txtID && $ednIDs){
+      } else if ($ednIDs){
         $cntCat = count($catIDs);
         $ednToCatID = array();
         for ($i = 0; $i < count($ednIDs); $i++){
@@ -99,23 +101,25 @@
       if ($text->hasError() || $text->getID() != $txtID) {
         returnXMLErrorMsgPage("unable to load text $txtID - ".join(",",$text->getErrors()));
       }
-      $editions = $text->getEditions();
-      if ($editions->getError() || $editions->getCount() == 0) {
-        returnXMLErrorMsgPage("unable to load any text $txtID editions - ".$editions->getError());
-      }
       $cfgEntityTag = DBNAME."txt$txtID";
       $entityCfgStaticView = $text->getScratchProperty("cfgStaticView");
       if ($entityCfgStaticView) {
         $entityCfgStaticView = json_decode($entityCfgStaticView);
       }
-      $edition = $editions->current();
-      //get this text's default edition
-      $ednIDs = $editions->getKeys();
-      $sortedEdnIDs = $ednIDs;
-      sort($sortedEdnIDs,SORT_NUMERIC);
-      $ednID = $sortedEdnIDs[0];
-      if ($catID) {
-        $ednToCatID = array($ednID=>$catID);//single catalog case
+      if (!$ednIDs) {
+        $editions = $text->getEditions();
+        if ($editions->getError() || $editions->getCount() == 0) {
+          returnXMLErrorMsgPage("unable to load any text $txtID editions - ".$editions->getError());
+        }
+        $edition = $editions->current();
+        //get this text's default edition
+        $ednIDs = $editions->getKeys();
+        $sortedEdnIDs = $ednIDs;
+        sort($sortedEdnIDs,SORT_NUMERIC);
+        $ednID = $sortedEdnIDs[0];
+        if ($catID) {
+          $ednToCatID = array($ednID=>$catID);//single catalog case
+        }
       }
       if (!$multiEdition){
         $ednIDs = null;
