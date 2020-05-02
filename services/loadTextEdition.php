@@ -350,7 +350,7 @@
                                             '"children":'.getChildEntitiesJsonString($sequence->getEntityIDs()).
                                             ((isset($seqEntityIDs) && count(@$seqEntityIDs))?',"entityIDs":["'.join('","',$seqEntityIDs).'"]':'');
               $superscript = $sequence->getSuperScript();
-              if ($superscript && count($superscript) > 0) {
+              if ($superscript && strlen($superscript) > 0) {
                 $seqRetString .= ',"sup":"'.$superscript.'"';
               }
               $AnoIDs = $sequence->getAnnotationIDs();

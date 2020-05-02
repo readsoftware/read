@@ -111,24 +111,28 @@ if (count($errors) == 0) {
   } else {//use data to update baseline and save
     if ($srfID !== null) {
       $surface = new Surface($srfID);
-    } else if (!$baseline->getSurfaceID() && $txtID) {//create new surface
-      $surface = new Surface();
-      $surface->setTextIDs(array($txtID));
-      if ($imgID) {
-        $surface->setImageIDs(array($imgID));
+    } else if (!$baseline->getSurfaceID() && $txtID) {
+      //check if text had existing surface to use
+      $condition = "$txtID = ANY(srf_text_ids)";
+      $surfaces = new Surfaces($condition);
+      if ($surfaces->getCount() > 0) { //found a match use first one
+        $surface = $surfaces->current();
+      } else {//else create new surface
+        $surface = new Surface();
+        $surface->setTextIDs(array($txtID));
+        if ($imgID) {
+          $surface->setImageIDs(array($imgID));
+        }
+        $surface->setOwnerID($defOwnerID);
+        $surface->setVisibilityIDs($defVisIDs);
+        $surface->save();
+        if ($surface->hasError()) {
+          array_push($errors,"error creating new surface - ".join(",",$surface->getErrors()));
+        } else {
+          addNewEntityReturnData('srf',$surface);
+        }
       }
-      $surface->setOwnerID($defOwnerID);
-      $surface->setVisibilityIDs($defVisIDs);
-      if ($defAttrIDs){
-//        $surface->setAttributionIDs($defAttrIDs);
-      }
-      $surface->save();
-      if ($surface->hasError()) {
-        array_push($errors,"error creating new surface - ".join(",",$surface->getErrors()));
-      } else {
-        addNewEntityReturnData('srf',$surface);
-        $srfID = $surface->getID();
-      }
+      $srfID = $surface->getID();
     }
     if ($srfID !== null) {
       $baseline->setSurfaceID($srfID);
