@@ -151,6 +151,8 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   define("FORMATENCODEDETYM",true);
   // Boolean constant to control the use of enclosing parentheses around the lemma etymology
   define("SHOWETYMPARENS",false);
+  // symbol for marking footnotes
+  define("FOOTNOTEMARKER",'n');
   // String template used to create the href link for the lemma
   define("LEMMALINKTEMPLATE",READ_DIR."/plugins/dictionary/?search=%lemval%");
 

@@ -1076,9 +1076,15 @@ createSearchCtrlPanel: function(){
           for (i in catalog.ednIDs) {
             ednID = catalog.ednIDs[i];
             if (!this.dataMgr.editionForIDUnavailable(ednID) && !this.dataMgr.isEditionLoaded(ednID)) {
-              this.dataMgr.loadEdition(ednID,function() {
-                              layoutMgr.loadPaneContent(tag,paneID);
-                            });
+              if (this.dataMgr.loadingEdition && ednID == this.dataMgr.loadingEdition) {
+                this.dataMgr.stackLoadEdition(ednID,function() {
+                                                      layoutMgr.loadPaneContent(tag,paneID);
+                                                    });
+              } else {
+                this.dataMgr.loadEdition(ednID,function() {
+                                                  layoutMgr.loadPaneContent(tag,paneID);
+                                                });
+              }
               DEBUG.traceExit("layoutMgr.loadPaneContent"," entTag "+ tag + " for "+paneID);
               return;
             }

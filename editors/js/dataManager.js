@@ -1133,7 +1133,7 @@ MANAGERS.DataManager.prototype = {
         }
       }
       if (ednID) {
-        DEBUG.trace('AfterStackPop loadEdition Call','ednID = '+ednID,1);
+        DEBUG.trace('AfterStackPop loadEdition Call','ednID = '+ednID);
         this.loadEdition(ednID, cb);
         exitMsg = 'ednID = '+ ednID;
       }
@@ -1381,6 +1381,7 @@ MANAGERS.DataManager.prototype = {
 
   processLoadBaselineStack: function() {
     var blnID, cb;
+    DEBUG.traceEntry("dataMgr.processLoadBaselineStack","");
     if (!this.loadingBaseline && this.blnStack &&
           Object.keys(this.blnStack).length) {
       for (blnID in this.blnStack) {
@@ -1392,6 +1393,7 @@ MANAGERS.DataManager.prototype = {
         this.loadBaseline(blnID, cb);
       }
     }
+    DEBUG.traceExit("dataMgr.processLoadBaselineStack","");
   },
 
 
@@ -1859,6 +1861,7 @@ removeTextResourcesCache: function(txtID) {
 
   processLoadCatalogStack: function() {
     var catID, cb;
+    DEBUG.traceEntry("dataMgr.processLoadCatalogStack","");
     if (!this.loadingCatalog && this.catStack &&
         Object.keys(this.catStack).length) {
       for (catID in this.catStack) {
@@ -1870,6 +1873,7 @@ removeTextResourcesCache: function(txtID) {
         this.loadCatalog(catID, cb);
       }
     }
+    DEBUG.traceExit("dataMgr.processLoadCatalogStack","");
   },
 
 
@@ -1966,6 +1970,8 @@ removeTextResourcesCache: function(txtID) {
               dataMgr.processLoadCatalogStack();
           }
       });
+    } else if (cb && typeof cb == "function") {
+      cb();
     }
     DEBUG.traceExit("dataMgr.loadCatalog","catID = " + catID);
   },
