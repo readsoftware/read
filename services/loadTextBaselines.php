@@ -109,12 +109,14 @@
         $srfID = $surface->getID();
         if ($srfID && !array_key_exists($srfID, $entities['srf'])) {
           $entities['srf'][$srfID] = array( 'fragmentID'=> $surface->getFragmentID(),
-                                 'number' => $surface->getNumber(),
-                                 'description' => $surface->getDescription(),
-                                 'layer' => $surface->getLayerNumber(),
-                                 'txtID' => $txtID,
-                                 'imageIDs' => $surface->getImageIDs());
-          if (count($surface->getImageIDs()) > 0) {
+                                            'number' => $surface->getNumber(),
+                                            'label' => $surface->getLabel(),
+                                            'value' => $surface->getDescription(),
+                                            'description' => $surface->getDescription(),
+                                            'layer' => $surface->getLayerNumber(),
+                                            'txtIDs' => $surface->getTextIDs(),
+                                            'imageIDs' => $surface->getImageIDs());
+                      if (count($surface->getImageIDs()) > 0) {
             foreach ($surface->getImages(true) as $image) {
                 $imgID = $image->getID();
                 if ($imgID && !array_key_exists($imgID, $entities['img'])) {

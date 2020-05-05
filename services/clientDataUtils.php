@@ -158,8 +158,8 @@ function addNewEntityReturnData($prefix,$entity) {
         'label' => $surface->getLabel(),
         'description' => $surface->getDescription(),
         'layer' => $surface->getLayerNumber(),
-        'scripts' => $surface->getScripts(),
         'textIDs' => $surface->getTextIDs(),
+        'scripts' => $surface->getScripts(),
         'imageIDs' => $surface->getImageIDs(),
         'readonly' => $surface->isReadonly(),
         'attributionIDs' => $surface->getAttributionIDs());

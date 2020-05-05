@@ -923,14 +923,34 @@ EDITORS.SearchVE.prototype = {
       alert("BEEP!!!");
       return;
     }
-    var srchVE = this, rptPanel,
+    var srchVE = this, srfID = null,
         imgID = $(button).prop("imgID"),
         txtID = $(button).prop("txtID");
     DEBUG.traceEntry("newBaseline"," search editor");
+    srfInfos = [];
+    textID = "" + txtID;
+    for (i in this.dataMgr.entities.srf) {
+      srf = this.dataMgr.entities.srf[i];
+      if (srf.textIDs.length && srf.textIDs.indexOf(textID) > -1){
+        srfInfos.push({id:srf.id, label:srf.label})
+      }
+    }
+    if (srfInfos.length>0){
+      if (srfInfos.length == 1){
+        srfID = srfInfos[0]["id"];
+      } else {//multiple surfaces case
+        srfInfos.forEach(srfInfo => {
+          if (!srfID && confirm("Would you like to link "+(srfInfo.label?srfInfo.label:"unknown")+
+                      " surface to the new baseline?")) {
+                        srfID = srfInfo.id;
+                      }
+        });
+      }
+    }
     $.ajax({
         dataType: 'json',
         url: basepath+'/services/saveBaseline.php?db='+dbName,
-        data:{imgID:imgID,txtID:txtID},
+        data:{imgID:imgID,txtID:txtID,srfID:srfID},
         asynch: true,
         success: function (data, status, xhr) {
               if (typeof data == 'object' && data.success && data.entities) {

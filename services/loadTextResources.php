@@ -199,12 +199,13 @@
       if ($srfID && !array_key_exists($srfID, $entities['update']['srf'])) {
         $frgID =  $surface->getFragmentID();
         $entities['update']['srf'][$srfID] = array('fragmentID'=>$frgID,
-                                         'id' => $srfID,
-                                         'number' => $surface->getNumber(),
-                                         'value' => $surface->getDescription(),
-                                         'description' => $surface->getDescription(),
-                                         'layer' => $surface->getLayerNumber(),
-                                         'textIDs' => $surface->getTextIDs());
+                                                  'id' => $srfID,
+                                                  'number' => $surface->getNumber(),
+                                                  'label' => $surface->getLabel(),
+                                                  'value' => $surface->getDescription(),
+                                                  'description' => $surface->getDescription(),
+                                                  'layer' => $surface->getLayerNumber(),
+                                                  'textIDs' => $surface->getTextIDs());
         array_push($srfIDs,$srfID);
         $sImgIDs = $surface->getImageIDs();
         if ($sImgIDs && count($sImgIDs) > 0) {

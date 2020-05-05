@@ -128,6 +128,8 @@
         $entities["insert"]['srf'][$srfID] = array( 'fragmentID'=> $surface->getFragmentID(),
                                                     'id' => $srfID,
                                                     'number' => $surface->getNumber(),
+                                                    'label' => $surface->getLabel(),
+                                                    'value' => $surface->getDescription(),
                                                     'description' => $surface->getDescription(),
                                                     'layer' => $surface->getLayerNumber(),
                                                     'textIDs' => $surface->getTextIDs());
