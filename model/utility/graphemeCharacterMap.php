@@ -163,7 +163,7 @@ $graphemeCharacterMap = array(
     "h"=>array("srt"=>"330","ssrt"=>"330","typ"=>"C"),
     "srt"=>"320","ssrt"=>"320","typ"=>"C"),
 "ć"=>array(
-    "̂"=>array("srt"=>"329","ssrt"=>"329","typ"=>"C"),
+    "̄"=>array("srt"=>"329","ssrt"=>"329","typ"=>"C"),
     "srt"=>"329","ssrt"=>"329","typ"=>"C"),
 "d"=>array("srt"=>"470","ssrt"=>"470","typ"=>"C",
     "h"=>array("srt"=>"480","ssrt"=>"480","typ"=>"C")),
