@@ -91,7 +91,7 @@ if (array_key_exists("callback",$_REQUEST)) {
   function calcAnnotationsByEntityByType() {
     global $entities;
 
-    $annotations = new Annotations("ano_linkfrom_ids is not null and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified");
+    $annotations = new Annotations("ano_linkfrom_ids is not null and ano_linkto_ids is null and not ano_owner_id = 1","ano_type_id,modified",null,null);
     if ($annotations->getCount()>0){
       foreach ($annotations as $annotation){
         $curType = $annotation->getTypeID();
