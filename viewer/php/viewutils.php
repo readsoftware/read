@@ -401,20 +401,22 @@ function getEditionAnnotationTypes($ednIDs) {
       $edSeqs = $edition->getSequences(true);
       $textAnalysisSeq = null;
       $textPhysicalSeq = null;
-      foreach ($edSeqs as $edSequence) {
-        $seqType = $edSequence->getType();
-        if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
-          $textAnalysisSeq = $edSequence;
+      if ($edSeqs && $edSeqs->getCount() > 0) {
+        foreach ($edSeqs as $edSequence) {
+          $seqType = $edSequence->getType();
+          if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
+            $textAnalysisSeq = $edSequence;
+          }
+          if (!$textPhysicalSeq && $seqType == "TextPhysical"){//warning!!!! term dependency
+            $textPhysicalSeq = $edSequence;
+          }
         }
-        if (!$textPhysicalSeq && $seqType == "TextPhysical"){//warning!!!! term dependency
-          $textPhysicalSeq = $edSequence;
+        if ($textAnalysisSeq && $textAnalysisSeq->getEntityIDs() && count($textAnalysisSeq->getEntityIDs()) > 0) {
+          getSequenceAnnotationTypes($textAnalysisSeq);
         }
-      }
-      if ($textAnalysisSeq && $textAnalysisSeq->getEntityIDs() && count($textAnalysisSeq->getEntityIDs()) > 0) {
-        getSequenceAnnotationTypes($textAnalysisSeq);
-      }
-      if ($textPhysicalSeq && $textPhysicalSeq->getEntityIDs() && count($textPhysicalSeq->getEntityIDs()) > 0) {
-        getSequenceAnnotationTypes($textPhysicalSeq);
+        if ($textPhysicalSeq && $textPhysicalSeq->getEntityIDs() && count($textPhysicalSeq->getEntityIDs()) > 0) {
+          getSequenceAnnotationTypes($textPhysicalSeq);
+        }
       }
     }
   }

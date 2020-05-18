@@ -3728,8 +3728,8 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
           $frgLbl = $row["flabel"];
           $srfLabel = $row["slabel"];
           $sideLbl = ($prtLabel || $frgLbl || $srfLabel)?($prtLabel?$prtLabel:"").
-                        ((INCLUDEFRAGINPARTSIDELABEL && $frgLbl)? (PARTFRAGSEPARATOR?PARTFRAGSEPARATOR:'').$frgLbl:"").
-                        ($srfLabel?(FRAGSIDESEPARATOR?FRAGSIDESEPARATOR:'').$srfLabel:""):
+                        ((INCLUDEFRAGINPARTSIDELABEL && $frgLbl)? ($prtLabel && PARTFRAGSEPARATOR?PARTFRAGSEPARATOR:'').$frgLbl:"").
+                        ($srfLabel?(($prtLabel || $frgLbl) && FRAGSIDESEPARATOR?FRAGSIDESEPARATOR:'').$srfLabel:""):
                       ((SUBIMGTITLEFORPARTSIDELABEL && $imgLabel)? $imgLabel:"");
           //on label changes save html for graphemeID to mark change logical location
           if ($sideLbl && $curSideLbl != $sideLbl) {

@@ -239,7 +239,9 @@
         $cfgEntityTag = DBNAME.$cfgEntTag;
       }
     }
-    $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:true;
+//    $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:true;
+    $refreshLookUps = (isset($data['refreshLookUps']) && $data['refreshLookUps'])? $data['refreshLookUps']:
+                        ((isset($data['refresh']) && $data['refresh'])? $data['refresh']: false);//default (parameter missing) not multi edition
     $basefilename = null;
     if ( isset($data['fname']) && strlen($data['fname']) > 0)  {
       $basefilename = $data['fname'];
