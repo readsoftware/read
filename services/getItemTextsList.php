@@ -59,7 +59,7 @@ if (!$data) {
 }
 
 if ($itmID) {
-	$query = 	'select txt_id as txtid, txt_title as txttitle, txt_ckn as ckn, '.
+	$query = 	"select txt_id as txtid, txt_title as txttitle, txt_ckn as ckn, ".
 	                 "(case when txt_title is null then concat('text-',txt_id) else txt_title end) as txtdisplay ".
 						'from text '.
 						'where txt_id in ( '.
@@ -80,7 +80,7 @@ if ($itmID) {
 																'prt_id is not null and '.
 																'srf_id is not null and '.
 																"txt_id is not null and itm_id = $itmID) t) s) ".
-						'order by txt_ckn;';
+						"order by regexp_replace(txt_title, E'\\\\D','','g')::int, txt_ckn;";
 
 	$dbMgr->query($query);
 	if ($dbMgr->getError()) {
