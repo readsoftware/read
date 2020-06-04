@@ -120,6 +120,19 @@ EDITORS.SearchVE.prototype = {
     this.viewToolbar = $('<div class="viewtoolbar"/>');
     this.editToolbar = $('<div class="edittoolbar"/>');
 
+    this.wzItemBtnDiv = $('<div class="toolbuttondiv">' +
+                            '<button class="toolbutton iconbutton" id="wzItemtBtn"' +
+                              ' title="Add a new text to the database">Find Item</button>'+
+                              '<div class="toolbuttonlabel">Item Wizard</div>'+
+                           '</div>');
+    this.editToolbar.append(this.wzItemBtnDiv);
+    this.wzItemtBtn = $('#wzItemtBtn',this.wzItemBtnDiv);
+    this.wzItemtBtn.unbind('click')
+                                  .bind('click',function(e) {
+                                    srchVE.layoutMgr.createItemWizard();
+                                    e.stopImmediatePropagation();
+                                    return false;
+                                  });
     this.newTextBtnDiv = $('<div class="toolbuttondiv">' +
                             '<button class="toolbutton iconbutton" id="newTextBtn"' +
                               ' title="Add a new text to the database">+ &#x1F4DC;</button>'+
@@ -882,7 +895,7 @@ EDITORS.SearchVE.prototype = {
                                 if (!srchVE.layoutMgr.ednWizard) {
                                   srchVE.layoutMgr.createNewEditionWizard(ckn);
                                 } else {
-                                  srchVE.layoutMgr.initEditionWizard(ckn)
+                                  srchVE.layoutMgr.initEditionWizard(ckn);
                                 }
                                 if (!srchVE.layoutMgr.ednWizard.jqxWindow('isOpen')) {
                                   srchVE.layoutMgr.ednWizard.jqxWindow('open');

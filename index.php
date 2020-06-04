@@ -84,6 +84,7 @@
     <script src="/jqwidget/jqwidgets/jqxlistbox.js"></script>
     <script src="/jqwidget/jqwidgets/jqxinput.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcheckbox.js"></script>
+    <script src="/jqwidget/jqwidgets/jqxcombobox.js"></script>
     <script src="/jqwidget/jqwidgets/jqxvalidator.js"></script>
     <script src="/jqwidget/jqwidgets/jqxpanel.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtree.js"></script>

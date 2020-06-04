@@ -164,8 +164,10 @@ if (count($errors) == 0) {
         addLinkEntityReturnData('img',$imgID,'blnIDs',$blnID);
       }
       $txtIDs = $surface->getTextIDs();
-      foreach ($txtIDs as $txtID) {
-        addLinkEntityReturnData('txt',$txtID,'blnIDs',$blnID);
+      if ($txtIDs && count($txtIDs) > 0) {
+        foreach ($txtIDs as $txtID) {
+          addLinkEntityReturnData('txt',$txtID,'blnIDs',$blnID);
+        }
       }
     }
   }
