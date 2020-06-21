@@ -1030,7 +1030,7 @@ EDITORS.WordlistVE.prototype = {
                         ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                         (wordAnno?' ('+wordAnno+')':"") + '</span>';
               } else {
-                DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
+                DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+(word && word.tag)?word.tag+" ":""+
                           (!word.value ? " missing word value":"")+
                           (!word.transcr ? " missing word trascription":"")+
                           (!word.locTag ? " missing word location label":""));
