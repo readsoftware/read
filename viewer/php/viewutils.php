@@ -917,13 +917,16 @@ function getEntityFootnotesHtml($entity, $refresh = false, $drillDown = true) {
 */
 function addWordToEntityLookups($entity, $refresh = false) {
   global $blnPosByEntTag, $polysByBlnTagTokCmpTag;
-  $polysByBln = $entity->getBaselinePolygons($refresh);// call once as updates scrolltop at the same time
+  if (is_numeric($refresh) && $refresh > 1) {
+    $entity->updateBaselineInfo(true);
+  }
+  $polysByBln = $entity->getBaselinePolygons(true);// call once as updates scrolltop at the same time
   if ($polysByBln && count($polysByBln) > 0) {
     foreach( $polysByBln as $blnTag => $polygons){
       $polysByBlnTagTokCmpTag[$blnTag][$entity->getEntityTag()] = $polygons;
     }
   }
-  if ($scrollTopInfo = $entity->getScrollTopInfo()) {
+  if ($scrollTopInfo = $entity->getScrollTopInfo(true)) {
     $blnPosByEntTag['word'][$entity->getEntityTag()] = $scrollTopInfo;
   }
 }
