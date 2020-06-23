@@ -176,6 +176,7 @@
         layoutManager = new MANAGERS.LayoutManager({ navPanel: navPanelDiv,
                                                      contentDiv: contDiv,
                                                      dataMgr: dataManager,
+                                                     catalogIdURL: "<?=defined("NEW_CATALOG_ID_URL")?NEW_CATALOG_ID_URL:''?>",
                                                      projTitle: "<?=defined("PROJECT_TITLE")?PROJECT_TITLE:"Set PROJECT_TITLE in config.php"?>",
                                                      username: "<?= @$username?$username:"unknown"?>" });
         dataManager.layoutMgr = layoutManager;

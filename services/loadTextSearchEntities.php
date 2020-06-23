@@ -162,6 +162,7 @@
                 (defined('DEFAULTSEARCHREFRESH')?DEFAULTSEARCHREFRESH:0)));
   $jsonRetVal = "";
   $jsonCache = null;
+  $orderBy = (defined('TEXT_INV_SORT')?TEXT_INV_SORT:'txt_ckn');
   $isSearchAll = ($condition === "");
   if ($isSearchAll && !$refresh && // if search all text then check cache.
       defined("USECACHE") && USECACHE) {
@@ -224,7 +225,8 @@
       } //for catalog
     }
 
-    $texts = new Texts($condition,'txt_ckn',null,null);//get all user visible text
+    $sortOrder = array();
+    $texts = new Texts($condition,$orderBy,null,null);//get all user visible text
     foreach ($texts as $text){
       $replacementIDs = $text->getReplacementIDs(true);
       if ($replacementIDs && count($replacementIDs)) continue; // skip forwarding references
@@ -243,6 +245,7 @@
                                'typeIDs' => $text->getTypeIDs(),
                                'ref' => $text->getRef());
         $cknLookup[$ckn] = $txtID;
+        array_push($sortOrder,$txtID);
         $tImgIDs = $text->getImageIDs();
         if ($tImgIDs && count($tImgIDs) > 0) {
           $entities['txt'][$txtID]['imageIDs'] = $tImgIDs;
@@ -315,6 +318,7 @@
 //    }
     if (count($cknLookup)) {
       $retVal["cknToTextID"] = $cknLookup;
+      $retVal["sortOrder"] = $sortOrder;
     }
     if (count($entities)) {
       $retVal["entities"] = array("insert"=>$entities);//dependencies for this to remain "insert"

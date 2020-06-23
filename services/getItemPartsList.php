@@ -58,7 +58,8 @@ if (!$data) {
 }
 
 if ($itmID) {
-	$query = "select prt_id as prtid, prt_label as prtlabel, (case when prt_label is null then concat('part-',prt_id) else prt_label end) as prtdisplay, prt_sequence as prtord ".
+	$query = "select prt_id, prt_label, prt_description, prt_sequence,".
+									"(case when prt_label is null then concat('part-',prt_id) else prt_label end) as prtdisplay ".
 						'from part '.
 						"where prt_owner_id != 1 and prt_item_id = $itmID ".
 						'order by prt_sequence;';

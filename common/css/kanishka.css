@@ -803,3 +803,76 @@ a.logoLink > img {
   margin-right: 0.1em;
   text-align: right;
 }
+
+.wzModelSep{
+  padding-top: 20px;
+  border-bottom: solid 2px;
+  margin-bottom: 3px;
+}
+
+.wzBtnAddEntity{
+  margin-top:5px;
+}
+
+.wzLabel{
+  display:inline-block;
+  vertical-align:top;
+  width: 120px;
+}
+
+.wzCombo{
+  display:inline-block;
+  vertical-align:top;
+}
+
+.wzInfoHdr{
+  width: 100%;
+  padding-left:10px;
+}
+
+.wzInfoDiv{
+  display:inline-block;
+}
+
+.wzInfoRow{
+  display:table-row;
+}
+
+.wzInfoRow.Top{
+  padding-top: 10px;
+}
+
+.wzEntInfoLbl{
+  display:table-cell;
+  padding-left: 10px;
+  width: 50px;
+  text-align: left;
+}
+
+.wzEntInfo{
+  display:table-cell;
+  padding-left: 10px;
+}
+
+.wzEntInfo.edit{
+  display:none;
+}
+
+.wzEntInfoInput{
+  display:none;
+  padding-left: 10px;
+}
+
+.wzEntInfoInput.edit{
+  display:table-cell;
+}
+
+.wzInvCombo{
+  display:none;
+  padding-left: 10px;
+  margin-top: 5px;
+}
+
+.wzInvCombo.show{
+  display:inline-block;
+}

@@ -229,10 +229,10 @@ EDITORS.SearchVE.prototype = {
       srchVE.propMgr.displayProperties(bShow);
       if (this.propertyBtn.hasClass("showUI") && !bShow) {
         this.propertyBtn.removeClass("showUI");
-        this.gridDiv.jqxGrid('pagesize',22);
+        this.gridDiv.jqxGrid('pagesize',22); //size without property pane
       } else if (!this.propertyBtn.hasClass("showUI") && bShow) {
         this.propertyBtn.addClass("showUI");
-        this.gridDiv.jqxGrid('pagesize',13);
+        this.gridDiv.jqxGrid('pagesize',13); // size with property pane
       }
     }
   },
@@ -375,14 +375,18 @@ EDITORS.SearchVE.prototype = {
 * @param textResults
 */
 
-  updateResultGrid: function (textResults) {
+  updateResultGrid: function (searchResults) {
     var srchVE = this, txtData, newRow, dataAdapter,
         selectedTxtIDs = {},selectedNewRowIndexes = [],
-        i,cnt=0,txtID,dataArray = [];
-    for (txtID in textResults) {
-      txtData = textResults[txtID];
-      if (txtData && txtData.title && txtData.CKN) {
-        newRow = [txtID];
+        textResults = searchResults.entities.insert.txt,
+        sortedTxtIDs = searchResults.sortOrder,
+        i,cnt=0,txtID,ckn,dataArray = [];
+//    for (txtID in textResults) {
+//      txtData = textResults[txtID];
+    for (i in sortedTxtIDs) {
+      txtData = textResults[sortedTxtIDs[i]];
+      if (txtData && txtData.CKN) {
+        newRow = [txtData['id']];
         newRow.push(txtData['CKN']);
         newRow.push(txtData['title']);
         dataArray.push(newRow);

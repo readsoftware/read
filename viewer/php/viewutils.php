@@ -808,6 +808,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
     foreach ($sourceNameLookup as $atbID => $title) {
       if ($isFrist) {
         $sourceHtml .= "<span class=\"sourceitem atb$atbID\">$title";
+        $isFirst = false;
       } else {
         $sourceHtml .= ",</span><span class=\"sourceitem atb$atbID\">$title";
       }

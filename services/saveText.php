@@ -41,6 +41,7 @@ require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database
 require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
 require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
 require_once (dirname(__FILE__) . '/../model/entities/Text.php');
+require_once (dirname(__FILE__) . '/../model/entities/Item.php');
 require_once (dirname(__FILE__) . '/../model/entities/Image.php');
 require_once (dirname(__FILE__) . '/../model/entities/EntityFactory.php');
 require_once (dirname(__FILE__) . '/clientDataUtils.php');
@@ -75,8 +76,8 @@ if (!$data) {
     if ($defAttrIDs){
       $text->setAttributionIDs($defAttrIDs);
     }
-    $text->setTitle("enter text title");
-    $text->setCKN("enter text inv. no.");
+    //$text->setTitle("enter text title");
+    $text->setCKN("");
     $text->save();
     if ($text->hasError()) {
       array_push($errors,"error creating new text - ".join(",",$text->getErrors()));
@@ -100,6 +101,10 @@ if (!$data) {
   if ( isset($data['typeIDs'])) {//get typeIDs for text
     $typeIDs = $data['typeIDs'];
   }
+  $itmID = null;
+  if ( isset($data['itmID'])) {//get itmID for text
+    $itmID = $data['itmID'];
+  }
   $imageIDs = null;
   if ( isset($data['imageIDs'])) {//get imageIDs for text
     $imageIDs = $data['imageIDs'];
@@ -120,7 +125,7 @@ if (!$data) {
 
 if (count($errors) == 0) {
   if (!$text || ($ckn === null && $title === null && $ref === null && !$typeIDs && !$addNewText &&
-                   !$imageIDs && $addTypeID === null && $addImageID === null)) {
+                   !$imageIDs && $itmID === null && $addTypeID === null && $addImageID === null)) {
     array_push($errors,"insufficient data to save text");
   } else {//use data to update text and save
     if ($ckn !== null) {
@@ -128,6 +133,8 @@ if (count($errors) == 0) {
       if ($txtID) {
         addUpdateEntityReturnData("txt",$txtID,'CKN', $text->getCKN());
       }
+    } else if ($text->getCKN() == "Need CKN" && $addNewText) {
+      $text->setCKN('');
     }
     if ($title !== null) {
       $text->setTitle($title);
@@ -179,12 +186,30 @@ if (count($errors) == 0) {
         addUpdateEntityReturnData("txt",$txtID,'imageIDs', $text->getImageIDs());
       }
     }
+    if ($itmID) {
+      $item = new Item($itmID);
+      if ($item->hasError()) {
+        array_push($warning,"error loading item id $itmID - ".join(",",$item->getErrors()));
+      } else if ($item->isReadonly()) {
+        array_push($warning,"error item id $itmID - is readonly");
+      } else { // add text to textIDs in item scratch
+        $txtIDs = $item->getScratchProperty('textids');
+        if (!$txtIDs) {
+          $txtIDs = array($text->getID());
+        } else if ($txtIDs && is_array($txtIDs) && !in_array($text->getID(),$txtIDs)) {
+          array_push($txtIDs,$text->getID());
+        }
+        $item->storeScratchProperty('textids',$txtIDs);
+        $item->save();
+      }
+    }
     $text->save();
     if ($text->hasError()) {
       array_push($errors,"error updating text '".$text->getTitle()."' - ".$text->getErrors(true));
     }else {
       if (!$txtID){
         addNewEntityReturnData('txt',$text);
+        invalidateCache('SearchAllResults');
       }
     }
   }
@@ -197,7 +222,7 @@ if (count($errors)) {
 //  invalidateCache('AllTextResources'.getUserDefEditorID());
 //  invalidateCache('SearchAllResults'.getUserDefEditorID());
 //  invalidateCache('AllTextResources');
-//  invalidateCache('SearchAllResults');
+  invalidateCache('SearchAllResults');
 }
 if (count($warnings)) {
   $retVal["warnings"] = $warnings;

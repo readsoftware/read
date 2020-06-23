@@ -80,7 +80,7 @@ if ($itmID) {
 																'prt_id is not null and '.
 																'srf_id is not null and '.
 																"txt_id is not null and itm_id = $itmID) t) s) ".
-						"order by regexp_replace(txt_title, E'\\\\D','','g')::int, txt_ckn;";
+						"order by txt_ckn;";
 
 	$dbMgr->query($query);
 	if ($dbMgr->getError()) {

@@ -58,6 +58,9 @@ MANAGERS.LayoutManager = function (layoutCfg) {
       username: this.username ? this.username : "Guest"
     });
   }
+  if (layoutCfg['catalogIdURL']) {
+    this.newCatalogIDService = layoutCfg['catalogIdURL'];
+  }
   this.projTitle = layoutCfg['projTitle'] ? layoutCfg['projTitle'] : "No Title sent to LayoutMgr";
   this.contentDiv = layoutCfg['contentDiv'] ? layoutCfg['contentDiv'] : null;
   this.username = layoutCfg['username'] && layoutCfg['username'] != "unknown" ? layoutCfg['username'] : null;
@@ -1825,7 +1828,7 @@ MANAGERS.LayoutManager.prototype = {
   * init text wizard
   */
 
-  initTextWizard: function (itmID,srfTxtIDs) {
+  initTextWizard: function (itmID,srfdisplay,srfTxtIDs,srfID) {
     DEBUG.traceEntry("layoutMgr.initTextWizard", "");
     var layoutMgr = this,
         $textWizContentDiv,
@@ -1843,43 +1846,118 @@ MANAGERS.LayoutManager.prototype = {
         txtDataAdapter = new $.jqx.dataAdapter(txtDatasource),
         $textSelector = $('#srfTextSelect');
     if ($textSelector && $textSelector.length) {
-      //remove fragment UI for rebuild
+      //remove text UI for rebuild
       layoutMgr.removeTextWizard();
     }
-    layoutMgr.modelWizContentDiv.append('<div id="textSep" class="modelSep" style="padding-top: 20px;border-bottom: solid 2px;margin-bottom: 3px;"></div>');
+    layoutMgr.modelWizContentDiv.append('<div id="textSep" class="wzModelSep"></div>');
     layoutMgr.modelWizContentDiv.append(
       '<div id="txtWizardContent">' +
-        '<div style="display:inline-block; vertical-align:top; width:70px" class="wzLabel">Text : </div>' +
-        '<div  style="display:inline-block; vertical-align:top" class="wzCombo" id="srfTextSelect"/>' +
-        '<div style="display:inline-block" class="wzInfoDiv" id="textInfoDiv"></div>' +
+        '<div class="wzLabel">' +
+          '<div style:"float :right; padding-right:5px">Text :</div>' +
+          '<button class="wzBtnAddEntity" title="Add new text to surface '+srfdisplay+'" >Add text</button>' +
+        '</div>' +
+        '<div class="wzCombo" id="srfTextSelect"/>' +
+        '<div class="wzInfoDiv" id="textInfoDiv"></div>' +
       '</div>');
     $textWizContentDiv = $('#txtWizardContent');
+    $btnNewText = $('button.wzBtnAddEntity', $textWizContentDiv);
+    $btnNewText.unbind('click').bind('click', function(e) {
+      //if service for auto inv. no. call to get next inventory
+      if (layoutMgr.newCatalogIDService) {
+        //jqAjax asynch save
+        $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: layoutMgr.newCatalogIDService + '?itmID='+itmID, //caution dependency on context having basepath and dbName
+          async: true,
+          success: function (data, status, xhr) {
+            var ckn = data[0], blankText = false;
+            if (!ckn) {
+              blankText = true;
+            }
+            //call service to create new text with inventory number
+            layoutMgr.modelWizardSaveText(null,ckn,null,null,blankText,itmID, function (success){
+              if (!success) {
+                alert("Unable to save text entity");
+              }
+              layoutMgr.initTextWizard(itmID,srfdisplay,srfTxtIDs,srfID);
+            });
+          }
+        });
+      } else {
+        layoutMgr.modelWizardSaveText(null,null,null,null,true,itmID, function (success){
+          if (!success) {
+            alert("Unable to save text entity");
+          }
+          layoutMgr.initTextWizard(itmID,srfdisplay,srfTxtIDs,srfID);
+        });
+      }
+    });
     $textSelector = $('#srfTextSelect', $textWizContentDiv);
     $textSelector.prop('srfTxtIDs', srfTxtIDs);
     function refreshTextInfo() {
-      var textInfo,
+      var textInfo, txtTag,
       checkedItems = $textSelector.jqxComboBox('getCheckedItems'),
       $textInfoDiv = $('#textInfoDiv');
       $textInfoDiv.children().remove();
       if (!checkedItems || checkedItems.length == 0) {
-        $textInfoDiv.append('<div style="width: 100%; padding-left:10px"><strong>No linked texted</strong></div>');
+        $textInfoDiv.append('<div class="wzInfoHdr"><strong>No linked texts</strong></div>');
       } else {
-        $textInfoDiv.append('<div style="width: 100%; padding-left:10px"><strong>'+checkedItems.length+' linked texted :</strong></div>');
+        $textInfoDiv.append('<div class="wzInfoHdr"><strong>'+checkedItems.length+' linked text(s) :</strong></div>');
         for (i=0; i<checkedItems.length; i++) {
           textInfo = checkedItems[i].originalItem;
-          $textInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; padding-top: 10px; width: 50px; text-align: left">ID:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + textInfo.txtid + '</div>' +
+          txtTag = "txt"+textInfo.txtid;
+          $textInfoDiv.append('<div class="wzInfoRow Top">' +
+            '<div class="wzEntInfoLbl">ID:</div>' +
+            '<div class="wzEntInfo readonly" id="'+txtTag+'_id">' + textInfo.txtid + '</div>' +
             '</div>');
-          $textInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">Inv.No.:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + textInfo.ckn + '</div>' +
+          $textInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">Inv.No.:</div>' +
+            '<div class="wzEntInfo" id="'+txtTag+'_ckn">' + textInfo.ckn + '</div>' +
+            '<input class="wzEntInfoInput" value="' + textInfo.ckn + '"/>' +
             '</div>');
-          $textInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">Title:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + textInfo.txttitle + '</div>' +
+          $textInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">Title:</div>' +
+            '<div class="wzEntInfo" id="'+txtTag+'_title">' + textInfo.txttitle + '</div>' +
+            '<input class="wzEntInfoInput" value="' + textInfo.txttitle + '"/>' +
             '</div>');
         }
+        $('.wzEntInfo:not(readonly)',$textInfoDiv).unbind('click').bind('click',function(event){
+            var element = this, id = element.id,
+                $fieldDisplayDiv = $(element),
+                $fieldInput = $(element.nextSibling);
+            $fieldDisplayDiv.addClass('edit');
+            $fieldInput.addClass('edit');
+            $fieldInput.focus().select();
+            $fieldInput.unbind('keydown').bind('keydown', function(event){
+              var val = $(this).val(),
+                  codes = id.split('_'),
+                  key = codes[1],
+                  txtTag = codes[0],
+                  txtID = txtTag.substr(3);
+              if(event.keyCode == 13) {
+                $fieldDisplayDiv.text(val);
+                $fieldDisplayDiv.removeClass('edit');
+                $fieldInput.removeClass('edit');
+                if (key == 'ckn') {
+                  layoutMgr.modelWizardSaveText(txtID,val,null,null,false,null, function (success){
+                    if (!success) {
+                      alert("Unable to update text inv. no.");
+                    }
+                    layoutMgr.initTextWizard(itmID,srfdisplay,srfTxtIDs,srfID);
+                  });
+                } else if (key == 'title') {
+                  layoutMgr.modelWizardSaveText(txtID,null,val,null,false,null, function (success){
+                    if (!success) {
+                      alert("Unable to update text title");
+                    }
+                    layoutMgr.initTextWizard(itmID,srfdisplay,srfTxtIDs,srfID);
+                  });
+                }
+              }
+            });
+            //alert("Edit "+id+" with value: "+val);
+        });
       }
     }
     $textSelector.jqxComboBox(
@@ -1899,6 +1977,7 @@ MANAGERS.LayoutManager.prototype = {
     $textSelector.unbind('bindingComplete').bind('bindingComplete', function (event) {
       var saveSrfTxtIDs = $textSelector.prop('srfTxtIDs');
       $textSelector.find('input').css('width','100%');//force combo input to full width
+      $textSelector.unbind('checkChange');
       if (saveSrfTxtIDs.length > 0) {
         $textSelector.jqxComboBox('getItems').forEach(textItem => {
           if (saveSrfTxtIDs.indexOf(textItem.value) > -1) {
@@ -1906,21 +1985,142 @@ MANAGERS.LayoutManager.prototype = {
           }
         });
       }
+
+      $textSelector.bind('checkChange', function (event) {
+        if (event.args) {
+          var selText = event.args.item;
+          if (selText) {
+            var text = selText.originalItem,
+                txtID = text.txtid,
+                bAddTextID = selText.checked;
+            if (bAddTextID) {   
+              //link text to surface
+              layoutMgr.modelWizardSaveSurface(srfID,null,null,null,null,false,txtID,null,function (success){
+                if (!success) {
+                  alert("Unable to link text to surface entity");
+                }
+                setTimeout(function() {
+                            var surfTextIds = layoutMgr.dataMgr.entities.srf[srfID].textIDs;
+                            if (!surfTextIds) {
+                              surfTextIds = [];
+                            }
+                            layoutMgr.initTextWizard(itmID,srfdisplay,surfTextIds,srfID);
+                          }, 50);
+              });
+            } else  {   
+              //unlink text from surface
+              layoutMgr.modelWizardSaveSurface(srfID,null,null,null,null,false,null,txtID,function (success){
+                if (!success) {
+                  alert("Unable to link text to surface entity");
+                }
+                setTimeout(function() {
+                            var surfTextIds = layoutMgr.dataMgr.entities.srf[srfID].textIDs;
+                            if (!surfTextIds) {
+                              surfTextIds = [];
+                            }
+                            layoutMgr.initTextWizard(itmID,srfdisplay,surfTextIds,srfID);
+                          }, 50);
+              });
+            }
+          }
+        }
+      });
       refreshTextInfo();
     });
 
-    $textSelector.unbind('select').bind('select', function (event) {
-      if (event.args) {
-        refreshTextInfo();
-      }
-    });
-
-    $textSelector.unbind('unselect').bind('unselect', function (event) {
-      if (event.args) {
-        refreshTextInfo();
-      }
-    });
     DEBUG.traceExit("layoutMgr.initTextWizard", "");
+  },
+
+
+  /**
+  * model wizard save text entity
+  *
+  * @param int txtID
+  * @param string ckn Inventory id for this text
+  * @param string title
+  * @param string refLabel Short label for identifying text
+  * @param boolean newText Flag to signal next text creation
+  * @param int itmID item id to link text to
+  * @param function cb is a callback function with a flag to signal success
+  */
+
+  modelWizardSaveText: function(txtID, ckn, title, refLabel, newText, itmID, cb) {
+    var savedata ={}, layoutMgr = this;
+    DEBUG.traceEntry("layoutMgr.modelWizardSaveText");
+    if (txtID) {
+      savedata["txtID"] = txtID;
+    }
+    if (ckn != null) {
+      savedata["ckn"] = ckn;
+    }
+    if (itmID != null) {
+      savedata["itmID"] = itmID;
+    }
+    if (title != null) {
+      savedata["title"] = title;
+    }
+    if (refLabel != null) {
+      savedata["ref"] = refLabel;
+    }
+    if (newText) {
+      savedata["addNewText"] = 1;
+    }
+    if (Object.keys(savedata).length > 0) {
+      //jqAjax asynch save
+      $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: basepath+'/services/saveText.php?db='+dbName,//caution dependency on context having basepath and dbName
+          data: savedata,
+          async: true,
+          success: function (data, status, xhr) {
+              var txtID, text;
+              if (typeof data == 'object' && data.success && data.entities &&
+                  layoutMgr.dataMgr ) {
+                //update data
+                layoutMgr.dataMgr.updateLocalCache(data,null);
+                if ((data.entities.update && data.entities.update.txt) ||
+                                            (data.entities.insert && data.entities.insert.txt)) {
+                  if (data.entities.insert) {
+                    txtID = Object.keys(data.entities.insert.txt)[0];
+                    text = layoutMgr.dataMgr.getEntity('txt',txtID);
+                    if (text && layoutMgr.editors && layoutMgr.editors.searchVE && layoutMgr.editors.searchVE.addTextRow &&
+                        typeof layoutMgr.editors.searchVE.addTextRow  == "function") {
+                      layoutMgr.editors.searchVE.addTextRow(txtID, text.CKN, text.title);
+                      if (layoutMgr.editors.searchVE.showProperties &&
+                          typeof layoutMgr.editors.searchVE.showProperties  == "function") {
+                        layoutMgr.editors.searchVE.showProperties(true);
+                      }
+                    }
+                    if (text) {
+                      layoutMgr.dataMgr.updateTextResourcesCache(txtID);
+                    }
+                  } else {
+                    txtID = Object.keys(data.entities.update.txt)[0];
+                    layoutMgr.dataMgr.updateTextResourcesCache(txtID);
+                  }
+                }
+//                layoutMgr.initTextWizard();
+              }
+              if (data.errors) {
+                alert("An error occurred while trying to save text data. Error: " + data.errors.join());
+                if (cb) {
+                  cb(false);
+                }
+              } else if (cb){
+                cb(true);
+              }
+          },
+          error: function (xhr,status,error) {
+              // add record failed.
+              alert("An error occurred while trying to save text data. Error: " + error);
+              if (cb) {
+                cb(false);
+              }
+        }
+      });
+    }
+    DEBUG.traceExit("layoutMgr.modelWizardSaveText");
   },
 
 
@@ -1934,10 +2134,18 @@ MANAGERS.LayoutManager.prototype = {
         $surfSelector = $('#srfSelect'),
         $surfSep = $('#surfSep'),
         $surfInfoDiv = $('#surfaceInfoDiv');
-    $surfInfoDiv.remove();
-    $surfSep.remove();
-    $surfSelector.jqxComboBox('destroy');
-    $surfWizContentDiv.remove();
+    if ($surfInfoDiv.length) {    
+      $surfInfoDiv.remove();
+    }
+    if ($surfSep.length) {    
+      $surfSep.remove();
+    }
+    if ($surfSelector.length) {    
+      $surfSelector.jqxComboBox('destroy');
+    }
+    if ($surfWizContentDiv.length) {    
+      $surfWizContentDiv.remove();
+    }
   },
 
 
@@ -1945,7 +2153,7 @@ MANAGERS.LayoutManager.prototype = {
   * init surface wizard
   */
 
-  initSurfaceWizard: function (frgID,itmID) {
+  initSurfaceWizard: function (frgID,frgdisplay,itmID) {
     DEBUG.traceEntry("layoutMgr.initSurfaceWizard", "");
     var layoutMgr = this,
         $surfWizContentDiv ,
@@ -1953,10 +2161,11 @@ MANAGERS.LayoutManager.prototype = {
         srfDatasource = {
           datatype: "jsonp",
           datafields: [
-            { name: 'srfid' },
+            { name: 'srf_id' },
             { name: 'srftxtids' },
             { name: 'srfdisplay' },
-            { name: 'srflabel' }
+            { name: 'srf_label' },
+            { name: 'srf_number' }
           ],
           url: srfDataUrl,
         },
@@ -1966,15 +2175,29 @@ MANAGERS.LayoutManager.prototype = {
       //remove fragment UI for rebuild
       layoutMgr.removeSurfaceWizard();
     }
-    layoutMgr.modelWizContentDiv.append('<div id="surfSep" class="modelSep" style="padding-top: 20px;border-bottom: solid 2px;margin-bottom: 3px;"></div>');
+    layoutMgr.modelWizContentDiv.append('<div id="surfSep" class="wzModelSep"></div>');
     layoutMgr.modelWizContentDiv.append(
       '<div id="srfWizardContent">' +
-        '<div style="display:inline-block; vertical-align:top; width:70px" class="wzLabel">Surface : </div>' +
-        '<div  style="display:inline-block; vertical-align:top" class="wzCombo" id="srfSelect"/>' +
-        '<div style="display:inline-block" class="wzInfoDiv" id="surfaceInfoDiv"></div>' +
+        '<div class="wzLabel">' +
+          '<div style:"float :right; padding-right:5px">Surface :</div>' +
+          '<button class="wzBtnAddEntity" title="Add new surface to fragment '+frgdisplay+'" >Add surface</button>' +
+        '</div>' +
+        '<div class="wzCombo" id="srfSelect"/>' +
+        '<div class="wzInfoDiv" id="surfaceInfoDiv"></div>' +
       '</div>');
 
     $surfWizContentDiv = $('#srfWizardContent');
+    $btnNewSurface = $('button.wzBtnAddEntity', $surfWizContentDiv);
+    $btnNewSurface.unbind('click').bind('click', function(e) {
+      layoutMgr.modelWizardSaveSurface(null,null,null,null,null,frgID,null,null,function (success){
+        if (!success) {
+          alert("Unable to create new surface entity");
+        }
+        setTimeout(function() {
+                    layoutMgr.initSurfaceWizard(frgID,frgdisplay,itmID);
+                  }, 50);
+      });
+    });
     $surfSelector = $('#srfSelect',$surfWizContentDiv);
     $surfSelector.prop('itemID', itmID);
     $surfSelector.jqxComboBox(
@@ -1988,29 +2211,179 @@ MANAGERS.LayoutManager.prototype = {
         selectedIndex: 0,
         popupZIndex: 18010,
         displayMember: "srfdisplay",
-        valueMember: "srfid",
+        valueMember: "srf_id",
       });
     $surfSelector.unbind('select').bind('select', function (event) {
       if (event.args) {
         var surf = event.args.item,
             itemID = $surfSelector.prop('itemID');
         if (surf) {
-          var surfInfo = surf.originalItem,
+          var surfInfo = surf.originalItem,srfTag = 'srf'+surfInfo.srf_id,
+            surfTextIds = [],
             $surfInfoDiv = $('#surfaceInfoDiv', $surfWizContentDiv);
+          if (surfInfo.srftxtids && surfInfo.srftxtids.length) {
+            surfTextIds = surfInfo.srftxtids.replace("{",'').replace('}','').split(',');
+          }
           $surfInfoDiv.children().remove();
-          $surfInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">ID:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + surfInfo.srfid + '</div>' +
+          $surfInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">ID:</div>' +
+            '<div class="wzEntInfo readonly" id="'+srfTag+'_id">' + surfInfo.srf_id + '</div>' +
             '</div>');
-          $surfInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">Label:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + surfInfo.srflabel + '</div>' +
+          $surfInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">Label:</div>' +
+            '<div class="wzEntInfo" id="'+srfTag+'_label">' + surfInfo.srf_label + '</div>' +
+            '<input class="wzEntInfoInput" value="' + surfInfo.srf_label + '"/>' +
             '</div>');
-          layoutMgr.initTextWizard(itemID,surfInfo.srftxtids.replace("{",'').replace('}','').split(','))
+          $surfInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">Number:</div>' +
+            '<div class="wzEntInfo" id="'+srfTag+'_number">' + surfInfo.srf_number + '</div>' +
+            '<input class="wzEntInfoInput" value="' + surfInfo.srf_number + '"/>' +
+            '</div>');
+          $('.wzEntInfo:not(readonly)',$surfInfoDiv).unbind('click').bind('click',function(event){
+            var element = this, id = element.id,
+                $fieldDisplayDiv = $(element),
+                $fieldInput = $(element.nextSibling);
+            $fieldDisplayDiv.addClass('edit');
+            $fieldInput.addClass('edit');
+            $fieldInput.focus().select();
+            $fieldInput.unbind('keydown').bind('keydown', function(event){
+              var val = $(this).val(),
+                  codes = id.split('_'),
+                  key = codes[1],
+                  srfTag = codes[0],
+                  srfID = srfTag.substr(3);
+              if(event.keyCode == 13) {
+                $fieldDisplayDiv.text(val);
+                $fieldDisplayDiv.removeClass('edit');
+                $fieldInput.removeClass('edit');
+                if (key == 'label') {
+                  layoutMgr.modelWizardSaveSurface(srfID,null,val,null,null,null,null,null,function (success){
+                    if (!success) {
+                      alert("Unable to update surface entity");
+                    }
+                    setTimeout(function() {
+                                layoutMgr.initSurfaceWizard(frgID,frgdisplay,itmID);
+                              }, 50);
+                  });
+                } else if (key == 'number') {
+                  layoutMgr.modelWizardSaveSurface(srfID,null,null,val,null,null,null,null,function (success){
+                    if (!success) {
+                      alert("Unable to update surface entity");
+                    }
+                    setTimeout(function() {
+                                layoutMgr.initSurfaceWizard(frgID,frgdisplay,itmID);
+                              }, 50);
+                  });
+                }
+              }
+            });
+            //alert("Edit "+id+" with value: "+val);
+          });
+          layoutMgr.initTextWizard(itemID,surfInfo.srfdisplay,surfTextIds,surfInfo.srf_id);
         }
       }
     });
   DEBUG.traceExit("layoutMgr.initSurfaceWizard", "");
+},
+
+
+  /**
+  * model wizard save surface entity
+  *
+  * @param int srfID
+  * @param string description of this surface
+  * @param string label commonly used for this surface
+  * @param int number surface ordinal
+  * @param int layer indicator for this surface
+  * @param int newSurfaceFrgID Fragment ID to link new surface to
+  * @param int addTxtID text id to link to surface
+  * @param int removeTxtID text id to unlink from surface
+  * @param function cb is a callback function with a flag to signal success
+  */
+
+ modelWizardSaveSurface: function(srfID, description, label, number, layer, newSurfaceFrgID, addTxtID, removeTxtID, cb) {
+  var savedata ={}, layoutMgr = this;
+  DEBUG.traceEntry("layoutMgr.modelWizardSaveSurface");
+  if (srfID) {
+    savedata["srfID"] = srfID;
+  }
+  if (description != null) {
+    savedata["description"] = description;
+  }
+  if (label != null) {
+    savedata["label"] = label;
+  }
+  if (number != null) {
+    savedata["number"] = number;
+  }
+  if (layer != null) {
+    savedata["layer"] = layer;
+  }
+  if (addTxtID != null) {
+    savedata["addTxtID"] = addTxtID;
+  }
+  if (removeTxtID != null) {
+    savedata["removeTxtID"] = removeTxtID;
+  }
+  if (newSurfaceFrgID) {
+    savedata["newSurfaceFrgID"] = newSurfaceFrgID;
+  }
+  if (Object.keys(savedata).length > 0) {
+    //jqAjax asynch save
+    $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: basepath+'/services/saveSurface.php?db='+dbName,//caution dependency on context having basepath and dbName
+        data: savedata,
+        async: true,
+        success: function (data, status, xhr) {
+            var txtID, text;
+            if (typeof data == 'object' && data.success && data.entities &&
+                layoutMgr.dataMgr ) {
+              //update data
+              layoutMgr.dataMgr.updateLocalCache(data,null);
+              if ((data.entities.update && data.entities.update.txt) ||
+                                          (data.entities.insert && data.entities.insert.txt)) {
+                if (data.entities.insert) {
+                  txtID = Object.keys(data.entities.insert.txt)[0];
+                  text = layoutMgr.dataMgr.getEntity('txt',txtID);
+                  if (text && layoutMgr.editors && layoutMgr.editors.searchVE && layoutMgr.editors.searchVE.addTextRow &&
+                      typeof layoutMgr.editors.searchVE.addTextRow  == "function") {
+                    layoutMgr.editors.searchVE.addTextRow(txtID, text.CKN, text.title);
+                    if (layoutMgr.editors.searchVE.showProperties &&
+                        typeof layoutMgr.editors.searchVE.showProperties  == "function") {
+                      layoutMgr.editors.searchVE.showProperties(true);
+                    }
+                  }
+                  if (text) {
+                    layoutMgr.dataMgr.updateTextResourcesCache(txtID);
+                  }
+                } else {
+                  txtID = Object.keys(data.entities.update.txt)[0];
+                  layoutMgr.dataMgr.updateTextResourcesCache(txtID);
+                }
+              }
+//              layoutMgr.initTextWizard();
+            }
+            if (data.errors) {
+              alert("An error occurred while trying to save text data. Error: " + data.errors.join());
+              if (cb) {
+                cb(false);
+              }
+            } else if (cb){
+              cb(true);
+            }
+        },
+        error: function (xhr,status,error) {
+            // add record failed.
+            alert("An error occurred while trying to save text data. Error: " + error);
+            if (cb) {
+              cb(false);
+            }
+      }
+    });
+  }
+  DEBUG.traceExit("layoutMgr.modelWizardSaveSurface");
 },
 
 
@@ -2023,11 +2396,19 @@ MANAGERS.LayoutManager.prototype = {
     var $fragWizContentDiv = $('#frgWizardContent'),
         $fragSelector = $('#frgSelect'),
         $fragSep = $('#fragSep'),
-        $fragInfoDiv = $('#fragmentInfoDiv');
-    $fragInfoDiv.remove();
-    $fragSep.remove();
-    $fragSelector.jqxComboBox('destroy');
-    $fragWizContentDiv.remove();
+        $fragInfoDiv = $('#fragmwzEntInfoDiv');
+    if ($fragInfoDiv.length) {    
+      $fragInfoDiv.remove();
+    }
+    if ($fragSep.length) {    
+      $fragSep.remove();
+    }
+    if ($fragSelector.length) {    
+      $fragSelector.jqxComboBox('destroy');
+    }
+    if ($fragWizContentDiv.length) {    
+      $fragWizContentDiv.remove();
+    }
   },
 
 
@@ -2035,7 +2416,7 @@ MANAGERS.LayoutManager.prototype = {
   * init fragment wizard
   */
 
- initFragmentWizard: function (prtID, itmID) {
+ initFragmentWizard: function (prtID, prtdisplay, itmID) {
   DEBUG.traceEntry("layoutMgr.initFragmentWizard", "");
   var layoutMgr = this, savedItmID = itmID,
       $fragWizContentDiv,
@@ -2043,9 +2424,10 @@ MANAGERS.LayoutManager.prototype = {
       frgDatasource = {
         datatype: "jsonp",
         datafields: [
-          { name: 'frgid' },
+          { name: 'frg_id' },
+          { name: 'frg_description' },
           { name: 'frgdisplay' },
-          { name: 'frglabel' }
+          { name: 'frg_label' }
         ],
         url: frgDataUrl,
       },
@@ -2055,14 +2437,28 @@ MANAGERS.LayoutManager.prototype = {
     //remove fragment UI for rebuild
     layoutMgr.removeFragmentWizard();
   }
-  layoutMgr.modelWizContentDiv.append('<div id="fragSep" class="modelSep" style="padding-top: 20px;border-bottom: solid 2px;margin-bottom: 3px;"></div>');
+  layoutMgr.modelWizContentDiv.append('<div id="fragSep" class="wzModelSep"></div>');
   layoutMgr.modelWizContentDiv.append(
       '<div id="frgWizardContent">' +
-        '<div style="display:inline-block; vertical-align:top; width:70px" class="wzLabel">Fragment : </div>' +
-        '<div  style="display:inline-block; vertical-align:top" class="wzCombo" id="frgSelect"/>' +
-        '<div style="display:inline-block" class="wzInfoDiv" id="fragmentInfoDiv"></div>' +
+        '<div class="wzLabel">' +
+          '<div style:"padding-right:5px">Fragment :</div>' +
+          '<button class="wzBtnAddEntity" title="Add new fragment to part '+prtdisplay+'" >Add fragment</button>' +
+        '</div>' +
+        '<div class="wzCombo" id="frgSelect"/>' +
+        '<div class="wzInfoDiv" id="fragmwzEntInfoDiv"></div>' +
       '</div>');
   $fragWizContentDiv = $('#frgWizardContent'),
+  $btnNewFragment = $('button.wzBtnAddEntity', $fragWizContentDiv);
+  $btnNewFragment.unbind('click').bind('click', function(e) {
+    layoutMgr.modelWizardSaveFragment(null,null,null,null,null,prtID,function (success){
+      if (!success) {
+        alert("Unable to create new fragment entity");
+      }
+      setTimeout(function() {
+                  layoutMgr.initFragmentWizard(prtID, prtdisplay, itmID);
+                }, 50);
+    });
+  });
   $fragSelector = $('#frgSelect', $fragWizContentDiv),
   $fragSelector.prop('itemID', itmID);
   $fragSelector.jqxComboBox(
@@ -2076,29 +2472,145 @@ MANAGERS.LayoutManager.prototype = {
       selectedIndex: 0,
       popupZIndex: 18010,
       displayMember: "frgdisplay",
-      valueMember: "frgid",
+      valueMember: "frg_id",
     });
   $fragSelector.unbind('select').bind('select', function (event) {
     if (event.args) {
       var frag = event.args.item,
           itemID = $fragSelector.prop('itemID');
       if (frag) {
-        var fragInfo = frag.originalItem,
-          $fragInfoDiv = $('#fragmentInfoDiv', $fragWizContentDiv);
+        var fragInfo = frag.originalItem, frgTag = 'frg'+fragInfo.frg_id,
+          $fragInfoDiv = $('#fragmwzEntInfoDiv', $fragWizContentDiv);
         $fragInfoDiv.children().remove();
-        $fragInfoDiv.append('<div style="display:table-row">' +
-          '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">ID:</div>' +
-          '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + fragInfo.frgid + '</div>' +
+        $fragInfoDiv.append('<div class="wzInfoRow">' +
+          '<div class="wzEntInfoLbl">ID:</div>' +
+          '<div class="wzEntInfo readonly" id="'+frgTag+'_id">' + fragInfo.frg_id + '</div>' +
           '</div>');
-        $fragInfoDiv.append('<div style="display:table-row">' +
-          '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">Label:</div>' +
-          '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + fragInfo.frglabel + '</div>' +
+        $fragInfoDiv.append('<div class="wzInfoRow">' +
+          '<div class="wzEntInfoLbl">Label:</div>' +
+          '<div class="wzEntInfo" id="'+frgTag+'_label">' + fragInfo.frg_label + '</div>' +
+          '<input class="wzEntInfoInput" value="' + fragInfo.frg_label + '"/>' +
           '</div>');
-        layoutMgr.initSurfaceWizard(fragInfo.frgid,itemID);
+        /*$fragInfoDiv.append('<div class="wzInfoRow">' +
+          '<div class="wzEntInfoLbl">Description:</div>' +
+          '<div class="wzEntInfo" id="'+frgTag+'_description>' + fragInfo.frg_description + '</div>' +
+          '<input class="wzEntInfoInput" value="' + fragInfo.frg_description + '"/>' +
+          '</div>');*/
+          $('.wzEntInfo:not(readonly)',$fragInfoDiv).unbind('click').bind('click',function(event){
+            var element = this, id = element.id,
+                $fieldDisplayDiv = $(element),
+                $fieldInput = $(element.nextSibling);
+            $fieldDisplayDiv.addClass('edit');
+            $fieldInput.addClass('edit');
+            $fieldInput.focus().select();
+            $fieldInput.unbind('keydown').bind('keydown', function(event){
+              var val = $(this).val(),
+                  codes = id.split('_'),
+                  key = codes[1],
+                  frgTag = codes[0],
+                  frgID = frgTag.substr(3);
+              if(event.keyCode == 13) {
+                $fieldDisplayDiv.text(val);
+                $fieldDisplayDiv.removeClass('edit');
+                $fieldInput.removeClass('edit');
+                if (key == 'label') {
+                  layoutMgr.modelWizardSaveFragment(frgID,null,val,null,null,null,function (success){
+                    if (!success) {
+                      alert("Unable to update fragment entity");
+                    }
+                    setTimeout(function() {
+                                layoutMgr.initFragmentWizard(prtID, prtdisplay, itmID);
+                              }, 50);
+                  });
+                } else if (key == 'description') {
+                  layoutMgr.modelWizardSaveFragment(frgID,val,null,null,null,null,function (success){
+                    if (!success) {
+                      alert("Unable to update fragment entity");
+                    }
+                    setTimeout(function() {
+                                layoutMgr.initFragmentWizard(prtID, prtdisplay, itmID);
+                              }, 50);
+                  });
+                }
+              }
+            });
+            //alert("Edit "+id+" with value: "+val);
+          });
+        layoutMgr.initSurfaceWizard(fragInfo.frg_id,fragInfo.frgdisplay,itemID);
       }
     }
   });
   DEBUG.traceExit("layoutMgr.initFragmentWizard", "");
+},
+
+
+  /**
+  * model wizard save fragment entity
+  *
+  * @param int frgID
+  * @param string description of this fragment
+  * @param string label commonly used for this fragment
+  * @param string measure describing the measurements of this fragment
+  * @param string locations is comma separate list of location references for this fragment
+  * @param int newFragmentPrtID Part ID to link new fragment to
+  * @param function cb is a callback function with a flag to signal success
+  */
+
+ modelWizardSaveFragment: function(frgID, description, label, measure, locations, newFragmentPrtID, cb) {
+  var savedata ={}, layoutMgr = this;
+  DEBUG.traceEntry("layoutMgr.modelWizardSaveFragment");
+  if (frgID) {
+    savedata["frgID"] = frgID;
+  }
+  if (description != null) {
+    savedata["description"] = description;
+  }
+  if (label != null) {
+    savedata["label"] = label;
+  }
+  if (measure != null) {
+    savedata["measure"] = measure;
+  }
+  if (locations != null) {
+    savedata["locations"] = locations;
+  }
+  if (newFragmentPrtID) {
+    savedata["newFragmentPrtID"] = newFragmentPrtID;
+  }
+  if (Object.keys(savedata).length > 0) {
+    //jqAjax asynch save
+    $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: basepath+'/services/saveFragment.php?db='+dbName,//caution dependency on context having basepath and dbName
+        data: savedata,
+        async: true,
+        success: function (data, status, xhr) {
+            var txtID, text;
+            if (typeof data == 'object' && data.success && data.entities &&
+                layoutMgr.dataMgr ) {
+              //update data
+              layoutMgr.dataMgr.updateLocalCache(data,null);
+            }
+            if (data.errors) {
+              alert("An error occurred while trying to save fragment data. Error: " + data.errors.join());
+              if (cb) {
+                cb(false);
+              }
+            } else if (cb){
+              cb(true);
+            }
+        },
+        error: function (xhr,status,error) {
+            // add record failed.
+            alert("An error occurred while trying to save fragment data. Error: " + error);
+            if (cb) {
+              cb(false);
+            }
+      }
+    });
+  }
+  DEBUG.traceExit("layoutMgr.modelWizardSaveFragment");
 },
 
 
@@ -2112,10 +2624,18 @@ MANAGERS.LayoutManager.prototype = {
         $partSep = $('#partSep'),
         $partSelector = $('#prtSelect'),
         $partInfoDiv = $('#partInfoDiv');
-    $partInfoDiv.remove();
-    $partSep.remove();
-    $partSelector.jqxComboBox('destroy');
-    $partWizContentDiv.remove();
+    if ($partInfoDiv.length) {    
+      $partInfoDiv.remove();
+    }
+    if ($partSep.length) {    
+      $partSep.remove();
+    }
+    if ($partSelector.length) {    
+      $partSelector.jqxComboBox('destroy');
+    }
+    if ($partWizContentDiv.length) {    
+      $partWizContentDiv.remove();
+    }
   },
 
 
@@ -2123,7 +2643,7 @@ MANAGERS.LayoutManager.prototype = {
     * init part wizard
     */
 
-  initPartWizard: function (itmID) {
+  initPartWizard: function (itmID, itmdisplay) {
     DEBUG.traceEntry("layoutMgr.initPartWizard", "");
     var layoutMgr = this,
         $partWizContentDiv,
@@ -2131,10 +2651,11 @@ MANAGERS.LayoutManager.prototype = {
         prtDatasource = {
           datatype: "jsonp",
           datafields: [
-            { name: 'prtid' },
-            { name: 'prtlabel' },
-            { name: 'prtdisplay' },
-            { name: 'prtord' }
+            { name: 'prt_id' },
+            { name: 'prt_label' },
+            { name: 'prt_description' },
+            { name: 'prt_sequence' },
+            { name: 'prtdisplay' }
           ],
           url: prtDataUrl,
         },
@@ -2144,14 +2665,28 @@ MANAGERS.LayoutManager.prototype = {
       //remove part UI for rebuild
       layoutMgr.removePartWizard();
     }
-    layoutMgr.modelWizContentDiv.append('<div id="partSep" class="modelSep" style="padding-top: 20px;border-bottom: solid 2px;margin-bottom: 3px;"></div>');
+    layoutMgr.modelWizContentDiv.append('<div id="partSep" class="wzModelSep"></div>');
     layoutMgr.modelWizContentDiv.append(
         '<div id="prtWizardContent">' +
-          '<div style="display:inline-block; vertical-align:top; width:70px" class="wzLabel">Part : </div>' +
-          '<div  style="display:inline-block; vertical-align:top" class="wzCombo" id="prtSelect"/>' +
-          '<div style="display:inline-block" class="wzInfoDiv" id="partInfoDiv"></div>' +
+          '<div class="wzLabel">' +
+            '<div style:"padding-right:5px">Part :</div>' +
+            '<button class="wzBtnAddEntity" title="Add new part to item '+itmdisplay+'" >Add part</button>' +
+          '</div>' +
+          '<div class="wzCombo" id="prtSelect"/>' +
+          '<div class="wzInfoDiv" id="partInfoDiv"></div>' +
         '</div>');
     $partWizContentDiv = $('#prtWizardContent');
+    $btnNewPart = $('button.wzBtnAddEntity', $partWizContentDiv);
+    $btnNewPart.unbind('click').bind('click', function(e) {
+      layoutMgr.modelWizardSavePart(null,null,null,null,null,null,itmID,function (success){
+        if (!success) {
+          alert("Unable to create new part entity");
+        }
+        setTimeout(function() {
+                    layoutMgr.initPartWizard(itmID, itmdisplay);
+                  }, 50);
+      });
+    });
     $partSelector = $('#prtSelect');
     $partSelector.prop('itemID', itmID);
     $partSelector.jqxComboBox(
@@ -2165,29 +2700,85 @@ MANAGERS.LayoutManager.prototype = {
         selectedIndex: 0,
         popupZIndex: 18010,
         displayMember: "prtdisplay",
-        valueMember: "prtid",
+        valueMember: "prt_id",
       });
     $partSelector.unbind('select').bind('select', function (event) {
       if (event.args) {
         var part = event.args.item,
             itemID = $partSelector.prop('itemID');
         if (part) {
-          var partInfo = part.originalItem,
+          var partInfo = part.originalItem, prtTag = 'prt'+partInfo.prt_id,
             $partInfoDiv = $('#partInfoDiv', $partWizContentDiv);
           $partInfoDiv.children().remove();
-          $partInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">ID:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + partInfo.prtid + '</div>' +
+          $partInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">ID:</div>' +
+            '<div class="wzEntInfo readonly" id="'+prtTag+'_id">' + partInfo.prt_id + '</div>' +
             '</div>');
-          $partInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">Label:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + partInfo.prtlabel + '</div>' +
+          $partInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">Label:</div>' +
+            '<div class="wzEntInfo" id="'+prtTag+'_label">' + partInfo.prt_label + '</div>' +
+            '<input class="wzEntInfoInput" value="' + partInfo.prt_label + '"/>' +
             '</div>');
-          $partInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">Sequence:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + partInfo.prtord + '</div>' +
+          $partInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">Sequence:</div>' +
+            '<div class="wzEntInfo" id="'+prtTag+'_sequence">' + partInfo.prt_sequence + '</div>' +
+            '<input class="wzEntInfoInput" value="' + partInfo.prt_sequence + '"/>' +
             '</div>');
-          layoutMgr.initFragmentWizard(partInfo.prtid,itemID);
+        /*$partInfoDiv.append('<div class="wzInfoRow">' +
+          '<div class="wzEntInfoLbl">Description:</div>' +
+          '<div class="wzEntInfo" id="'+prtTag+'_description">' + partInfo.prt_description + '</div>' +
+          '<input class="wzEntInfoInput" value="' + partInfo.prt_description + '"/>' +
+          '</div>');*/
+          $('.wzEntInfo:not(readonly)',$partInfoDiv).unbind('click').bind('click',function(event){
+            var element = this, id = element.id,
+                $fieldDisplayDiv = $(element),
+                $fieldInput = $(element.nextSibling);
+            $fieldDisplayDiv.addClass('edit');
+            $fieldInput.addClass('edit');
+            $fieldInput.focus().select();
+            $fieldInput.unbind('keydown').bind('keydown', function(event){
+              var val = $(this).val(),
+                  codes = id.split('_'),
+                  key = codes[1],
+                  prtTag = codes[0],
+                  prtID = prtTag.substr(3);
+              if(event.keyCode == 13) {
+                $fieldDisplayDiv.text(val);
+                $fieldDisplayDiv.removeClass('edit');
+                $fieldInput.removeClass('edit');
+                if (key == 'label') {
+                  layoutMgr.modelWizardSavePart(prtID,null,val,null,null,null,null,function (success){
+                    if (!success) {
+                      alert("Unable to update part entity");
+                    }
+                    setTimeout(function() {
+                                layoutMgr.initPartWizard(itmID, itmdisplay);
+                              }, 50);
+                  });
+                } else if (key == 'sequence') {
+                  layoutMgr.modelWizardSavePart(prtID,null,null,null,val,null,null,function (success){
+                    if (!success) {
+                      alert("Unable to update part entity");
+                    }
+                    setTimeout(function() {
+                                layoutMgr.initPartWizard(itmID, itmdisplay);
+                              }, 50);
+                  });
+                } else if (key == 'description') {
+                  layoutMgr.modelWizardSavePart(prtID,val,null,null,null,null,null,function (success){
+                    if (!success) {
+                      alert("Unable to update part entity");
+                    }
+                    setTimeout(function() {
+                                layoutMgr.initPartWizard(itmID, itmdisplay);
+                              }, 50);
+                  });
+                }
+              }
+            });
+            //alert("Edit "+id+" with value: "+val);
+          });
+          layoutMgr.initFragmentWizard(partInfo.prt_id,partInfo.prtdisplay,itemID);
         }
       }
     });
@@ -2196,10 +2787,83 @@ MANAGERS.LayoutManager.prototype = {
 
 
   /**
+  * model wizard save part entity
+  *
+  * @param int prtID
+  * @param string description of this part
+  * @param string label commonly used for this part
+  * @param string measure describing the measurements of this part
+  * @param int sequence number of this part
+  * @param string mediums is comma separate list of mediums used for this part
+  * @param int newPartItmID Item ID to link new part to
+  * @param function cb is a callback function with a flag to signal success
+  */
+
+ modelWizardSavePart: function(prtID, description, label, measure, sequence, mediums, newPartItmID, cb) {
+  var savedata ={}, layoutMgr = this;
+  DEBUG.traceEntry("layoutMgr.modelWizardSavePart");
+  if (prtID) {
+    savedata["prtID"] = prtID;
+  }
+  if (description != null) {
+    savedata["description"] = description;
+  }
+  if (label != null) {
+    savedata["label"] = label;
+  }
+  if (measure != null) {
+    savedata["measure"] = measure;
+  }
+  if (sequence != null) {
+    savedata["sequence"] = sequence;
+  }
+  if (mediums != null) {
+    savedata["mediums"] = mediums;
+  }
+  if (newPartItmID) {
+    savedata["newPartItmID"] = newPartItmID;
+  }
+  if (Object.keys(savedata).length > 0) {
+    //jqAjax asynch save
+    $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: basepath+'/services/savePart.php?db='+dbName,//caution dependency on context having basepath and dbName
+        data: savedata,
+        async: true,
+        success: function (data, status, xhr) {
+            if (typeof data == 'object' && data.success && data.entities &&
+                layoutMgr.dataMgr ) {
+              //update data
+              layoutMgr.dataMgr.updateLocalCache(data,null);
+            }
+            if (data.errors) {
+              alert("An error occurred while trying to save part data. Error: " + data.errors.join());
+              if (cb) {
+                cb(false);
+              }
+            } else if (cb){
+              cb(true);
+            }
+        },
+        error: function (xhr,status,error) {
+            // add record failed.
+            alert("An error occurred while trying to save part data. Error: " + error);
+            if (cb) {
+              cb(false);
+            }
+      }
+    });
+  }
+  DEBUG.traceExit("layoutMgr.modelWizardSavePart");
+},
+
+
+  /**
   * init item wizard
   */
 
-  initItemWizard: function () {
+  initItemWizard: function (selectItmID = null) {
     DEBUG.traceEntry("layoutMgr.initItemWizard", "");
     var layoutMgr = this,
       $itemWizContentDiv = $('#itmWizardContent'),
@@ -2208,9 +2872,11 @@ MANAGERS.LayoutManager.prototype = {
       itmDatasource = {
         datatype: "jsonp",
         datafields: [
-          { name: 'itemid' },
-          { name: 'ckn' },
-          { name: 'title' }
+          { name: 'itm_id' },
+          { name: 'itm_idno' },
+          { name: 'itm_title' },
+          { name: 'itm_description' },
+          { name: 'display' }
         ],
         url: itmDataUrl,
       },
@@ -2224,29 +2890,89 @@ MANAGERS.LayoutManager.prototype = {
         placeHolder: "Select item ...",
         source: itmDataAdapter,
         popupZIndex: 18010,
-        displayMember: "title",
-        valueMember: "itemid",
+        displayMember: "display",
+        valueMember: "itm_id",
       });
-    $itemSelector.unbind('select').bind('select', function (event) {
+      $itemSelector.unbind('bindingComplete').bind('bindingComplete', function (event) {
+        if (selectItmID){
+//          alert("Finding item id " + selectItmID);
+          var item = $itemSelector.jqxComboBox('getItemByValue',selectItmID);
+          if (item) {
+            $itemSelector.jqxComboBox('selectItem',item);
+          }
+        } else {
+//          alert("normal start");
+        }
+      });
+      $itemSelector.unbind('select').bind('select', function (event) {
       if (event.args) {
         var item = event.args.item;
-        if (item) {
-          var itemInfo = item.originalItem,
+        if (item) { // show select item info and setup insitu edit UX
+          var itemInfo = item.originalItem, itmTag = 'itm'+itemInfo.itm_id,
             $itemInfoDiv = $('#itemInfoDiv', $itemWizContentDiv);
           $itemInfoDiv.children().remove();
-          $itemInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">ID:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + itemInfo.itemid + '</div>' +
+          $itemInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">ID:</div>' +
+            '<div class="wzEntInfo" readonly" id="'+itmTag+'_id">' + itemInfo.itm_id + '</div>' +
             '</div>');
-          $itemInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">Inv.No.:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + itemInfo.ckn + '</div>' +
+          $itemInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">Inv.No.:</div>' +
+            '<div class="wzEntInfo" id="'+itmTag+'_idno">' + itemInfo.itm_idno + '</div>' +
+            '<input class="wzEntInfoInput" value="' + itemInfo.itm_idno + '"/>' +
             '</div>');
-          $itemInfoDiv.append('<div style="display:table-row">' +
-            '<div class="entInfoLbl" style="display:table-cell; padding-left: 10px; width: 50px; text-align: left">Title:</div>' +
-            '<div class="entInfo" style="display:table-cell; padding-left: 10px">' + itemInfo.title.substr(9) + '</div>' +
+          $itemInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl">Title:</div>' +
+            '<div class="wzEntInfo" id="'+itmTag+'_title">' + itemInfo.itm_title + '</div>' +
+            '<input class="wzEntInfoInput" value="' + itemInfo.itm_title + '"/>' +
             '</div>');
-            layoutMgr.initPartWizard(itemInfo.itemid);
+          /*$itemInfoDiv.append('<div class="wzInfoRow">' +
+            '<div class="wzEntInfoLbl" id="'+itmTag+'_id">Description:</div>' +
+            '<div class="wzEntInfo">' + itemInfo.itm_description + '</div>' +
+            '<input class="wzEntInfoInput" value="' + itemInfo.itm_description + '"/>' +
+            '</div>');*/
+
+          // check if there is 
+          //add click handler for each editable item property
+          $('.wzEntInfo:not(readonly)',$itemInfoDiv).unbind('click').bind('click',function(event){
+            var element = this, id = element.id,
+                $fieldDisplayDiv = $(element),
+                $fieldInput = $(element.nextSibling), $fieldSelect,
+                codes = id.split('_'),
+                key = codes[1],
+                itmTag = codes[0],
+                itmID = itmTag.substr(3);
+            $fieldDisplayDiv.addClass('edit');
+            $fieldInput.addClass('edit');
+            $fieldInput.focus().select();
+            $fieldInput.unbind('keydown').bind('keydown', function(event) {
+              var val = $(this).val();
+              if(event.keyCode == 13) {
+                $fieldDisplayDiv.text(val);
+                $fieldDisplayDiv.removeClass('edit');
+                $fieldInput.removeClass('edit');
+                if (key == 'idno') {
+                  layoutMgr.modelWizardSaveItem(itmID, null, null, null, val,null,function (success){
+                    if (!success) {
+                      alert("Unable to update item entity");
+                    }
+                    setTimeout(function() {
+                                layoutMgr.initItemWizard(itmID);
+                              }, 50);
+                  });
+                } else if (key == 'title') {
+                  layoutMgr.modelWizardSaveItem(itmID, null, val, null, null, null, function (success){
+                    if (!success) {
+                      alert("Unable to update item entity");
+                    }
+                    setTimeout(function() {
+                                layoutMgr.initItemWizard(itmID);
+                              }, 50);
+                  });
+                }
+              }
+            });
+          });
+          layoutMgr.initPartWizard(itemInfo.itm_id,itemInfo.display);
         }
       }
     });
@@ -2256,16 +2982,88 @@ MANAGERS.LayoutManager.prototype = {
 
 
   /**
+  * model wizard save item entity
+  *
+  * @param int itmID
+  * @param string description of this item
+  * @param string title commonly used for this item
+  * @param string measure describing the measurements of this item
+  * @param int idno identifying number of this item
+  * @param function cb is a callback function with a flag to signal success
+  */
+
+ modelWizardSaveItem: function(itmID, description, title, measure, idno, createBlank, cb) {
+  var savedata ={}, layoutMgr = this;
+  DEBUG.traceEntry("layoutMgr.modelWizardSaveItem");
+  if (itmID) {
+    savedata["itmID"] = itmID;
+  }
+  if (description != null) {
+    savedata["description"] = description;
+  }
+  if (title != null) {
+    savedata["title"] = title;
+  }
+  if (measure != null) {
+    savedata["measure"] = measure;
+  }
+  if (idno != null) {
+    savedata["idno"] = idno;
+  }
+  if (createBlank != null) {
+    savedata["createBlank"] = createBlank;
+  }
+  if (Object.keys(savedata).length > 0) {
+    //jqAjax asynch save
+    $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: basepath+'/services/saveItem.php?db='+dbName,//caution dependency on context having basepath and dbName
+        data: savedata,
+        async: true,
+        success: function (data, status, xhr) {
+            var selectItmID = itmID;
+            if (typeof data == 'object' && data.success && data.entities &&
+                layoutMgr.dataMgr ) {
+              //update data
+              layoutMgr.dataMgr.updateLocalCache(data,null);
+              if (!selectItmID && data.entities.insert && data.entities.insert.itm) {
+                selectItmID = Object.keys(data.entities.insert.itm)[0];
+              }
+            }
+            if (data.errors) {
+              alert("An error occurred while trying to save item data. Error: " + data.errors.join());
+              if (cb) {
+                cb(false);
+              }
+            } else if (cb){
+              cb(selectItmID);
+            }
+        },
+        error: function (xhr,status,error) {
+            // add record failed.
+            alert("An error occurred while trying to save item data. Error: " + error);
+            if (cb) {
+              cb(false);
+            }
+      }
+    });
+  }
+  DEBUG.traceExit("layoutMgr.modelWizardSaveItem");
+},
+
+
+  /**
     * create new item wizard
     */
 
-  createItemWizard: function () {
+  createItemWizard: function (initalItmID = null) {
     DEBUG.traceEntry("layoutMgr.createNewItemWizard", "");
     var layoutMgr = this, mainContainer = $('body'),
       offset = mainContainer.offset(),
       wzWidth, wzHeight,
       $modelWizDiv,
-      $itemWizContentDiv;
+      $itemCategorySelect;
     if (layoutMgr.modelWizard) {
       layoutMgr.modelWizard.jqxWindow('close');
       delete layoutMgr.modelWizard;
@@ -2278,17 +3076,77 @@ MANAGERS.LayoutManager.prototype = {
         '<div id="wizardHeader">' +
           '<span id="itmHeaderSpan" style="float: left">Item Wizard</span>' +
         '</div>' +
-        '<div id="wizardContent">' +
+        '<div id="wizardContent" style="overflow-y: auto;">' +
           '<div id="itmWizardContent">' +
-            '<div style="display:inline-block; vertical-align:top; width:70px" class="wzLabel">Item : </div>' +
-            '<div  style="display:inline-block; vertical-align:top" class="wzCombo" id="itmSelect"/>' +
-            '<div style="display:inline-block" class="wzInfoDiv" id="itemInfoDiv"></div>' +
+            '<div class="wzLabel">' +
+              '<div style:"padding-right:5px">Item :</div>' +
+              '<button class="wzBtnAddEntity" title="Add new item to corpus" >Add item</button>' +
+              '<div class="wzInvCombo" id="invSelect"/>' +
+            '</div>' +
+            '<div class="wzCombo" id="itmSelect"/>' +
+            '<div class="wzInfoDiv" id="itemInfoDiv"></div>' +
           '</div>' +
         '</div>' +
       '</div>');
     $modelWizDiv = $('#modelWizard');
     // get wizard content div in modelWizard
     layoutMgr.modelWizContentDiv = $('#wizardContent',$modelWizDiv);
+    $btnNewItem = $('#itmWizardContent button.wzBtnAddEntity', $modelWizDiv);
+    $btnNewItem.unbind('click').bind('click', function(e) {
+      if (layoutMgr.newCatalogIDService) {
+        //jqAjax asynch save
+        $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: layoutMgr.newCatalogIDService, //caution dependency on context having basepath and dbName
+          async: true,
+          success: function (data, status, xhr) {
+            var invNo = null;
+            $itemCategorySelect = $('#invSelect', layoutMgr.modelWizContentDiv);
+            if (data && Object.keys(data).length && $itemCategorySelect.length) {
+              if (!layoutMgr.previousInvCat || !data[layoutMgr.previousInvCat]) {
+                if (Object.keys(data).length > 1 && !$itemCategorySelect.hasClass('show')) { // init select and have user select
+                  $itemCategorySelect.addClass('show');
+                  $itemCategorySelect.jqxComboBox(
+                    {
+                      width: 100,
+                      height: 20,
+                      placeHolder: "Select type ...",
+                      source: Object.keys(data),
+                      popupZIndex: 18010
+                    });
+                    $itemCategorySelect.unbind('select').bind('select', function(event){
+                      var key = $(this).val();
+                      layoutMgr.previousInvCat = key;
+                      $btnNewItem.attr('title', "Add "+key+" item");
+                    });
+                }
+                alert("Please select a category of item to create.");
+                return;
+              } else {
+                invNo = data[layoutMgr.previousInvCat];
+              }
+            }
+            //call service to create new text with inventory number
+            layoutMgr.modelWizardSaveItem(null,null,null,null,invNo,true, function (selectItmID){
+              if (!selectItmID) {
+                alert("Unable to save text entity");
+              }
+              layoutMgr.initItemWizard(selectItmID);
+            });
+          }
+        });
+      } else {
+        layoutMgr.modelWizardSaveItem(null,null,null,null,null,true,function (selectItmID){
+          if (!selectItmID) {
+            alert("Unable to create new item entity");
+          }
+          setTimeout(function() {
+                      layoutMgr.initItemWizard(selectItmID);
+                    }, 50);
+        });
+      }
+    });
     offset.xcenter = mainContainer.innerWidth() / 4;
     offset.ycenter = mainContainer.innerHeight() / 4;
     wzWidth = 3 * offset.xcenter + 300;
@@ -2300,7 +3158,7 @@ MANAGERS.LayoutManager.prototype = {
         x: offset.left + 100,
         y: offset.top + 100
       },
-      initContent: function () { layoutMgr.initItemWizard(); }
+      initContent: function () { layoutMgr.initItemWizard(initalItmID); }
     });
     DEBUG.traceExit("layoutMgr.createNewItemWizard", "");
   }

@@ -3940,7 +3940,7 @@ function updateWordLocationForLine($seqID) {
   }
 }
 
-          
+
 function getTokLocQueryString($tokID){
   $strMatch = defined('CKNMATCHREGEXP')?CKNMATCHREGEXP:"'([a-z]+)0*(\d+)'";
   $strReplace = defined('CKNREPLACEMENTEXP')?CKNREPLACEMENTEXP:"'\\1 \\2'";
@@ -4240,7 +4240,7 @@ function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $
   $thumbfile = $targetPath.getThumbFromFilename($srcFilename);
   list($imageW,$imageH) = getimagesize($sourcefile);
   if ($imageW <= $maxSizeX && $imageH <= $maxSizeY && preg_match("/^th/",$srcFilename)) { // small image or likely a thumbnail
-    return null;    
+    return null;
   }
   //shrink and preserve aspect
   $percent = $maxSizeX/$imageW;
@@ -4469,6 +4469,7 @@ function createAttribution($title, $description, $visibilityIDs, $ckn_Key, $bibl
   }
 }  
 
+//setup for full text import or update
 function updateTextEntites($textCKN, $entitiesConfig) {
 
   if (!isset($textCKN)) {
@@ -4989,9 +4990,6 @@ function updateTextEntites($textCKN, $entitiesConfig) {
       }
     }
   }
-
-
   error_log("$textCKN updated");
-
 }
 ?>

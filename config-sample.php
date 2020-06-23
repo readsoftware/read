@@ -58,7 +58,7 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   // boolean constant to use dynamic calls to retrieve lemma popup info in the READ Viewer
   if(!defined("USEDYNAMICLEMMAINFO")) define("USEDYNAMICLEMMAINFO",true);
 
-//Refresh default settings
+// Caching Refresh default settings
   // Default value that controls Annotation cache refresh
   if(!defined("DEFAULTANNOTATIONSREFRESH")) define("DEFAULTANNOTATIONSREFRESH",0);//set >= 1 always refresh
   // Default value that controls Text Resources cache refresh
@@ -156,7 +156,7 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   // String template used to create the href link for the lemma
   define("LEMMALINKTEMPLATE",READ_DIR."/plugins/dictionary/?search=%lemval%");
 
-//location label formatting
+//word location label formatting
   // regular expression string for pattern match on text number used in attestform location labelling
   define("CKNMATCHREGEXP","'([a-z]+)0*(\\d+)'");// grp1 match starting non numeric characters followed by zero or more 0 grp2 match 1 or more following numbers
   // replacement string for creating text ref part of attestedform location label
@@ -193,12 +193,22 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
 // to export with separation of project databases use the line below. Also consider
 // symbolic links to READ's viewer support subdirectories css and js in viewer export
 // directory for automatic system update
-  // 
+// 
 //  if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer/".DBNAME);
   // 
   if(!defined("VIEWER_EXPORT_PATH")) define("VIEWER_EXPORT_PATH",DOCUMENT_ROOT.VIEWER_EXPORT_SUBDIR);
   // 
   if(!defined("VIEWER_BASE_URL")) define("VIEWER_BASE_URL",SITE_ROOT.VIEWER_EXPORT_SUBDIR);
+
+// Upper Model Configuration constants
+  // New Catalog Id No. service URL. 
+      //If present the Item wizard will call the service 
+      //expexting a json object of key:value pair with the key indicating the category
+      //of item and the value a string of the next available inventory number. 
+  // New Item Id No. service URL. 
+  //if(!defined("NEW_CATALOG_ID_URL")) define("NEW_CATALOG_ID_URL","http://your/service/url");
+  // sort string used in order by
+  //if(!defined("TEXT_INV_SORT")) define("TEXT_INV_SORT","SUBSTRING(txt_ckn,3,1) DESC, SUBSTRING(txt_ckn,0,9), SUBSTRING(txt_ckn,9)::int");
 
   $info = new SplFileInfo(SEGMENT_CACHE_BASE_PATH);
   if (!$info->isDir()) {

@@ -47,7 +47,8 @@ $dbMgr = new DBManager();
               'where itm_owner_id != 1 '.
               'order by SUBSTRING(itm_idno,3,1) DESC, itm_idno) t;';
 */
-$query ="select itm_id as itemid, itm_idno as ckn, CONCAT(itm_idno,': ',itm_title) as title ".
+$query ="select itm_id, itm_idno, itm_title, itm_description, ".
+                "CONCAT(itm_idno,': ',itm_title) as display ".
         'from item '.
         'where itm_owner_id != 1 '.
         'order by SUBSTRING(itm_idno,3,1) DESC, itm_idno;';

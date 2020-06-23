@@ -58,9 +58,9 @@ if (!$data) {
 }
 
 if ($frgID) {
-	$query = 	"select srf_id as srfid,".
+	$query = 	"select srf_id, srf_number,".
 						"(case when srf_label is null then concat('surf-',srf_id) else srf_label end) as srfdisplay,".
-						" srf_label as srflabel, cast(srf_text_ids as int[]) as srftxtids ".
+						" srf_label, cast(srf_text_ids as int[]) as srftxtids ".
 						'from surface '.
 						"where srf_fragment_id = $frgID ".
 						'order by srf_id';

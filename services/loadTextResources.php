@@ -138,7 +138,8 @@
     }
   }
 
-  if ($removeTextFromCache && $txtIDs && $jsonRetVal) { // call to remove text from cache
+  // call to remove text from cache
+  if ($removeTextFromCache && $txtIDs && $jsonRetVal) {
     $curCache = json_decode($jsonRetVal,true);
     foreach ($txtIDs as $txtID) {
       if (array_key_exists($txtID,$curCache['entities']['insert']['txt'])) {
@@ -154,20 +155,21 @@
     $jsonRetVal = json_encode(array("success"=>true));
   }
 
-  if (!$jsonRetVal) {
+  if (!$jsonRetVal || $updateCache) {
     $imgIDs = array();
     $img2blnIDs = array();
     $anoIDs = array();
     $atbIDs = array();
+    $orderBy = (defined('TEXT_INV_SORT')?TEXT_INV_SORT:'txt_ckn');
     if ($txtIDs && strlen($txtIDs)) {
       if (is_array($txtIDs)){
         $condition = "txt_id in (".join(',',$txtIDs).") and not txt_owner_id = 1";
       } else {
         $condition = "txt_id in ($txtIDs) and not txt_owner_id = 1";
       }
-      $texts = new Texts($condition,"txt_id",null,null);
+      $texts = new Texts($condition,$orderBy,null,null);
     } else {
-      $texts = new Texts("not txt_owner_id = 1","txt_id",null,null);
+      $texts = new Texts("not txt_owner_id = 1",$orderBy,null,null);
       $isLoadAll = true;
     }
     $termInfo = getTermInfoForLangCode('en');

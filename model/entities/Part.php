@@ -189,7 +189,7 @@
       if ($this->_type_id && $this->getTermFromID($this->_type_id)) {
         $type = $this->_type_id;
       } else if ($this->getScratchProperty('type')) {
-        $state = $this->getScratchProperty('type');
+        $type = $this->getScratchProperty('type');
       }
       return $type;
     }

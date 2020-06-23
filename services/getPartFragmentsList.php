@@ -58,7 +58,8 @@ if (!$data) {
 }
 
 if ($prtID) {
-	$query = 	"select frg_id as frgid,(case when frg_label is null then concat('frag-',frg_id) else frg_label end) as frgdisplay, frg_label as frglabel ".
+	$query = 	"select frg_id, (case when frg_label is null then concat('frag-',frg_id) else frg_label end) as frgdisplay, ".
+						'frg_label, frg_description '.
 						'from fragment '.
 						"where frg_owner_id != 1 and frg_part_id = $prtID ".
 						'order by frg_id';

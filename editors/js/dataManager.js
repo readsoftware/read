@@ -2048,7 +2048,7 @@ removeTextResourcesCache: function(txtID) {
               dataMgr.updateLocalCache(data,null);
             }
             if (cb && typeof cb == "function") {
-              cb(textResults);
+              cb(data);
             }
             DEBUG.traceExit("dataMgr.loadTextSearch.SuccessCB","search = " + search);
         },
