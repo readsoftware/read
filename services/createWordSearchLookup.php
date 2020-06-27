@@ -66,27 +66,32 @@
     (
       select t.* from
       (";
-      for ($i=0; $i <= $subQueryCount; $i++) {
-        $start = $i * CHUNK_SIZE;
-        $end = $start + CHUNK_SIZE;
-        if ($start){
-          $query .= "
-          union all ";
-        }
-        $query .=  "
-          select w.txt_id as txt_id, w.edn_id, w.tseqID as seq_id, w.edn_description, array_cat_agg(w.wordIDs)::varchar(30)[] as edn_word_ids
-          from
-          (select edn_text_id as txt_id, edn_id, p.seq_id as tseqID, edn_description, c.seq_id, c.seq_entity_ids as wordIDs, 
-                  array_position( p.seq_entity_ids::text[],concat('seq:',c.seq_id)) as divord
-            from  sequence p 
-                left join sequence c on concat('seq:',c.seq_id) = ANY(p.seq_entity_ids)
-                left join edition on p.seq_id = ANY(edn_sequence_ids)
-            where c.seq_id is not null and p.seq_type_id = 738 and 
-                  not p.seq_owner_id = 1 and not c.seq_owner_id = 1 and not edn_owner_id = 1 and 
-                    edn_id > $start and edn_id <=$end  
-            order by p.seq_id,divord) w 
-          group by w.txt_id, w.edn_id, w.tseqID, w.edn_description ";
-      }
+
+  for ($i=0; $i <= $subQueryCount; $i++) {
+    $start = $i * CHUNK_SIZE;
+    $end = $start + CHUNK_SIZE;
+    if ($start){
+      $query .= "
+      union all ";
+    }
+    $query .= 
+         "select w.txt_id as txt_id, w.txt_title as txt_title, w.txt_ref as txt_ref, ".
+                "w.edn_id, w.tseqID as seq_id, w.edn_description, ".
+                "array_cat_agg(w.wordIDs)::varchar(30)[] as edn_word_ids ".
+         "from ".
+         "(select txt_id, txt_title, txt_ref, edn_id, p.seq_id as tseqID, edn_description, ".
+                  "c.seq_id, c.seq_entity_ids as wordIDs, ".
+                  "array_position( p.seq_entity_ids::text[],concat('seq:',c.seq_id)) as divord ".
+          "from  sequence p ".
+               "left join sequence c on concat('seq:',c.seq_id) = ANY(p.seq_entity_ids) ".
+               "left join edition on p.seq_id = ANY(edn_sequence_ids) ".
+               "left join text on txt_id = edn_text_id ".
+           "where c.seq_id is not null and p.seq_type_id = 738 and ".
+                 "not p.seq_owner_id = 1 and not c.seq_owner_id = 1 and not edn_owner_id = 1 and ".
+                   "edn_id > $start and edn_id <=$end ".
+           "order by p.seq_id,divord) w ".
+        "group by w.txt_id, w.txt_title, w.txt_ref, w.edn_id, w.tseqID, w.edn_description ";
+  }
 /*      union all 
       select w.txt_id as txt_id, w.edn_id, w.tseqID as seq_id, w.edn_description, array_cat_agg(w.wordIDs)::varchar(30)[] as edn_word_ids
       from
