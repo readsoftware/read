@@ -896,13 +896,13 @@ EDITORS.SearchVE.prototype = {
       resDiv.unbind('click').bind('click', function (e) {
 //                                var btn = this;
 //                                srchVE.newEdition(e,btn);
-                                if (!srchVE.layoutMgr.ednWizard) {
+                                if (!srchVE.layoutMgr.editionWizard) {
                                   srchVE.layoutMgr.createNewEditionWizard(ckn);
                                 } else {
                                   srchVE.layoutMgr.initEditionWizard(ckn);
                                 }
-                                if (!srchVE.layoutMgr.ednWizard.jqxWindow('isOpen')) {
-                                  srchVE.layoutMgr.ednWizard.jqxWindow('open');
+                                if (!srchVE.layoutMgr.editionWizard.jqxWindow('isOpen')) {
+                                  srchVE.layoutMgr.editionWizard.jqxWindow('open');
                                 }
                               });
 //                            .prop('GID', "txt:"+ srchVE.getCursorTextID());
