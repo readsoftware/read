@@ -262,6 +262,7 @@
           hAdjustPX="<?=$hAdjustPX?>",
           basepath="<?=SITE_BASE_PATH?>",
 <?php
+  $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
   if (!$isStaticView) {
 ?>
           exportStaticBaseURL = "<?=$exportStaticBaseURL?>",

@@ -1328,7 +1328,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
             $physicalLineHtml = $linePhysSequence->getScratchProperty("physLineHtml");
           }
           $fnRefTofnTextByLine = $linePhysSequence->getScratchProperty("edn".$edition->getID()."fnTextByAnoTag");
-          if (count($fnRefTofnTextByLine) == 0) {
+          if (!$fnRefTofnTextByLine || count($fnRefTofnTextByLine) == 0) {
             $fnRefTofnTextByLine = $linePhysSequence->getScratchProperty("fnTextByAnoTag");
           }
         }
@@ -1659,7 +1659,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
 //  $sclTag2BlnPolyMap = array();
 //  $sclTagLineStart = array();
   $blnInfobyBlnTag = array();
-  $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
+//  $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
   $isFirstEdn = true;
   $jsonCache = null;
   if (count($ednIDs) == 1) {
