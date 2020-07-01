@@ -54,100 +54,119 @@
     //get parameters
     $str1 = (isset($data['str1']) && $data['str1'])? $data['str1']:null;
     $str2 = (isset($data['str2']) && $data['str2'])? $data['str2']:null;
-    $rng = (isset($data['rng']) && $data['rng'])? $data['rng']:null;
+    $rng = (isset($data['rng']) && $data['rng'])? $data['rng']:1;
     $verbose = (isset($data['verbose']) && $data['verbose'])? $data['verbose']:null;
+    $matchorder = (isset($data['matchorder']) && $data['matchorder'])? $data['matchorder']:null;
     $txtIDs = (isset($data['txtIDs']) && $data['txtIDs'])? $data['txtIDs']:null;
-    $condition = "";
+    $txtconstraint = "";
+    $orderconstraint = "";
     if ($txtIDs) {
-      $condition = "a.txt_id in ($txtIDs)";
+      // todo  add code to clense $txt ids needs to be string of comma separated ints
+      $txtconstraint = "and a.txt_id in ($txtIDs)";
+    }
+    if ($matchorder) {
+      $orderconstraint = "and w2.ord-w1.ord > -1";
     }
     if (!$str2) {
-      if ($condition){
-        $condition = "where ".$condition;
+      if ($txtconstraint){
+        $txtconstraint = "and ".$txtconstraint;
       }
       $query =
       "select r.* from
-        (select a.txt_id as txt_id, a.txt_title as txt_title, a.txt_ref as txt_ref, concat('tok:',a.w1_id) as w1_id, 
-                a.w1_ord, a.w1_loc, a.edn_id, a.seq_id,  
-                a.edn_word_ids[a.w1_ord-$rng: a.w1_ord+$rng], 
-                (case when a.w1_ord > $rng then -$rng when a.w1_ord = 1 then 0 else -a.w1_ord + 1 end) as istart
-        from  (select txt_id, txt_title, txt_ref, edn_id, seq_id, 
-                      array_position(edn_word_ids::text[],concat('tok:',tok_id)) as w1_ord, 
-                      w1.tok_id as w1_id, w1.tok_value as w1_val, edn_word_ids, 
-                      w1.tok_scratch::json->'locLabel'::text as w1_loc
-              from token w1
-              left join word_search_lookup on concat('tok:',tok_id) = ANY(edn_word_ids)
-              where tok_value ~* '$str1' and not tok_owner_id = 1 and edn_id is not null
-              order by edn_id, w1_ord) a
-        $condition
+          (select txt_id, txt_title, txt_ref, w1.edn_id, seq_id, 
+                  w1.edn_word_ids[w1.ord-$rng: w1.ord+$rng]::text[] as edn_word_ids,
+                  w1.ord as w1_ord, w1.wrd_id as w1_id, w1.val as w1_val, w1.loc as w1_loc,
+                  (case when w1.ord > $rng then -$rng when w1.ord = 1 then 0 else -w1.ord + 1 end) as istart 
+           from (select w.* from 
+                    (select txt_id, txt_title, txt_ref, edn_id, seq_id, 
+                            array_position(edn_word_ids::text[],concat('tok:',tok_id)) as ord, 
+                            concat('tok:',tok_id)::text as wrd_id, tok_value as val, edn_word_ids, 
+                            tok_scratch::json->'locLabel' as loc
+                    from token 
+                          left join word_search_lookup on concat('tok:',tok_id) = ANY(edn_word_ids)
+                    where tok_value ~* '$str1' and not tok_owner_id = 1 
+                          and edn_id is not null and txt_id is not null
+                          $txtconstraint
 
-        union all
+                    union all
 
-        select a.txt_id as txt_id, a.txt_title as txt_title, a.txt_ref as txt_ref, concat('cmp:',a.w1_id) as w1_id, 
-              a.w1_ord, a.w1_loc, a.edn_id, a.seq_id, 
-              a.edn_word_ids[a.w1_ord-$rng: a.w1_ord+$rng],
-              (case when a.w1_ord > $rng then -$rng when a.w1_ord = 1 then 0 else -a.w1_ord + 1 end) as istart
-        from  (select txt_id, txt_title, txt_ref, edn_id, seq_id, 
-                      array_position(edn_word_ids::text[],concat('cmp:',cmp_id)) as w1_ord, 
-                      w1.cmp_id as w1_id, w1.cmp_value as w1_val, edn_word_ids, 
-                      w1.cmp_scratch::json->'locLabel'::text as w1_loc
-              from compound w1
-              left join word_search_lookup on concat('cmp:',cmp_id) = ANY(edn_word_ids)
-              where cmp_value ~* '$str1' and not cmp_owner_id = 1 and edn_id is not null
-              order by edn_id, w1_ord) a
-        $condition
-         ) r
+                    select txt_id, txt_title, txt_ref, edn_id, seq_id, 
+                            array_position(edn_word_ids::text[],concat('cmp:',cmp_id)) as ord, 
+                            concat('cmp:',cmp_id)::text as wrd_id, cmp_value as val, edn_word_ids, 
+                            cmp_scratch::json->'locLabel' as loc
+                    from compound 
+                          left join word_search_lookup on concat('cmp:',cmp_id) = ANY(edn_word_ids)
+                    where cmp_value ~* '$str1' and not cmp_owner_id = 1 
+                          and edn_id is not null and txt_id is not null
+                          $txtconstraint
+                          ) w
+                  order by w.edn_id, w.ord
+                ) w1
+          ) r
       order by r.txt_id";
+
     } else {
-      if ($condition){
-        $condition = "and ".$condition;
-      }
       $query =
       "select r.* from
-      (select a.txt_id as txt_id, a.txt_title as txt_title, a.txt_ref as txt_ref, concat('tok:',a.w1_id) as w1_id,concat('tok:',b.w2_id) as w2_id, 
-                a.w1_ord, b.w2_ord, a.w1_loc, b.w2_loc, a.edn_id, a.seq_id, b.w2_ord-a.w1_ord as wrd_rng,  
-                a.edn_word_ids[a.w1_ord-$rng: a.w1_ord+$rng], (case when a.w1_ord > $rng then -$rng when a.w1_ord = 1 then 0 else -a.w1_ord + 1 end) as istart
-        from  (select txt_id, txt_title, txt_ref, edn_id, seq_id, 
-                      array_position(edn_word_ids::text[],concat('tok:',tok_id)) as w1_ord, 
-                      w1.tok_id as w1_id, w1.tok_value as w1_val, edn_word_ids, 
-                      w1.tok_scratch::json->'locLabel'::text as w1_loc
-              from token w1
-              left join word_search_lookup on concat('tok:',tok_id) = ANY(edn_word_ids)
-              where tok_value ~* '$str1' and not tok_owner_id = 1 and edn_id is not null
-              order by edn_id, w1_ord) a
-        left join
-              (select edn_id, array_position(edn_word_ids::text[],concat('tok:',tok_id)) as w2_ord, 
-                      w2.tok_id as w2_id, w2.tok_value as w2_val,w2.tok_scratch::json->'locLabel'::text as w2_loc
-              from token w2
-              left join word_search_lookup on concat('tok:',tok_id) = ANY(edn_word_ids)
-              where tok_value ~* '$str2' and not tok_owner_id = 1 and edn_id is not null
-              order by edn_id, w2_ord) b
-        on a.edn_id = b.edn_id
-        where abs(b.w2_ord-a.w1_ord) < $rng+1 $condition
+        (select txt_id, txt_title, txt_ref, w1.edn_id, seq_id, 
+          w1.edn_word_ids[w1.ord-$rng: w1.ord+$rng]::text[] as edn_word_ids,
+          w1.ord as w1_ord, w2.ord as w2_ord, w1.wrd_id as w1_id, w2.wrd_id as w2_id, 
+          w1.val as w1_val, w2.val as w2_val, w1.loc as w1_loc, w2.loc as w2_loc,
+          (w2.ord - w1.ord) as dist, (case when w1.ord > $rng then -$rng when w1.ord = 1 then 0 else -w1.ord + 1 end) as istart 
+          from (select w.* from 
+                  (select txt_id, txt_title, txt_ref, edn_id, seq_id, 
+                          array_position(edn_word_ids::text[],concat('tok:',tok_id)) as ord, 
+                          concat('tok:',tok_id)::text as wrd_id, tok_value as val, edn_word_ids, 
+                          tok_scratch::json->'locLabel' as loc
+                  from token 
+                        left join word_search_lookup on concat('tok:',tok_id) = ANY(edn_word_ids)
+                  where tok_value ~* '$str1' and not tok_owner_id = 1 
+                        and edn_id is not null and txt_id is not null
+                        $txtconstraint
 
-        union all
+                  union all
 
-        select a.txt_id as txt_id, a.txt_title as txt_title, a.txt_ref as txt_ref, concat('cmp:',a.w1_id) as w1_id,concat('cmp:',b.w2_id) as w2_id, 
-              a.w1_ord, b.w2_ord, a.w1_loc, b.w2_loc, a.edn_id, a.seq_id, b.w2_ord-a.w1_ord as wrd_rng, 
-              a.edn_word_ids[a.w1_ord-$rng: a.w1_ord+$rng],(case when a.w1_ord > $rng then -$rng when a.w1_ord = 1 then 0 else -a.w1_ord + 1 end) as istart
-        from  (select txt_id, txt_title, txt_ref, edn_id, seq_id, 
-                      array_position(edn_word_ids::text[],concat('cmp:',cmp_id)) as w1_ord, 
-                      w1.cmp_id as w1_id, w1.cmp_value as w1_val, edn_word_ids, 
-                      w1.cmp_scratch::json->'locLabel'::text as w1_loc
-              from compound w1
-              left join word_search_lookup on concat('cmp:',cmp_id) = ANY(edn_word_ids)
-              where cmp_value ~* '$str1' and not cmp_owner_id = 1 and edn_id is not null
-              order by edn_id, w1_ord) a
-        left join
-              (select edn_id, array_position(edn_word_ids::text[],concat('cmp:',cmp_id)) as w2_ord, 
-                      w2.cmp_id as w2_id, w2.cmp_value as w2_val,
-                      w2.cmp_scratch::json->'locLabel'::text as w2_loc
-              from compound w2
-              left join word_search_lookup on concat('cmp:',cmp_id) = ANY(edn_word_ids)
-              where cmp_value ~* '$str2' and not cmp_owner_id = 1 and edn_id is not null
-              order by edn_id, w2_ord) b
-        on a.edn_id = b.edn_id
-        where abs(b.w2_ord-a.w1_ord) < $rng+1 $condition) r
+                  select txt_id, txt_title, txt_ref, edn_id, seq_id, 
+                          array_position(edn_word_ids::text[],concat('cmp:',cmp_id)) as ord, 
+                          concat('cmp:',cmp_id)::text as wrd_id, cmp_value as val, edn_word_ids, 
+                          cmp_scratch::json->'locLabel' as loc
+                  from compound 
+                        left join word_search_lookup on concat('cmp:',cmp_id) = ANY(edn_word_ids)
+                  where cmp_value ~* '$str1' and not cmp_owner_id = 1 
+                        and edn_id is not null and txt_id is not null
+                        $txtconstraint
+                  ) w
+                order by w.edn_id, w.ord
+              ) w1
+          left join
+              (select w.edn_id, w.ord, w.val, w.loc, w.wrd_id from 
+                  (select txt_id, edn_id, seq_id, 
+                          array_position(edn_word_ids::text[],concat('tok:',tok_id)) as ord, 
+                          concat('tok:',tok_id)::text as wrd_id, tok_value as val, edn_word_ids, 
+                          tok_scratch::json->'locLabel' as loc
+                  from token 
+                        left join word_search_lookup on concat('tok:',tok_id) = ANY(edn_word_ids)
+                  where tok_value ~* '$str2' and not tok_owner_id = 1 
+                        and edn_id is not null and txt_id is not null
+                        $txtconstraint
+
+                  union all
+
+                  select txt_id, edn_id, seq_id, 
+                          array_position(edn_word_ids::text[],concat('cmp:',cmp_id)) as ord, 
+                          concat('cmp:',cmp_id)::text as wrd_id, cmp_value as val, edn_word_ids, 
+                          cmp_scratch::json->'locLabel' as loc
+                  from compound 
+                        left join word_search_lookup on concat('cmp:',cmp_id) = ANY(edn_word_ids)
+                  where cmp_value ~* '$str2' and not cmp_owner_id = 1 
+                        and edn_id is not null and txt_id is not null
+                        $txtconstraint
+                  ) w
+                order by w.edn_id, w.ord
+              ) w2
+          on w1.edn_id = w2.edn_id
+          where abs(w2.ord-w1.ord) < $rng+1 $orderconstraint
+        ) r
       order by r.txt_id";
     }
     $dbMgr->query($query);
@@ -163,7 +182,13 @@
         $result['ednID'] = $row['edn_id'];
         $result['seqType'] = "Text";
         $result['seqID'] = $row['seq_id'];
-        $result['range'] = $rng;
+        $result['query'] = array();
+        $result['query']['range'] = $rng;
+        $result['query']['str1'] = $str1;
+        $result['query']['str2'] = $str2;
+        $result['query']['txtIDs'] = $txtIDs;
+        $result['query']['matchorder'] = $matchorder;
+        $result['query']['verbose'] = $verbose;
         $result['match'] = array();
         $result['match']['gid'] = $row['w1_id'];
         $result['match']['wordOrdinal'] = $row['w1_ord'];
@@ -174,6 +199,7 @@
         $result['match']['transcription'] =  $entity->getTranscription();
         if($str2) {
           $result['match2'] = array();
+          $result['match2']['distance'] = $row['dist'];
           $result['match2']['gid'] = $row['w2_id'];
           $result['match2']['wordOrdinal'] = $row['w2_ord'];
           $result['match2']['location'] = trim($row['w2_loc'],"\"");
