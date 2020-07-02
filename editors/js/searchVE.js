@@ -383,103 +383,109 @@ EDITORS.SearchVE.prototype = {
         i,cnt=0,txtID,ckn,dataArray = [];
 //    for (txtID in textResults) {
 //      txtData = textResults[txtID];
-    for (i in sortedTxtIDs) {
-      txtData = textResults[sortedTxtIDs[i]];
-      if (txtData && txtData.CKN) {
-        newRow = [txtData['id']];
-        newRow.push(txtData['CKN']);
-        newRow.push(txtData['title']);
-        dataArray.push(newRow);
-        if (this.selectedTxtIDs && this.selectedTxtIDs[txtID]) {
-          selectedNewRowIndexes.push(cnt);
+    if(searchResults && searchResults.sortOrder && searchResults.entities && 
+       searchResults.entities.insert && searchResults.entities.insert.txt) {
+      textResults = searchResults.entities.insert.txt;
+      sortedTxtIDs = searchResults.sortOrder;
+
+      for (i in sortedTxtIDs) {
+        txtData = textResults[sortedTxtIDs[i]];
+        if (txtData && txtData.CKN) {
+          newRow = [txtData['id']];
+          newRow.push(txtData['CKN']);
+          newRow.push(txtData['title']);
+          dataArray.push(newRow);
+          if (this.selectedTxtIDs && this.selectedTxtIDs[txtID]) {
+            selectedNewRowIndexes.push(cnt);
+          }
+          cnt++;
         }
-        cnt++;
       }
-    }
-    dataAdapter = new $.jqx.dataAdapter({
-                localdata: dataArray,
-                datatype: "array",
-                pagesize: 22,
-                datafields:
-                [
-                    { name: 'txt_id', type: 'number',map: '0' },
-                    { name: 'ckn', type: 'string',map: '1' },
-                    { name: 'title', type: 'string',map: '2' }
-                ],
-                addrow: function(rowid,rowdate,pos,commit) {
-                          srchVE.newRowID = rowid;
-                          commit(true);
-                        }
-            });
-    if (this.gridDiv.children().length) {
-      try {
-        this.gridDiv.remove();
-        delete this.gridDiv;
-      } catch (e) {
-        alert( "exception from removal of grid");
+      dataAdapter = new $.jqx.dataAdapter({
+                  localdata: dataArray,
+                  datatype: "array",
+                  pagesize: 22,
+                  datafields:
+                  [
+                      { name: 'txt_id', type: 'number',map: '0' },
+                      { name: 'ckn', type: 'string',map: '1' },
+                      { name: 'title', type: 'string',map: '2' }
+                  ],
+                  addrow: function(rowid,rowdate,pos,commit) {
+                            srchVE.newRowID = rowid;
+                            commit(true);
+                          }
+              });
+      if (this.gridDiv.children().length) {
+        try {
+          this.gridDiv.remove();
+          delete this.gridDiv;
+        } catch (e) {
+          alert( "exception from removal of grid");
+        }
       }
+      if (!this.gridDiv){
+        this.gridDiv = $('<div id="'+this.id+'Grid" />');
+        this.gridDivCntr.append(this.gridDiv);
+      }
+      this.gridDiv.jqxGrid({
+        source: dataAdapter,
+        theme: 'energyblue',
+        width: '100%',
+  //      height:'100%',
+        altrows: true,
+        columnsresize: false,
+        selectionmode: 'checkbox',
+        sortable: true,
+        pageable: true,
+        pagermode: 'simple',
+        pagesizeoptions: ['15', '20', '25'],
+        autoheight:true,
+        autorowheight:true,
+        editable: false,
+        filterable: true,
+        columns: [
+                    { text: 'FK', datafield: 'txt_id', hidden: true },
+                    { text: 'ID', datafield: 'ckn', minwidth: 100 },
+                    { text: 'Title', datafield: 'title',minwidth: 400 , cellsalign: 'left' },
+                  ]
+      });
+      for (i=0; i < selectedNewRowIndexes.length; i++) {
+        this.gridDiv.jqxGrid('selectrow',selectedNewRowIndexes[i]);
+      }
+      this.gridDiv.unbind('rowselect').bind('rowselect', function(e) {
+                                                            var gid;
+                                                            if (e.args && e.args.row &&  e.args.row.txt_id) {
+                                                              gid = "txt"+e.args.row.txt_id;
+                                                              srchVE.propMgr.showVE(null,gid);
+                                                              //create a refresh API for the select row in case user edits properties.
+                                                              srchVE.refreshEntityDisplay = function(id) {
+                                                                var rowID = e.args.row.uid, txtID = e.args.row.txt_id, text;
+                                                                if (id == txtID) {//create rowdata from text entity in dataMgr
+                                                                  text = srchVE.dataMgr.getEntity('txt',id);
+                                                                  rowData = {
+                                                                    "ckn": text.CKN,
+                                                                    "txt_id": id,
+                                                                    "title":text.title
+                                                                  };
+                                                                  srchVE.gridDiv.jqxGrid('updaterow',rowID,rowData)
+                                                                }
+                                                              };
+                                                            } else {// remove refresh API so it's not called without edits.
+                                                              delete srchVE.refreshEntityDisplay;
+                                                            }
+                                                            srchVE.gridChange(e)
+                                                          });
+      this.gridDiv.unbind('rowunselect').bind('rowunselect', function(e) {
+                                                            srchVE.gridChange(e)
+                                                          });
+      this.gridDiv.unbind('sort').bind('sort', function(e) {
+                                                            srchVE.gridChange(e)
+                                                          });
+      this.gridDiv.unbind('filter').bind('filter', function(e) {
+                                                            srchVE.gridChange(e)
+                                                          });
     }
-    if (!this.gridDiv){
-      this.gridDiv = $('<div id="'+this.id+'Grid" />');
-      this.gridDivCntr.append(this.gridDiv);
-    }
-    this.gridDiv.jqxGrid({
-      source: dataAdapter,
-      theme: 'energyblue',
-      width: '100%',
-//      height:'100%',
-      altrows: true,
-      columnsresize: false,
-      selectionmode: 'checkbox',
-      sortable: true,
-      pageable: true,
-      pagermode: 'simple',
-      pagesizeoptions: ['15', '20', '25'],
-      autoheight:true,
-      autorowheight:true,
-      editable: false,
-      filterable: true,
-      columns: [
-                  { text: 'FK', datafield: 'txt_id', hidden: true },
-                  { text: 'ID', datafield: 'ckn', minwidth: 100 },
-                  { text: 'Title', datafield: 'title',minwidth: 400 , cellsalign: 'left' },
-                ]
-    });
-    for (i=0; i < selectedNewRowIndexes.length; i++) {
-      this.gridDiv.jqxGrid('selectrow',selectedNewRowIndexes[i]);
-    }
-    this.gridDiv.unbind('rowselect').bind('rowselect', function(e) {
-                                                           var gid;
-                                                           if (e.args && e.args.row &&  e.args.row.txt_id) {
-                                                             gid = "txt"+e.args.row.txt_id;
-                                                             srchVE.propMgr.showVE(null,gid);
-                                                             //create a refresh API for the select row in case user edits properties.
-                                                             srchVE.refreshEntityDisplay = function(id) {
-                                                               var rowID = e.args.row.uid, txtID = e.args.row.txt_id, text;
-                                                               if (id == txtID) {//create rowdata from text entity in dataMgr
-                                                                 text = srchVE.dataMgr.getEntity('txt',id);
-                                                                 rowData = {
-                                                                   "ckn": text.CKN,
-                                                                   "txt_id": id,
-                                                                   "title":text.title
-                                                                 };
-                                                                 srchVE.gridDiv.jqxGrid('updaterow',rowID,rowData)
-                                                               }
-                                                            };
-                                                           } else {// remove refresh API so it's not called without edits.
-                                                             delete srchVE.refreshEntityDisplay;
-                                                           }
-                                                           srchVE.gridChange(e)
-                                                         });
-    this.gridDiv.unbind('rowunselect').bind('rowunselect', function(e) {
-                                                           srchVE.gridChange(e)
-                                                         });
-    this.gridDiv.unbind('sort').bind('sort', function(e) {
-                                                           srchVE.gridChange(e)
-                                                         });
-    this.gridDiv.unbind('filter').bind('filter', function(e) {
-                                                           srchVE.gridChange(e)
-                                                         });
  },
 
 

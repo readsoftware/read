@@ -48,7 +48,7 @@
                         ((isset($data['refresh']) && $data['refresh'])? $data['refresh']: false);//default (parameter missing) not multi edition
     $multiEdition = (!isset($data['multiEd']) || !$data['multiEd'])? false:true;//default (parameter missing) not multi edition
     $isStaticView = (!isset($data['staticView'])||$data['staticView']==0)?false:true;
-    $hAdjustPX = (!isset($data['hAdjustPX'])||$data['hAdjustPX']==0)?15:$data['hAdjustPX'];
+    $hAdjustPX = (!isset($data['hAdjustPX'])||$data['hAdjustPX']==0)?15:$data['hAdjustPX']; // panel height pixel adjustment
     $txtID = null;
     $cfgEntityTag = null;
     if(!$isStaticView) {
@@ -62,36 +62,18 @@
         $txtID = null;
       }
     }
+    // check for user supplied edition id(s)
     if ( isset($data['ednID'])) {
       $ednID = $data['ednID'];
-      $ednIDs = explode(",",$ednID);
+      $ednIDs = explode(",",$ednID); //can be a comma delimited list of edition ids
       $ednID = intval($ednIDs[0]); //first id is primary
-      if (!is_int($ednID)) {
+      if (!is_int($ednID)) { // if not int, don't trust input
         $ednIDs = $ednID = null;
       } else {
         $edition = new Edition($ednID);
       }
     }
-    if ( isset($data['catID'])) {//optional override
-      $catID = $data['catID'];
-      $catIDs = explode(",",$catID);
-      $catID = intval($catIDs[0]); //first id is primary
-      if (!is_int($catID)) {
-        $catIDs = $catID = null;
-      } else if ($ednIDs){
-        $cntCat = count($catIDs);
-        $ednToCatID = array();
-        for ($i = 0; $i < count($ednIDs); $i++){
-          if ($cntCat == 1){
-            $ednToCatID[$ednIDs[$i]] = $catIDs[0];//single catalog case
-          } else if ($i < $cntCat) {
-            $ednToCatID[$ednIDs[$i]] = $catIDs[$i];//multiple catalog case
-          } else {
-            $ednToCatID[$ednIDs[$i]] = null;//too many ednIDs case
-          }
-        }
-      }
-    }
+    
     $entityCfgStaticView = null;
     $text = null;
     if (!$txtID && !$ednID) {
@@ -106,20 +88,15 @@
       if ($entityCfgStaticView) {
         $entityCfgStaticView = json_decode($entityCfgStaticView);
       }
-      if (!$ednIDs) {
-        $editions = $text->getEditions();
+      if (!$ednIDs) { //no edition info passed in
+        $editions = $text->getEditions(); // ordered by edition ordinal
         if ($editions->getError() || $editions->getCount() == 0) {
           returnXMLErrorMsgPage("unable to load any text $txtID editions - ".$editions->getError());
         }
-        $edition = $editions->current();
         //get this text's default edition
+        $edition = $editions->current();
         $ednIDs = $editions->getKeys();
-        $sortedEdnIDs = $ednIDs;
-        sort($sortedEdnIDs,SORT_NUMERIC);
-        $ednID = $sortedEdnIDs[0];
-        if ($catID) {
-          $ednToCatID = array($ednID=>$catID);//single catalog case
-        }
+        $ednID = $ednIDs[0];
       }
       if (!$multiEdition){
         $ednIDs = null;
@@ -140,6 +117,29 @@
       }
       $txtID = $text->getID();
     }
+    //check for glossary linkage
+    if ( isset($data['catID'])) {//optional override
+      $catID = $data['catID'];
+      $catIDs = explode(",",$catID);
+      $catID = intval($catIDs[0]); //first id is primary
+      if (!is_int($catID)) {
+        $catIDs = $catID = null;
+      }
+    }
+    if ($ednIDs && $catIDs) {
+      $cntCat = count($catIDs);
+      $ednToCatID = array();
+      for ($i = 0; $i < count($ednIDs); $i++){
+        if ($cntCat == 1){
+          $ednToCatID[$ednIDs[$i]] = $catIDs[0];//single catalog case
+        } else if ($i < $cntCat) {
+          $ednToCatID[$ednIDs[$i]] = $catIDs[$i];//multiple catalog case
+        } else {
+          $ednToCatID[$ednIDs[$i]] = null;//too many ednIDs for parallel array case
+        }
+      }
+    }
+
     if (!$title && $text) {//if title not passed in and text
       $invNumber = $text->getCKN();
       if ($invNumber) {
@@ -379,7 +379,7 @@
 ,
           ednToEpiDownloadURLs = <?=json_encode($urlMap['tei'])?>,
           editionIsPublic = <?=($edition->isResearchEdition()?"false":"true")?>,
-          curEdnID = "<?=$edition->getID()?>",
+          curEdnID = "<?=$ednIDs[0]?>",
           curEpidocDownloadURL = ednToEpiDownloadURLs["edn"+curEdnID]
 <?php
   if ($showContentOutline) {

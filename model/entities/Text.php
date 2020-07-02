@@ -306,7 +306,7 @@
     * @return iterator that contains image objects of this text or NULL
     */
     public function getImages($autoExpand = false) {
-      if (!$this->_images && $autoExpand && $this->_image_ids && is_array($this->_image_ids) && count($this->getImageIDs())>0) {
+      if (!$this->_images && $autoExpand && $this->_image_ids && is_array($this->getImageIDs()) && count($this->getImageIDs())>0) {
         $this->_images = new Images("not (5 = ANY(img_visibility_ids)) and img_id in (".join(",",$this->getImageIDs()).")",null,null,null);
         $this->_images->setAutoAdvance(false);
       }
@@ -370,7 +370,7 @@
       }else{
         $condition = "not edn_owner_id = 1 and edn_text_id = ".$this->_id;
       }
-      $this->_editions = new Editions($condition,null,null,null);
+      $this->_editions = new Editions($condition,"(edn_scratch::jsonb->>'default')::text , (edn_scratch::jsonb->>'ordinal')::text::int",null,null);
       $this->_editions->setAutoAdvance(false);
       return $this->_editions;
     }
@@ -383,7 +383,8 @@
     public function getEditionIDs() {
       $dbMgr = new DBManager();
       $dbMgr->query("select array_agg(edn_id) from edition ".
-                    "where ".$this->_id." = edn_text_id and not edn_owner_id = 1;");
+                    "where ".$this->_id." = edn_text_id and not edn_owner_id = 1 ".
+                    "order by (edn_scratch::jsonb->>'default')::text , (edn_scratch::jsonb->>'ordinal')::text::int;");
       if ($dbMgr->getRowCount()) {
         $row = $dbMgr->fetchResultRow();
         $ednIDs = explode(',',trim($row[0],"\"{}"));
