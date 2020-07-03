@@ -107,7 +107,6 @@
         if ($ednIDs && count($ednIDs) > 0) {
           $tempIDs = array();
           foreach ($ednIDs as $ednID) {
-            $tempIDs = array();
             array_push($tempIDs,$ednID['edn_id']);
           }
           $ednIDs = $tempIDs;
@@ -124,6 +123,10 @@
       foreach ($ckns as $ckn) {
         if (strpos($ckn,'_') !== false && strpos($ckn,'_') == strrpos($ckn,'_')) { // ckn range
           list($ckn, $ckn2) = explode('_',$ckn);
+        }
+        if (!$ckn2){
+          array_push($cknList, $ckn);
+          continue;
         }
         if (strlen($ckn)>7 || $ckn2 && strlen($ckn2)>7 ) { //unknown format !!dependency
           print "illegal format using $ckn"."_$ckn2 \n";
