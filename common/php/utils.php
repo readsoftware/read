@@ -2652,7 +2652,7 @@ function checkEditionHealth($ednID, $verbose = true) {
             $sequence = new Sequence($seqID);
             if ($sequence->hasError()) {
               array_push($hltherrors,"Error Strucutral Sequence (seq:$seqID) cannot be loaded. Error:".$sequence->getErrors(true));
-              continue;
+              break;
             }
             $seqGID = $sequence->getGlobalID();
             $seqLabel = $sequence->getLabel()?$sequence->getLabel():$sequence->getSuperScript();
@@ -2664,8 +2664,8 @@ function checkEditionHealth($ednID, $verbose = true) {
             $seqEntityGIDs = $sequence->getEntityIDs();
             if (!$seqEntityGIDs || count($seqEntityGIDs) == 0) {
               array_push($hltherrors,"Error Structural Sequence (seq:$seqID) has no entity ids.");
-              continue;
-            }
+              break;
+          }
             foreach ($seqEntityGIDs as $seqEntityGID) {
               $prefix =substr($seqEntityGID,0,3);
               switch ($prefix) {
@@ -2674,13 +2674,13 @@ function checkEditionHealth($ednID, $verbose = true) {
                   $subsequence = new Sequence($subSeqID);
                   if ($subsequence->hasError()) {
                     array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has subsequence $seqEntityGID with loading error. Error:".$subsequence->getErrors(true));
-                    continue;
+                    break;
                   }
                   $subSeqLabel = $subsequence->getLabel()?$subsequence->getLabel():$subsequence->getSuperScript();
                   $seqGID2Label[$seqEntityGID] = $subSeqLabel;
                   if ($sequence->isMarkedDelete()) {
                     array_push($hltherrors,"Error Structural Sequence ($subSeqLabel/$seqEntityGID) is marked for delete.");
-                    continue;
+                    break;
                     //ToDo:  add code to add <a> for a service to correct the issue.
                   }
                   if ( $seqGID == $seqEntityGID ) {//recursion
@@ -2703,11 +2703,11 @@ function checkEditionHealth($ednID, $verbose = true) {
                     $token = new Token(substr($seqEntityGID,4));
                     if ($token->hasError()) {
                       array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has token $seqEntityGID with loading error. Error:".$token->getErrors(true));
-                      continue;
+                      break;
                     }
                     if ($token->isMarkedDelete()) {
                       array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has token $seqEntityGID which is marked for delete.");
-                      continue;
+                      break;
                       //ToDo:  add code to add <a> for a service to correct the issue.
                     }
                     if (count($token->getGraphemeIDs())==0) {
@@ -2721,11 +2721,11 @@ function checkEditionHealth($ednID, $verbose = true) {
                     $compound = new Compound(substr($seqEntityGID,4));
                     if ($compound->hasError()) {
                       array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has compound $seqEntityGID with loading error. Error:".$compound->getErrors(true));
-                      continue;
+                      break;
                     }
                     if ($compound->isMarkedDelete()) {
                       array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has compound $seqEntityGID which is marked for delete.");
-                      continue;
+                      break;
                       //ToDo:  add code to add <a> for a service to correct the issue.
                     }
                     if (count($compound->getComponentIDs())==0) {
@@ -3556,35 +3556,35 @@ function addSequenceLabelToLookup($seqID) {
               break;
             case 'cmp':
               if ($firstGraID) {
-                continue;
+                break;
               }
               $compound = new Compound($entID);
               $tokenIDs = $compound->getTokenIDs();
               if (count($tokenIDs) == 0) {
                 error_log("warn, Warning irregular compound $entTag in sequence - $structGID skipped.");
-                continue;
+                break;
               }
               $entID = $tokenIDs[0]; //first token of compound
             case 'tok':
               if ($firstGraID) {
-                continue;
+                break;
               }
               $token = new Token($entID);
               $graIDs = $token->getGraphemeIDs();
               if ($graIDs && count($graIDs) == 0) {
                 error_log("warn, Warning irregular token $entTag with no graphemes - $structGID skipped.");
-                continue;
+                break;
               }
               break;
             case 'scl':
               if ($firstGraID) {
-                continue;
+                break;
               }
               $syllable = new SyllableCluster($entID);
               $graIDs = $syllable->getGraphemeIDs();
               if ($graIDs && count($graIDs) == 0) {
                 error_log("warn, Warning irregular syllable $entTag with no graphemes - $structGID skipped.");
-                continue;
+                break;
               }
               break;
           }
