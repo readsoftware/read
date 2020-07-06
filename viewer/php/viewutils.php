@@ -1659,7 +1659,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
 //  $sclTag2BlnPolyMap = array();
 //  $sclTagLineStart = array();
   $blnInfobyBlnTag = array();
-//  $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
+  $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
   $isFirstEdn = true;
   $jsonCache = null;
   if (count($ednIDs) == 1) {
