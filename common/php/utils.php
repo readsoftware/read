@@ -3424,7 +3424,7 @@ function getWordsBaselineInfo($tokIDs) {
           if (!array_key_exists($curBlnTag,$wrdBlnPolygons)) {
             $bBox = pointsArray2ArrayOfTuples(getBoundingRect($accPoints));
             $wrdBlnPolygons[$curBlnTag] = array($bBox);
-            $wrdBlnScrollTop = array('blnTag'=>$blnTag,'x'=>$bBox[0][0],'y'=>$bBox[0][1],'h'=>($bBox[2][1]-$bBox[0][1]));
+            $wrdBlnScrollTop = array('blnTag'=>$curBlnTag,'x'=>$bBox[0][0],'y'=>$bBox[0][1],'h'=>($bBox[2][1]-$bBox[0][1]));
           } else {
             array_push($wrdBlnPolygons[$curBlnTag],pointsArray2ArrayOfTuples(getBoundingRect($accPoints)));
           }
@@ -3443,7 +3443,7 @@ function getWordsBaselineInfo($tokIDs) {
       if (!array_key_exists($curBlnTag,$wrdBlnPolygons)) {
         $wrdBlnPolygons[$curBlnTag] = array($bBox);
         if (count($wrdBlnScrollTop) == 0) {
-          $wrdBlnScrollTop = array('blnTag'=>$blnTag,'x'=>$bBox[0][0],'y'=>$bBox[0][1],'h'=>($bBox[2][1]-$bBox[0][1]));
+          $wrdBlnScrollTop = array('blnTag'=>$curBlnTag,'x'=>$bBox[0][0],'y'=>$bBox[0][1],'h'=>($bBox[2][1]-$bBox[0][1]));
         }
       } else {
         array_push($wrdBlnPolygons[$curBlnTag],pointsArray2ArrayOfTuples(getBoundingRect($accPoints)));
@@ -3689,7 +3689,8 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
         $sclGraID = $row['scl_gra_id'];
         $sclTag = 'scl'.$row["scl_id"];
         // collect unique blnIDs for url lookup
-        if (array_key_exists("bln_id",$row)&& $row["bln_id"] != $blnID && array_key_exists("seg_image_pos",$row) && $row["seg_image_pos"]) {// found another baseline need to capture the id
+        if (array_key_exists("bln_id",$row)&& $row["bln_id"] != $blnID && 
+            array_key_exists("seg_image_pos",$row) && $row["seg_image_pos"]) {// found another baseline need to capture the id
           $blnID = $row["bln_id"];
           $blnTag = 'bln'.$blnID;
           array_push($blnIDs,$blnID);
