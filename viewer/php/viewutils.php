@@ -806,12 +806,12 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
     $isFrist = true;
     $sourceHtml = "<div class=\"source edn1\"><span class=\"sourcelabel\">Source: </span>";
     foreach ($sourceNameLookup as $atbID => $title) {
-      if ($isFrist) {
-        $sourceHtml .= "<span class=\"sourceitem atb$atbID\">$title";
-        $isFirst = false;
-      } else {
-        $sourceHtml .= ",</span><span class=\"sourceitem atb$atbID\">$title";
+      $sources = '';
+      foreach ($sourceNameLookup as $atbID => $title) {
+        $titlez = str_replace('_',' ',$title);
+        $sources .= "<span class=\"sourceitem atb$atbID\">$titlez</span>, ";
       }
+      $sourceHtml .= trim($sources,', ')."</div>";
     }
     $sourceHtml .= "</span></div>";
   }
@@ -1831,14 +1831,12 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   if ($sourceNameLookup && count($sourceNameLookup) > 0) {
     $isFrist = true;
     $sourceHtml = "<div class=\"source edn1\"><span class=\"sourcelabel\">Source: </span>";
+    $sources = '';
     foreach ($sourceNameLookup as $atbID => $title) {
-      if ($isFrist) {
-        $sourceHtml .= "<span class=\"sourceitem atb$atbID\">$title";
-      } else {
-        $sourceHtml .= ",</span><span class=\"sourceitem atb$atbID\">$title";
-      }
+      $titlez = str_replace('_',' ',$title);
+      $sources .= "<span class=\"sourceitem atb$atbID\">$titlez</span>, ";
     }
-    $sourceHtml .= "</span></div>";
+    $sourceHtml .= trim($sources,', ')."</div>";
   }
 
   $html = "";
