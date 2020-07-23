@@ -3023,7 +3023,7 @@ selectPolygons: function () {
         }
       }
       if ( this.orderSegMode != "on" ) {
-        this.imgContext.strokeStyle = polygon.hilite? "#DDDDDD" : (this.selectedPolygons[polygon.label]? "#DDDDDD" : (polygon.dirty? "orange":polygon.color));
+        this.imgContext.strokeStyle = polygon.hilite? "cyan" : (this.selectedPolygons[polygon.label]? "cyan" : (polygon.dirty? "orange":polygon.color));
         if (this.showPolygonNumbers && polygon.order) {// draw order numer if there is one
           this.imgContext.lineWidth = 1;
           this.imgContext.fillStyle = this.imgContext.strokeStyle;
@@ -3048,8 +3048,8 @@ selectPolygons: function () {
       } else {
         if (this.showPolygonNumbers && polygon.order) {// draw order number if there is one
           this.imgContext.lineWidth = 1;
-          this.imgContext.strokeStyle = "#DDDDDD";
-          this.imgContext.fillStyle = "#DDDDDD";
+          this.imgContext.strokeStyle = "cyan";
+          this.imgContext.fillStyle = "cyan";
           this.imgContext.fillText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
           this.imgContext.strokeText(polygon.order,(polygon.center[0] - offsetX)*scaleX,(polygon.center[1] - offsetY)*scaleY);
           this.imgContext.lineWidth = 3 ;

@@ -1429,15 +1429,22 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1468,'en=>"Quote"',1466,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1469,'en=>"AltEdition"',1466,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1470,'en=>"GlyphBlock"',1471,778,'{1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1471,'en=>"LineBlock"',736,778,'{1470}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1472,'en=>"ImageBlock"',1471,778,'{1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1473,'en=>"NumberBlock"',1471,778,'{1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1471,'en=>"LineBlock"',1478,778,'{1470}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1472,'en=>"ImageBlock"',1478,778,'{1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1473,'en=>"NumberBlock"',1478,778,'{1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1474,'en=>"CalendarColumn"',1475,778,'{1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1475,'en=>"StartBlock"',1478,778,'{1474,1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1476,'en=>"ImageGlyphBlock"',1472,778,'{1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+<<<<<<< HEAD
 (1477,'en=>"CaptionBlock"',1472,778,'{1470}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1478,'en=>"Frame"',735,778,'{1471,1472,1473,1475,1476,1477,1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1479,'en=>"Logograph"',502,778,NULL,NULL,'L',NULL,NULL,NULL,1,'{2}'),
 (1480,'en=>"Alphabetic"',502,778,NULL,NULL,'A',NULL,NULL,NULL,1,'{2}');
 
 ALTER SEQUENCE term_trm_id_seq RESTART WITH 1481;
+=======
+(1477,'en=>"CaptionBlock"',1478,778,'{1470}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1478,'en=>"Frame"',735	778,'{1471,1472,1473,1475,1476,1477,1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}');
+
+ALTER SEQUENCE term_trm_id_seq RESTART WITH 1479;
+>>>>>>> d862d31a (fix multi-polygon segments and show seg code & loc)

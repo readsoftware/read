@@ -262,8 +262,10 @@ function addNewEntityReturnData($prefix,$entity) {
       }
       $boundary = $segment->getImageBoundary();
       if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
-        $boundary = $boundary[0];
-        $entities["insert"]['seg'][$entID]['boundary']= array($boundary->getPoints());
+        $entities["insert"]['seg'][$entID]['boundary']= array();
+        foreach($boundary as $polygon) {
+          array_push($entities["insert"]['seg'][$entID]['boundary'], $polygon->getPoints());
+        }
         $entities["insert"]['seg'][$entID]['urls']= $segment->getURLs();
       }
       $stringpos = $segment->getStringPos();
@@ -277,6 +279,15 @@ function addNewEntityReturnData($prefix,$entity) {
       $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
       if ($segBlnOrder) {
         $entities["insert"]['seg'][$entID]['ordinal'] = $segBlnOrder;
+      }
+      $segCode = $segment->getScratchProperty("code");
+      if ($segCode) {
+        $entities["insert"]['seg'][$entID]['code'] = $segCode;
+        $entities["insert"]['seg'][$entID]['value'] = $segCode;
+      }
+      $segLoc = $segment->getScratchProperty("sgnLoc");
+      if ($segLoc) {
+        $entities["insert"]['seg'][$entID]['loc'] = $segLoc;
       }
       break;
     case 'lem':
