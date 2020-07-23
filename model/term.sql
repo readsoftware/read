@@ -1460,5 +1460,4 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1499,'en=>"Column"',1481,778,'{1497}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1500,'en=>"Table"',1481,778,'{1498,1499}',NULL,NULL,NULL,NULL,NULL,1,'{2}');
 
-
 ALTER SEQUENCE term_trm_id_seq RESTART WITH 1501;

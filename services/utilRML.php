@@ -541,8 +541,12 @@
       $label = $entityLookup['term']['idByCode']['img_url']['englabel'];//warning term trm_code dependency
       $label = ($label?$label:'url');
       $imgInfo = null;
+      $imgUrl = $image->getURL();
+      if (!preg_match("/^http/i",$imgUrl) && preg_match("/^\//",$imgUrl)) {
+        $imgUrl = SITE_ROOT.$imgUrl;
+      }
       try {
-        $imgInfo = getimagesize($image->getURL());
+        $imgInfo = getimagesize($imgUrl);
       } catch(Exception $e){
       }
       $width = $height = $type = $attr = null;

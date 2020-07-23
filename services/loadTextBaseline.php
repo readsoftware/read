@@ -206,7 +206,7 @@
             }
             $entities["insert"]['seg'][$segID]['urls']= $segment->getURLs();
           }
-          $mappedSegIDs = $segment->getMappedSegmentIDs();
+              $mappedSegIDs = $segment->getMappedSegmentIDs();
           if ($mappedSegIDs && count($mappedSegIDs) > 0) {
             $entities["insert"]['seg'][$segID]['mappedSegIDs'] = $mappedSegIDs;
           }
