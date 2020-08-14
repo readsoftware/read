@@ -165,7 +165,7 @@ if (count($errors) == 0) {
       }
     }
     $mcxID = null;
-    if ($createMcx){
+    if ($createMcx || !$addMcxID && !$frgID){
       $materialCtx = new MaterialContext();
       $materialCtx->setOwnerID($defOwnerID);
       $materialCtx->setVisibilityIDs($defVisIDs);
