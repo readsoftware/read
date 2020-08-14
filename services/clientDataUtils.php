@@ -148,7 +148,7 @@ function addNewEntityReturnData($prefix,$entity) {
            $entities['insert']['seq'][$entID]['validationMsg'] = $validationMsg;
         }
       break;
-      case 'srf':
+    case 'srf':
       $surface = $entity;
       $entities['insert']['srf'][$entID] = array(
         'fragmentID'=>$surface->getFragmentID(),
@@ -164,7 +164,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'readonly' => $surface->isReadonly(),
         'attributionIDs' => $surface->getAttributionIDs());
       break;
-      case 'frg':
+    case 'frg':
       $fragment = $entity;
       $entities['insert']['frg'][$entID] = array(
         'partID'=>$fragment->getPartID(),
@@ -175,12 +175,21 @@ function addNewEntityReturnData($prefix,$entity) {
         'measure' => $fragment->getMeasure(),
         'status' => $fragment->getRestoreState(),
         'locRefs' => $fragment->getLocationRefs(),
-        'mtxIDs' => $fragment->getMaterialContextIDs(),
+        'mcxIDs' => $fragment->getMaterialContextIDs(),
         'imageIDs' => $fragment->getImageIDs(),
         'readonly' => $fragment->isReadonly(),
         'attributionIDs' => $fragment->getAttributionIDs());
       break;
-      case 'prt':
+    case 'mcx':
+      $materialCtx = $entity;
+      $entities['insert']['mcx'][$entID] = array(
+        'id' => $entID,
+        'archContext' => $materialCtx->getArchContext(),
+        'findStatus' => $materialCtx->getFindStatus(),
+        'readonly' => $materialCtx->isReadonly(),
+        'attributionIDs' => $materialCtx->getAttributionIDs());
+      break;
+    case 'prt':
       $part = $entity;
       $entities['insert']['prt'][$entID] = array(
         'itemID'=>$part->getItemID(),
@@ -197,7 +206,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'readonly' => $part->isReadonly(),
         'attributionIDs' => $part->getAttributionIDs());
       break;
-      case 'itm':
+    case 'itm':
       $item = $entity;
       $entities['insert']['itm'][$entID] = array(
         'id' => $entID,
@@ -209,6 +218,7 @@ function addNewEntityReturnData($prefix,$entity) {
         'shape' => $item->getShape(),
         'measure' => $item->getMeasure(),
         'imageIDs' => $item->getImageIDs(),
+        'editibility' => $item->getOwnerID(),
         'readonly' => $item->isReadonly(),
         'attributionIDs' => $item->getAttributionIDs());
       break;
@@ -359,6 +369,21 @@ function addNewEntityReturnData($prefix,$entity) {
         $attrIDs = $text->getAttributionIDs();
         if ($attrIDs && count($attrIDs)) {
           $entities['insert']['txt'][$entID]['attributionIDs'] = $attrIDs;
+        }
+      break;
+    case 'tmd':
+      $textMetadata = $entity;
+      $entities['insert']['tmd'][$entID] = array(
+         'id' => $entID,
+         'txtID'=> $textMetadata->getTextID(),
+         'typeIDs'=> $textMetadata->getTypeIDs(),
+         'readonly' => $textMetadata->isReadonly(),
+         'editibility' => $textMetadata->getOwnerID(),
+         'refIDs' => $textMetadata->getReferenceIDs());
+      //todo create service to push and remove from FK list
+        $attrIDs = $textMetadata->getAttributionIDs();
+        if ($attrIDs && count($attrIDs)) {
+          $entities['insert']['tmd'][$entID]['attributionIDs'] = $attrIDs;
         }
       break;
     case 'img':

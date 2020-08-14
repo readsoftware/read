@@ -165,7 +165,7 @@
                 order by w.edn_id, w.ord
               ) w2
           on w1.edn_id = w2.edn_id
-          where abs(w2.ord-w1.ord) < $rng+1 $orderconstraint
+          where w1.wrd_id != w2.wrd_id and abs(w2.ord-w1.ord) < $rng+1 $orderconstraint
         ) r
       order by r.txt_id";
     }

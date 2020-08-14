@@ -278,6 +278,7 @@
                                'blnIDs' => array(),
                                'value' => $text->getTitle(),
                                'ref' => $text->getRef(),
+                               'editibility' => $text->getOwnerID(),
                                'readonly' => $text->isReadonly(),
                                'title' => $text->getTitle());
         $cknLookup[$ckn] = $txtID;
@@ -369,12 +370,15 @@
         }
       }
     }
-    //find fragemnts for all surfaces
+    //find fragments for all surfaces
     $fragments = new Fragments("frg_id in (".join(",",$frgIDs).")",null,null,null);
     $fragments->setAutoAdvance(false); // make sure the iterator doesn't prefetch
+    $mcxIDs = array();
     $prtIDs = array();
     foreach ($fragments as $fragment) {
       $frgID = $fragment->getID();
+      $fragMcxIDs = $fragment->getMaterialContextIDs();
+      $mcxIDs = array_merge($mcxIDs, $fragMcxIDs);
       if ($frgID && !array_key_exists($frgID, $entities['frg'])) {
         $prtID = $fragment->getPartID();
         array_push($prtIDs,$prtID);
@@ -382,6 +386,7 @@
                                'id' => $frgID,
                                'value' => $fragment->getLabel(),
                                'label' => $fragment->getLabel(),
+                               'mcxIDs' => $fragMcxIDs,
                                'description' => $fragment->getDescription(),
                                'readonly' => $fragment->isReadonly(),
                                'locRef' => $fragment->getLocationRefs());
@@ -471,6 +476,7 @@
         $entities['itm'][$itmID] = array( 'title' => $item->getTitle(),
                                'id' => $itmID,
                                'value' => $item->getTitle(),
+                               'editibility' => $item->getOwnerID(),
                                'readonly' => $item->isReadonly(),
                                'typeID' => $item->getType(),
                                'measure' => $item->getMeasure(),
@@ -516,6 +522,7 @@
                                'type' => $baseline->getType(),
                                'value' => ($baseline->getURL()?$baseline->getURL():$baseline->getTranscription()),
                                'readonly' => $baseline->isReadonly(),
+                               'editibility' => $baseline->getOwnerID(),
                                'transcription' => $baseline->getTranscription(),
                                'boundary' => $baseline->getImageBoundary(),
                                'segCount' => ($segIDs?count($segIDs):0),
@@ -578,6 +585,7 @@
                                'baselineIDs' => $sBlnIDs,
                                'value' => 'seg'.$segID,
                                'center' => $segment->getCenter(),
+                               'editibility' => $segment->getOwnerID(),
                                'readonly' => $segment->isReadonly(),
                                'layer' => $segment->getLayer());
         $boundary = $segment->getImageBoundary();
@@ -763,12 +771,14 @@
       $tmdID = $textMetadata->getID();
       if ($tmdID && !array_key_exists($tmdID, $entities['tmd'])) {
         array_push($tmdIDs,$tmdID);
-        $entities['tmd'][$tmdID] = array( 'txtID'=> $textMetadata->getTextID(),
+        $tmdTxtID = $textMetadata->getTextID();
+        $entities['tmd'][$tmdID] = array( 'txtID'=> $tmdTxtID,
                                'id' => $tmdID,
                                'ednIDs' => array(),
                                'readonly' => $textMetadata->isReadonly(),
+                               'editibility' => $textMetadata->getOwnerID(),
                                'typeIDs' => $textMetadata->getTypeIDs());
-        array_push($entities['txt'][$entities['tmd'][$tmdID]['txtID']]['tmdIDs'],$tmdID);
+        array_push($entities['txt'][$tmdTxtID]['tmdIDs'],$tmdID);
         $tmRefIDs =$textMetadata->getReferenceIDs();
         if ($tmRefIDs && count($tmRefIDs) > 0) {
           $entities['tmd'][$tmdID]['refIDs'] = $tmRefIDs;
@@ -827,6 +837,7 @@
                                    'id' => $catID,
                                    'value'=> $catalog->getTitle(),
                                    'readonly' => $catalog->isReadonly(),
+                                   'editibility' => $catalog->getOwnerID(),
                                    'ednIDs' => $catalog->getEditionIDs(),
                                    'typeID' => $catalog->getTypeID());
           }
@@ -1398,6 +1409,7 @@
             if ($segID && !array_key_exists($segID, $entities['seg'])) {
               $entities['seg'][$segID] = array( 'layer' => $segment->getLayer(),
                                                 'id' => $segID,
+                                                'editibility' => $segment->getOwnerID(),
                                                 'readonly' => $segment->isReadonly(),
                                                 'center' => $segment->getCenter(),
                                                 'value' => 'seg'.$segID);

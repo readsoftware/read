@@ -108,6 +108,14 @@ if (!$data) {
   if ( isset($data['addImageID'])) {//get addImageID for text
     $addImageID = $data['addImageID'];
   }
+  $addMcxID = null;
+  if ( isset($data['addMcxID'])) {//add mcx ID to fragment
+    $addMcxID = $data['addMcxID'];
+  }
+  $createMcx = ($addMcxID == null); // set default createMcx to true if no mcxID else false
+  if ( isset($data['createMcx'])) {//create mcx entiry and add mcx ID to fragment
+    $createMcx = $data['createMcx'];
+  }
   $newFragmentPrtID = null;
   if ( isset($data['newFragmentPrtID'])) {//add new fragment to part of newFragmentPrtID
     $newFragmentPrtID = $data['newFragmentPrtID'];
@@ -115,8 +123,8 @@ if (!$data) {
 }
 
 if (count($errors) == 0) {
-  if (!$fragment || ($description === null && $label === null && $measure === null && $locations === null &&
-                    $imageIDs === null && $addImageID === null && $newFragmentPrtID === null)) {
+  if (!$fragment || ($description === null && $label === null && $measure === null && $locations === null && !$createMcx &&
+                    $imageIDs === null && $addImageID === null  && $addMcxID === null && $newFragmentPrtID === null)) {
     array_push($errors,"insufficient data to save fragment");
   } else {//use data to update fragment and save
     if ($description !== null) {
@@ -154,6 +162,39 @@ if (count($errors) == 0) {
       $fragment->setImageIDs($imageIDs);
       if ($frgID) {
         addUpdateEntityReturnData("frg",$frgID,'imageIDs', $fragment->getImageIDs());
+      }
+    }
+    $mcxID = null;
+    if ($createMcx){
+      $materialCtx = new MaterialContext();
+      $materialCtx->setOwnerID($defOwnerID);
+      $materialCtx->setVisibilityIDs($defVisIDs);
+      if ($defAttrIDs){
+        $materialCtx->setAttributionIDs($defAttrIDs);
+      }
+      $materialCtx->save();
+      if ($materialCtx->hasError()) {
+        array_push($errors,"error creating new Material Context - ".join(",",$materialCtx->getErrors()));
+      } else {
+        $mcxID = $materialCtx->getID();
+        addNewEntityReturnData('mcx',$materialCtx);
+      }
+    }
+    if ($addMcxID || $mcxID) {
+      $mcxIDs = $fragment->getMaterialContextIDs();
+      if (!$mcxIDs) {
+        $mcxIDs = array();
+      }
+      if($addMcxID) {
+        array_push($mcxIDs,$addMcxID);
+      }
+      if($mcxID) {
+        array_push($mcxIDs,$mcxID);
+      }
+      array_unique($mcxIDs);
+      $fragment->setMaterialContextIDs($mcxIDs);
+      if ($frgID) {
+        addUpdateEntityReturnData("frg",$frgID,'mcxIDs', $fragment->getMaterialContextIDs());
       }
     }
     if ($addImageID) {

@@ -83,6 +83,20 @@ if (!$data) {
       array_push($errors,"error creating new text - ".join(",",$text->getErrors()));
     } else {
       $txtGID = $text->getGlobalID();
+      //create linked TextMetadata
+      $textMetadata = new TextMetadata();
+      $textMetadata->setOwnerID($defOwnerID);
+      $textMetadata->setVisibilityIDs($defVisIDs);
+      if ($defAttrIDs){
+        $textMetadata->setAttributionIDs($defAttrIDs);
+      }
+      $textMetadata->setTextID($text->getID());
+      $textMetadata->save();
+      if ($textMetadata->hasError()) {
+        array_push($errors,"error creating new textmetadata - ".join(",",$textMetadata->getErrors()));
+      } else {
+        addNewEntityReturnData('tmd',$textMetadata);
+      }
     }
   }
   $ckn = null;
@@ -118,7 +132,7 @@ if (!$data) {
     $addImageID = $data['addImageID'];
   }
   $addNewText = null;
-  if ( isset($data['addNewText'])) {//add new Image to text
+  if ( isset($data['addNewText'])) {//add new text
     $addNewText = true;
   }
 }

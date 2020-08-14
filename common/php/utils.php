@@ -4743,45 +4743,45 @@ function updateTextEntites($textCKN, $entitiesConfig) {
   }
 
   //MATERIALCONTEXT
-  $mtxsNonce2mtx = array();
-  $mtxs = new MaterialContexts("mcx_scratch like '%$textCKN%'","mcx_id",null,null);
-  if ($mtxs->getCount() == 0 || $mtxs->getError()) {
-    error_log("Error updating $textCKN - ".$mtxs->getError());
+  $mcxsNonce2mcx = array();
+  $mcxs = new MaterialContexts("mcx_scratch like '%$textCKN%'","mcx_id",null,null);
+  if ($mcxs->getCount() == 0 || $mcxs->getError()) {
+    error_log("Error updating $textCKN - ".$mcxs->getError());
   } else {
-    foreach ($mtxs as $materialContext) {
+    foreach ($mcxs as $materialContext) {
       $nonce = $materialContext->getScratchProperty('nonce');
       if ($nonce) {
-        $mtxsNonce2mtx[$nonce] = $materialContext;
+        $mcxsNonce2mcx[$nonce] = $materialContext;
       }
     }
   }
-  $mtxs = array();
+  $mcxs = array();
   if(isset($materialContexts) && count($materialContexts) > 0) {
-    foreach ($materialContexts as $mtxNonce => $mtxMetadata) {
-      if (array_key_exists($mtxNonce,$mtxsNonce2mtx)) {
-        $materialContext = $mtxsNonce2mtx[$mtxNonce];
+    foreach ($materialContexts as $mcxNonce => $mcxMetadata) {
+      if (array_key_exists($mcxNonce,$mcxsNonce2mcx)) {
+        $materialContext = $mcxsNonce2mcx[$mcxNonce];
       } else {
         $materialContext = new MaterialContext();
         $materialContext->setOwnerID($ownerID);
         $materialContext->setVisibilityIDs($visibilityIDs);
         $materialContext->setAttributionIDs($defAttrIDs);
-        $materialContext->storeScratchProperty('nonce',$mtxNonce);
+        $materialContext->storeScratchProperty('nonce',$mcxNonce);
         $materialContext->storeScratchProperty('ckn',$textCKN);
       }
-      if (array_key_exists('arch_context',$mtxMetadata)) {
+      if (array_key_exists('arch_context',$mcxMetadata)) {
         $archCtxID = null; //TODO add code to lookup string
         if ($archCtxID) {
           $materialContext->setArchContextID($archCtxID);
         } else {
-          $materialContext->storeScratchProperty('arch_context',$mtxMetadata['arch_context']);
+          $materialContext->storeScratchProperty('arch_context',$mcxMetadata['arch_context']);
         }
       }
-      if (array_key_exists('find_status',$mtxMetadata)) {
-        $materialContext->setFindStatus($mtxMetadata['find_status']);
+      if (array_key_exists('find_status',$mcxMetadata)) {
+        $materialContext->setFindStatus($mcxMetadata['find_status']);
       }
       $materialContext->save();
       if (!$materialContext->hasError()) {
-        $mtxsNonce2mtx[$mtxNonce] = $materialContext;
+        $mcxsNonce2mcx[$mcxNonce] = $materialContext;
       }else{
         error_log($materialContext->getErrors(true));
       }
@@ -4838,14 +4838,14 @@ function updateTextEntites($textCKN, $entitiesConfig) {
         $fragment->setPartID($partsNonce2part[$fraMetadata['part_id']]->getID());
       }
       if (array_key_exists('material_context_ids',$fraMetadata)) {
-        $fragmentMtxIDs = array();
-        foreach ($fraMetadata['material_context_ids'] as $mtxNonce) {
-          if (array_key_exists($mtxNonce,$mtxsNonce2mtx)) {
-            array_push($fragmentMtxIDs,$mtxsNonce2mtx[$mtxNonce]->getID());
+        $fragmentMcxIDs = array();
+        foreach ($fraMetadata['material_context_ids'] as $mcxNonce) {
+          if (array_key_exists($mcxNonce,$mcxsNonce2mcx)) {
+            array_push($fragmentMcxIDs,$mcxsNonce2mcx[$mcxNonce]->getID());
           }
         }
-        if (count($fragmentMtxIDs)) {
-          $fragment->setMaterialContextIDs($fragmentMtxIDs);
+        if (count($fragmentMcxIDs)) {
+          $fragment->setMaterialContextIDs($fragmentMcxIDs);
         }
       }
       if (array_key_exists('image_ids',$fraMetadata)) {

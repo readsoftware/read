@@ -559,7 +559,7 @@ EDITORS.SearchVE.prototype = {
         cursorMap.push([txtID,j]);
         this.selectedTxtIDs[txtID] = j;
       }
-    } else if (gridDisplayRows.length) {//use entire grid displayRows
+    } else if (gridDisplayRows && gridDisplayRows.length) {//use entire grid displayRows
       for (i in gridDisplayRows) {
         cursorMap.push([gridDisplayRows[i].txt_id,i]);
       }
