@@ -6329,7 +6329,7 @@ mergeLine: function (direction,cbError) {
               }
             }
           }
-          if (grapheme.value == "a" && !(graLU && (graLU.boundary || graLU.postTCM))) {
+          if (grapheme.value.toLowerCase() == "a" && !(graLU && (graLU.boundary || graLU.postTCM))) {
             previousA = true;
             previousGraTCMS = grapheme.txtcrit;
           } else {
