@@ -1041,7 +1041,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
         $prevTCMS = $tcms;
         $wordHtml .= $graTemp;
         $prevGraID = $graID;
-        if ($graTemp == "a") {
+        if (strtolower($graTemp) == "a") {
           $previousA = true;
         } else {
           $previousA = false;
@@ -1536,7 +1536,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                   }
                   $physicalLineHtml .= $graTemp;
                   $prevGraID = $graID;
-                  if ($graTemp == "a") {
+                  if (strtolower($graTemp) == "a") {
                     $previousA = true;
                   } else {
                     $previousA = false;
