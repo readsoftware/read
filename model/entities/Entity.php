@@ -207,7 +207,7 @@
       if ($this->getAttributionIDs() && count($this->getAttributionIDs())) {
         $this->_data[@$this->getGlobalPrefix().'_attribution_ids'] = $this->getAttributionIDs(true);
       }
-      if (isset($this->_visibility_ids) && count($this->_visibility_ids)) {
+      if ($this->getVisibilityIDs() && count($this->getVisibilityIDs())) {
         $this->_data[@$this->getGlobalPrefix().'_visibility_ids'] = $this->idsToString($this->_visibility_ids);
       }
     }
