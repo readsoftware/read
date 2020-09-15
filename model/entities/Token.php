@@ -136,22 +136,22 @@
     protected function synchData() {
       $this->calculateValues();
       $this->synchBaseData();
-      if (count($this->_grapheme_ids)) {
+      if (isset($this->_grapheme_ids) && count($this->_grapheme_ids)) {
         $this->_data['tok_grapheme_ids'] = $this->idsToString($this->_grapheme_ids);
       }
-      if (count($this->_value)) {
+      if (isset($this->_value) && strlen($this->_value)) {
         $this->_data['tok_value'] = $this->_value;
       }
-      if (count($this->_transcription)) {
+      if (isset($this->_transcription) && strlen($this->_transcription)) {
         $this->_data['tok_transcription'] = $this->_transcription;
       }
-      if ($this->_nom_affix) {
+      if (isset($this->_nom_affix) && strlen($this->_nom_affix)) {
         $this->_data['tok_nom_affix'] = $this->_nom_affix;
       }
-      if (count($this->_sort_code)) {
+      if (isset($this->_sort_code) && strlen($this->_sort_code)) {
         $this->_data['tok_sort_code'] = $this->_sort_code;
       }
-      if (count($this->_sort_code2)) {
+      if (isset($this->_sort_code2) && strlen($this->_sort_code2)) {
         $this->_data['tok_sort_code2'] = $this->_sort_code2;
       }
     }

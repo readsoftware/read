@@ -198,16 +198,16 @@
     *
     */
     protected function synchBaseData(){
-      if (@$this->_scratchProperties && count($this->_scratchProperties)) {
+      if (isset($this->_scratchProperties) && count($this->_scratchProperties)) {
         $this->_data[@$this->getGlobalPrefix().'_scratch'] = json_encode($this->_scratchProperties);
       }
-      if (@$this->_annotation_ids && count($this->_annotation_ids)) {
+      if (isset($this->_annotation_ids) && count($this->_annotation_ids)) {
         $this->_data[@$this->getGlobalPrefix().'_annotation_ids'] = $this->idsToString($this->_annotation_ids);
       }
-      if (@$this->getAttributionIDs() && count($this->getAttributionIDs())) {
+      if ($this->getAttributionIDs() && count($this->getAttributionIDs())) {
         $this->_data[@$this->getGlobalPrefix().'_attribution_ids'] = $this->getAttributionIDs(true);
       }
-      if (@$this->_visibility_ids && count($this->_visibility_ids)) {
+      if (isset($this->_visibility_ids) && count($this->_visibility_ids)) {
         $this->_data[@$this->getGlobalPrefix().'_visibility_ids'] = $this->idsToString($this->_visibility_ids);
       }
     }
