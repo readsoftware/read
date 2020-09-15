@@ -136,7 +136,7 @@
     protected function synchData() {
       $this->calculateValues();
       $this->synchBaseData();
-      if (isset($this->_grapheme_ids) && count($this->_grapheme_ids)) {
+      if ($this->getGraphemeIDs() && count($this->getGraphemeIDs())) {
         $this->_data['tok_grapheme_ids'] = $this->idsToString($this->_grapheme_ids);
       }
       if (isset($this->_value) && strlen($this->_value)) {
