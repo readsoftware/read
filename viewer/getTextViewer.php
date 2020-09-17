@@ -261,6 +261,7 @@
           srvbasepath="<?=SITE_ROOT?>",
           hAdjustPX="<?=$hAdjustPX?>",
           basepath="<?=SITE_BASE_PATH?>",
+          curEdnID = "<?=$ednID?>",
 <?php
   $imgURLsbyBlnImgTag = array('img'=>array(),'bln'=>array());
   if (!$isStaticView) {
@@ -329,14 +330,19 @@
           edStructHtmlByEdn = {<?=$edStructHtmlByEdn?>},
           edFootnotesByEdn = {<?=$edFootnotesByEdn?>},//reset and calc'd in getEditionsStructuralViewHtml
           edGlossaryLookupByEdn = {<?=$edGlossaryLookupByEdn?>},//calc'd for first edition assuming all editions are inclusive
-          edFootnotes = edFootnotesByEdn[<?=$defaultEdnID?>],//get first edition
-          edStructHtml = edStructHtmlByEdn[<?=$defaultEdnID?>],//get first edition
-          edGlossaryLookup = edGlossaryLookupByEdn[<?=$defaultEdnID?>]//get first edition
+          edFootnotes = edFootnotesByEdn[curEdnID],//get first edition
+          edStructHtml = edStructHtmlByEdn[curEdnID],//get first edition
+          edGlossaryLookup = edGlossaryLookupByEdn[curEdnID]//get first edition
 <?php
   } else if ($ednIDs && count($ednIDs) > 1) { //case for multipart text
+    if (!$isStaticView) {
+      ob_flush();//hack for ob injected number during EditionStructural calc
+      $structHtml = getEditionsStructuralViewHtml($ednIDs,$refreshLookUps);
+      ob_clean();//hack for ob injected number during EditionStructural calc
+    }
 ?>
-          edStructHtml = <?=getEditionsStructuralViewHtml($ednIDs,$refreshLookUps)?>,
           multiEdition = false,
+          edStructHtml = <?=$structHtml?>,
           edFootnotes = <?=getEditionFootnoteTextLookup()?>,//reset and calc'd in getEditionsStructuralViewHtml
 <?php
       if ((!defined('USEDYNAMICLEMMAINFO') || !USEDYNAMICLEMMAINFO) && $ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
@@ -379,7 +385,6 @@
 ,
           ednToEpiDownloadURLs = <?=json_encode($urlMap['tei'])?>,
           editionIsPublic = <?=($edition->isResearchEdition()?"false":"true")?>,
-          curEdnID = "<?=$ednIDs[0]?>",
           curEpidocDownloadURL = ednToEpiDownloadURLs["edn"+curEdnID]
 <?php
   if ($showContentOutline) {
@@ -387,7 +392,7 @@
 ?>
 ,
           edTocHtmlByEdn = {<?=$edTocHtmlByEdn?>},//reset and calc'd in getEditionsStructuralViewHtml
-          tocHtml = edTocHtmlByEdn[<?=$defaultEdnID?>]//get first edition
+          tocHtml = edTocHtmlByEdn[curEdnID]//get first edition
 <?php
     } else {
 ?>
@@ -403,9 +408,9 @@
           edUrlBlnImgLookupByEdn = {<?=$edUrlBlnImgLookupByEdn?>},
           edBlnPosLookupByEdn = {<?=$edBlnPosLookupByEdn?>},//reset and calc'd in getEditionsStructuralViewHtml
           edPolysByBlnTagTokCmpTagByEdn = {<?=$edPolysByBlnTagTokCmpTagByEdn?>},//calc'd for first edition assuming all editions are inclusive
-          urlBlnImgLookup = edUrlBlnImgLookupByEdn[<?=$defaultEdnID?>],//get first edition
-          blnPosLookup = edBlnPosLookupByEdn[<?=$defaultEdnID?>],//get first edition
-          polysByBlnTagTokCmpTag = edPolysByBlnTagTokCmpTagByEdn[<?=$defaultEdnID?>]//get first edition
+          urlBlnImgLookup = edUrlBlnImgLookupByEdn[curEdnID],//get first edition
+          blnPosLookup = edBlnPosLookupByEdn[curEdnID],//get first edition
+          polysByBlnTagTokCmpTag = edPolysByBlnTagTokCmpTagByEdn[curEdnID]//get first edition
 <?php
     } else {
 ?>
@@ -438,8 +443,8 @@
 ,
           edTransStructHtmlByEdn = {<?=$edTransStructHtmlByEdn?>},
           edTransFootnotesByEdn = {<?=$edTransFootnotesByEdn?>},
-          transStructHtml = edTransStructHtmlByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
-          transFootnotes = edTransFootnotesByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
+          transStructHtml = edTransStructHtmlByEdn[curEdnID]//reset and calc'd in getEditionsStructuralTranslationHtml
+          transFootnotes = edTransFootnotesByEdn[curEdnID]//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
     } else if ($ednIDs && count($ednIDs) > 0) {
 ?>
@@ -477,8 +482,8 @@
 ,
           edChayaStructHtmlByEdn = {<?=$edChayaStructHtmlByEdn?>},
           edChayaFootnotesByEdn = {<?=$edChayaFootnotesByEdn?>},
-          chayaStructHtml = edChayaStructHtmlByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
-          chayaFootnotes = edChayaFootnotesByEdn[<?=$defaultEdnID?>]//reset and calc'd in getEditionsStructuralTranslationHtml
+          chayaStructHtml = edChayaStructHtmlByEdn[curEdnID]//reset and calc'd in getEditionsStructuralTranslationHtml
+          chayaFootnotes = edChayaFootnotesByEdn[curEdnID]//reset and calc'd in getEditionsStructuralTranslationHtml
 <?php
     } else if ($ednIDs && count($ednIDs) > 0) {
 ?>

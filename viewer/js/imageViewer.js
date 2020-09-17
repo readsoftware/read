@@ -440,7 +440,7 @@ VIEWERS.ImageViewer.prototype = {
 
   initViewport: function () {
     var vpWidth ,vpHeight;
-    this.zoomFactor = this.imgCanvas.width/this.image.width * 100;
+    //this.zoomFactor = this.imgCanvas.width/this.image.width * 100;
 
     vpWidth  = this.imgCanvas.width *100 / this.zoomFactor;
     vpHeight = this.imgCanvas.height *100 / this.zoomFactor;

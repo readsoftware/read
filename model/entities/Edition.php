@@ -160,16 +160,16 @@
     */
     protected function synchData() {
       $this->synchBaseData();
-      if (count($this->_description)) {
+      if (isset($this->_description) && strlen($this->_description)) {
         $this->_data['edn_description'] = $this->_description;
       }
-      if (count($this->_sequence_ids)) {
+      if ($this->getSequenceIDs() && count($this->getSequenceIDs())) {
         $this->_data['edn_sequence_ids'] = $this->idsToString($this->_sequence_ids);
       }
-      if ($this->_type_id) {
+      if (isset($this->_type_id)) {
         $this->_data['edn_type_id'] = $this->_type_id;
       }
-      if ($this->_text_id) {
+      if (isset($this->_text_id)) {
         $this->_data['edn_text_id'] = $this->_text_id;
       }
     }
