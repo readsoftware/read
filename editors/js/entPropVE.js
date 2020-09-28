@@ -1420,7 +1420,7 @@ removeLink: function(anoTag) {
         id = graIDs[i];
         entity = this.dataMgr.getEntity(prefix,id);
         if (!entity) {
-          DEBUG.log('warn',entIDs[i]+" entID not in datamanager");
+          DEBUG.log('warn',graIDs[i]+" graID not in datamanager");
           continue;
         }
         tag = prefix+id;

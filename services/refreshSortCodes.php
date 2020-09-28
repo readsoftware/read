@@ -44,8 +44,14 @@ require_once (dirname(__FILE__) . '/../model/entities/Compounds.php');
 require_once (dirname(__FILE__) . '/clientDataUtils.php');
 $dbMgr = new DBManager();
 $data = (array_key_exists('data', $_REQUEST)? json_decode($_REQUEST['data'], true):$_REQUEST);
-$gcalc = $scalc = $tcalc = $ccalc = $lcalc = true;
-if ( isset($data['entTypes'])) {//get command
+$specificRecalc = ( isset($data['graIDs']) ||
+                    isset($data['sclIDs']) ||
+                    isset($data['tokIDs']) ||
+                    isset($data['cmpIDs']) ||
+                    isset($data['lemIDs'])
+                  );
+$gcalc = $scalc = $tcalc = $ccalc = $lcalc = !$specificRecalc;
+if ( !$specificRecalc && isset($data['entTypes'])) {//get command
   $entTypes = $data['entTypes'];
   if (strpos($entTypes, "g")===false) {
     $gcalc = false;
@@ -63,6 +69,27 @@ if ( isset($data['entTypes'])) {//get command
     $ccalc = false;
   }
 }
+$graIDs = $sclIDs = $tokIDs = $cmpIDs = $lemIDs = null;
+if ( isset($data['graIDs'])) {//specifying graphemes
+  $graIDs = $data['graIDs'];
+  $gcalc = true;
+}
+if ( isset($data['sclIDs'])) {//specifying syllables
+  $sclIDs = $data['sclIDs'];
+  $scalc = true;
+}
+if ( isset($data['tokIDs'])) {//specifying tokens
+  $tokIDs = $data['tokIDs'];
+  $tcalc = true;
+}
+if ( isset($data['cmpIDs'])) {//specifying compounds
+  $cmpIDs = $data['cmpIDs'];
+  $ccalc = true;
+}
+if ( isset($data['lemIDs'])) {//specifying lemmas
+  $lemIDs = $data['lemIDs'];
+  $lcalc = true;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -76,7 +103,11 @@ if ( isset($data['entTypes'])) {//get command
 <body>
 <?php
 if ($gcalc) {
-  $graphemes = new Graphemes(null,null,null,500);
+  $condition = null;
+  if ($graIDs) {
+    $condition = "gra_id in ($graIDs)";
+  }
+  $graphemes = new Graphemes($condition,null,null,500);
   $graphemes->setAutoAdvance(true);
   echo "recalculating grapheme sort codes <br/>";
   foreach ($graphemes as $grapheme) {
@@ -90,7 +121,11 @@ if ($gcalc) {
 //  ob_flush();
 }
 if ($scalc) {
-  $syllables = new SyllableClusters(null,null,null,500);
+  $condition = null;
+  if ($sclIDs) {
+    $condition = "scl_id in ($sclIDs)";
+  }
+  $syllables = new SyllableClusters($condition,null,null,500);
   $syllables->setAutoAdvance(true);
   echo "recalculating syllable sort codes <br/>";
   foreach ($syllables as $syllable) {
@@ -103,7 +138,11 @@ if ($scalc) {
   unset($syllables);
 }
 if ($tcalc) {
-  $tokens = new Tokens(null,null,null,500);
+  $condition = null;
+  if ($tokIDs) {
+    $condition = "tok_id in ($tokIDs)";
+  }
+  $tokens = new Tokens($condition,null,null,500);
   $tokens->setAutoAdvance(true);
   echo "recalculating token sort codes <br/>";
   foreach ($tokens as $token) {
@@ -117,7 +156,11 @@ if ($tcalc) {
   //ob_flush();
 }
 if ($lcalc) {
-  $lemmas = new Lemmas(null,null,null,500);
+  $condition = null;
+  if ($lemIDs) {
+    $condition = "lem_id in ($lemIDs)";
+  }
+  $lemmas = new Lemmas($condition,null,null,500);
   $lemmas->setAutoAdvance(true);
   echo "recalculating lemma sort codes <br/>";
   foreach ($lemmas as $lemma) {
@@ -131,7 +174,11 @@ if ($lcalc) {
 //  ob_flush();
 }
 if ($ccalc) {
-  $compounds = new Compounds("not cmp_id=0",null,null,500);
+  $condition = "not cmp_id=0";
+  if ($cmpIDs) {
+    $condition = "cmp_id in ($cmpIDs)";
+  }
+  $compounds = new Compounds($condition,null,null,500);
   $compounds->setAutoAdvance(true);
   echo "recalculating compound sort codes <br/>";
   foreach ($compounds as $compound) {

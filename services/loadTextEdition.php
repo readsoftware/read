@@ -141,6 +141,9 @@
   if (count($warnings) == 0 && !$retString) {// edition found and  so process/load it
     $refresh = ($edition->getScratchProperty('refresh')?$edition->getScratchProperty('refresh'):
                   (defined('DEFAULTEDITIONREFRESH')?DEFAULTEDITIONREFRESH:0));
+    if(isset($_REQUEST['refresh'])) {
+      $refresh = max( $refresh, intval($_REQUEST['refresh']));
+    }
     $saveEditionToCache = true;
     $termInfo = getTermInfoForLangCode('en');
     $dictionaryCatalogTypeID = $termInfo['idByTerm_ParentLabel']['dictionary-catalogtype'];//term dependency
