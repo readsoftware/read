@@ -485,6 +485,9 @@
         } else { //just insert the new textDiv seqID in the text seq
           //update text seq entityIDs
           $seqTextEntIDs = $seqText->getEntityIDs();
+          if (!is_array($seqTextEntIDs)) {
+            $seqTextEntIDs = array();
+          }
           //find insert index using $prevTxtDivSeq  GID
           if ($prevTxtDivSeq) {
             $insertTxtDivSeqID = $prevTxtDivSeq->getGlobalID();
@@ -545,79 +548,5 @@
   } else {
     print json_encode($retVal);
   }
-/*
 
-  $graCnt = count($parser->getGraphemes());
-  echo "<h2> Entities </h2>";
-  echo '<table style="width:100%">';
-  echo '<tr>';
-  echo '<th>Graphemes IDs</th>';
-  $graLookup = array();
-  foreach ($parser->getGraphemes() as $grapheme) {
-    $graID = mb_substr(mb_strstr($grapheme->getScratchProperty("nonce"),"#",true),5);
-    $graLookup[$graID] = $grapheme;
-    echo "<td style=\"border: 1px solid\">$graID</td>";
-  }
-  echo '</tr>';
-  echo '<tr>';
-  echo '<th>Graphemes</th>';
-  foreach ($parser->getGraphemes() as $grapheme) {
-    $decomp = $grapheme->getDecomposition();
-    if (mb_strlen($decomp)){
-      $value = preg_replace("/\:/","",$decomp);
-    } else {
-      $value = $grapheme->getGrapheme();
-    }
-    echo "<td style=\"border: 1px solid; text-align: center\">".$value."</td>";
-  }
-  echo '</tr>';
-  echo '<tr>';
-  echo '<th>SyllableClusters</th>';
-  foreach ($parser->getSyllableClusters() as $syllable) {
-    $sclGraIDs = $syllable->getGraphemeIDs();
-    $sclGraCnt = count($sclGraIDs);
-    $value = '';
-    foreach ($sclGraIDs as $graID) {
-      $value .= $graLookup[substr($graID,1)]->getGrapheme();
-    }
-//    $value = $syllable->getSegmentID();
-    echo "<td style=\"border: 1px solid; text-align: center\" colspan=\"$sclGraCnt\">$value</td>";
-  }
-  echo '</tr>';
-  echo '<tr>';
-  echo '<th>Tokens</th>';
-  foreach ($parser->getTokens() as $token) {
-    $tokGraIDs = $token->getGraphemeIDs();
-    $tokGraCnt = count($tokGraIDs);
-    $decomp = $graLookup[substr($tokGraIDs[0],1)]->getDecomposition();
-    if (mb_strlen($decomp)){
-      $tokGraCnt--;
-    }
-    $value = $token->getValue();
-    echo "<td style=\"border: 1px solid; text-align: center\" colspan=\"$tokGraCnt\">$value</td>";
-  }
-  echo '</tr>';
-  echo '<th>Token IDs</th>';
-  foreach ($parser->getTokens() as $token) {
-    $tokID = mb_substr(mb_strstr($token->getScratchProperty("nonce"),"#",true),5);
-    $tokGraIDs = $token->getGraphemeIDs();
-    $tokGraCnt = count($tokGraIDs);
-    $decomp = $graLookup[substr($tokGraIDs[0],1)]->getDecomposition();
-    if (mb_strlen($decomp)){
-      $tokGraCnt--;
-    }
-    echo "<td style=\"border: 1px solid; text-align: center\" colspan=\"$tokGraCnt\">$tokID</td>";
-  }
-  echo '</tr>';
-  echo '</table>';
-  echo "<h2> Compounds </h2>";
-  foreach ($parser->getCompounds() as $compound) {
-    echo (($ckn = $compound->getScratchProperty("cknLine")) ? "$ckn ":"")."\"".$compound->getCompound()."\"".
-          " - ".$compound->getTranscription()." SC -  ".$compound->getSortCode()."     ".
-         "componentIDs - ".$compound->getComponentIDs(true)."     ".mb_strstr($compound->getScratchProperty("nonce"),"#",true)."<br>";
-  }
-}
-</body>
-</html>
-*/
 ?>
