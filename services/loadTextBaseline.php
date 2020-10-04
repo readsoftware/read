@@ -217,10 +217,12 @@
           $segCode = $segment->getScratchProperty("code");
           if ($segCode) {
             $entities["insert"]['seg'][$segID]['code'] = $segCode;
+            $entities["insert"]['seg'][$segID]['value'] = $segCode;
           }
           $segLoc = $segment->getScratchProperty("sgnLoc");
           if ($segLoc) {
             $entities["insert"]['seg'][$segID]['loc'] = $segLoc;
+            $entities["insert"]['seg'][$segID]['value'] = $segLoc;
           }
           $stringpos = $segment->getStringPos();
           if ($stringpos && count($stringpos) > 0) {

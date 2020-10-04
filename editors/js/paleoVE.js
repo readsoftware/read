@@ -765,6 +765,7 @@ EDITORS.PaleoVE.prototype = {
     if (!sktSort) {
       this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr>' +
         '<td><div class="col0 columnHeader"/></td>' +
+        '<td><div class="noVowel columnHeader">&nbsp;</div></td>' +
         '<td><div class="columnHeader">a</div></td>' +
         '<td><div class="columnHeader">i</div></td>' +
         '<td><div class="columnHeader">u</div></td>' +
@@ -773,7 +774,7 @@ EDITORS.PaleoVE.prototype = {
         '<td><div class="lastColumnHeader"/></td>' +
         '</tr></thead>'
       ));
-      colNum = 5;
+      colNum = 6;
     } else {
       this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr><td>' +
         '<div class="col0 columnHeader"/>' +
@@ -1314,6 +1315,7 @@ sortCodeToCharLookup = {
   "590": [ "t" ],
   "599": [ "_" ],
   "600": [ "tz" ],
+  "601": [ "tz'" ],
   "610": [ "v" ],
   "630": [ "w" ],
   "650": [ "x" ],
@@ -1331,7 +1333,15 @@ sortCodeToCharLookup = {
   "758": [ 8 ],
   "759": [ 9 ],
   "760": [ 10 ],
+  "761": [ 11 ],
   "762": [ 12 ],
+  "763": [ 13 ],
+  "764": [ 14 ],
+  "765": [ 15 ],
+  "766": [ 16 ],
+  "767": [ 17 ],
+  "768": [ 18 ],
+  "769": [ 19 ],
   "770": [ 20 ],
   "780": [ 100 ],
   "790": [ 1000 ],
