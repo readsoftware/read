@@ -78,25 +78,33 @@ if (!$data) {
         array_push($warnings,"error segment id $segID - is readonly");
       } else {
         $segGID = $segment->getGlobalID();
-        if ( isset($segProps['baselineIDs'])) {//get baseline for segment
+        if ( isset($segProps['baselineIDs'])) {//set baseline for segment
           $segment->setBaselineIDs($segProps['baselineIDs']);
           addUpdateEntityReturnData("seg",$segID,'baselineIDs', $segment->getBaselineIDs());
         }
-        if ( isset($segProps['boundary'])) {//get boundary for segment
+        if ( isset($segProps['boundary'])) {//set boundary for segment
           $segment->setImageBoundary($segProps['boundary']);
           addUpdateEntityReturnData("seg",$segID,'boundary', $segment->getImageBoundary());
         }
-        if ( isset($segProps['layer'])) {//get layer for segment
+        if ( isset($segProps['layer'])) {//set layer for segment
           $segment->setLayer($segProps['layer']);
           addUpdateEntityReturnData("seg",$segID,'layer', $segment->getLayer());
         }
-        if ( isset($segProps['urls'])) {//get url for segment
+        if ( isset($segProps['urls'])) {//set url for segment
           $segment->setURL($segProps['urls']);
           addUpdateEntityReturnData("seg",$segID,'urls', $segment->getURLs());
         }
-        if ( isset($segProps['ordinal'])) {//get order for segment
+        if ( isset($segProps['ordinal'])) {//set order for segment
           $segment->storeScratchProperty("blnOrdinal",$segProps['ordinal']);
           addUpdateEntityReturnData("seg",$segID,'ordinal', $segment->getScratchProperty("blnOrdinal"));
+        }
+        if ( isset($segProps['code'])) {//set code for segment
+          $segment->storeScratchProperty("code",$segProps['code']);
+          addUpdateEntityReturnData("seg",$segID,'code', $segment->getScratchProperty("code"));
+        }
+        if ( isset($segProps['loc'])) {//set location for segment
+          $segment->storeScratchProperty("sgnLoc",$segProps['loc']);
+          addUpdateEntityReturnData("seg",$segID,'loc', $segment->getScratchProperty("sgnLoc"));
         }
         if ($segment->isDirty()) {
           $segment->save();

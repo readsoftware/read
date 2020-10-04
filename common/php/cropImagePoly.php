@@ -4,12 +4,16 @@
 
   $polygons = isset($_REQUEST['polygons']) ? json_decode($_REQUEST['polygons'],true) : null;
   $url = isset($_REQUEST['url']) ? $_REQUEST['url'] : null;
+  $url2 = isset($_REQUEST['url2']) ? $_REQUEST['url2'] : null;
+  $margin = isset($_REQUEST['margin']) ? $_REQUEST['margin'] : 0;
   $transparency = array_key_exists('trans',$_REQUEST) ? intval($_REQUEST['trans']) : 80;
   if($transparency < 0) $transparency = 0;
   if($transparency > 100) $transparency = 100;
   $colourNum = intval( 255 * (100-$transparency)/100);
   $image = null;
-
+  if ($url2) {
+    $url .= $url2;
+  }
   if (!$url) {
     ob_clean();
     header('Location: /images/100x100-check.gif');
@@ -25,6 +29,8 @@
   }
 
   if ($polygons) {
+    $wMax = imagesx($image);
+    $hMax = imagesy($image);
     $bounds = array();
     foreach ($polygons as $polygon) {
       $bounds = array_merge($bounds,getBoundingRect($polygon));
@@ -34,6 +40,30 @@
     $h = $bounds[5] - $bounds[1]+1;
     $originX = $bounds[0];
     $originY = $bounds[1];
+    if ($wMax > $w) {
+      if ($wMax > 2*$margin+$w) {
+        $w += 2*$margin;
+        $originX -= $margin;
+      } else {
+        $dw = intval(($wMax-$w)/2);
+        $originX -= $dw;
+        $w = $wMax;
+      }
+    }
+    if ($hMax > $h) {
+      if ($hMax > 2*$margin+$h) {
+        $h += 2*$margin;
+        $originY -= $margin;
+      } else {
+        $dh = intval(($hMax-$h)/2);
+        $originY -= $dh;
+        $h = $hMax;
+      }
+      if ($originY < 0) {
+        $h += $originY;
+        $originY = 0;
+      }
+    }
 
     // crop the image to bounding box to reduce work - todo test image size against bbox size if < 90% then die
     $img_resized = imagecreatetruecolor($w, $h)  or die;
@@ -42,7 +72,6 @@
     imagecopyresampled($img_resized, $image, 0, 0, $originX, $originY, $w, $h, $w, $h)  or die;
     imagedestroy($image);
     $image = $img_resized;
-
     // create mask of areas we need to keep
     $mask = imagecreatetruecolor($w, $h);
     imagefill($mask, 0, 0,     imagecolorallocate($mask, $colourNum, $colourNum, $colourNum));
