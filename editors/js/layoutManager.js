@@ -1292,18 +1292,34 @@ MANAGERS.LayoutManager.prototype = {
           if (catalog.value == "GD" || catalog.value == "MW" || catalog.value == "MG") {
             catCode = catalog.value.toLowerCase();
             config['dictionary'] = catCode;
+<<<<<<< HEAD
             if (catalog.value == "GD") {
               config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype=F';
             } else if (catalog.value == "MG") {
               config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype={{type}}';
             }
             config['url'] = basepath + '/plugins/dictionary/index.php?dictionary=' + catCode + '&searchstring=a&searchtype=F&strJSON={"dictionary":"' + catCode + '","mode":"getdictionarystats"}';
+=======
+            config['url'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring=a&searchtype=F&strJSON={"dictionary":"' + catCode + '","mode":"getdictionarystats"}';
+            //            config['url'] = basepath+'/plugins/dictionary/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
+            //            config['url'] = 'https://gandhari.org/beta/plugins/dictionary/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
+            //            config['url'] = 'http://gandhari.org/~glass/testing/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
+>>>>>>> update remove CK specific assumption + NCX resources
             config['entGID'] = entGID;
             this.editors[paneID] = new EDITORS.FrameV(config);
           } else if (catalog.value == "BG") {
             catCode = catalog.value.toLowerCase();
             config['bibliography'] = catCode;
             config['url'] = basepath + '/plugins/bibliography/a_bibliography.php?initial=a';
+            config['entGID'] = entGID;
+            this.editors[paneID] = new EDITORS.FrameV(config);
+          } else if (catalog.value == "MIR") {
+            catCode = catalog.value.toLowerCase();
+            config['bibliography'] = catCode;
+            config['url'] = 'https://ncodex.org/capture/index_inline.php?dir=prod';
+            //            config['url'] = basepath+'/plugins/bibliography/a_bibliography.php?initial=a';
+            //            config['url'] = 'https://gandhari.org/beta/plugins/bibliography/a_bibliography.php?initial=a';
+            //            config['url'] = 'http://gandhari.org/~glass/testing/a_bibliography.php?initial=a';
             config['entGID'] = entGID;
             this.editors[paneID] = new EDITORS.FrameV(config);
           } else {

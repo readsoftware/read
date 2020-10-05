@@ -347,24 +347,29 @@ EDITORS.SearchVE.prototype = {
       //remove all filters from grid
       this.gridDiv.jqxGrid('removefilter', 'ckn', true);
       this.gridDiv.jqxGrid('removefilter', 'title', true);
-    } else if (search.toUpperCase().substring(0,2) == "CK") {//filter ckn column
+    } else { //if (search.toUpperCase().substring(0,2) == "CK") {//filter ckn column
       var filtergroup = new $.jqx.filter(),
           filter_or_operator = 1;
+      this.gridDiv.jqxGrid('clearfilters');
       var filter1 = filtergroup.createfilter('stringfilter', search, 'starts_with');
       filtergroup.addfilter(filter_or_operator, filter1);
       // add the filters.
-      this.gridDiv.jqxGrid('addfilter', 'ckn', filtergroup);
+      this.gridDiv.jqxGrid('addfilter', 'ckn', filtergroup,true);
       // apply the filters.
-      this.gridDiv.jqxGrid('applyfilters');
-    } else {// filter title column
-      var filtergroup = new $.jqx.filter(),
-          filter_or_operator = 1;
-      var filter1 = filtergroup.createfilter('stringfilter', search, 'contains');
-      filtergroup.addfilter(filter_or_operator, filter1);
-      // add the filters.
-      this.gridDiv.jqxGrid('addfilter', 'title', filtergroup);
-      // apply the filters.
-      this.gridDiv.jqxGrid('applyfilters');
+      //this.gridDiv.jqxGrid('applyfilters');
+      //} else {// filter title column
+      dataInfo = this.gridDiv.jqxGrid('getdatainformation');
+      if (dataInfo.rowscount == 0) { //try short name first if none then search titles
+        var filtergroup = new $.jqx.filter(),
+            filter_or_operator = 1;
+        this.gridDiv.jqxGrid('clearfilters');
+        var filter1 = filtergroup.createfilter('stringfilter', search, 'contains');
+        filtergroup.addfilter(filter_or_operator, filter1);
+        // add the filters.
+        this.gridDiv.jqxGrid('addfilter', 'title', filtergroup,true);
+        // apply the filters.
+        //this.gridDiv.jqxGrid('applyfilters');
+      }
     }
   },
 
