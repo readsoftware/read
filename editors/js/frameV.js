@@ -48,6 +48,7 @@ EDITORS.FrameV =  function(frameVCfg) {
   this.dataMgr = frameVCfg['dataMgr'] ? frameVCfg['dataMgr']:null;
   this.dictionary = frameVCfg['dictionary'] ? frameVCfg['dictionary']:null;
   this.url = frameVCfg['url'] ? frameVCfg['url']:null;
+  this.selectURL = frameVCfg['selectURL'] ? frameVCfg['selectURL']:null;
   if (this.url && this.url.indexOf('?') > 0) {
     service = this.url.split('?');
     this.serviceUrl = service[0];
@@ -125,7 +126,7 @@ EDITORS.FrameV.prototype = {
       if (senderID == frameV.id || !frameV.dictionary) {
         return;
       }
-      var i, id, prefix, url;
+      var i, id, prefix, url, entity, value, resLabel;
       DEBUG.log("event","selection changed recieved by "+frameV.id+" from "+senderID+" selected ids "+ selectionIDs.join());
       if (entID && entID.length && entID.length > 3) {
         prefix = entID.substr(0,3);
