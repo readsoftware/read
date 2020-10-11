@@ -54,7 +54,9 @@ if (!$cmd && !$dbname && !$sqlfilename) {
   return;
 } else {
   //get password from config.php
-  $psqlPWD = defined("PASSWORD")? PASSWORD :null;
+  $psqlPWD = defined("PASSWORD")? PASSWORD :"gandhari";
+  //get postgres server name from config.php
+  $pgServerNameSwitch = defined("DBSERVERNAME")? " -h ".DBSERVERNAME :"";
   //set default postgresql database
   $psqlDB = defined("PSQLDEFAULTDB")? PSQLDEFAULTDB :'postgres';
   //get environment set command
@@ -62,25 +64,26 @@ if (!$cmd && !$dbname && !$sqlfilename) {
   //get shell command separator
   $cmdsep = defined("CMDSEPARATOR")? CMDSEPARATOR :';'; // ';' for ubuntu, '&' for mac bitnami
   //need to set environment 'PGPASSWORD' and 'PGDATABASE' before running script
-  $psqlPath = ("$setCmd PGDATABASE=$cmdsep ").
+  $psqlPath = ("$setCmd PGDATABASE=$psqlDB$cmdsep ").
               ($psqlPWD?"$setCmd PGPASSWORD=$psqlPWD"."$cmdsep ":'').
-              (defined("PSQL_PATH")? PSQL_PATH."\\" :"");//configured tool dir or assume in PATH windows
+              (defined("PSQL_PATH") && PSQL_PATH ? PSQL_PATH."/" :"");//configured tool dir or assume in PATH windows
+  echo "debug: $psqlPath";
   //get db username
   $psqlUser = defined("PGUSERNAME")? PGUSERNAME :'postgres';
   //get path to db SQL files
-  $sqlFilePath = $sqlfilepath?$sqlfilepath:(defined("READ_FILE_STORE")?READ_FILE_STORE."\\":"");//set dir for sql file windows
+  $sqlFilePath = $sqlfilepath?$sqlfilepath:(defined("READ_FILE_STORE")?READ_FILE_STORE."/":"");//set dir for sql file windows
 //  $psqlPath = defined("PSQL_PATH")? PSQL_PATH."/" :"";//configured tool dir or assume in PATH
 //  $sqlFilePath = defined("READ_FILE_STORE")?READ_FILE_STORE."/":"";//set dir for sql file
   switch ($cmd) {
     case "restore": 
     //WARNING this set of commands may shut of a connection causing a warning first connection to the new/restored db
     //This can be avoided by checking PHP.ini for pgsql.auto_reset_persistent and set it to On.
-      $command = $psqlPath.'psql -U '.$psqlUser.' -c "REVOKE CONNECT ON DATABASE '.$dbname.' FROM PUBLIC;"';
+      $command = $psqlPath.'psql -w -U '.$psqlUser.$pgServerNameSwitch.' -c "REVOKE CONNECT ON DATABASE '.$dbname.' FROM PUBLIC;"';
       if (runShellCommand($command, "REVOKED connection on $dbname database", "Aborting - failed to revoke connections to database $dbname")) {
-        $command = $psqlPath.'psql -U '.$psqlUser.
+        $command = $psqlPath.'psql -w -U '.$psqlUser.$pgServerNameSwitch.
                     ' -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '."'$dbname';\"";
         if (runShellCommand($command, "DROPPED connections to $dbname database", "Aborting - failed to drop connections to database $dbname")) {
-          $command = $psqlPath.'psql -U '.$psqlUser.' -c "DROP DATABASE IF EXISTS '.$dbname.';"';
+          $command = $psqlPath.'psql -w -U '.$psqlUser.$pgServerNameSwitch.' -c "DROP DATABASE IF EXISTS '.$dbname.';"';
           if (!runShellCommand($command, "DROPPED $dbname database", "Aborting - failed to drop database $dbname")) {
             echo "unable to restore $dbname from $sqlFilePath$sqlfilename. Please read error <br>";
             break;
@@ -94,13 +97,13 @@ if (!$cmd && !$dbname && !$sqlfilename) {
         break;
       }
     case "create":
-      $command = $psqlPath.'psql -U '.$psqlUser.' -c "CREATE DATABASE '."$dbname WITH OWNER = ".USERNAME." ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'C' LC_CTYPE = 'C'".' CONNECTION LIMIT = -1 TEMPLATE template0;"';
+      $command = $psqlPath.'psql -w -U '.$psqlUser.$pgServerNameSwitch.' -c "CREATE DATABASE '."$dbname WITH OWNER = ".USERNAME." ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'C' LC_CTYPE = 'C'".' CONNECTION LIMIT = -1 TEMPLATE template0;"';
       if (runShellCommand($command, "CREATED $dbname database", "Aborting - failed to create database $dbname")) {
-        $command = $psqlPath.'psql -U '.$psqlUser." -d $dbname -f ".$sqlFilePath.$sqlfilename;
+        $command = $psqlPath.'psql -w -U '.$psqlUser.$pgServerNameSwitch." -d $dbname -f ".$sqlFilePath.$sqlfilename;
         if (runShellCommand($command, "Loaded $dbname database from $sqlFilePath$sqlfilename", "Aborting - failed to load database $dbname from $sqlFilePath$sqlfilename")) {
-          $command = $psqlPath.'psql -U '.$psqlUser.' -c "GRANT CONNECT ON DATABASE '.$dbname.' TO PUBLIC;"';
+          $command = $psqlPath.'psql -w -U '.$psqlUser.$pgServerNameSwitch.' -c "GRANT CONNECT ON DATABASE '.$dbname.' TO PUBLIC;"';
            if (runShellCommand($command, "GRANTED connection on $dbname database", "Aborting - failed to GRANTED connections to database $dbname")) {
-             echo ('<span id="dbready">'.$dbname.' database ready</span>');// span id="dbready" is for front end test harness used to trigger test after db restore
+             echo ('<span id="dbready">'.$dbname.$pgServerNameSwitch.' database ready</span>');// span id="dbready" is for front end test harness used to trigger test after db restore
              ob_flush();
            }
         }
@@ -108,7 +111,7 @@ if (!$cmd && !$dbname && !$sqlfilename) {
       break;
 
     case "snapshot":
-      $command = $psqlPath."pg_dump -U $psqlUser --no-privileges --no-owner $dbname > $sqlFilePath"."snapshot$sqlfilename";
+      $command = $psqlPath."pg_dump -U -w $psqlUser$pgServerNameSwitch --no-privileges --no-owner $dbname > $sqlFilePath"."snapshot$sqlfilename";
       if (runShellCommand($command, "Dump $dbname database to $sqlFilePath"."snapshot$sqlfilename", "Aborting - failed to dump database $dbname to $sqlFilePath"."snapshot$sqlfilename")) {
         $info = new SplFileInfo("$sqlFilePath"."snapshot$sqlfilename");
         if ($info && $info->isFile()) {
