@@ -1,8 +1,8 @@
 # READ Docker Setup for Development
 
-READ (Research Environment for Ancient Documents) uses a multicontainer setup for development attempting to be seamless when coding, testing, debugging or using. READ is a SAP written with PHP, Javascript, and XSLT. It uses jQuery, jqWidgets, HTML5 with Canvas, D3.js and CSS2 to provide a multi-layer editing approach to text research. The setup for READ requires a Web Server, PHP server, and PostgreSQL server. This docker setup is customized for running VSCode with GIT Source Control that uses Windows 10 with a browser as the front end user interface and a Docker Container Swarm as a backend server. The Docker swarm is organized into 3 services 'read', 'db' and 'pgadmin'. 
+READ (Research Environment for Ancient Documents) uses a multicontainer setup for development attempting to be seamless when coding, testing, debugging or using. READ is a SAP written with PHP, Javascript, and XSLT. It uses jQuery, jqWidgets, HTML5 with Canvas, D3.js and CSS2 to provide a multi-layer editing approach to text research. The setup for READ requires a Web Server, PHP server, and PostgreSQL server. This docker setup is customized for running VSCode with GIT Source Control that uses Windows 10 with a browser as the front end user interface and a Docker Milticontainer as a backend server. The Docker Milticontainer is organized into 3 services 'read', 'db' and 'pgadmin'. 
 
-## READ Swarm 
+## READ Multicontainer 
   - 'read' contains:
     - PHP 7.3 service with XDebug
     - Apache2 web server
@@ -94,8 +94,8 @@ The 2 Dockerfiles specify a custom build of the 'php-apache' and 'db' containers
 
 
 ---
-## Using READ's Swarm:
-In a terminal, navigate to the docker directory and type **docker-compose up**. The first time will take a shile as Docker will down load and install all the needed modules. This starts the READ Docker swarm. It will adjust for any changes that affect the containers and will start posting status information about the running containers. Pressing **ctrl+c** will shut down/stop the containers. Note that the images of the containers are cached and the next **docker-compose up** will restart the READ swarm without rebuilding. If you need to ensure a rebuild you can use **docker-compose up --build** . Also using **docker-compose down** will purge the images and rebuild using cache modules. VSCode has a docker interface so that you can remove any cached image you would like to update as well as volumes that you would like to flush. These are rebuilt on the next start of the swarm.
+## Using READ's Multicontainer:
+In a terminal, navigate to the docker directory and type **docker-compose up**. The first time will take a shile as Docker will down load and install all the needed modules. This starts the READ Docker Multicontainer. It will adjust for any changes that affect the containers and will start posting status information about the running containers. Pressing **ctrl+c** will shut down/stop the containers. Note that the images of the containers are cached and the next **docker-compose up** will restart the READ Multicontainer without rebuilding. If you need to ensure a rebuild you can use **docker-compose up --build** . Also using **docker-compose down** will purge the images and rebuild using cache modules. VSCode has a docker interface so that you can remove any cached image you would like to update as well as volumes that you would like to flush. These are rebuilt on the next start of the Multicontainer.
 
 
 
