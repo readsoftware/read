@@ -152,7 +152,7 @@ if ( count($errors) == 0 && ($splitToken || !$splitToken && isset($compounds) &&
   $tokGraIDs = $splitToken->getGraphemeIDs();
   $lenGraIDs = count($tokGraIDs);
   // check for splitting compound at a word boundary
-  if (($insPos == -1 || $insPos == $lenGraIDs) && isset($compounds) && count($compounds)) {
+  if (($insPos == -1 || $insPos == $lenGraIDs - 1) && isset($compounds) && count($compounds)) {
     // at boundary just need to separate tokens so get ccontianing compound
     $compound = array_shift($compounds);
     // get components gids as relpacement gids
