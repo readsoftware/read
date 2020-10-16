@@ -1475,10 +1475,35 @@ addTextReference: function () {
 * @param function cbError Error callback function\n*/
 
   splitToken: function (cbError) {
-    var ednVE = this, sclEd = this.sclEd, startNode, prevNode, headerNode, grdCnt = 500,
-        context,refDivSeqID, grpClass = "",hdrClass = "", sclIDs,
-        refSclID, newTokGID, physLineSeqID, lineOrdTag, isLastLine, splittokendata;
+    var ednVE = this, sclEd = this.sclEd, crosslineWord = false, curBOL = false, curEOL = false,
+        context,refDivSeqID, sclIDs, splitPos, refSclID, splittokendata,
+        newTokGID, physLineSeqID, lineOrdTag, adjPhysLineSeqID = null, adjLineOrdTag = null;
     if (sclEd) {
+      lineOrdTag = sclEd.syllable[0].className.match(/ordL\d+/)[0];
+      physLineSeqID = $('.textDivHeader.'+lineOrdTag,ednVE.contentDiv).attr('class').match(/lineseq(\d+)/)[1];
+      splitPos = sclEd.getTokenCurPos();
+      curBOL =sclEd.caretAtBOL();
+      curEOL =sclEd.caretAtEOL();
+      //special case syllables at the beginning or end of line
+      if ( curBOL && !sclEd.syllable.hasClass('firstLine') ||
+          curEOL && !sclEd.syllable.hasClass('lastLine')) {
+        // set ordOffset variable BOL => -1 EOL + 1
+        ordOffset = (curBOL?-1:1);
+        adjLineOrdTag = "ordL" + (parseInt(lineOrdTag.substr(4))+ordOffset);
+        adjPhysLineSeqID = $('.textDivHeader.'+adjLineOrdTag,ednVE.contentDiv).attr('class').match(/lineseq(\d+)/)[1];
+        //check for crossline words to ensure that both lines are updated 
+        // class of 'toksplit' indicates a crossline token and 'cmpsplit' indicates a crossline compound
+        if (curBOL) {
+          lbNode = $('.linebreak.'+adjLineOrdTag);
+        } else {
+          lbNode = $('.linebreak.'+lineOrdTag);
+        }
+        crosslineWord = (lbNode.hasClass('toksplit') || lbNode.hasClass('cmpsplit'));
+      }
+      if (!crosslineWord && splitPos == -1) {
+        DEBUG.beep();
+        return;
+      }
       context = sclEd.syllable[0].className.replace(/grpGra/,"")
                                       .replace(/ord\d+/,"")
                                       .replace(/ordL\d+/,"")
@@ -1490,19 +1515,17 @@ addTextReference: function () {
                                       .trim()
                                       .replace(/\s+/g,",")
                                       .split(",");
-      lineOrdTag = sclEd.syllable[0].className.match(/ordL\d+/)[0];
-      headerNode = $('.textDivHeader.'+lineOrdTag,ednVE.contentDiv);
-      physLineSeqID = headerNode.attr('class').match(/lineseq(\d+)/)[1];
       refDivSeqID = context[0].substring(3);//!!!!Caution!!!!!  class order dependency
       //setup data
       splittokendata={
         ednID: this.edition.id,
         context: context,
-        insPos: sclEd.getTokenCurPos()
+        insPos: splitPos
       };
       if (DEBUG.healthLogOn) {
         splittokendata['hlthLog'] = 1;
       }
+
       DEBUG.log("gen","call to splitToken for tokID "+ sclEd.getTokenID() +
                   " at position " + splittokendata.insPos +
                   " in text division sequence id " + splittokendata.refDivSeqID +
@@ -1546,7 +1569,13 @@ addTextReference: function () {
                 ednVE.calcLineGraphemeLookups(physLineSeqID);
                 //redraw line
                 ednVE.reRenderPhysLine(lineOrdTag,physLineSeqID);
-                //position sylED on new syllable
+                if (crosslineWord) {
+                  // calcLineGraphemeLookups for new line ? needed?
+                  ednVE.calcLineGraphemeLookups(adjPhysLineSeqID);
+                  //redraw line
+                  ednVE.reRenderPhysLine(adjLineOrdTag,adjPhysLineSeqID);
+                }
+                //position sclED on new syllable
                 if (typeof sclEd != "undefined") {
                   newTokGID = data.alteredTextDivComponentGIDs[-1+data.alteredTextDivComponentGIDs.length];//caution!!!! service return data order dependency
                   sclIDs = entities.tok[newTokGID.substring(4)].syllableClusterIDs;
@@ -1558,8 +1587,8 @@ addTextReference: function () {
                   DEBUG.log("health","Params: "+JSON.stringify(splittokendata));
                   DEBUG.log("health",data.editionHealth);
                 }
-              }else if (data['error']) {
-                alert("An error occurred while trying to save a syllable record. Error: " + data['error']);
+              }else if (data['errors']) {
+                alert("An error occurred while trying to save a syllable record. Error: " + data['errors'].join(" : "));
               }
           },// end success cb
           error: function (xhr,status,error) {

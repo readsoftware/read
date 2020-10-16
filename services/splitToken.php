@@ -107,6 +107,11 @@ if (!$data) {
   $insPos = null;
   if ( isset($data['insPos'])) {//get alignment info
     $insPos = $data['insPos'];
+    if (is_numeric($insPos)){
+      $insPos = intval($insPos);
+    } else {
+      array_push($errors,"position of split should be an integer between 0 and the number of charaters in the work");
+    }
   }
   $healthLogging = false;
   if ( isset($data['hlthLog'])) {//check for health logging
@@ -124,7 +129,7 @@ if (count($errors) == 0) {
           $splitToken = new Token($id);
           break;
         case "cmp":
-          if (!@$compounds) {
+          if (!isset($compounds)) {
             $compounds = array(new Compound($id));
           } else {
             array_push($compounds, new Compound($id));
@@ -139,16 +144,34 @@ if (count($errors) == 0) {
     array_push($errors,"missing context");
   }
 }
-if ( count($errors) == 0 && $splitToken ) {
+$oldTokCmpGID = null;
+if ( count($errors) == 0 && ($splitToken || !$splitToken && isset($compounds) && count($compounds))) {
+  // capture GID of item being replaced, start with the split token
   $oldTokCmpGID = $splitToken->getGlobalID();
-  if ($splitToken->isReadonly()){ //clone token
-    $splitToken = $splitToken->cloneEntity($defAttrIDs,$defVisIDs);
-  }
-  $newToken = $splitToken->cloneEntity($defAttrIDs,$defVisIDs);
-  //divide up graphemes
+  //get the number of graphemes for this token
   $tokGraIDs = $splitToken->getGraphemeIDs();
-  //if position is in range of token graphemes then split
-  if (is_numeric($insPos) && $insPos > -1 && $insPos < count($tokGraIDs)) {
+  $lenGraIDs = count($tokGraIDs);
+  // check for splitting compound at a word boundary
+  if (($insPos == -1 || $insPos == $lenGraIDs) && isset($compounds) && count($compounds)) {
+    // at boundary just need to separate tokens so get ccontianing compound
+    $compound = array_shift($compounds);
+    // get components gids as relpacement gids
+    $componentGIDs = $compound->getComponentIDs();
+    // test location of split token, should be a contained GID of first level compound 
+    if (array_search($oldTokCmpGID,$componentGIDs) === false) { //not contained so must be errant
+      array_push($errors,"context in context, containment hierarchy is not valid, aborting word split");
+    } else {
+      // need to decompose the compound into it components and propagate the change up the hierarchy
+      $oldTokCmpGID = $compound->getGlobalID();
+      $tokCmpReplaceGIDs = $componentGIDs;
+    }
+  } else if ($insPos > -1 && $insPos < $lenGraIDs) { //need to split the token into 2 tokens
+    if ($splitToken->isReadonly()) { //clone token
+      $splitToken = $splitToken->cloneEntity($defAttrIDs,$defVisIDs);
+    }
+    //copy token as second token in split
+    $newToken = $splitToken->cloneEntity($defAttrIDs,$defVisIDs);
+    //divide up graphemes at the insPos
     $splitTokGraIDs = array_splice($tokGraIDs,1+$insPos);
     $splitToken->setGraphemeIDs($tokGraIDs);
     $splitToken->getValue(true);//cause recalc
@@ -179,21 +202,27 @@ if ( count($errors) == 0 && $splitToken ) {
   }
 }
 
-//update compound heirarchy
+//update compound hierarchy
 if (count($errors) == 0 && isset($compounds) && count($compounds) > 0) {//update compounds
-  while (count($compounds)) {
+  while (count($compounds)) { // iterate through the compound hierarchy from bottom to top
+    // get compound object
     $compound = array_shift($compounds);
+    // get array of it's ordered component GIDs
     $componentGIDs = $compound->getComponentIDs();
+    // get location of GID in array of GIDs
     $oldTokCmpIndex = array_search($oldTokCmpGID,$componentGIDs);
+    //replace oldGID with replacement GIDs
     array_splice($componentGIDs,$oldTokCmpIndex,1,$tokCmpReplaceGIDs);
+    // setup for higher level replacement
     $tokCmpReplaceGIDs = $componentGIDs;
     $oldTokCmpGID = $compound->getGlobalID();
+    // if $compound is readonly it means it's in an unowned edition so don't remove it.
     if (!$compound->isReadonly()) {
       $compound->markForDelete();
       addRemoveEntityReturnData('cmp',$compound->getID());
     }
     if ($compound->hasError()) {
-      array_push($errors,"error updating compound clone '".$compound->getValue()."' - ".$compound->getErrors(true));
+      array_push($errors,"error in splitToken trying to decompose compound '".$compound->getValue()."' - ".$compound->getErrors(true));
       break;
     }
   }
@@ -216,7 +245,7 @@ if (count($errors) == 0 && count($tokCmpReplaceGIDs)) {//token or compound chang
     array_splice($textDivSeqEntityIDs,$tokCmpIndex,1,$tokCmpReplaceGIDs);
     $retVal['alteredTextDivComponentGIDs'] = $tokCmpReplaceGIDs;
     $textDivSeq->setEntityIDs($textDivSeqEntityIDs);
-    $removeTokCmpGID = $oldTokCmpGID;
+//    $removeTokCmpGID = $oldTokCmpGID;
     invalidateSequenceCache($textDivSeq,$edition->getID());
     //save text division sequence
     $textDivSeq->save();

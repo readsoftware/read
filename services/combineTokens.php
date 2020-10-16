@@ -65,9 +65,10 @@
     $defVisIDs = getUserDefVisibilityIDs();
     $defOwnerID = getUserDefEditorID();
     if ( isset($data['ednID'])) {//get edition
-      $edition = new Edition($data['ednID']);
+      $ednID = $data['ednID'];
+      $edition = new Edition($ednID);
       if ($edition->hasError()) {
-        array_push($errors,"creating edition - ".join(",",$edition->getErrors()));
+        array_push($errors,"loading edition $ednID - ".join(",",$edition->getErrors()));
       } else if ($edition->isReadonly()) {
         array_push($errors,"edition readonly");
       } else {
@@ -76,7 +77,7 @@
         if (!$defAttrIDs || count($defAttrIDs) == 0) {
           $attrIDs = $edition->getAttributionIDs();
           if ($attrIDs && count($attrIDs) > 0 ) {
-            $defAttrIDs = array($attrIDs[0]);
+            $defAttrIDs = array($attrIDs[0]); //first is primary
           }
         }
         //get default visibility
@@ -91,7 +92,8 @@
         $seqText = null;
         $oldPhysSeqID = null;
         $oldTextSeqID = null;
-        $edSeqs = $edition->getSequences(true);
+        // get container sequences from edition
+        $edSeqs = $edition->getSequences(true); 
         foreach ($edSeqs as $edSequence) {
           $seqType = $edSequence->getType();
           if (!$seqPhys && $seqType == "TextPhysical"){
@@ -120,7 +122,8 @@
       $context2 = $data['context'][1];
       $textDivSeqTag2 = array_shift($context2);
       if (substr($textDivSeqTag1,0,3) == 'seq') {
-        $textDivSeq1 = new Sequence(substr($textDivSeqTag1,3));
+        $textDivSeqID1 = substr($textDivSeqTag1,3);
+        $textDivSeq1 = new Sequence($textDivSeqID1);
         if ($textDivSeq1->hasError()) {
           array_push($errors,"error combining tokens trying to load sequence '".$textDivSeqTag1);
         } else {
@@ -131,9 +134,10 @@
       }
       if ($textDivSeqTag1 != $textDivSeqTag2) { //tokens/compounds are in different text divisions
         if (substr($textDivSeqTag2,0,3) == 'seq') {
-          $textDivSeq2 = new Sequence(substr($textDivSeqTag2,3));
+          $textDivSeqID2 = substr($textDivSeqTag2,3);
+          $textDivSeq2 = new Sequence($textDivSeqID2);
           if ($textDivSeq2->hasError()) {
-            array_push($errors,"error combining tokens trying to load sequence '".$textDivSeq2);
+            array_push($errors,"error combining tokens trying to load sequence '".$textDivSeqTag2);
           }
         } else {
           array_push($errors,"invalid context, expexting sequence tag and found $textDivSeqTag2");

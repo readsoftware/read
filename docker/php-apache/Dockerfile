@@ -18,16 +18,22 @@ ENV PATH $PATH:/usr/lib/postgresql/bin
 # docker-compose.yml
 EXPOSE 80
 
+WORKDIR /usr/local/etc/php
 # create a php.ini file from the development version change to copy php.ini-production => php.ini for production
-RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
+RUN cp php.ini-development php.ini
+# Update Php Settings
+RUN sed -E -i -e 's/max_execution_time = 30/max_execution_time = 200/' php.ini \
+ && sed -E -i -e 's/memory_limit = 128M/memory_limit = 512M/' php.ini \
+ && sed -E -i -e 's/post_max_size = 8M/post_max_size = 32000000/' php.ini \
+ && sed -E -i -e 's/upload_max_filesize = 2M/upload_max_filesize = 32000000/' php.ini
 
 # enable xdebug
 RUN docker-php-ext-enable xdebug
 
 # precreate log file for xdebug
-RUN echo " " >> /usr/local/etc/php/xdebug.log \
-&& chown www-data:www-data /usr/local/etc/php/xdebug.log \
-&& chmod 774 /usr/local/etc/php/xdebug.log
+RUN echo " " >> xdebug.log \
+&& chown www-data:www-data xdebug.log \
+&& chmod 774 xdebug.log
 
 # create and move xdebug.ini initialization file to start up dir
 # Add Xdebug to PHP configuration
@@ -43,3 +49,5 @@ RUN echo "" >> xdebug.ini \
  && echo "xdebug.idekey=VSCODE" >> xdebug.ini\
  && echo "xdebug.remote_log=/usr/local/etc/php/xdebug.log" >> xdebug.ini\
  && mv xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+WORKDIR /var/www/html
