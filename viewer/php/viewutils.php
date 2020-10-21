@@ -2871,7 +2871,7 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
             }
           }
           if ($isVerb) {
-            $displayOrder1 = array('pres.','pres.(?)','opt.','opt.(?)','impv.','impv.(?)','fut.','fut.(?)','perf.','perf.(?)','pret','pret(?)','?');
+            $displayOrder1 = array('pres.','pres.(?)','opt.','opt.(?)','impv.','impv.(?)','fut.','fut.(?)','perf.','perf.(?)','pret.','pret.(?)','?');
             $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
             $displayOrder3 = array('1st','1st(?)','2nd','2nd(?)','3rd','3rd(?)','?');
             $displayOrder4 = array('inf.','inf.(?)','abs.','abs.(?)','?');

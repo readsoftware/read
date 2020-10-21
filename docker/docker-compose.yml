@@ -25,9 +25,10 @@ services:
     ports:
       - "81:80" # "host_port:container_port". pgadmin can be found from host browser as localhost:81
     volumes: 
-      - pgadmin-data:/var/lib/pgadmin  #create named volume and add to volumes to persist container data
+      - sharebin:/usr/local/pgsql-10 # share postgres tools with php server to help maintain databases
+      - ../../../readfilestore/pgadmin:/var/lib/pgadmin # using relative path to bind host dir to /pgadmin_queries
     links: 
-      - "db:pgsql-server"
+      - "db:pgsql-server" 
     depends_on: 
       - db
   read:
@@ -46,4 +47,3 @@ services:
 volumes: #these volumes will be saved in docker storage until deleted
   sharebin:
   db-data:
-  pgadmin-data:

@@ -106,10 +106,11 @@
         $this->_dbName = $dbname;
       }
       $this->_conn = "dbname='". $dbname . "'" .
-                    " user='".($user?$user."'":(defined('USERNAME')?USERNAME."'":"white'")).
+                    " user='".($user?$user."'":(defined('USERNAME')?USERNAME."'":"testdb'")).
                     " password='".($password?$password."'":(defined('PASSWORD')?PASSWORD."'":"'")).
                     " host='".(defined('DBSERVERNAME')?DBSERVERNAME."'":"localhost'").
-                    " port='".(defined('PORT')?PORT."'":"5432'");
+                    " port='".(defined('PORT')?PORT."'":"5432'").
+                    " keepalives_idle=60"; // for docker postgres issues
       $this->_connect();
    }
 
@@ -389,7 +390,7 @@
     * Sets connection string and ensures that
     */
     public function setConnection($dbname = "",$user = "", $password = "") {
-      $conn = "dbname='".($dbname?$dbname."'":(defined('DBNAME')?DBNAME."'":"kanishka'")).
+      $conn = "dbname='".($dbname?$dbname."'":(defined('DBNAME')?DBNAME."'":"testdb'")).
               " user='".($user?$user."'":(defined('USERNAME')?USERNAME."'":"postgres'")).
               " password='".($password?$password."'":(defined('PASSWORD')?PASSWORD."'":"'")).
               " host='".(defined('DBSERVERNAME')?DBSERVERNAME."'":"localhost'").
