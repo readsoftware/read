@@ -1163,7 +1163,7 @@
                         htmlLemma +=     '<p>';
                         htmlLemma +=      '<span id="gd3form_etymology class="lemEtym">'+(popup.etymology?popup.etymology:'')+'</span>';
                         htmlLemma +=      '<span id="gd3form_phonetic class="lemPhonetic">'+(popup.phonetic?' ['+popup.phonetic+'] ':'')+'</span>';
-                        htmlLemma +=      '<span id="gd3form_pos" class="lemPos">'+(popup.pos?popup.pos:'')+'</span>';
+                        htmlLemma +=      '<span id="gd3form_pos" class="lemPos">'+(popup.pos?popup.pos:'')+' </span>';
                         htmlLemma +=      '<span id="gd3form_def class="lemGLoss">'+(popup.def?popup.def:'')+'</span>';
                         htmlLemma +=    '</p>';
                         htmlLemma +=  '</div>';
