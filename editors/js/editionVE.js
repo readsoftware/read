@@ -6544,6 +6544,9 @@ mergeLine: function (direction,cbError) {
       for (i=0; i<cnt; i++) {
         seqID = ednSeqIDs[i];
         tempSeq = entities['seq'][seqID];
+        if (!tempSeq) {
+          continue;
+        }
         if (this.trmIDtoLabel[tempSeq.typeID] == 'Text'){//warning!!!! term dependency edition text seq type
           if (!textSeq) {
            textSeq = tempSeq;
