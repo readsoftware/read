@@ -84,7 +84,9 @@ if (!$data) {
   if ( isset($data['entGID'])) {//get entity GID
     $entGID = $data['entGID'];
     $entity = EntityFactory::createEntityFromGlobalID($entGID);
-    if ($entity->hasError()) {
+    if (!$entity) {
+      array_push($errors,"error creating entity id $entGID");
+    } else if ($entity->hasError()) {
       array_push($errors,"error loading entity id $entGID - ".join(",",$entity->getErrors()));
     } else {
       $entGID = $entity->getGlobalID();

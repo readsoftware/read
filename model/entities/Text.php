@@ -347,7 +347,7 @@
     public function getTextMetadataIDs() {
       $dbMgr = new DBManager();
       $dbMgr->query("select array_agg(tmd_id) from textmetadata ".
-                    "where ".$this->_id." = ANY (tmd_text_ids) and not tmd_owner_id = 1;");
+                    "where ".$this->_id." = ANY (tmd_text_id) and not tmd_owner_id = 1;");
       if ($dbMgr->getRowCount()) {
         $row = $dbMgr->fetchResultRow();
         $tmdIDs = explode(',',trim($row[0],"\"{}"));

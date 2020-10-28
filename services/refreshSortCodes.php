@@ -107,7 +107,7 @@ if ($gcalc) {
   if ($graIDs) {
     $condition = "gra_id in ($graIDs)";
   }
-  $graphemes = new Graphemes($condition,null,null,500);
+  $graphemes = new Graphemes($condition,null,0,500);
   $graphemes->setAutoAdvance(true);
   echo "recalculating grapheme sort codes <br/>";
   foreach ($graphemes as $grapheme) {
@@ -125,7 +125,7 @@ if ($scalc) {
   if ($sclIDs) {
     $condition = "scl_id in ($sclIDs)";
   }
-  $syllables = new SyllableClusters($condition,null,null,500);
+  $syllables = new SyllableClusters($condition,null,0,500);
   $syllables->setAutoAdvance(true);
   echo "recalculating syllable sort codes <br/>";
   foreach ($syllables as $syllable) {
@@ -142,7 +142,7 @@ if ($tcalc) {
   if ($tokIDs) {
     $condition = "tok_id in ($tokIDs)";
   }
-  $tokens = new Tokens($condition,null,null,500);
+  $tokens = new Tokens($condition,null,0,500);
   $tokens->setAutoAdvance(true);
   echo "recalculating token sort codes <br/>";
   foreach ($tokens as $token) {
@@ -160,7 +160,7 @@ if ($lcalc) {
   if ($lemIDs) {
     $condition = "lem_id in ($lemIDs)";
   }
-  $lemmas = new Lemmas($condition,null,null,500);
+  $lemmas = new Lemmas($condition,null,0,500);
   $lemmas->setAutoAdvance(true);
   echo "recalculating lemma sort codes <br/>";
   foreach ($lemmas as $lemma) {
@@ -178,7 +178,7 @@ if ($ccalc) {
   if ($cmpIDs) {
     $condition = "cmp_id in ($cmpIDs)";
   }
-  $compounds = new Compounds($condition,null,null,500);
+  $compounds = new Compounds($condition,null,0,500);
   $compounds->setAutoAdvance(true);
   echo "recalculating compound sort codes <br/>";
   foreach ($compounds as $compound) {

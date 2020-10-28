@@ -6529,7 +6529,7 @@ mergeLine: function (direction,cbError) {
     //    <span class="TCM">]</span>
     //track end of physical lines to insert <br/>
     var ednVE = this, entities = this.dataMgr.entities,
-        textSeq, textDivSeq, physicalSeq, lineSeq,
+        textSeq, textDivSeq, physicalSeq, lineSeq, prevWordLastGraID = null,
         textAnalysisSeq, textSubStructSeq, tcms = 'S',
         seqID, ednSeqIDs = this.edition.seqIDs, text = this.dataMgr.getEntity('txt',this.edition.txtID),
         i,cnt;
@@ -6621,6 +6621,12 @@ mergeLine: function (direction,cbError) {
           //for each grapheme in token
           for(j=0; j<graIDs.length; j++) {
             graID = graIDs[j];
+            if (j === 0 && graID == prevWordLastGraID){ // first grapheme same as previous word - sandhi
+              continue;
+            }
+            if (j+1 == graIDs.length) { // last grapheme of this token save the graID
+              prevWordLastGraID = graID;
+            }
             grapheme = entities.gra[graID];
             if (!grapheme) {
               DEBUG.log("err","calculating graLookups and grapheme not available for graID "+graID);

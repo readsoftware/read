@@ -183,7 +183,7 @@ div.section.Sentence{
   padding-right: 5px;
 }
 
-div.secHeader, div.secTitle{
+div.secHeader, div.secTitleHeader{
 /*  display: inline-block; */
   font-weight: bold;
   padding-top: 10px;

@@ -942,7 +942,7 @@ function addWordToEntityLookups($entity, $refresh = false) {
 * @return string Html representing the $entity
 */
 function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh = false, $ctxClass = '') {
-  global $prevTCMS, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $fnRefTofnText, $wordCnt;
+  global $prevTCMS, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $fnRefTofnText, $wordCnt, $graID2WordGID;
   $footnoteHtml = "";
   $entGID = $entity->getGlobalID();
   $prefix = substr($entGID,0,3);
@@ -965,27 +965,31 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
   }
   if ($tokIDs) {
     ++$wordCnt;
-    //open word span
-    $wordHtml .= '<span class="grpTok '.($ctxClass?$ctxClass.' ':'').$entTag.' ord'.$wordCnt.'">';
     //for each token in word
     $tokCnt = count($tokIDs);
-    $prevGraID = null;
+//    $prevGraID = null;
     for($i =0; $i < $tokCnt; $i++) {
       $tokID = $tokIDs[$i];
       $token = new Token($tokID);
+      $graIDs = $token->getGraphemeIDs();
+      if ($i == 0) {
+        $firstT = true;
+        //open word span
+        list($tdSeqTag,$wordTag,$sandhiWordPos) = $graID2WordGID[$graIDs[0]];
+        //$wordHtml .= '<span class="grpTok '.($ctxClass?$ctxClass.' ':'').$entTag.' ord'.$wordCnt.'">';
+        $wordHtml .= '<span class="grpTok '.($sandhiWordPos?"sandhi$sandhiWordPos ":'').($tdSeqTag?$tdSeqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
+      }
       //new code ---- add code to get  linemarker from token scratch, possible for long words to cross multiple lines
       //$graID2LineHtmlMarkerlMap = $token->getScratchProperty("htmlLineMarkers");
-      $graIDs = $token->getGraphemeIDs();
-      $firstT = ($i==0);
       $lastT = ($i == -1 + $tokCnt);
       //for each grapheme in token
       $graCnt = count($graIDs);
       for($j=0; $j<$graCnt; $j++) {
         $graID = $graIDs[$j];
-        if ($prevGraID == $graID){//sandhi case of repeated grapheme
+        $grapheme = new Grapheme($graID);
+        if ($j+1 == $graCnt && $sandhiWordPos == 1) { // last grapheme of this token and sandhi so skip it
           continue;
         }
-        $grapheme = new Grapheme($graID);
         if (!$grapheme) {
           error_log("err,calculating word html and grapheme not available for graID $graID");
           $prevGraIsVowelCarrier = false;
@@ -1040,7 +1044,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
         }
         $prevTCMS = $tcms;
         $wordHtml .= $graTemp;
-        $prevGraID = $graID;
+//        $prevGraID = $graID;
         if (strtolower($graTemp) == "a") {
           $previousA = true;
         } else {
@@ -1108,8 +1112,7 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
 * @param int $level indicate the level of nest in the structural hierarchy
 */
 function getStructHTML($sequence, $refresh = false, $addBoundaryHtml = false) {
-  global $edition, $editionTOCHtml, $seqBoundaryMarkerHtmlLookup,
-         $fnRefTofnText,$blnPosByEntTag, $curStructHeaderbyLevel;
+  global $edition, $editionTOCHtml, $seqBoundaryMarkerHtmlLookup, $fnRefTofnText,$blnPosByEntTag, $curStructHeaderbyLevel;
   // check sequence for cached html by edition keying
   $structureHtml = $sequence->getScratchProperty("edn".$edition->getID()."structHtml");
   if (defined("USEVIEWERCACHING") && !USEVIEWERCACHING || $refresh || !$structureHtml ) {
@@ -1535,7 +1538,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                     $physicalLineHtml .= "&nbsp;";
                   }
                   $physicalLineHtml .= $graTemp;
-                  $prevGraID = $graID;
+//                  $prevGraID = $graID;
                   if (strtolower($graTemp) == "a") {
                     $previousA = true;
                   } else {
@@ -1631,7 +1634,7 @@ function getFreeTextHTML($freetextLines) {
 */
 function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   global $edition, $prevTCMS, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $graID2StructureInlineLabels,// $sclTag2BlnPolyMap,
-  $wordCnt, $fnRefTofnText, $typeIDs, $imgURLsbyBlnImgTag, $blnInfobyBlnTag, $curBlnTag,
+  $wordCnt, $fnRefTofnText, $typeIDs, $imgURLsbyBlnImgTag, $blnInfobyBlnTag, $curBlnTag, $graID2WordGID,
 //  $sclTagLineStart,
   $seqBoundaryMarkerHtmlLookup, $curStructHeaderbyLevel,
   $editionTOCHtml, $polysByBlnTagTokCmpTag, $blnPosByEntTag;
