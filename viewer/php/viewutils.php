@@ -972,18 +972,18 @@ function getWordHtml($entity, $isLastStructureWord, $nextToken = null, $refresh 
       $tokID = $tokIDs[$i];
       $token = new Token($tokID);
       $graIDs = $token->getGraphemeIDs();
-      if ($i == 0) {
+      //new code ---- add code to get  linemarker from token scratch, possible for long words to cross multiple lines
+      //$graID2LineHtmlMarkerlMap = $token->getScratchProperty("htmlLineMarkers");
+      $lastT = ($i == -1 + $tokCnt);
+      //for each grapheme in token
+      $graCnt = count($graIDs);
+      if ($graCnt && $i == 0) {
         $firstT = true;
         //open word span
         list($tdSeqTag,$wordTag,$sandhiWordPos) = $graID2WordGID[$graIDs[0]];
         //$wordHtml .= '<span class="grpTok '.($ctxClass?$ctxClass.' ':'').$entTag.' ord'.$wordCnt.'">';
         $wordHtml .= '<span class="grpTok '.($sandhiWordPos?"sandhi$sandhiWordPos ":'').($tdSeqTag?$tdSeqTag.' ':'').$wordTag.' ord'.$wordCnt.'">';
       }
-      //new code ---- add code to get  linemarker from token scratch, possible for long words to cross multiple lines
-      //$graID2LineHtmlMarkerlMap = $token->getScratchProperty("htmlLineMarkers");
-      $lastT = ($i == -1 + $tokCnt);
-      //for each grapheme in token
-      $graCnt = count($graIDs);
       for($j=0; $j<$graCnt; $j++) {
         $graID = $graIDs[$j];
         $grapheme = new Grapheme($graID);
@@ -1331,7 +1331,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
             $physicalLineHtml = $linePhysSequence->getScratchProperty("physLineHtml");
           }
           $fnRefTofnTextByLine = $linePhysSequence->getScratchProperty("edn".$edition->getID()."fnTextByAnoTag");
-          if (!$fnRefTofnTextByLine || count($fnRefTofnTextByLine) == 0) {
+          if ($fnRefTofnTextByLine && count($fnRefTofnTextByLine) == 0) {
             $fnRefTofnTextByLine = $linePhysSequence->getScratchProperty("fnTextByAnoTag");
           }
         }

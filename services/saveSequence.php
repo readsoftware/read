@@ -397,7 +397,7 @@ if (array_key_exists("callback",$_REQUEST)) {
 
 function checkInContainment($searchGID,$containGID,$ednSeqIDs,$level=4) {
   $containers = new Sequences("'$containGID' = ANY(seq_entity_ids)",null,null,null);
-  if ($containers && count($containers)){
+  if ($containers && $containers->getCount()){
     foreach($containers as $seqContainer){
       if ( $searchGID == $seqContainer->getGlobalID()) {
         return true;

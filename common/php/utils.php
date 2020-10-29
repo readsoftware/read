@@ -2665,7 +2665,7 @@ function checkEditionHealth($ednID, $verbose = true) {
             if (!$seqEntityGIDs || count($seqEntityGIDs) == 0) {
               array_push($hltherrors,"Error Structural Sequence (seq:$seqID) has no entity ids.");
               break;
-          }
+            }
             foreach ($seqEntityGIDs as $seqEntityGID) {
               $prefix =substr($seqEntityGID,0,3);
               switch ($prefix) {
@@ -2858,7 +2858,7 @@ function checkGlossaryHealth($catID, $verbose = true) {
           $entGIDs = $lemma->getComponentIDs();
           $lemValue = $lemma->getValue();
           $lemTag = $lemma->getEntityTag();
-          if (count($entGIDs) == 0) {
+          if (!$entGIDs || count($entGIDs) == 0) {
             array_push($hlthwarnings,"Warning lemma ($lemValue/$lemTag) that is has no attested forms.");
             continue;
           }
@@ -3167,6 +3167,10 @@ function validateTokCmp ($tokCmpGID, $ctxMessage, $topTokCmpGID) {
     array_push($hltherrors,"Error Unable to create tok/cmp ($tokCmpGID) located in $ctxMessage.".
                 (($entity && $entity->hasError())?"Errors: ".$entity->getErrors(true):EntityFactory::$error));
   } else {
+     if (!$entity->getID()) { //failed to create entity
+      array_push($hltherrors,"Error Unable to create tok/cmp ($tokCmpGID) -> invalid attestation located in $ctxMessage.");
+      return;
+    }
     if ($entity->isMarkedDelete()) {
       array_push($hltherrors,"Error $ctxMessage has token/compound link ($tokCmpGID) that is marked for delete.");
       //ToDo:  add code to add <a> for a service to correct the issue.
@@ -3544,7 +3548,7 @@ function addSequenceLabelToLookup($seqID) {
     $seqType = $structSequence->getType();
     $firstGraID = null;
     $graIDs = null;
-    if (count($structGIDs) > 0) {
+    if ($structGIDs && count($structGIDs) > 0) {
       $cnt = 0;
       foreach ($structGIDs as $structGID) {
         list($prefix,$entID) = explode(':',$structGID);
