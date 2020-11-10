@@ -88,18 +88,10 @@ if (!$data) {
       //find edition's Physical and Text sequences
       $seqPhys = null;
       $seqText = null;
+      $seqAnalysis = null;
       $oldPhysSeqID = null;
       $oldTextSeqID = null;
-      $edSeqs = $edition->getSequences(true);
-      foreach ($edSeqs as $edSequence) {
-        $seqType = $edSequence->getType();
-        if (!$seqPhys && $seqType == "TextPhysical"){ //warning!!!! term dependency
-          $seqPhys = $edSequence;
-        }
-        if (!$seqText && $seqType == "Text"){ //warning!!!! term dependency
-          $seqText = $edSequence;
-        }
-      }
+      list($seqText,$seqPhys,$seqAnalysis) = getOrderedEditionSequences($edition);
     }
   } else {
     array_push($errors,"unaccessable edition");

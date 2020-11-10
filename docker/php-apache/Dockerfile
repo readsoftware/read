@@ -33,14 +33,35 @@ RUN docker-php-ext-enable xdebug
 # precreate log file for xdebug
 RUN echo " " >> xdebug.log \
 && chown www-data:www-data xdebug.log \
-&& chmod 774 xdebug.log
+&& chmod 774 xdebug.log \
+# precreate directory for xdebug profiler
+&& mkdir profiles \
+&& chown www-data:www-data profiles \
+&& chmod 774 profiles\
+# precreate directory for xdebug tracer
+&& mkdir traces \
+&& chown www-data:www-data traces \
+&& chmod 774 traces
 
 # create and move xdebug.ini initialization file to start up dir
 # Add Xdebug to PHP configuration
+# See https://xdebug.org/docs/all_settings
 RUN echo "" >> xdebug.ini \
  && echo "[xdebug]" >> xdebug.ini \
  && echo "zend_extension = /usr/local/lib/php/extensions/no-debug-non-zts-20180731/xdebug.so" >> xdebug.ini \
  && echo "xdebug.remote_enable = 1" >> xdebug.ini \
+#profile setting
+ && echo "xdebug.profiler_enable = 0" >> xdebug.ini \
+#               use url param XDEBUG_PROFILE nothing or secret found in profile_enable_trigger_value
+ && echo "xdebug.profiler_enable_trigger = 1" >> xdebug.ini \
+ && echo "xdebug.profiler_output_name = readxdebug.out.%t.pro" >> xdebug.ini \
+ && echo "xdebug.profiler_output_dir = /usr/local/etc/php/profiles" >> xdebug.ini \
+#trace setting
+ && echo "xdebug.trace_enable_trigger = 1" >> xdebug.ini \
+#               use url param XDEBUG_TRACE nothing or secret found in trace_enable_trigger_value
+ && echo "xdebug.trace_output_name = readtrace.%c" >> xdebug.ini \
+ && echo "xdebug.trace_output_dir = /usr/local/etc/php/traces" >> xdebug.ini \
+#
  && echo "xdebug.remote_autostart = 1" >> xdebug.ini \
  && echo "xdebug.remote_host = host.docker.internal" >> xdebug.ini\
  && echo "xdebug.default_enable=1" >> xdebug.ini\

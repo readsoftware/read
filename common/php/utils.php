@@ -616,60 +616,65 @@ function getTermInfoForLangCode($langCode = 'en'){
     return $termInfos[$langCode];
   }
   $enumLables = array('SystemList','ContentList','EntityList','List-Single','List-Multiple','List-MultipleOrdered');
-  $termInfo = array('idByTerm_ParentLabel' => array(),
-    'labelByID' => array(),
-    'termByID' => array(),
-    'codeByID' => array(),
-    'parentIDByID' => array(),
-    'enumTypeIDs' => array(),
-    'fkTypeIDs' => array(),
-    'automationTypeIDs' => array(),
-    'uiAssistTypeIDs' => array());
+  $termInfo = array();
   $dbMgr = new DBManager();
   if ($dbMgr->getError()) {
     return null;
   }
   $dbMgr->query("SELECT trm_id, trm_labels::hstore->'$langCode' as trm_label, trm_labels, trm_list_ids, trm_code, trm_parent_id FROM term;");
-  while($row = $dbMgr->fetchResultRow()){
-    $termInfo['labelByID'][$row['trm_id']] = $row['trm_label'];
-    $termInfo['termByID'][$row['trm_id']] = $row;
-    if ($row['trm_code']) {
-      $termInfo['codeByID'][$row['trm_id']] = $row['trm_code'];
-    }
-    $termInfo['parentIDByID'][$row['trm_id']] = $row['trm_parent_id']?$row['trm_parent_id']:"";
-    if (in_array($row['trm_label'], $enumLables)) {
-      $termInfo['enumTypeIDs'][$row['trm_id']] = 1;
-    }
-    if (strpos($row['trm_label'],'FK-') === 0) {
-      $subtype = array();
-      if(strpos($row['trm_label'],'Hom')) {
-        $subtype['ho'] = 1;
-      }else  if(strpos($row['trm_label'],'Het')) {
-        $subtype['he'] = 1;
-      }else{
-        $subtype['pr'] = 1;
+  $rows = $dbMgr->fetchAllResultRows();
+  if ($rows && count($rows) > 0) {
+    $termInfo = array('idByTerm_ParentLabel' => array(),
+                      'labelByID' => array(),
+                      'termByID' => array(),
+                      'codeByID' => array(),
+                      'parentIDByID' => array(),
+                      'enumTypeIDs' => array(),
+                      'fkTypeIDs' => array(),
+                      'automationTypeIDs' => array(),
+                      'uiAssistTypeIDs' => array());
+      foreach($rows as $row) { 
+//    while($row = $dbMgr->fetchResultRow()){
+      $termInfo['labelByID'][$row['trm_id']] = $row['trm_label'];
+      $termInfo['termByID'][$row['trm_id']] = $row;
+      if ($row['trm_code']) {
+        $termInfo['codeByID'][$row['trm_id']] = $row['trm_code'];
       }
-      if(strpos($row['trm_label'],'Multi')) {
-        $subtype['mu'] = 1;
-      }else{
-        $subtype['si'] = 1;
+      $termInfo['parentIDByID'][$row['trm_id']] = $row['trm_parent_id']?$row['trm_parent_id']:"";
+      if (in_array($row['trm_label'], $enumLables)) {
+        $termInfo['enumTypeIDs'][$row['trm_id']] = 1;
       }
-      if(strpos($row['trm_label'],'Ord')) {
-        $subtype['ord'] = 1;
+      if (strpos($row['trm_label'],'FK-') === 0) {
+        $subtype = array();
+        if(strpos($row['trm_label'],'Hom')) {
+          $subtype['ho'] = 1;
+        }else  if(strpos($row['trm_label'],'Het')) {
+          $subtype['he'] = 1;
+        }else{
+          $subtype['pr'] = 1;
+        }
+        if(strpos($row['trm_label'],'Multi')) {
+          $subtype['mu'] = 1;
+        }else{
+          $subtype['si'] = 1;
+        }
+        if(strpos($row['trm_label'],'Ord')) {
+          $subtype['ord'] = 1;
+        }
+        $termInfo['fkTypeIDs'][$row['trm_id']] = $subtype;
       }
-      $termInfo['fkTypeIDs'][$row['trm_id']] = $subtype;
+      if (strpos($row['trm_label'],'Automation') === 0) {
+        $termInfo['automationTypeIDs'][$row['trm_id']] = 1;
+      }
+      if (strpos($row['trm_label'],'(UI)') === 0) {
+        $termInfo['uiAssistTypeIDs'][$row['trm_id']] = 1;
+      }
     }
-    if (strpos($row['trm_label'],'Automation') === 0) {
-      $termInfo['automationTypeIDs'][$row['trm_id']] = 1;
+    foreach ($termInfo['parentIDByID'] as $trmID => $pTrmID) {
+      $termInfo['idByTerm_ParentLabel'][mb_strtolower($termInfo['labelByID'][$trmID].($pTrmID?'-'.$termInfo['labelByID'][$pTrmID]:''),'utf-8')] = $trmID;
     }
-    if (strpos($row['trm_label'],'(UI)') === 0) {
-      $termInfo['uiAssistTypeIDs'][$row['trm_id']] = 1;
-    }
+    $termInfos[$langCode] = $termInfo;
   }
-  foreach ($termInfo['parentIDByID'] as $trmID => $pTrmID) {
-    $termInfo['idByTerm_ParentLabel'][mb_strtolower($termInfo['labelByID'][$trmID].($pTrmID?'-'.$termInfo['labelByID'][$pTrmID]:''),'utf-8')] = $trmID;
-  }
-  $termInfos[$langCode] = $termInfo;
   return $termInfo;
 }
 
@@ -1166,26 +1171,200 @@ function getCmpContext($pGID,$cGID) {
 *
 * @param string(3) $prefix identifying the entity type 'scl', 'tok' or 'cmp'
 * @param int $id entity identifier
+* @param bool $refresh by requery for syllableClusters
 *
 * @return int array $sclIDs of SyllableCluster entity ids for a given entity
 */
 
-function getEntitySclIDs($prefix,$id) {
+function getEntitySclIDs($prefix,$id,$refresh = true) { //todo: make SclIDs refresh default configurable
   $sclIDs = null;
   if ($prefix == 'scl') {
     $sclIDs = array($id);
   } else if ($prefix == 'tok') {
     $token = new Token($id);
-    $sclIDs = $token->getSyllableClusterIDs(false,true);
+    $sclIDs = $token->getSyllableClusterIDs(false,$refresh);
   } else if ($prefix == 'cmp') {
     $compound = new Compound($id);
     $cmpTokens = $compound->getTokens();
     $sclIDs = array();
     foreach ($cmpTokens as $token) {
-      $sclIDs = array_merge($sclIDs,$token->getSyllableClusterIDs(false,true));
+      $sclIDs = array_merge($sclIDs,$token->getSyllableClusterIDs(false,$refresh));
     }
   }
   return $sclIDs;
+}
+
+/**
+* get text, textphysical and analysis sequences for a given edition entity
+*
+* @param object $edition entity
+*
+* @return Sequence array $sequences ($seqText, $seqPhysicalText, $seqAnalysis) the given edition entity
+*/
+
+function getOrderedEditionSequences($edition) {
+  $seqPhysicalText = null;
+  $seqText = null;
+  $seqAnalysis = null;
+  $edSeqs = $edition->getSequences(true);
+  foreach ($edSeqs as $edSequence) {
+    $seqType = $edSequence->getType();
+    if (!$seqPhysicalText && $seqType == "TextPhysical"){ //warning!!!! term dependency
+      $seqPhysicalText = $edSequence;
+    }
+    if (!$seqText && $seqType == "Text"){ //warning!!!! term dependency
+      $seqText = $edSequence;
+    }
+    if (!$seqAnalysis && $seqType == "Analysis"){ //warning!!!! term dependency
+      $seqAnalysis = $edSequence;
+    }
+  }
+  return array($seqText,$seqPhysicalText,$seqAnalysis);
+}
+
+/**
+* get morphology for word entity sequences for a given edition entity
+*
+* @param object $word entity is either a compound or token
+*
+* @return structure of morphological information POS:???, MORPH: ? ? ?
+*/
+
+function getWordMorphology($word, $catID = null) {
+  // find inf and lem from catID
+  $prefix = $word->getEntityTypeCode();
+  $table = $word->getEntityType();
+  $id = $word->getID();
+
+  $inflQuery = "
+      select concat('$prefix',$prefix"."_id) as id, $prefix"."_value as value, inf_certainty as icert,
+        inf_case_id as caseid, inf_nominal_gender_id as ngenid, inf_gram_number_id as gnumid,
+        inf_verb_person_id as personid, inf_verb_voice_id as voiceid,inf_verb_tense_id as tenseid,
+        inf_verb_mood_id as moodid, inf_verb_second_conj_id as conjid,lem_id,lem_part_of_speech_id as posid,
+        lem_subpart_of_speech_id as sposid, lem_nominal_gender_id as genid, lem_certainty as lcert
+      from $table 
+        left join inflection on concat('$prefix:',$prefix"."_id) = ANY(inf_component_ids)
+        left join lemma on concat('inf:',inf_id) = ANY(lem_component_ids)
+      where $prefix"."_id = $id and inf_id is not null".($catID?" and lem_catalog_id = ".$catID:"").";";
+
+  $unInflQuery = "
+      select concat('$prefix',$prefix"."_id) as id, $prefix"."_value as value,
+        lem_id,lem_part_of_speech_id as posid,
+        lem_subpart_of_speech_id as sposid, lem_nominal_gender_id as genid, lem_certainty as lcert
+      from $table 
+        left join lemma on concat('$prefix:',$prefix"."_id) = ANY(lem_component_ids)
+      where $prefix"."_id = $id".($catID?" and lem_catalog_id = ".$catID:"").";";
+
+  $pos = "???";
+  $morph = "? ? ?";
+  $isVerb = false;
+  $processInfl = false;
+  $dbMgr = new DBManager();
+  $dbMgr->query($inflQuery);
+  if ($dbMgr->getError()) {
+    error_log("error querying morphology word GID ".$word->getGlobalID()." error: ".$dbMgr->getError());
+    $row = null;
+  } else if ($dbMgr->getRowCount() >= 1) { //found an inflection
+    $row = $dbMgr->fetchResultRow();
+    $processInfl = true;
+  } else { //no inflection found so try uninflected case
+    $dbMgr->query($unInflQuery);
+    if ($dbMgr->getError()) {
+      error_log("error querying morphology word GID ".$word->getGlobalID()." error: ".$dbMgr->getError());
+      $row = null;
+    } else if ($dbMgr->getRowCount() >= 1) { //found a lemma
+      $row = $dbMgr->fetchResultRow();
+    }
+  }
+  if ($row && $row['posid']) {
+    //build lemma pos
+    $posID = $row['posid'];
+    $sposID = $row['sposid'];
+    $genid = $row['genid'];
+    $lCert = $row['lcert'];//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
+    $pos = $posID && is_numeric($posID) && Entity::getTermFromID($posID) ? Entity::getTermFromID($posID) : '';
+    $isVerb = null;
+    if ($pos) {
+      $isVerb = ($pos == 'v.');
+    }
+    $sPos = $sposID && is_numeric($sposID) && Entity::getTermFromID($sposID) ? Entity::getTermFromID($sposID) : '';
+    $lGen = $sposID && is_numeric($sposID) && Entity::getTermFromID($sposID) ? Entity::getTermFromID($sposID) : '';
+    if ($lGen ) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
+      $pos =  $lGen.($lCert[2]==2?'(?)':'');
+    } else if ($sPos ) {
+      $pos =  $sPos.($lCert[1]==2?'(?)':'');
+    }else if ($pos) {
+      $pos .=  ($lCert[0]==2?'(?)':'');
+    }
+
+    if ($processInfl) {
+      $infCF = $row['icert'];
+      $case = $row['caseid'];
+      $gen = $row['ngenid'];
+      $num = $row['gnumid'];
+      $vper = $row['personid'];
+      $vvoice = $row['voiceid'];
+      $vtense = $row['tenseid'];
+      $vmood = $row['moodid'];
+      $conj2 = $row['conjid'];
+      $morph = '';
+      if ($isVerb) { //term dependency
+        if ($vmood && is_numeric($vmood)) {
+          $morph = Entity::getTermFromID($vmood).($infCF[2]==2?'(?)':'');
+        } else if ($vtense && is_numeric($vtense)) {
+          $morph = Entity::getTermFromID($vtense).($infCF[0]==2?'(?)':'');
+        } else {
+          $morph = '?';
+        }
+        if ($num && is_numeric($num)) {
+          $num = Entity::getTermFromID($num).($infCF[4]==2?'(?)':'');
+        } else {
+          $num = '?';
+        }
+        if ($vper && is_numeric($vper)) {
+          $vper = Entity::getTermFromID($vper).($infCF[6]==2?'(?)':'');
+        } else {
+          $vper = '?';
+        }
+        $morph .= " ".$vper;
+        if ($num && $num != '?') {
+          $morph .= " ".$num;
+        }
+        if ($conj2 && is_numeric($conj2)) {
+          $conj2 = Entity::getTermFromID($conj2).($infCF[7]==2?'(?)':'');
+        } else {
+          $conj2 = '?';
+        }
+        $morph .= " ".$conj2;
+      } else {
+        if ($gen && is_numeric($gen)) {
+          $gen = Entity::getTermFromID($gen).($infCF[3]==2?'(?)':'');
+        } else {
+          $gen = '?';
+        }
+        $morph = $gen;
+        if ($num && is_numeric($num)) {
+          $num = Entity::getTermFromID($num).($infCF[4]==2?'(?)':'');
+        } else {
+          $num = '?';
+        }
+        $morph .= " ".$num;
+        if ($case && is_numeric($case)) {
+          $case = Entity::getTermFromID($case).($infCF[5]==2?'(?)':'');
+        } else {
+          $case = '?';
+        }
+        $morph .= " ".$case;
+        if ($conj2 && is_numeric($conj2)) {
+          $conj2 = Entity::getTermFromID($conj2).($infCF[7]==2?'(?)':'');
+        } else {
+          $conj2 = '?';
+        }
+        $morph .= " ".$conj2;
+      }
+    }
+  }
+  return array("pos"=>"$pos","morph"=>"$morph");
 }
 
 /**
