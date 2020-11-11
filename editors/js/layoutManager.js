@@ -1292,25 +1292,15 @@ MANAGERS.LayoutManager.prototype = {
           if (catalog.value == "GD" || catalog.value == "MW" || catalog.value == "MG") {
             catCode = catalog.value.toLowerCase();
             config['dictionary'] = catCode;
-<<<<<<< HEAD
             if (catalog.value == "GD") {
               config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype=F';
             } else if (catalog.value == "MG") {
               config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype={{type}}';
             }
             config['url'] = basepath + '/plugins/dictionary/index.php?dictionary=' + catCode + '&searchstring=a&searchtype=F&strJSON={"dictionary":"' + catCode + '","mode":"getdictionarystats"}';
-=======
-            config['url'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring=a&searchtype=F&strJSON={"dictionary":"' + catCode + '","mode":"getdictionarystats"}';
-<<<<<<< HEAD
-            //            config['url'] = basepath+'/plugins/dictionary/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
-            //            config['url'] = 'https://gandhari.org/beta/plugins/dictionary/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
-            //            config['url'] = 'http://gandhari.org/~glass/testing/m_dictionary.php?dictionary='+catCode+'&searchstring=a&searchtype=F&strJSON={"dictionary":"'+catCode+'","mode":"getdictionarystats"}';
->>>>>>> update remove CK specific assumption + NCX resources
-=======
             if (catalog.value == "GD" || catalog.value == "MG") {
               config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype='+(catalog.value == "MG"?'S':'F');
             }
->>>>>>> Modify selection update handler for MG
             config['entGID'] = entGID;
             this.editors[paneID] = new EDITORS.FrameV(config);
           } else if (catalog.value == "BG") {
