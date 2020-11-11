@@ -851,6 +851,11 @@ MANAGERS.LayoutManager.prototype = {
     if (paneID) {
       $targetPane = $('.editContainer.' + paneID + ':not(:has(div.editPlaceholder))');
       if (this.focusPaneID && this.focusPaneID != paneID) {
+        // Fire focus out event for the current focus editor.
+        if (this.editors && this.editors[this.focusPaneID]) {
+          $(this.editors[this.focusPaneID].editDiv).trigger('focusout');
+        }
+
         $('#viewToolBarPanel').removeClass('show' + this.focusPaneID + 'TB');
         $('#editToolBarPanel').removeClass('show' + this.focusPaneID + 'TB');
         if ($('.editContainer.' + this.focusPaneID).hasClass('hasFocus')) {
