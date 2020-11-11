@@ -62,7 +62,7 @@ if (!$data) {
   $linkTypeID = null;
   $oldLinkTypeID = null;
   $unique = false;
-  if ( isset($data['fromGID'])) {//get lemma id
+  if ( isset($data['fromGID'])) {
     $fromGID = $data['fromGID'];
   }
   if ( isset($data['toGID']) && $data['toGID']) {

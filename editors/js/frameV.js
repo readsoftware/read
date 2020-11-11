@@ -130,19 +130,22 @@ EDITORS.FrameV.prototype = {
       if (entID && entID.length && entID.length > 3) {
         prefix = entID.substr(0,3);
         id = entID.substr(3);
-        if (prefix == 'tok' || prefix == 'cmp' && frameV.dictionary ) {
+        if ((prefix == 'scl' || prefix == 'tok' || prefix == 'cmp') && frameV.dictionary ) {
+          entity = frameV.dataMgr.getEntity(prefix,id);
+          value = entity.value.replace(/ʔ/g,'');
+          resLabel = frameV.dictionary;
           //reset src with value of word
           if (frameV.serviceURL) {
-            url = frameV.serviceURL;
-          } else {
-//            url = basepath+'/plugins/azesdictionary/m_dictionary.php';
-//            url = 'https://gandhari.org/beta/plugins/azesdictionary/m_dictionary.php';
-            url = 'https://gandhari.org/beta/plugins/azesdictionary/m_dictionary.php';
-            url = basepath+'/plugins/dictionary/index.php';
+            //template url where entity value field replaces {{value}} in url string
+            url = frameV.selectURL.replace(/\{\{value\}\}/g,value);
+          } else { 
+            if (frameV.serviceURL) {
+              url = frameV.serviceURL;
+            } else {
+              url = basepath+'/plugins/dictionary/index.php';
+            }
+            url += '?dictionary='+frameV.dictionary+'&searchstring='+value+'&searchtype=S&strJSON={"dictionary":"'+frameV.dictionary+'","mode":"F:'+value+'"}';
           }
-          entity = frameV.dataMgr.getEntity(prefix,id);
-          url += '?dictionary='+frameV.dictionary+'&searchstring='+entity.value.replace(/ʔ/g,'')+'&searchtype=F&strJSON={"dictionary":"'+frameV.dictionary+'","mode":"F:'+entity.value.replace(/ʔ/g,'')+'"}';
-
           frameV.frameElem.attr("src",url);
         }
       }

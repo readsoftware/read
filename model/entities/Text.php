@@ -347,7 +347,7 @@
     public function getTextMetadataIDs() {
       $dbMgr = new DBManager();
       $dbMgr->query("select array_agg(tmd_id) from textmetadata ".
-                    "where ".$this->_id." = ANY (tmd_text_id) and not tmd_owner_id = 1;");
+                    "where ".$this->_id." = tmd_text_id and not tmd_owner_id = 1;");
       if ($dbMgr->getRowCount()) {
         $row = $dbMgr->fetchResultRow();
         $tmdIDs = explode(',',trim($row[0],"\"{}"));
@@ -384,6 +384,7 @@
       $dbMgr = new DBManager();
       $dbMgr->query("select array_agg(edn_id) from edition ".
                     "where ".$this->_id." = edn_text_id and not edn_owner_id = 1 ".
+                    "group by (edn_scratch::jsonb->>'default')::text , (edn_scratch::jsonb->>'ordinal')::text::int ".
                     "order by (edn_scratch::jsonb->>'default')::text , (edn_scratch::jsonb->>'ordinal')::text::int;");
       if ($dbMgr->getRowCount()) {
         $row = $dbMgr->fetchResultRow();
