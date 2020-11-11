@@ -156,6 +156,27 @@
     //*******************************PUBLIC FUNCTIONS************************************
 
     /**
+    * Calculate mophology data for this word, use and update cached value
+    *
+    * @param int $catID catalog id use to restrict the morphology search
+    * @param bool $useCache determines whether to use cached value in scratch
+    *
+    * @return structure of morphological information ["pos":"???", "morph": "? ? ?"]
+    */
+    public function getMorphology($catID = null, $useCache = false){
+      $morphology = null;
+      if ($useCache) {
+        $morphology = $this->getScratchProperty("morphinfo");
+      }
+      if (!$morphology) {
+        $morphology = getWordMorphology($this,$catID);
+        $this->storeScratchProperty("morphinfo",$morphology);
+        $this->save();
+      }
+      return $morphology;
+    }
+
+    /**
     * Get ordered list of ids for the tokens of this compound
     *
     * @return int array of ids for the tokens of this compound
