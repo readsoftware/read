@@ -1330,6 +1330,22 @@ MANAGERS.LayoutManager.prototype = {
               }
               //instantiate wordlist VE with GID catID will launch Lemma Glossary while ednID with generate word list.
               break;
+            case 'sx'://syntax
+              config = {
+                eventMgr: layoutMgr,
+                layoutMgr: layoutMgr,
+                entGID: 'sx-' + entGID,
+                dataMgr: this.dataMgr,
+                id: paneID,
+                editDiv: $("." + paneID, this.curLayout)[0]
+              }
+              if (prefix == "edn") {
+                config['ednID'] = entID;
+                this.editors[paneID] = new EDITORS.SyntaxVE(config);
+              } else {
+                $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">unknown report entity.</div>');
+              }
+              break;
             case 'ph'://Phonology
               rptLabel = 'Phonology';
               $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">' + rptLabel + ' report is under construction.</div>');

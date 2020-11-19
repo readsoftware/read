@@ -1170,6 +1170,9 @@ EDITORS.SearchVE.prototype = {
     rptDiv =$('<div class="reportmenuitem"><div class="reportmenuitemlabellvl2">Paleography</div></div>');
     rptDiv.append($('<div id="pa-'+ednGID+'" class="draghandle"/>'));
     rptPanel.append(rptDiv);
+    rptDiv =$('<div class="reportmenuitem"><div class="reportmenuitemlabellvl2">Syntax</div></div>');
+    rptDiv.append($('<div id="sx-'+ednGID+'" class="draghandle"/>'));
+    rptPanel.append(rptDiv);
     rptDiv =$('<div class="reportmenuitem"><div class="reportmenuitemlabellvl2">Translation</div></div>');
     rptDiv.append($('<div id="tr-'+ednGID+'" class="draghandle"/>'));
     rptPanel.append(rptDiv);

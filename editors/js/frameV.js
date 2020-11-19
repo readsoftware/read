@@ -94,7 +94,7 @@ EDITORS.FrameV.prototype = {
 *
 */
 
-  createStaticToolbar: function () {
+  createStaticToolbar: function() {
     var frameV = this;
     this.viewToolbar = $('<div class="viewtoolbar"/>');
     this.editToolbar = $('<div class="edittoolbar"/>');
@@ -135,7 +135,7 @@ EDITORS.FrameV.prototype = {
           value = entity.value.replace(/ʔ/g,'');
           resLabel = frameV.dictionary;
           //reset src with value of word
-          if (frameV.serviceURL) {
+          if (frameV.selectURL) {
             //template url where entity value field replaces {{value}} in url string
             url = frameV.selectURL.replace(/\{\{value\}\}/g,value);
           } else { 

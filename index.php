@@ -55,10 +55,12 @@
     <link rel="stylesheet" href="./editors/css/editionVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/wordlistVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/paleoVE.css" type="text/css" />
+    <link rel="stylesheet" href="./editors/css/syntaxVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/lemmaVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/searchVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/propertyVE.css" type="text/css" />
     <script src="/jquery/jquery-1.11.1.min.js"></script>
+    <script src="/d3/d3.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtouch.js"></script>
     <script src="/jqwidget/jqwidgets/jqxdata.js"></script>
@@ -130,6 +132,7 @@
     <script src="./editors/js/translationV.js"></script>
     <script src="./editors/js/wordlistVE.js"></script>
     <script src="./editors/js/paleoVE.js"></script>
+    <script src="./editors/js/syntaxVE.js"></script>
     <script src="./editors/js/frameV.js"></script>
     <script src="./editors/js/lemmaVE.js"></script>
     <script src="./editors/js/annoVE.js"></script>

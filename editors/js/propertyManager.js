@@ -68,72 +68,72 @@ MANAGERS.PropertyManager.prototype = {
   init: function() {
     DEBUG.traceEntry("propMgr.init","");
     var propMgr = this, lemmaEdCfg, entPropVECfg, tabPropVECfg;
-    if (this.propVEType) {
-      this.propVEDiv = $('<div id="'+this.id+'propVEContainer" class="propertyVEContainer '+this.propVEType+' autoScrollY"/>');
-      $(this.propertyMgrDiv).append(this.propVEDiv);
+    if (propMgr.propVEType) {
+      propMgr.propVEDiv = $('<div id="'+propMgr.id+'propVEContainer" class="propertyVEContainer '+propMgr.propVEType+' autoScrollY"/>');
+      $(propMgr.propertyMgrDiv).append(propMgr.propVEDiv);
       // create a lemmaVE
-      if (this.propVEType == "lemmaVE" && this.controlEditor.type == "WordlistVE") {
-        lemmaEdCfg = {dataMgr: this.dataMgr,
-                      propMgr: this,
-                      id:this.id,
-                      editor: this.controlEditor,
-                      editDiv:this.propVEDiv.get(0)
+      if (propMgr.propVEType == "lemmaVE" && propMgr.controlEditor.type == "WordlistVE") {
+        lemmaEdCfg = {dataMgr: propMgr.dataMgr,
+                      propMgr: propMgr,
+                      id:propMgr.id,
+                      editor: propMgr.controlEditor,
+                      editDiv:propMgr.propVEDiv.get(0)
                     };
-        if (this.catID) {
-          lemmaEdCfg['catID'] = this.catID;
+        if (propMgr.catID) {
+          lemmaEdCfg['catID'] = propMgr.catID;
         } else {
-          lemmaEdCfg['ednID'] = this.ednID;
+          lemmaEdCfg['ednID'] = propMgr.ednID;
         }
-        this.lemmaVE = new EDITORS.LemmaVE(lemmaEdCfg);
-        this.currentVE = this.lemmaVE;
-      } else if (this.propVEType == "entPropVE") {
-        entPropVECfg = {dataMgr: this.dataMgr,
-                      id:this.id,
-                      propMgr: this,
-                      ednID: this.ednID,
-                      editor: this.controlEditor,
-                      contentDiv:this.propVEDiv.get(0)
-                    };
-        if (this.config.hideSubType) {
+        propMgr.lemmaVE = new EDITORS.LemmaVE(lemmaEdCfg);
+        propMgr.currentVE = propMgr.lemmaVE;
+      } else if (propMgr.propVEType == "entPropVE") {
+        entPropVECfg = {dataMgr: propMgr.dataMgr,
+                        id:propMgr.id,
+                        propMgr: propMgr,
+                        ednID: propMgr.ednID,
+                        editor: propMgr.controlEditor,
+                        contentDiv:propMgr.propVEDiv.get(0)
+                      };
+        if (propMgr.config.hideSubType) {
           entPropVECfg['hideSubType'] = true;
         }
-        if (this.config.hideComponents) {
+        if (propMgr.config.hideComponents) {
           entPropVECfg['hideComponents'] = true;
         }
-        this.entPropVE = new EDITORS.EntityPropVE(entPropVECfg);
-        this.currentVE = this.entPropVE;
-      } else if (this.propVEType == "annoVE") {
-        annoVECfg = {dataMgr: this.dataMgr,
-                      id:this.id,
-                      propMgr: this,
-                      editor: this.controlEditor,
-                      editDiv:this.propVEDiv.get(0)
-                    };
-        this.annoVE = new EDITORS.AnnoVE(annoVECfg);
-        this.currentVE = this.annoVE;
-      } else if (this.propVEType == "tagVE") {
-        tagVECfg = {dataMgr: this.dataMgr,
-                      id:this.id,
-                      propMgr: this,
-                      editor: this.controlEditor,
-                      editDiv:this.propVEDiv.get(0)
-                    };
-        this.tagVE = new EDITORS.TagVE(tagVECfg);
-        this.currentVE = this.tagVE;
+        propMgr.entPropVE = new EDITORS.EntityPropVE(entPropVECfg);
+        propMgr.currentVE = propMgr.entPropVE;
+      } else if (propMgr.propVEType == "annoVE") {
+        annoVECfg = {dataMgr: propMgr.dataMgr,
+                     id:propMgr.id,
+                     propMgr: propMgr,
+                     editor: propMgr.controlEditor,
+                     editDiv:propMgr.propVEDiv.get(0)
+                   };
+        propMgr.annoVE = new EDITORS.AnnoVE(annoVECfg);
+        propMgr.currentVE = propMgr.annoVE;
+      } else if (propMgr.propVEType == "tagVE") {
+        tagVECfg = {dataMgr: propMgr.dataMgr,
+                    id:propMgr.id,
+                    propMgr: propMgr,
+                    editor: propMgr.controlEditor,
+                    editDiv:propMgr.propVEDiv.get(0)
+                  };
+        propMgr.tagVE = new EDITORS.TagVE(tagVECfg);
+        propMgr.currentVE = propMgr.tagVE;
       }
     }
     // always make tabbed prop VE
-    this.propertiesDiv = $('<div id="'+this.id+'propContainer" class="propertyContainer"/>');
-    $(this.propertyMgrDiv).append(this.propertiesDiv);
-    tabPropVECfg = {dataMgr: this.dataMgr,
-                    propMgr: this,
-                    id:this.id,
-                    editor: this.controlEditor,
-                    editDiv:this.propertiesDiv.get(0)
+    propMgr.propertiesDiv = $('<div id="'+propMgr.id+'propContainer" class="propertyContainer"/>');
+    $(propMgr.propertyMgrDiv).append(propMgr.propertiesDiv);
+    tabPropVECfg = {dataMgr: propMgr.dataMgr,
+                    propMgr: propMgr,
+                    id:propMgr.id,
+                    editor: propMgr.controlEditor,
+                    editDiv:propMgr.propertiesDiv.get(0)
                   };
-    this.tabPropVE = new EDITORS.TabbedPropVE(tabPropVECfg);
-    if (!this.currentVE) {
-      this.currentVE = this.tabPropVE;
+    propMgr.tabPropVE = new EDITORS.TabbedPropVE(tabPropVECfg);
+    if (!propMgr.currentVE) {
+      propMgr.currentVE = propMgr.tabPropVE;
     }
     DEBUG.traceExit("propMgr.init","");
   },
@@ -192,7 +192,7 @@ MANAGERS.PropertyManager.prototype = {
 
 
 /**
-* put your comment there...
+* showVE creates if need a subordinate viewer/editor or propVE of selected type
 *
 * @param propVEType
 * @param gid
@@ -200,203 +200,208 @@ MANAGERS.PropertyManager.prototype = {
 
   showVE: function (propVEType,gid,cfg) {
     DEBUG.traceEntry("showVE");
+    var propMgr = this;
+    // check if this is call to switch to properties view of the current entity
     if (!gid && propVEType == "tabPropVE") {
-      gid = this.currentVE.tag;
+      gid = propMgr.currentVE.tag;
     }
     switch (propVEType) {
       case 'attrVE':
-        if (!this.attrVE) {
-          this.attrVEDiv = $('<div id="'+this.id+'attrVEContainer" class="attrVEContainer '+this.propVEType+'"/>');
-          $(this.propertyMgrDiv).append(this.attrVEDiv);
-          attrVECfg = {dataMgr: this.dataMgr,
-                        id:this.id,
-                        propMgr: this,
-                        editor: this.controlEditor,
-                        editDiv:this.attrVEDiv.get(0)
+        if (!propMgr.attrVE) {
+          propMgr.attrVEDiv = $('<div id="'+propMgr.id+'attrVEContainer" class="attrVEContainer '+propMgr.propVEType+'"/>');
+          $(propMgr.propertyMgrDiv).append(propMgr.attrVEDiv);
+          attrVECfg = {dataMgr: propMgr.dataMgr,
+                        id:propMgr.id,
+                        propMgr: propMgr,
+                        editor: propMgr.controlEditor,
+                        editDiv:propMgr.attrVEDiv.get(0)
                       };
-          if (this.currentVE && this.currentVE.tag) {//capture data to redisplay current editor on exit from annoEditor
-            attrVECfg['entTag'] = this.currentVE.tag;
-            attrVECfg['cbVEType'] = this.currentVE.getType();
+          if (propMgr.currentVE && propMgr.currentVE.tag) {//capture data to redisplay current editor on exit from annoEditor
+            attrVECfg['entTag'] = propMgr.currentVE.tag;
+            attrVECfg['cbVEType'] = propMgr.currentVE.getType();
           }
-          this.attrVE = new EDITORS.AttrVE(attrVECfg);
+          propMgr.attrVE = new EDITORS.AttrVE(attrVECfg);
         }
-        if (this.attrVE && this.attrVE.setEntity && this.attrVE.show) {
-          if (this.currentVE != this.attrVE) {
-            if (this.currentVE) {
-              this.currentVE.hide();
-              if (this.currentVE.tag){
-                this.attrVE.entTag = this.currentVE.tag;//set the tagVE scope entity
+        if (propMgr.attrVE && propMgr.attrVE.setEntity && propMgr.attrVE.show) {
+          if (propMgr.currentVE != propMgr.attrVE) {
+            if (propMgr.currentVE) {
+              propMgr.currentVE.hide();
+              if (propMgr.currentVE.tag){
+                propMgr.attrVE.entTag = propMgr.currentVE.tag;//set the tagVE scope entity
               }
             }
-            this.attrVE.show();
+            propMgr.attrVE.show();
           }
-          this.attrVE.setEntity(gid);
+          propMgr.attrVE.setEntity(gid);
         }
         break;
       case 'tagVE':
-        if (!this.tagVE) {
-          this.tagVEDiv = $('<div id="'+this.id+'tagVEContainer" class="tagVEContainer '+this.propVEType+'"/>');
-          $(this.propertyMgrDiv).append(this.tagVEDiv);
-          tagVECfg = {dataMgr: this.dataMgr,
-                        id:this.id,
-                        propMgr: this,
-                        editor: this.controlEditor,
-                        editDiv:this.tagVEDiv.get(0)
+        if (!propMgr.tagVE) {
+          propMgr.tagVEDiv = $('<div id="'+propMgr.id+'tagVEContainer" class="tagVEContainer '+propMgr.propVEType+'"/>');
+          $(propMgr.propertyMgrDiv).append(propMgr.tagVEDiv);
+          tagVECfg = {dataMgr: propMgr.dataMgr,
+                        id:propMgr.id,
+                        propMgr: propMgr,
+                        editor: propMgr.controlEditor,
+                        editDiv:propMgr.tagVEDiv.get(0)
                       };
-          if (this.currentVE && this.currentVE.tag) {//capture data to redisplay current editor on exit from annoEditor
-            tagVECfg['entTag'] = this.currentVE.tag;
-            tagVECfg['cbVEType'] = this.currentVE.getType();
+          if (propMgr.currentVE && propMgr.currentVE.tag) {//capture data to redisplay current editor on exit from annoEditor
+            tagVECfg['entTag'] = propMgr.currentVE.tag;
+            tagVECfg['cbVEType'] = propMgr.currentVE.getType();
           }
-          this.tagVE = new EDITORS.TagVE(tagVECfg);
+          propMgr.tagVE = new EDITORS.TagVE(tagVECfg);
         }
-        if (this.tagVE && this.tagVE.setEntity && this.tagVE.show) {
-          if (this.currentVE != this.tagVE) {
-            if (this.currentVE) {
-              this.currentVE.hide();
-              if (this.currentVE.tag){
-                this.tagVE.entTag = this.currentVE.tag;//set the tagVE scope entity
+        if (propMgr.tagVE && propMgr.tagVE.setEntity && propMgr.tagVE.show) {
+          if (propMgr.currentVE != propMgr.tagVE) {
+            if (propMgr.currentVE) {
+              propMgr.currentVE.hide();
+              if (propMgr.currentVE.tag){
+                propMgr.tagVE.entTag = propMgr.currentVE.tag;//set the tagVE scope entity
               }
             }
-            this.tagVE.show();
+            propMgr.tagVE.show();
           }
-          this.tagVE.setEntity(gid);
+          propMgr.tagVE.setEntity(gid);
         }
         break;
       case 'imgVE':
-        if (!this.imgVE) {
-          this.imgVEDiv = $('<div id="'+this.id+'imgVEContainer" class="imgVEContainer '+this.propVEType+'"/>');
-          $(this.propertyMgrDiv).append(this.imgVEDiv);
-          imgVECfg = {dataMgr: this.dataMgr,
-                        id:this.id,
-                        propMgr: this,
-                        editor: this.controlEditor,
-                        editDiv:this.imgVEDiv.get(0)
+        // if the property Manager does not have an instance of the Image VE create one
+        if (!propMgr.imgVE) {
+          propMgr.imgVEDiv = $('<div id="'+propMgr.id+'imgVEContainer" class="imgVEContainer '+propMgr.propVEType+'"/>');
+          $(propMgr.propertyMgrDiv).append(propMgr.imgVEDiv);
+          imgVECfg = {dataMgr: propMgr.dataMgr,
+                        id:propMgr.id,
+                        propMgr: propMgr,
+                        editor: propMgr.controlEditor,
+                        editDiv:propMgr.imgVEDiv.get(0)
                       };
-          if (this.currentVE && this.currentVE.tag) {//capture data to redisplay current editor on exit from imgEditor
-            imgVECfg['entTag'] = this.currentVE.tag;
-            imgVECfg['cbVEType'] = this.currentVE.getType();
+          if (propMgr.currentVE && propMgr.currentVE.tag) {//capture data to redisplay current editor on exit from imgEditor
+            imgVECfg['entTag'] = propMgr.currentVE.tag;
+            imgVECfg['cbVEType'] = propMgr.currentVE.getType();
           }
-          this.imgVE = new EDITORS.ImgVE(imgVECfg);
+          propMgr.imgVE = new EDITORS.ImgVE(imgVECfg);
         }
-        if (this.imgVE && this.imgVE.setEntity && this.imgVE.show) {
-          if (this.currentVE != this.imgVE) {
-            if (this.currentVE) {
-              this.currentVE.hide();
-              if (this.currentVE.tag){
-                this.imgVE.entTag = this.currentVE.tag;//set the imgVE scope entity
+        if (propMgr.imgVE && propMgr.imgVE.setEntity && propMgr.imgVE.show) {
+          if (propMgr.currentVE != propMgr.imgVE) {
+            if (propMgr.currentVE) {
+              propMgr.currentVE.hide();
+              if (propMgr.currentVE.tag){
+                propMgr.imgVE.entTag = propMgr.currentVE.tag;//set the imgVE scope entity
               }
             }
-            this.imgVE.show();// ensure imgVE editor is visible
+            propMgr.imgVE.show();// ensure imgVE editor is visible
           }
-          this.imgVE.setEntity(gid);
+          propMgr.imgVE.setEntity(gid);
         }
         break;
       case 'annoVE':
-        if (!this.annoVE) {
-          this.annoVEDiv = $('<div id="'+this.id+'annoVEContainer" class="annoVEContainer '+this.propVEType+'"/>');
-          $(this.propertyMgrDiv).append(this.annoVEDiv);
-          annoVECfg = {dataMgr: this.dataMgr,
-                        id:this.id,
-                        propMgr: this,
-                        editor: this.controlEditor,
-                        editDiv:this.annoVEDiv.get(0)
+        if (!propMgr.annoVE) {
+          propMgr.annoVEDiv = $('<div id="'+propMgr.id+'annoVEContainer" class="annoVEContainer '+propMgr.propVEType+'"/>');
+          $(propMgr.propertyMgrDiv).append(propMgr.annoVEDiv);
+          annoVECfg = {dataMgr: propMgr.dataMgr,
+                        id:propMgr.id,
+                        propMgr: propMgr,
+                        editor: propMgr.controlEditor,
+                        editDiv:propMgr.annoVEDiv.get(0)
                       };
-          if (this.currentVE && this.currentVE.tag) {//capture data to redisplay current editor on exit from annoEditor
-            annoVECfg['entTag'] = this.currentVE.tag;
-            annoVECfg['cbVEType'] = this.currentVE.getType();
+          if (propMgr.currentVE && propMgr.currentVE.tag) {//capture data to redisplay current editor on exit from annoEditor
+            annoVECfg['entTag'] = propMgr.currentVE.tag;
+            annoVECfg['cbVEType'] = propMgr.currentVE.getType();
           }
-          this.annoVE = new EDITORS.AnnoVE(annoVECfg);
+          propMgr.annoVE = new EDITORS.AnnoVE(annoVECfg);
         }
-        if (this.annoVE && this.annoVE.setEntity && this.annoVE.show) {
-          if (this.currentVE != this.annoVE) {
-            if (this.currentVE) {
-              this.currentVE.hide();
-              if (this.currentVE.tag){
-                this.annoVE.entTag = (cfg && cfg['ctxGID']?cfg['ctxGID']:this.currentVE.tag);//set the annoVE scope entity
+        if (propMgr.annoVE && propMgr.annoVE.setEntity && propMgr.annoVE.show) {
+          if (propMgr.currentVE != propMgr.annoVE) {
+            if (propMgr.currentVE) {
+              propMgr.currentVE.hide();
+              if (propMgr.currentVE.tag){
+                propMgr.annoVE.entTag = (cfg && cfg['ctxGID']?cfg['ctxGID']:propMgr.currentVE.tag);//set the annoVE scope entity
               }
             }
             if (cfg && cfg.typeIDs) {
-              this.annoVE.typeIDs = cfg.typeIDs;
+              propMgr.annoVE.typeIDs = cfg.typeIDs;
             } else {
-              this.annoVE.typeIDs = this.annoVE.config.typeIDs;
+              propMgr.annoVE.typeIDs = propMgr.annoVE.config.typeIDs;
             }
-            this.annoVE.show();// ensure anno editor is visible
+            propMgr.annoVE.show();// ensure anno editor is visible
           }
-          this.annoVE.setEntity(gid);
+          propMgr.annoVE.setEntity(gid);
         }
         break;
       case 'entPropVE':
-        if (!this.entPropVE) {
-          this.entPropVEDiv = $('<div id="'+this.id+'propVEContainer" class="annoVEContainer '+this.propVEType+'"/>');
-          $(this.propertyMgrDiv).append(this.entPropVEDiv);
-           entPropVECfg = {dataMgr: this.dataMgr,
-                        id:this.id,
-                        propMgr: this,
-                        ednID: this.ednID,
-                        editor: this.controlEditor,
-                        contentDiv:this.entPropVEDiv
+        // if the property Manager does not have an instance of the Entity Property VE create one
+        if (!propMgr.entPropVE) {
+          propMgr.entPropVEDiv = $('<div id="'+propMgr.id+'propVEContainer" class="annoVEContainer '+propMgr.propVEType+'"/>');
+          $(propMgr.propertyMgrDiv).append(propMgr.entPropVEDiv);
+           entPropVECfg = {dataMgr: propMgr.dataMgr,
+                        id:propMgr.id,
+                        propMgr: propMgr,
+                        ednID: propMgr.ednID,
+                        editor: propMgr.controlEditor,
+                        contentDiv:propMgr.entPropVEDiv
                       };
-          if (this.currentVE && this.currentVE.tag) {//capture data to redisplay current editor on exit from annoEditor
-            entPropVECfg['entTag'] = this.currentVE.tag;
-            entPropVECfg['cbVEType'] = this.currentVE.getType();
+          if (propMgr.currentVE && propMgr.currentVE.tag) {//capture data to redisplay current editor on exit from annoEditor
+            entPropVECfg['entTag'] = propMgr.currentVE.tag;
+            entPropVECfg['cbVEType'] = propMgr.currentVE.getType();
           }
-          this.entPropVE = new EDITORS.EntityPropVE(entPropVECfg);
+          propMgr.entPropVE = new EDITORS.EntityPropVE(entPropVECfg);
         }
-        if (this.entPropVE && this.entPropVE.setEntity && this.entPropVE.show) {
-          if (this.currentVE && this.currentVE != this.entPropVE) {
-            this.currentVE.hide();
-            this.currentVE = this.entPropVE;
+        // if the entPropVE is valid then ensure it shows and sync the view with the entID
+        if (propMgr.entPropVE && propMgr.entPropVE.setEntity && propMgr.entPropVE.show) {
+          if (propMgr.currentVE && propMgr.currentVE != propMgr.entPropVE) {
+            propMgr.currentVE.hide();
+            propMgr.currentVE = propMgr.entPropVE;
           }
-          this.entPropVE.show();
+          propMgr.entPropVE.show();
           if (gid) {
-            this.entPropVE.setEntity(gid);
+            propMgr.entPropVE.setEntity(gid);
           } else {
-            this.entPropVE.setEntity();
+            propMgr.entPropVE.setEntity();
           }
         }
         break;
       case 'tabPropVE':
-        if (this.tabPropVE && this.tabPropVE.setEntity && this.tabPropVE.show) {
-          if (this.currentVE && this.currentVE != this.tabPropVE) {
-            this.currentVE.hide();
-            this.currentVE = this.tabPropVE;
+        if (propMgr.tabPropVE && propMgr.tabPropVE.setEntity && propMgr.tabPropVE.show) {
+          if (propMgr.currentVE && propMgr.currentVE != propMgr.tabPropVE) {
+            propMgr.currentVE.hide();
+            propMgr.currentVE = propMgr.tabPropVE;
           }
-          this.tabPropVE.show();
+          propMgr.tabPropVE.show();
           if (gid) {
-            this.tabPropVE.setEntity(gid);
+            propMgr.tabPropVE.setEntity(gid);
           } else {
-            this.tabPropVE.setEntity();
+            propMgr.tabPropVE.setEntity();
           }
         }
         break;
       case 'lemmaVE':
-        if (this.lemmaVE && this.lemmaVE.setEntity && this.lemmaVE.show) {
-          if (this.currentVE && this.currentVE != this.lemmaVE) {
-            this.currentVE.hide();
-            this.currentVE = this.lemmaVE;
+        if (propMgr.lemmaVE && propMgr.lemmaVE.setEntity && propMgr.lemmaVE.show) {
+          if (propMgr.currentVE && propMgr.currentVE != propMgr.lemmaVE) {
+            propMgr.currentVE.hide();
+            propMgr.currentVE = propMgr.lemmaVE;
           }
-          this.lemmaVE.show();
+          propMgr.lemmaVE.show();
           if (gid) {
-            this.lemmaVE.setEntity(gid);
+            propMgr.lemmaVE.setEntity(gid);
           } else {
-            this.lemmaVE.setEntity();
+            propMgr.lemmaVE.setEntity();
           }
         }
         break;
       default:
-          if (this.currentVE) {
-            this.currentVE.show();
-            if (this.currentVE.setEntity) {
+          if (propMgr.currentVE) {
+            propMgr.currentVE.show();
+            if (propMgr.currentVE.setEntity) {
               if (gid) {
-                this.currentVE.setEntity(gid);
+                propMgr.currentVE.setEntity(gid);
               } else {
-                this.currentVE.setEntity();
+                propMgr.currentVE.setEntity();
               }
             }
-          } else if (gid && this.tabPropVE &&
-                      this.tabPropVE.setEntity && this.tabPropVE.show) {
-            this.tabPropVE.show();
-            this.tabPropVE.setEntity(gid);
+          } else if (gid && propMgr.tabPropVE &&
+                      propMgr.tabPropVE.setEntity && propMgr.tabPropVE.show) {
+            propMgr.tabPropVE.show();
+            propMgr.tabPropVE.setEntity(gid);
           }
     }
     DEBUG.traceExit("showVE");

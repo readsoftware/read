@@ -64,7 +64,7 @@ EDITORS.PaleoVE = function(paleoCfg) {
 */
 EDITORS.PaleoVE.prototype = {
 
-  /**
+/**
 * initialization funciton to create the html container frame with an expandable side panel
 * for property editors and contextual/workflow editors.
 * @author Stephen White  <stephenawhite57@gmail.com>
@@ -103,7 +103,7 @@ EDITORS.PaleoVE.prototype = {
     this.displayPaleographicChart();
   },
 
-  /**
+/**
 * put your comment there...
 *
 */
@@ -111,10 +111,10 @@ EDITORS.PaleoVE.prototype = {
   createStaticToolbar: function () {
     var paleoVE = this;
     var btnEditModeName = this.id+'editmode',
-    btnShowPropsName = this.id+'showprops',
-    btnDownloadSegName = this.id+'downloadseg',
-    ddbtnCurTagName = this.id+'curtagbutton',
-    treeCurTagName = this.id+'curtagtree';
+        btnShowPropsName = this.id+'showprops',
+        btnDownloadSegName = this.id+'downloadseg',
+        ddbtnCurTagName = this.id+'curtagbutton',
+        treeCurTagName = this.id+'curtagtree';
     this.viewToolbar = $('<div class="viewtoolbar"/>');
     this.editToolbar = $('<div class="edittoolbar"/>');
 
@@ -192,7 +192,7 @@ EDITORS.PaleoVE.prototype = {
 /**
 * put your comment there...
 *
-* @param bShow
+* @param bShow bool indicating whether to show or hide the properties panel
 */
 
   showProperties: function (bShow) {
