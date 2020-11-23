@@ -122,7 +122,7 @@
       if ($text->hasError() || $text->getID() != $txtID) {
         returnXMLErrorMsgPage("unable to load text $txtID - ".join(",",$text->getErrors()));
       }
-      $cfgEntityTag = DBNAME."txt$txtID";
+      $cfgEntTag = "txt$txtID";
       $entityCfgStaticView = $text->getScratchProperty("cfgStaticView");
       if ($entityCfgStaticView) {
         $entityCfgStaticView = json_decode($entityCfgStaticView);
@@ -145,7 +145,7 @@
       if ($edition->hasError() || !$edition->getID()) {
         returnXMLErrorMsgPage("unable to load edition - ".join(",",$edition->getErrors()));
       }
-      $cfgEntityTag = DBNAME."edn$ednID";
+      $cfgEntTag = "edn$ednID";
       $entityCfgStaticView = $edition->getScratchProperty("cfgStaticView");
       if ($entityCfgStaticView) {
         $entityCfgStaticView = json_decode($entityCfgStaticView);
@@ -652,10 +652,11 @@
     //calculate static view configuration from initial values
     //save in session and use defaults if no session variable
     //todo  figure out a good place to save config based on live viewer context (text or edition or ??)
+    $cfgDbnameEntTag = DBNAME.$cfgEntTag;
     if ($entityCfgStaticView) {
-      $staticViewSettings = $_SESSION["cfgStaticView$cfgEntityTag"] = $entityCfgStaticView;
-    } else if (array_key_exists("cfgStaticView$cfgEntityTag",$_SESSION)) {
-      $staticViewSettings = $_SESSION["cfgStaticView$cfgEntityTag"];
+      $staticViewSettings = $_SESSION["cfgStaticView$cfgDbnameEntTag"] = $entityCfgStaticView;
+    } else if (array_key_exists("cfgStaticView$cfgDbnameEntTag",$_SESSION)) {
+      $staticViewSettings = $_SESSION["cfgStaticView$cfgDbnameEntTag"];
     } else {
       $staticViewLayout = 0;
       //leave bit 7 (128) so default to not overwrite.
@@ -684,14 +685,14 @@
       $staticViewSettings = array("fname"=>($text && $text->getCKN()?str_replace(' ','_',trim($text->getCKN())):"tempfname"),
                               "title"=>$title,
                               "cfgStaticLayout"=>$staticViewLayout);
-      $_SESSION["cfgStaticView$cfgEntityTag"] = $staticViewSettings;
+      $_SESSION["cfgStaticView$cfgDbnameEntTag"] = $staticViewSettings;
     }
     $staticViewSettings["cfgStaticLayout"] = ($staticViewSettings["cfgStaticLayout"] & 255);
 ?>
 ,
             $btnExportStatic = $('#btnExportStatic'),
             $btnExportDlg = $('#btnExportDlg'),
-            cfgEntityTag='<?=$cfgEntityTag?>',
+            cfgEntTag='<?=$cfgEntTag?>',
             staticViewSettings=<?= json_encode($staticViewSettings) ?>
 <?php
   }
@@ -767,8 +768,8 @@
             if (staticViewSettings['refresh']){
               newURL += "&refreshLookUps=1";
             }
-            if (cfgEntityTag && cfgEntityTag.length > 0){
-              newURL += "&cfgEntityTag="+cfgEntityTag;
+            if (cfgEntTag && cfgEntTag.length > 0){
+              newURL += "&cfgEntTag="+cfgEntTag;
             }
             //make ajax call to export
             $.ajax({

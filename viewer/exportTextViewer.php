@@ -39,45 +39,80 @@
   startLog();
   $verbose = true;
   //determine output directories writablity
+  // check base export path
   if (!file_exists(VIEWER_EXPORT_PATH)) {
-    logAddMsgExit("Configured Viewer Export path ".VIEWER_EXPORT_PATH." does not exist. Please inform your system administrator");
+    error_log("Configured Viewer Export path ".VIEWER_EXPORT_PATH." does not exist. Attemping to create ".VIEWER_EXPORT_PATH);
   }
+  $makeExportDir = false;
   $info = new SplFileInfo(VIEWER_EXPORT_PATH);
-  if (!$info->isDir() || !$info->isWritable()) {
-    logAddMsgExit("Configured Viewer Export path ".VIEWER_EXPORT_PATH." needs to be a writeable directory.");
+  if (!$info->isDir()) {
+    $isDir = mkdir($info, 0775, true);
+    $makeExportDir = true;
   }
-  $exportDir = VIEWER_EXPORT_PATH;
-  $exportBaseURL = VIEWER_BASE_URL;
+  if (!$info->isDir() || !$info->isWritable()) {
+    logAddMsgExit("Configured Viewer Export path ".VIEWER_EXPORT_PATH." needs to be a writeable directory. Please inform your system administrator.");
+  } else if ($makeExportDir) {
+    logAddMsg("Export path ".VIEWER_EXPORT_PATH." created sucessfully.");
+  }
   if ($verbose) {
     logAddMsg("Export path ".VIEWER_EXPORT_PATH." verified.");
   }
 
+  $exportDir = VIEWER_EXPORT_PATH;
+  $exportBaseURL = VIEWER_BASE_URL;
+
+  // check CSS subdirectory
   if (!file_exists($exportDir."/css")) {
-    logAddMsgExit("Configured Viewer Export path ".VIEWER_EXPORT_PATH." 'css' subdirectory does not exist. Please inform your system administrator");
+    error_log("Configured Viewer Export path ".VIEWER_EXPORT_PATH." 'css' subdirectory does not exist. Attemping to create css subdirectory");
   }
+  $makeExportCSSDir = false;
   $info = new SplFileInfo($exportDir."/css");
+  if (!$info->isDir()) {
+    $isDir = mkdir($info, 0775, true);
+    $makeExportCSSDir = true;
+  }
   if (!$info->isDir() || !$info->isWritable()) {
-    logAddMsgExit("Viewer Export directory $exportDir needs a 'css' subdirectory that is writeable directory.");
+    logAddMsgExit("Viewer Export directory $exportDir needs a 'css' subdirectory that is writeable directory. Please inform your system administrator.");
+  } else if ($makeExportCSSDir) {
+    logAddMsg("Export path ".VIEWER_EXPORT_PATH."/css created sucessfully.");
   }
   if ($verbose) {
     logAddMsg("Export path for css verified.");
   }
+
+  // check js subdirectory
   if (!file_exists($exportDir."/js")) {
-    logAddMsgExit("Configured Viewer Export path ".VIEWER_EXPORT_PATH." 'js' subdirectory does not exist. Please inform your system administrator");
+    error_log("Configured Viewer Export path ".VIEWER_EXPORT_PATH." 'js' subdirectory does not exist. Attemping to create js subdirectory");
   }
+  $makeExportjsDir = false;
   $info = new SplFileInfo($exportDir."/js");
+  if (!$info->isDir()) {
+    $isDir = mkdir($info, 0775, true);
+    $makeExportjsDir = true;
+  }
   if (!$info->isDir() || !$info->isWritable()) {
-    logAddMsgExit("Viewer Export directory $exportDir needs a 'js' subdirectory that is writeable directory.");
+    logAddMsgExit("Viewer Export directory $exportDir needs a 'js' subdirectory that is writeable directory. Please inform your system administrator.");
+  } else if ($makeExportjsDir) {
+    logAddMsg("Export path ".VIEWER_EXPORT_PATH."/js created sucessfully.");
   }
   if ($verbose) {
     logAddMsg("Export path for js verified.");
   }
+
+  //check images subdirectory
   if (!file_exists($exportDir."/images")) {
-    logAddMsgExit("Configured Viewer Export path ".VIEWER_EXPORT_PATH." 'images' subdirectory does not exist. Please inform your system administrator");
+    error_log("Configured Viewer Export path ".VIEWER_EXPORT_PATH." 'images' subdirectory does not exist. Attemping to create image subdirectory");
   }
+  $makeExportImageDir = false;
   $info = new SplFileInfo($exportDir."/images");
+  if (!$info->isDir()) {
+    $isDir = mkdir($info, 0775, true);
+    $makeExportImageDir = true;
+  }
   if (!$info->isDir() || !$info->isWritable()) {
-    logAddMsgExit("Viewer Export directory $exportDir needs a 'images' subdirectory that is writeable directory.");
+    logAddMsgExit("Viewer Export directory $exportDir needs a 'images' subdirectory that is writeable directory. Please inform your system administrator.");
+  } else if ($makeExportImageDir) {
+    logAddMsg("Export path ".VIEWER_EXPORT_PATH."/image created sucessfully.");
   }
   if ($verbose) {
     logAddMsg("Export path for images verified.");
@@ -218,10 +253,10 @@
     if ( isset($data['title'])) {
       $title = $data['title'];
     }
-    $cfgEntityTag = null;
+    $cfgDbnameEntTag = null;
     $cfgEntity = null;
-    if ( isset($data['cfgEntityTag'])) {
-      $cfgEntTag = $data['cfgEntityTag'];
+    if ( isset($data['cfgEntTag'])) {
+      $cfgEntTag = $data['cfgEntTag'];
       $prefix = substr($cfgEntTag,0,3);
       $cfgEntityID = substr($cfgEntTag,3);
       if ($prefix == "txt") {
@@ -236,7 +271,7 @@
         }
       }
       if ($cfgEntity) {
-        $cfgEntityTag = DBNAME.$cfgEntTag;
+        $cfgDbnameEntTag = DBNAME.$cfgEntTag;
       }
     }
 //    $refreshLookUps = (!isset($data['refreshLookUps']) || !$data['refreshLookUps'])? false:true;
@@ -268,8 +303,8 @@
     }
   }
   //update session Static View configuration
-  if ($cfgEntityTag) {
-    $_SESSION["cfgStaticView$cfgEntityTag"] = array("fname"=>$basefilename,
+  if ($cfgDbnameEntTag) {
+    $_SESSION["cfgStaticView$cfgDbnameEntTag"] = array("fname"=>$basefilename,
                                                     "title"=>($title?$title:"unknown title"),
                                                     "cfgStaticLayout"=>($cfgStatic&127));
   }
@@ -379,8 +414,8 @@
     $url = SITE_BASE_PATH."/services/downloadTextfile.php?url=$exportBaseURL/$viewerFilename";
     logAddLink("Open exported viewer '$viewerFilename'","$exportBaseURL/$viewerFilename");
     logAddLink("Download link for exported Viewer '$viewerFilename'",$url);//todo call service to zip all. Images??
-    if ($cfgEntity && array_key_exists("cfgStaticView$cfgEntityTag",$_SESSION)) {
-      $cfgEntity->storeScratchProperty("cfgStaticView",$_SESSION["cfgStaticView$cfgEntityTag"]);
+    if ($cfgEntity && array_key_exists("cfgStaticView$cfgDbnameEntTag",$_SESSION)) {
+      $cfgEntity->storeScratchProperty("cfgStaticView",$_SESSION["cfgStaticView$cfgDbnameEntTag"]);
     }
   } else {
     logAddMsg("Unable to export viewer file '$viewerFilename'.");

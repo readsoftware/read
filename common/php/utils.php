@@ -4068,7 +4068,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
         error_log("error retrieving analysis sequence ".$analSequence->getError());
       } else {
         $analysisGIDs = $analSequence->getEntityIDs();
-        if (count($analysisGIDs) > 0) {
+        if ($analysisGIDs && count($analysisGIDs) > 0) {
           foreach ($analysisGIDs as $subSeqGID) {
             list($prefix,$entID) = explode(':',$subSeqGID);
             $entTag = $prefix.$entID;
@@ -4079,7 +4079,7 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
             addSequenceLabelToLookup($entID);
           }
         }
-        if (count($graID2StructureInlineLabels) > 0){
+        if ($graID2StructureInlineLabels && count($graID2StructureInlineLabels) > 0){
           $ednLookupInfo['graID2StructureInlineLabels'] = $graID2StructureInlineLabels;
         }
       }
