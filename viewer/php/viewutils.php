@@ -1632,7 +1632,7 @@ function getFreeTextHTML($freetextLines) {
 *
 * @returns mixed object with a string representing the html and a footnote lookup table
 */
-function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
+function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false, $isMultiText = false) {
   global $edition, $prevTCMS, $graID2LineHtmlMarkerlMap, $graID2PSnFMarkerMap, $graID2StructureInlineLabels,// $sclTag2BlnPolyMap,
   $wordCnt, $fnRefTofnText, $typeIDs, $imgURLsbyBlnImgTag, $blnInfobyBlnTag, $curBlnTag, $graID2WordGID,
 //  $sclTagLineStart,
@@ -1667,9 +1667,9 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
   $jsonCache = null;
   if (count($ednIDs) == 1) {
     if(USEVIEWERCACHING) {
-      $cacheKey = "edn".$ednIDs[0]."structviewHTML";
+      $cacheKey = "edn".$ednIDs[0].(USEPHYSICALVIEW?"physicalviewHTML":"structviewHTML");
       $jsonCache = new JsonCache($cacheKey);
-      if ($jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty() && !$forceRecalc) {
+      if ($jsonCache && $jsonCache->getID() && !$jsonCache->hasError() && !$jsonCache->isDirty() && !$forceRecalc) {
         $cachedEditionData = json_decode($jsonCache->getJsonString(),true);
         //set dependent globals before returning html string
         $fnRefTofnText = $cachedEditionData['fnRefTofnText'];
@@ -1679,7 +1679,40 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
         $polysByBlnTagTokCmpTag = $cachedEditionData['polysByBlnTagTokCmpTag'];
         //return html
         return json_encode($cachedEditionData['editionHtml']);
-      } else if ($jsonCache->hasError() || !$jsonCache->getID()) {//need to create a new cache object
+      } else if (!$jsonCache || $jsonCache->hasError() || !$jsonCache->getID()) {//need to create a new cache object
+        $jsonCache = new JsonCache();
+        $jsonCache->setLabel($cacheKey);
+        if (!$edition) {
+          $edition = new Edition($ednIDs[0]);
+        }
+        if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
+          array_push($warnings,"Warning need valid accessible edition id $ednIDs[0]. Skipping.".
+            ($edition->hasError()?" Error: ".join(",",$edition->getErrors()):""));
+          $jsonCache = null;
+        } else { //align with edition editability and visibility
+          $jsonCache->setVisibilityIDs($edition->getVisibilityIDs());
+          $jsonCache->setOwnerID($edition->getOwnerID());
+        }
+      }
+    }
+  } else if (count($ednIDs) > 1) {
+    if(USEVIEWERCACHING) {
+      $cacheKey = "edn".join("_",$ednIDs).(USEPHYSICALVIEW?"physicalviewHTML":"structviewHTML");
+      $jsonCache = new JsonCache($cacheKey);
+      if ($jsonCache && $jsonCache->getID() && 
+         !$jsonCache->hasError() && 
+         !$jsonCache->isDirty() && 
+         !$forceRecalc) {
+        $cachedEditionData = json_decode($jsonCache->getJsonString(),true);
+        //set dependent globals before returning html string
+        $fnRefTofnText = $cachedEditionData['fnRefTofnText'];
+        $editionTOCHtml = $cachedEditionData['editionTOCHtml'];
+        $imgURLsbyBlnImgTag = $cachedEditionData['imgURLsbyBlnImgTag'];
+        $blnPosByEntTag = $cachedEditionData['blnPosByEntTag'];
+        $polysByBlnTagTokCmpTag = $cachedEditionData['polysByBlnTagTokCmpTag'];
+        //return html
+        return json_encode($cachedEditionData['editionHtml']);
+      } else if (!jsonCache || $jsonCache->hasError() || !$jsonCache->getID()) {//need to create a new cache object
         $jsonCache = new JsonCache();
         $jsonCache->setLabel($cacheKey);
         if (!$edition) {
@@ -1696,6 +1729,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
       }
     }
   }
+  $graID2WordGID = array();
   //multiple editions here means a multipart text with each part as a text + edition
   foreach ($ednIDs as $ednID) {//accumulate in order all subsequence for text, text physical and analysis
     $edition = new Edition($ednID);
@@ -1759,22 +1793,31 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
           }
           if (!$seqPhys && $seqType == "TextPhysical"){//warning!!!! term dependency
             $physicalLineSeqIDs = array_merge($physicalLineSeqIDs,$componentIDs);
+            $entTag = str_replace(':','',$componentIDs[0]);
             if (!$isFirstEdn) {
-              $entTag = str_replace(':','',$componentIDs[0]);
               $seqBoundaryMarkerHtmlLookup[$entTag] = getEntityBoundaryHtml($edition,"partBoundary $entTag");
+            }
+            if ($isMultiText) {
+              $seqBoundaryMarkerHtmlLookup[$entTag] = getEntityBoundaryHtml($text,"textBoundary $entTag");
             }
           } else if (!$seqText && $seqType == "Text"){//warning!!!! term dependency
             $textDivSeqIDs = array_merge($textDivSeqIDs,$componentIDs);
+            $entTag = str_replace(':','',$componentIDs[0]);
             if (!$isFirstEdn) {
-              $entTag = str_replace(':','',$componentIDs[0]);
               $seqBoundaryMarkerHtmlLookup[$entTag] = getEntityBoundaryHtml($edition,"partBoundary $entTag");
+            }
+            if ($isMultiText) {
+              $seqBoundaryMarkerHtmlLookup[$entTag] = getEntityBoundaryHtml($text,"textBoundary $entTag");
             }
           } else if (!$textAnalysisSeq && $seqType == "Analysis"){//warning!!!! term dependency
+            $analysisSeqIDs = array_merge($analysisSeqIDs,$componentIDs);
+            $entTag = str_replace(':','',$componentIDs[0]);
             if (!$isFirstEdn) {
-              $entTag = str_replace(':','',$componentIDs[0]);
               $seqBoundaryMarkerHtmlLookup[$entTag] = getEntityBoundaryHtml($edition,"partBoundary $entTag");
             }
-            $analysisSeqIDs = array_merge($analysisSeqIDs,$componentIDs);
+            if ($isMultiText) {
+              $seqBoundaryMarkerHtmlLookup[$entTag] = getEntityBoundaryHtml($text,"textBoundary $entTag");
+            }
           } else {//ignoring sequence so warn
             array_push($warnings,"Warning no code to handle sequence seq:$edSeqID of type $seqType. Skipping.");
           }
@@ -1793,8 +1836,8 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
           }
         }
       }
-      $graID2WordGID = array();
-      $ednLookupInfo = getEdnLookupInfo($edition, $typeIDs,(count($analysisSeqIDs) > 0 && !USEPHYSICALVIEW),$forceRecalc);
+//      $graID2WordGID = array();
+      $ednLookupInfo = getEdnLookupInfo($edition, $typeIDs,(count($analysisSeqIDs) > 0 && !USEPHYSICALVIEW),$forceRecalc,$isMultiText);
       if ($ednLookupInfo){
         if (array_key_exists("lineScrollTops",$ednLookupInfo) && count($ednLookupInfo['lineScrollTops'])) {
           foreach ($ednLookupInfo['lineScrollTops'] as $seqTag => $lineBlnScrollTop) {
@@ -1820,10 +1863,18 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false) {
           }
         }
         if (array_key_exists("graID2StructureInlineLabels",$ednLookupInfo) && count($ednLookupInfo['graID2StructureInlineLabels'])) {
-          $graID2StructureInlineLabels = $ednLookupInfo['graID2StructureInlineLabels'];
+          if ($graID2StructureInlineLabels && count($graID2StructureInlineLabels)) {
+            $graID2StructureInlineLabels = $graID2StructureInlineLabels + $ednLookupInfo['graID2StructureInlineLabels'];
+          } else {
+            $graID2StructureInlineLabels = $ednLookupInfo['graID2StructureInlineLabels'];
+          }
         }
         if (array_key_exists("gra2WordGID",$ednLookupInfo) && count($ednLookupInfo['gra2WordGID'])) {
-          $graID2WordGID = $ednLookupInfo['gra2WordGID'];
+          if ($graID2WordGID && count($graID2WordGID)) {
+            $graID2WordGID = $graID2WordGID + $ednLookupInfo['gra2WordGID'];
+          } else {
+            $graID2WordGID = $ednLookupInfo['gra2WordGID'];
+          }
         }
       }
     }//end else valid edition

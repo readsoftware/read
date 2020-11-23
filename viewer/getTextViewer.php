@@ -47,25 +47,52 @@
     $refreshLookUps = (isset($data['refreshLookUps']) && $data['refreshLookUps'])? $data['refreshLookUps']:
                         ((isset($data['refresh']) && $data['refresh'])? $data['refresh']: false);//default (parameter missing) not multi edition
     $multiEdition = (!isset($data['multiEd']) || !$data['multiEd'])? false:true;//default (parameter missing) not multi edition
+    $multiText = (!isset($data['multiText']) || !$data['multiText'])? false:true;//default (parameter missing) not multi edition
     $isStaticView = (!isset($data['staticView'])||$data['staticView']==0)?false:true;
     $hAdjustPX = (!isset($data['hAdjustPX'])||$data['hAdjustPX']==0)?15:$data['hAdjustPX']; // panel height pixel adjustment
-    $txtID = null;
     $cfgEntityTag = null;
+    $entityCfgStaticView = null;
     if(!$isStaticView) {
       $title = (isset($data['title'])?$data['title']:null);
     }
-    $ednIDs = $ednID = null;
-    $catIDs = $catID = $ednToCatID = null;
-    if (isset($data['txtID']) && is_numeric($data['txtID'])) {
-      $txtID = intval($data['txtID']);
-      if (!is_int($txtID)) {
-        $txtID = null;
+    //check for item id
+    $itmID = $item = null;
+    if (isset($data['itmID']) && is_numeric($data['itmID'])) {
+      $itmID = intval($data['itmID']);
+      if (!is_int($itmID)) {
+        $itmID = null;
+      } else {
+        $item = new Item($itmID);
+        if ($item && ($item->getID() != $itmID || $item->hasError())) {
+          $item = $itmID = null;
+        } else if(!$isStaticView && !$title && $item->getTitle()){
+          $invNumber = $item->getIdNo();
+          if ($invNumber) {
+            if (defined('INVMATCHREGEXP') && defined('INVREPLACEMENTEXP')) {
+              $invNumber = trim(preg_replace(INVMATCHREGEXP, INVREPLACEMENTEXP, $invNumber));
+            }
+          }
+          $titleSeparator = defined('VIEWERINVTITLESEP')?VIEWERINVTITLESEP:' ';
+          $title = ($invNumber?$invNumber.$titleSeparator:"").$item->getTitle();
+        }
+      }
+    }
+    //check for text id(s)
+    $txtIDs = $txtID = null;
+    if (isset($data['txtID'])) {
+      $txtIDs = explode(",",$data['txtID']); //can be a comma delimited list of edition ids
+      $txtID = intval($txtIDs[0]); //first id is primary
+      if (!is_int($txtID)) { // if not int, don't trust input
+        $txtIDs = $txtID = null;
+      } else {
+        $texts = new Texts("txt_id in (".join(",",$txtIDs).")");
       }
     }
     // check for user supplied edition id(s)
+    $ednIDs = $ednID = $edition = null;
     if ( isset($data['ednID'])) {
-      $ednID = $data['ednID'];
-      $ednIDs = explode(",",$ednID); //can be a comma delimited list of edition ids
+      //$ednID = $data['ednID'];
+      $ednIDs = explode(",",$data['ednID']); //can be a comma delimited list of edition ids
       $ednID = intval($ednIDs[0]); //first id is primary
       if (!is_int($ednID)) { // if not int, don't trust input
         $ednIDs = $ednID = null;
@@ -73,9 +100,21 @@
         $edition = new Edition($ednID);
       }
     }
-    
-    $entityCfgStaticView = null;
-    $text = null;
+    //check for glossary(s)
+    $catIDs = $catID = $ednToCatID = null;
+    if ( isset($data['catID'])) {//optional override
+      //$catID = $data['catID'];
+      $catIDs = explode(",",$data['catID']);
+      $catID = intval($catIDs[0]); //first id is primary
+      if (!is_int($catID)) {
+        $catIDs = $catID = null;
+      }
+    }
+
+    if ($multiText && !(($txtIDs && count($txtIDs)>1) || ($ednIDs && count($ednIDs)>1))) {
+      returnXMLErrorMsgPage("invalid viewer request - mutliText must specify multiple edition ids (ednID=1,2,etc.)");
+    }
+
     if (!$txtID && !$ednID) {
       returnXMLErrorMsgPage("invalid viewer request - not enough or invalid parameters");
     } else if ($txtID) {
@@ -98,7 +137,7 @@
         $ednIDs = $editions->getKeys();
         $ednID = $ednIDs[0];
       }
-      if (!$multiEdition){
+      if (!$multiEdition && !$multiText){
         $ednIDs = null;
       }
     } else { //case ednID and no txtID
@@ -116,15 +155,6 @@
         returnXMLErrorMsgPage("invalid viewer request - access denied");
       }
       $txtID = $text->getID();
-    }
-    //check for glossary linkage
-    if ( isset($data['catID'])) {//optional override
-      $catID = $data['catID'];
-      $catIDs = explode(",",$catID);
-      $catID = intval($catIDs[0]); //first id is primary
-      if (!is_int($catID)) {
-        $catIDs = $catID = null;
-      }
     }
     if ($ednIDs && $catIDs) {
       $cntCat = count($catIDs);
@@ -307,7 +337,7 @@
         $edPolysByBlnTagTokCmpTagByEdn .= "'$ednID':";
       }
 
-      $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
+      $edStructHtmlByEdn .= getEditionsStructuralViewHtml(array($ednID),$refreshLookUps,$multiText);
       $edFootnotesByEdn .= getEditionFootnoteTextLookup();
       if ((!defined('USEDYNAMICLEMMAINFO') || !USEDYNAMICLEMMAINFO) && $ednToCatID && array_key_exists($ednID, $ednToCatID)) {//if there is a catID mapping then use for the primary edition only
         $edGlossaryLookupByEdn .= getEditionGlossaryLookup("cat".$ednToCatID[$ednID],$ednID,$refreshLookUps?$refreshLookUps:$isStaticView,$glossaryUrlLookup);
@@ -337,7 +367,7 @@
   } else if ($ednIDs && count($ednIDs) > 1) { //case for multipart text
     if (!$isStaticView) {
       ob_flush();//hack for ob injected number during EditionStructural calc
-      $structHtml = getEditionsStructuralViewHtml($ednIDs,$refreshLookUps);
+      $structHtml = getEditionsStructuralViewHtml($ednIDs,$refreshLookUps,$multiText);
       ob_clean();//hack for ob injected number during EditionStructural calc
     }
 ?>
@@ -359,10 +389,10 @@
   } else {
     if (!$isStaticView) {
       ob_flush();//hack for ob injected number during EditionStructural calc
-      $structHtml = getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
+      $structHtml = getEditionsStructuralViewHtml(array($ednID),$refreshLookUps,$multiText);
       ob_clean();//hack for ob injected number during EditionStructural calc
     } else {
-      $structHtml = getEditionsStructuralViewHtml(array($ednID),$refreshLookUps);
+      $structHtml = getEditionsStructuralViewHtml(array($ednID),$refreshLookUps,$multiText);
     }
 ?>
           multiEdition = false,

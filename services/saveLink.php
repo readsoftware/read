@@ -217,7 +217,7 @@ if (count($errors) == 0) {
       }
       $targetTag = $linkToEntity->getEntityTag();
       $linkFromEntity->storeScratchProperty('syntacticRelation',$linkType.' → '.$dependencyWord);
-      $linkFromEntity->storeScratchProperty('syntaxData',"{'type':'$linkType','target':'$targetTag'}");
+      $linkFromEntity->storeScratchProperty('syntaxData',"{\"type\":\"$linkType\",\"target\":\"$targetTag\"}");
       $linkFromEntity->save();
     }
     $txtDivTypeID = Entity::getIDofTermParentLabel("textdivision-text"); //warning!! term dependency

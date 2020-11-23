@@ -3537,7 +3537,11 @@ function getToksBoundaryQueryString($tokIDs){
                     "left join segment on seg_id = scl_segment_id ".
                     "left join sequence c on concat('scl:',scl_id) = ANY(c.seq_entity_ids) ".
                     "left join sequence p on concat('seq:',c.seq_id) = ANY(p.seq_entity_ids) ".
-         "where tok_id = $tokID and scl_segment_id is not null and not scl_owner_id = 1)");
+                    "left join sequence ct on concat('tok:',tok_id) = ANY(ct.seq_entity_ids) ".
+                    "left join sequence pt on concat('seq:',ct.seq_id) = ANY(pt.seq_entity_ids) ".
+                    "left join edition on pt.seq_id = ANY(edn_sequence_ids) ".
+         "where tok_id = $tokIDs and scl_segment_id is not null and ".
+                "p.seq_id = ANY(edn_sequence_ids) and not scl_owner_id = 1)");
     }
     //lineOrd is position in edition while ord is multiple derived edition ordering of the same line
     return join(" union all ",$subQueries)." order by lineOrd,sylOrd,ord;";
@@ -3549,7 +3553,11 @@ function getToksBoundaryQueryString($tokIDs){
                       "left join segment on seg_id = scl_segment_id ".
                       "left join sequence c on concat('scl:',scl_id) = ANY(c.seq_entity_ids) ".
                       "left join sequence p on concat('seq:',c.seq_id) = ANY(p.seq_entity_ids) ".
-           "where tok_id = $tokIDs and scl_segment_id is not null and not scl_owner_id = 1 ".
+                      "left join sequence ct on concat('tok:',tok_id) = ANY(ct.seq_entity_ids) ".
+                      "left join sequence pt on concat('seq:',ct.seq_id) = ANY(pt.seq_entity_ids) ".
+                      "left join edition on pt.seq_id = ANY(edn_sequence_ids) ".
+           "where tok_id = $tokIDs and scl_segment_id is not null and ".
+                  "p.seq_id = ANY(edn_sequence_ids) and not scl_owner_id = 1 ".
     //lineOrd is position in edition while ord is multiple derived edition ordering of the same line
            "order by lineOrd,sylOrd,ord;";
   }
@@ -3799,7 +3807,7 @@ function addSequenceLabelToLookup($seqID) {
   return $firstGraID;
 }
 
-function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $refresh = false) {
+function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $refresh = false, $isMultiText = false) {
   global $graID2StructureInlineLabels;
   if (!$edition || $edition->hasError()) {
     return null;
@@ -4040,8 +4048,9 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
       }
     }
 
-    $graID2StructureInlineLabels = array();
-
+    if (!$isMultiText) {
+      $graID2StructureInlineLabels = array();
+    }
 
     $analysisSeqTypeID = Entity::getIDofTermParentLabel('analysis-sequencetype');// warning!!! term dependency
     $analSeqIDQuery = "select seq_id from sequence ".

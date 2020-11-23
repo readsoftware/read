@@ -329,7 +329,7 @@
     * @return TextMetadatas iterator with all textmetadatas linked to this text
     */
     public function getTextMetadatas() {
-      if (count($this->getReplacementIDs())>0) {
+      if ($this->_replacement_ids && count($this->getReplacementIDs())>0) {
         $condition = "not tmd_owner_id = 1 and tmd_text_id in (".join(",",$this->getReplacementIDs()).")";
       }else{
         $condition = "not tmd_owner_id = 1 and tmd_text_id = ".$this->_id;
@@ -365,7 +365,7 @@
     * @return Editions iterator with all editions linked to this text
     */
     public function getEditions() {
-      if ($this->getReplacementIDs() && count($this->getReplacementIDs())>0) {
+      if ($this->_replacement_ids && count($this->getReplacementIDs())>0) {
         $condition = "not edn_owner_id = 1 and edn_text_id in (".join(",",$this->getReplacementIDs()).")";
       }else{
         $condition = "not edn_owner_id = 1 and edn_text_id = ".$this->_id;
@@ -403,7 +403,7 @@
     * @return Surfaces iterator with all surfaces linked to this text
     */
     public function getSurfaces() {
-      if (count($this->getReplacementIDs())>0) {
+      if (false && $this->_replacement_ids && count($this->getReplacementIDs())>0) {
         // TODO correct this for getting intersection.
         //$condition = "srf_text_ids in (".join(",",$this->getReplacementIDs()).")";
       }else{

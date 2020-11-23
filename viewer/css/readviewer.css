@@ -315,6 +315,12 @@ body.showTOC .tocNavPanel {
   cursor: pointer;
 }
 
+.textBoundary {
+  font-weight: bold;
+  font-size: x-large;
+  margin-left: -10px;
+  margin-top: 10px;
+}
 .blnBoundary, .sideHeader {
   font-weight: bold;
   font-size: larger;
