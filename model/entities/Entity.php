@@ -584,18 +584,25 @@
       if ((!is_array($this->_scratchProperties) || !array_key_exists($key,$this->_scratchProperties)) && !isset($value)) {
         return;
       }
+      $originalScratch = null;
       // property save or sync cases
       if (!is_array($this->_scratchProperties) || !array_key_exists($key,$this->_scratchProperties) || $this->_scratchProperties[$key] != $value) {
         if (!is_array($this->_scratchProperties)) {
+          $originalScratch = $this->_scratchProperties;
           $this->_scratchProperties = array();
         }
-        if (isset($value) && $value !== '') {
+        if (isset($value) && $value !== '' && !is_array($value) && count($value) > 0) {
           $this->_scratchProperties[$key] = $value;
         } else if (array_key_exists($key,$this->_scratchProperties)){
           unset($this->_scratchProperties[$key]);
         }
-        $this->setDataKeyValuePair($this->getGlobalPrefix()."_scratch",json_encode($this->_scratchProperties));
-        $this->_dirty = true;
+        if (count($this->_scratchProperties) == 0 && $originalScratch != null) { // set scratch to null
+          $this->setDataKeyValuePair($this->getGlobalPrefix()."_scratch",null);
+          $this->_dirty = true;
+        } else {
+          $this->setDataKeyValuePair($this->getGlobalPrefix()."_scratch",json_encode($this->_scratchProperties));
+          $this->_dirty = true;
+        }
       }
     }
 

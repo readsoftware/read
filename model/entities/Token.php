@@ -362,12 +362,12 @@
     /**
     * Get Compound's boundary polygons
     *
-    * @param boolean $reCalculate that indicates whether to recalculate Baseline info
+    * @param boolean $autoupdate that indicates whether to autoupdate Baseline info
     * @return array of polygons indexed by baseline id
     */
-    public function getBaselinePolygons($autosave = true) {
-      if (!$this->getScratchProperty("blnPolygons")){
-        $this->updateBaselineInfo($autosave);
+    public function getBaselinePolygons($autoupdate = false) {
+      if ($autoupdate){
+        $this->updateBaselineInfo(true);
       }
       return $this->getScratchProperty("blnPolygons");
     }
@@ -375,12 +375,12 @@
     /**
     * Get Compound's scrolltop info
     *
-    * @param boolean $reCalculate that indicates whether to recalculate Baseline info
+    * @param boolean $autoupdate that indicates whether to autoupdate Baseline info
     * @return array of scrolltop information objects indexed by baseline id
     */
-    public function getScrollTopInfo($autosave = true) {
-      if (!$this->getScratchProperty("blnScrollTopInfo")){
-        $this->updateBaselineInfo($autosave);
+    public function getScrollTopInfo($autoupdate = false) {
+      if ($autoupdate){
+        $this->updateBaselineInfo(true);
       }
       return $this->getScratchProperty("blnScrollTopInfo");
     }

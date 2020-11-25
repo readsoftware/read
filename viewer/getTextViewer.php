@@ -276,6 +276,8 @@
     $exportStaticBaseURL = SITE_BASE_PATH."\/viewer\/exportTextViewer.php?db=".DBNAME.
                             (isset($data['txtID'])?"&txtID=".$data['txtID']:($data['ednID']?"&ednID=".$data['ednID']:"")).
                             (isset($data['multiEd'])?"&multiEd=".$data['multiEd']:"").
+                            (isset($data['multiText'])?"&multiText=".$data['multiText']:"").
+                            (isset($data['itmID'])?"&itmID=".$data['itmID']:"").
                             (isset($data['catID'])?"&catID=".$data['catID']:"").
                             (isset($data['refreshLookUps'])?"&refreshLookUps=".$data['refreshLookUps']:"").
                             (isset($ednIDs)?"&xednIDs=".join(',',$ednIDs):"&xednIDs=$ednID");

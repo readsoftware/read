@@ -917,17 +917,21 @@ function getEntityFootnotesHtml($entity, $refresh = false, $drillDown = true) {
 */
 function addWordToEntityLookups($entity, $refresh = false) {
   global $blnPosByEntTag, $polysByBlnTagTokCmpTag;
-  if (is_numeric($refresh) && $refresh > 1) {
-    $entity->updateBaselineInfo(true);
-  }
-  $polysByBln = $entity->getBaselinePolygons(true);// call once as updates scrolltop at the same time
-  if ($polysByBln && count($polysByBln) > 0) {
-    foreach( $polysByBln as $blnTag => $polygons){
-      $polysByBlnTagTokCmpTag[$blnTag][$entity->getEntityTag()] = $polygons;
+  $prefix = $entity->getEntityTypeCode();
+  if ($prefix == "tok" || $prefix == "cmp" ) {
+    // call update baseline info code if refresh is high enough
+    if (is_numeric($refresh) && $refresh > 1) {
+      $entity->updateBaselineInfo(true);
     }
-  }
-  if ($scrollTopInfo = $entity->getScrollTopInfo(true)) {
-    $blnPosByEntTag['word'][$entity->getEntityTag()] = $scrollTopInfo;
+    $polysByBln = $entity->getBaselinePolygons();// call once as updates scrolltop at the same time
+    if ($polysByBln && count($polysByBln) > 0) {
+      foreach( $polysByBln as $blnTag => $polygons){
+        $polysByBlnTagTokCmpTag[$blnTag][$entity->getEntityTag()] = $polygons;
+      }
+    }
+    if ($scrollTopInfo = $entity->getScrollTopInfo()) {
+      $blnPosByEntTag['word'][$entity->getEntityTag()] = $scrollTopInfo;
+    }
   }
 }
 
@@ -1421,9 +1425,9 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
               $graCnt = count($graIDs);
               //check for start of line headers
               if ($j == 0 && $graCnt) { //start of physical line
-                if (array_key_exists($graIDs[0],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[0]])) {
+                if (INLINEPARTSIDELABEL && array_key_exists($graIDs[0],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[0]])) {
                   $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[0]]['sideMarker'];
-                } else  if ($graCnt > 1 && array_key_exists($graIDs[1],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[1]])) {// case where glottal starts line
+                } else  if (INLINEPARTSIDELABEL && $graCnt > 1 && array_key_exists($graIDs[1],$graID2PSnFMarkerMap) && array_key_exists('sideMarker',$graID2PSnFMarkerMap[$graIDs[1]])) {// case where glottal starts line
                   $physicalLineHtml .= $graID2PSnFMarkerMap[$graIDs[1]]['sideMarker'];
                 }
                 $lineHtmlMarker = null;
@@ -1486,7 +1490,7 @@ function getPhysicalLinesHTML2($linePhysSeqIDs, $graID2WordGID, $refresh = false
                     // switch to new word
                     if (array_key_exists($graID,$graID2WordGID)) {
                       $word = EntityFactory::createEntityFromGlobalID($graID2WordGID[$graID][1]);
-                      addWordToEntityLookups($word, true);  // check for inline structure marker
+                      addWordToEntityLookups($word, $refresh);  // check for inline structure marker
                     }
                     if (isset($graID2StructureInlineLabels) && !$prevGraIsVowelCarrier && 
                         array_key_exists($structLookupGraID,$graID2StructureInlineLabels)) {
@@ -1712,7 +1716,7 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false, $isMultiTe
         $polysByBlnTagTokCmpTag = $cachedEditionData['polysByBlnTagTokCmpTag'];
         //return html
         return json_encode($cachedEditionData['editionHtml']);
-      } else if (!jsonCache || $jsonCache->hasError() || !$jsonCache->getID()) {//need to create a new cache object
+      } else if (!$jsonCache || $jsonCache->hasError() || !$jsonCache->getID()) {//need to create a new cache object
         $jsonCache = new JsonCache();
         $jsonCache->setLabel($cacheKey);
         if (!$edition) {
