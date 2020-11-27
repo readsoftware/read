@@ -490,7 +490,15 @@ EDITORS.threeDVE.prototype = {
    * @return {array} A list of syllable IDs.
    */
   getTokenSyllableIDs: function (tokenID) {
-    return this.dataMgr.entities.tok[tokenID].syllableClusterIDs;
+    var i;
+    var sclIDs = [];
+    var token = this.dataMgr.entities.tok[tokenID];
+    for (i = 0; i < token.syllableClusterIDs.length; i++) {
+      if (sclIDs.indexOf(token.syllableClusterIDs[i]) < 0) {
+        sclIDs.push(token.syllableClusterIDs[i]);
+      }
+    }
+    return sclIDs;
   },
 
   /**
@@ -616,7 +624,7 @@ EDITORS.threeDVE.prototype = {
       if (selectionGIDs.length > 0) {
         if (segID) {
           var annoIndex = tdVE.findAnnotationIndexBySegID(selectionGIDs);
-          if (annoIndex) {
+          if (annoIndex !== null) {
             tdVE.hideAllCurrentAnnotations();
             tdVE.api.showAnnotation(annoIndex, function(err, index) {
               if (!err) {
