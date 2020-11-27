@@ -114,9 +114,9 @@ EDITORS.threeDVE.prototype = {
   /**
    * Create a single annotation in the 3D model.
    *
-   * This method is used to iterate the annotation data to create the annotations.
-   * Once one annotation is created, it will continue to create the next until
-   * all the annotation data are consumed.
+   * This method is used to iterate the annotation data to create the
+   * annotations. Once one annotation is created, it will continue to create
+   * the next until all the annotation data are consumed.
    *
    * @param {string} objLevel The annotation object level, which could be
    *   'syllable', 'token' or 'compound'.
@@ -154,7 +154,8 @@ EDITORS.threeDVE.prototype = {
   /**
    * Refresh the 3D model annotations based on the current object level.
    *
-   * This will hide/show according annotations based on the current object level.
+   * This will hide/show according annotations based on the current object
+   * level.
    */
   refreshAnnotations: function () {
     var i;
@@ -268,14 +269,16 @@ EDITORS.threeDVE.prototype = {
    *   Under each property, there is an array which contains the list of
    *   annotation data for that object level.
    *
-   *   Each annotation data item is an object which has the following properties:
+   *   Each annotation data item is an object which has the following
+   *     properties:
    *
    *   - title: (string) The annotation tooltip title.
    *   - text: (string) The annotation tooltip content.
    *   - coords: (array) The annotation position.
    *   - cameraPosition: (array) The annotation camera position.
    *   - cameraTarget: (array) The annotation camera target.
-   *   - segIDs: (array) The segment IDs associated with the annotation. Each ID
+   *   - segIDs: (array) The segment IDs associated with the annotation. Each
+   *     ID
    *     is in the format of 'segXX'.
    *   - entityID: (string) The entity GID associated with the annotation.
    */
@@ -295,6 +298,10 @@ EDITORS.threeDVE.prototype = {
       var parsedTokID;
       var tokAnoSclID;
       var anoSegIDs;
+      var anoTitle;
+      var anoDescription;
+      var transText;
+      var chayaText;
 
       // Syllable.
       anoData.syllable = [];
@@ -303,10 +310,12 @@ EDITORS.threeDVE.prototype = {
         for (i = 0; i < sclIDs.length; i++) {
           var sclParsedID = this.parseGID(sclIDs[i]);
           if (sclData.hasOwnProperty(sclParsedID.id)) {
+            anoTitle = sclData[sclParsedID.id].sclTrans;
+            anoDescription = sclData[sclParsedID.id].sclTrans;
             for (j = 0; j < sclData[sclParsedID.id].annotations.length; j++) {
               anoData.syllable.push({
-                title: sclData[sclParsedID.id].sclTrans,
-                text: sclData[sclParsedID.id].sclTrans,
+                title: anoTitle,
+                text: anoDescription,
                 coords: sclData[sclParsedID.id].annotations[j].coords.split(','),
                 cameraPosition: sclData[sclParsedID.id].annotations[j].cameraPosition.split(','),
                 cameraTarget: sclData[sclParsedID.id].annotations[j].cameraTarget.split(','),
@@ -333,9 +342,20 @@ EDITORS.threeDVE.prototype = {
             }
           }
           for (j = 0; j < sclData[tokAnoSclID].annotations.length; j++) {
+            anoTitle = this.dataMgr.entities.tok[parsedTokID.id].transcr;
+            anoDescription = this.dataMgr.entities.tok[parsedTokID.id].transcr;
+            transText = this.getTranslationText(tokIDs[i]);
+            if (transText !== null) {
+              anoDescription += '<br /><br />Translation: ' + transText;
+            }
+            chayaText = this.getChayaText(tokIDs[i]);
+            if (chayaText !== null) {
+              anoDescription += '<br /><br />Chaya: ' + chayaText;
+            }
+
             anoData.token.push({
-              title: this.dataMgr.entities.tok[parsedTokID.id].transcr,
-              text: this.dataMgr.entities.tok[parsedTokID.id].transcr,
+              title: anoTitle,
+              text: anoDescription,
               coords: sclData[tokAnoSclID].annotations[j].coords.split(','),
               cameraPosition: sclData[tokAnoSclID].annotations[j].cameraPosition.split(','),
               cameraTarget: sclData[tokAnoSclID].annotations[j].cameraTarget.split(','),
@@ -367,13 +387,26 @@ EDITORS.threeDVE.prototype = {
           }
           for (j = 0; j < sclData[tokAnoSclID].annotations.length; j++) {
             if (parsedTokID.prefix === 'cmp') {
-              tokTrans = this.dataMgr.entities.cmp[parsedTokID.id].transcr;
+              anoTitle = this.dataMgr.entities.cmp[parsedTokID.id].transcr;
+              anoDescription = this.dataMgr.entities.cmp[parsedTokID.id].transcr;
             } else {
-              tokTrans = this.dataMgr.entities.tok[parsedTokID.id].transcr;
+              anoTitle = this.dataMgr.entities.tok[parsedTokID.id].transcr;
+              anoDescription = this.dataMgr.entities.tok[parsedTokID.id].transcr;
             }
+            console.log(tokIDs[i]);
+            transText = this.getTranslationText(tokIDs[i]);
+            console.log(transText);
+            if (transText !== null) {
+              anoDescription += '<br /><br />Translation: ' + transText;
+            }
+            chayaText = this.getChayaText(tokIDs[i]);
+            if (chayaText !== null) {
+              anoDescription += '<br /><br />Chaya: ' + chayaText;
+            }
+
             anoData.compound.push({
-              title: tokTrans,
-              text: tokTrans,
+              title: anoTitle,
+              text: anoDescription,
               coords: sclData[tokAnoSclID].annotations[j].coords.split(','),
               cameraPosition: sclData[tokAnoSclID].annotations[j].cameraPosition.split(','),
               cameraTarget: sclData[tokAnoSclID].annotations[j].cameraTarget.split(','),
@@ -481,6 +514,52 @@ EDITORS.threeDVE.prototype = {
       }
     }
     return tokenIDs;
+  },
+
+  /**
+   * Get the entity annotation text.
+   *
+   * @param {string} entityGID The entity GID.
+   * @param {string} anoTypeID The entity annotation type ID.
+   * @return {string}
+   */
+  getEntityAnnotationText: function (entityGID, anoTypeID) {
+    var annotations = this.dataMgr.entities.ano;
+    var anoText = null;
+    var i;
+    if (annotations) {
+      for (i in annotations) {
+        if (
+            annotations[i].typeID === anoTypeID &&
+            annotations[i].linkedFromIDs &&
+            annotations[i].linkedFromIDs.indexOf(entityGID) >= 0
+        ) {
+          anoText = annotations[i].text;
+          break;
+        }
+      }
+    }
+    return anoText;
+  },
+
+  /**
+   * Get the translation text of an entity.
+   *
+   * @param {string} entityGID The entity GID.
+   * @return {*|string}
+   */
+  getTranslationText: function (entityGID) {
+    return this.getEntityAnnotationText(entityGID, "761");
+  },
+
+  /**
+   * Get the chaya text of an entity.
+   *
+   * @param {string} entityGID The entity GID.
+   * @return {*|string}
+   */
+  getChayaText: function (entityGID) {
+    return this.getEntityAnnotationText(entityGID, "1421");
   },
 
   /**
