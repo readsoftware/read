@@ -591,7 +591,7 @@
           $originalScratch = $this->_scratchProperties;
           $this->_scratchProperties = array();
         }
-        if (isset($value) && $value !== '' && !is_array($value) && count($value) > 0) {
+        if (isset($value) && (!is_array($value) && $value !== '' || is_array($value) && count($value) > 0)) {
           $this->_scratchProperties[$key] = $value;
         } else if (array_key_exists($key,$this->_scratchProperties)){
           unset($this->_scratchProperties[$key]);
