@@ -47,8 +47,34 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   if(!defined("USERNAME")) define("USERNAME","postgres");
   // the connection password for the username above
   if(!defined("PASSWORD")) define("PASSWORD","password");
+
+
+// Constants for service to manage db snapshot and restore
+  // String representing the terminal command used to set environment variables
+  if(!defined("SETENVCMD")) define("SETENVCMD",'export'); //for windows bash use 'set'
+  // String character used in the terminal to separate commands
+  if(!defined("CMDSEPARATOR")) define("CMDSEPARATOR",';');//for windows bash use '&'
+  // String representing the path to the directory used for store READ database snapshot/restore .sql files
+  //if(!defined("READ_FILE_STORE")) define("READ_FILE_STORE",'\\xampp\\readfilestore');//simple script for managing db snapshot and restore
+  // String of path to psql.exe command line executable for database management
+  //if(!defined("PSQL_PATH")) define("PSQL_PATH",'\\xampp\\PostgreSQL\\9.3\\bin');////simple script for managing db snapshot and restore
+
+  // Calculate maximum size for successful upload based on system parameters
+  if(!defined("MAX_UPLOAD_SIZE")) {
+    $maxUpload = intval(ini_get("upload_max_filesize"));
+    $maxPost = intval(ini_get("post_max_size"));
+  // Maximum file size uploadable
+    define("MAX_UPLOAD_SIZE",!ini_get("file_uploads")?'0': ''.min(array($maxPost,$maxUpload)));
+  }
+
+  // String path to service for cropping image, use for clipping segments
+  define("CROP_IMAGE_SERVICE_PATH",SITE_BASE_PATH."/common/php/cropImagePoly.php");
+
+
   // the default visibility usergroup name used when there is not user preference
   if(!defined("DEFAULTVISIBILITY")) define("DEFAULTVISIBILITY","Users");
+
+  //CACHE Settings
   // boolean constant to control the use of general caching
   if(!defined("USECACHE")) define("USECACHE",false);
   // boolean constant to control the use of caching for dynamic READViewer calculation
@@ -83,26 +109,6 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   // Boolean constant to control the sort weights used for text in this system
   //if(!defined("USESKTSORT")) define("USESKTSORT",'1');
 
-// Constants for service to manage db snapshot and restore
-  // String representing the terminal command used to set environment variables
-  if(!defined("SETENVCMD")) define("SETENVCMD",'export'); //for windows bash use 'set'
-  // String character used in the terminal to separate commands
-  if(!defined("CMDSEPARATOR")) define("CMDSEPARATOR",';');//for windows bash use '&'
-  // String representing the path to the directory used for readfilestore snapshot/restore directory
-  //if(!defined("READ_FILE_STORE")) define("READ_FILE_STORE",'\\xampp\\readfilestore');//simple script for managing db snapshot and restore
-  // String of path to psql.exe command line executable for database management
-  //if(!defined("PSQL_PATH")) define("PSQL_PATH",'\\xampp\\PostgreSQL\\9.3\\bin');////simple script for managing db snapshot and restore
-
-  // Calculate maximum size for successful upload based on system parameters
-  if(!defined("MAX_UPLOAD_SIZE")) {
-    $maxUpload = intval(ini_get("upload_max_filesize"));
-    $maxPost = intval(ini_get("post_max_size"));
-  // Maximum file size uploadable
-    define("MAX_UPLOAD_SIZE",!ini_get("file_uploads")?'0': ''.min(array($maxPost,$maxUpload)));
-  }
-
-  // String path to service for cropping image, use for clipping segments
-  define("CROP_IMAGE_SERVICE_PATH",SITE_BASE_PATH."/common/php/cropImagePoly.php");
 
 //Constants for READ viewer/editors configuration options
   // Boolean constant to control the visibility of Lemma Phonetics
@@ -123,6 +129,8 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   define("LAYOUTTOOLSOPENONSTART",1);
   // Boolean constant to control Start state of Sidebar Tools Panel default state 1 = open  0 = collapsed
   define("TOOLSIDEBAROPENONSTART",1);
+  // String used to select the parent term of Ux SyntacticFunction terms
+  define("SYNTAXFUNCTIONLIST",'SyntacticFunction');
 
 //Constants for  READViewer  configuration options
   // Boolean constant to control the use/visibility of the export button on the dynamic READViewer
@@ -155,6 +163,8 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   define("FOOTNOTEMARKER",'n');
   // String template used to create the href link for the lemma
   define("LEMMALINKTEMPLATE",READ_DIR."/plugins/dictionary/?search=%lemval%");
+  // String defining an alternate path to fine the css file for the READ Viewer
+  //define("READVIEWER_CSS_PATH","../plugins/dev/css/readviewer.css"); // must be relative to getTextViewer.php directory
 
 //word location label formatting
   // regular expression string for pattern match on text number used in attestform location labelling
@@ -188,21 +198,22 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   // String used to separate fragment label from side label using this string
   define("FRAGSIDESEPARATOR"," ");
 
-//  if(!defined("READVIEWER_CSS_PATH")) define("READVIEWER_CSS_PATH","../mydirpath/css/myreadviewer.css"); // must be relative to getTextViewer.php directory
+//Configure the 
+  // String indicating the subdirectory where to write the static READ Viewer files
   if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer");
-// to export with separation of project databases use the line below. Also consider
-// symbolic links to READ's viewer support subdirectories css and js in viewer export
-// directory for automatic system update
-// 
-//  if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer/".DBNAME);
+  // to export with separation of project databases use the line below. Also consider
+  // symbolic links to READ's viewer support subdirectories css and js in viewer export
+  // directory for automatic system update
   // 
+  //  if(!defined("VIEWER_EXPORT_SUBDIR")) define("VIEWER_EXPORT_SUBDIR","/readviewer/".DBNAME);
+  // Sting indicating the directory where READ writes the static READ Viewer files 
   if(!defined("VIEWER_EXPORT_PATH")) define("VIEWER_EXPORT_PATH",DOCUMENT_ROOT.VIEWER_EXPORT_SUBDIR);
-  // 
+  // String used to calculate the URL for the static READ Viewer files
   if(!defined("VIEWER_BASE_URL")) define("VIEWER_BASE_URL",SITE_ROOT.VIEWER_EXPORT_SUBDIR);
 
 // Upper Model Configuration constants
   // New Catalog Id No. service URL. 
-      //If present the Item wizard will call the service 
+      //If present the Item wizard will call this service 
       //expexting a json object of key:value pair with the key indicating the category
       //of item and the value a string of the next available inventory number. 
   // New Item Id No. service URL. 

@@ -53,7 +53,7 @@ $errors = array();
 $warnings = array();
 $ednOwnerID = null;
 $status = null;
-$syntaxListTerm = (defined('SYNTAXFUNCTIONLIST')?SYNTAXFUNCTIONLIST:'SyntacticFuntion');
+$syntaxListTerm = (defined('SYNTAXFUNCTIONLIST')?SYNTAXFUNCTIONLIST:'SyntacticFunction');
 $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):$_REQUEST);
 if (!$data) {
   array_push($errors,"invalid json data - decode failed");

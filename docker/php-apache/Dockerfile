@@ -1,7 +1,8 @@
 FROM php:7.3-apache
 
-RUN apt-get update -yqq \
-    && apt-get install -y --no-install-recommends \
+RUN apt-get update -y --fix-missing \
+    && apt-get upgrade -y \
+    && apt-get install -y --fix-missing --no-install-recommends \
     git \
     nano \
     unzip \
@@ -13,16 +14,24 @@ RUN apt-get update -yqq \
     libmagickwand-dev \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
-    libpng-dev \
-  && docker-php-ext-configure gd \
+    libpng-dev
+
+# Install php extension like XDebug to debug php files 
+RUN pecl install xdebug-2.7.2 \
+  && docker-php-ext-enable xdebug
+
+RUN docker-php-ext-configure gd \
     --with-jpeg-dir=/usr/include/ \
     --with-freetype-dir=/usr/include/ \
+  && docker-php-ext-configure gd \
   && docker-php-ext-configure zip \
-  && docker-php-ext-install gd json opcache \
-  && docker-php-ext-install pgsql exif zip
+  && docker-php-ext-install zip
 
-# Install XDebug to debug php files 
-RUN pecl install xdebug
+RUN docker-php-ext-install mbstring \
+  && docker-php-ext-install opcache \
+  && docker-php-ext-install pgsql \
+  && docker-php-ext-install exif
+
 
 # compose will create a shared folder to postgresql tools like pg_dump and psql
 # so they can be used in this container
@@ -44,7 +53,6 @@ RUN sed -E -i -e 's/max_execution_time = 30/max_execution_time = 200/' php.ini \
  && sed -E -i -e 's/upload_max_filesize = 2M/upload_max_filesize = 32000000/' php.ini
 
 # enable xdebug
-RUN docker-php-ext-enable xdebug
 
 # precreate log file for xdebug
 RUN echo " " >> xdebug.log \
@@ -80,7 +88,7 @@ RUN echo "" >> xdebug.ini \
 #
  && echo "xdebug.remote_autostart = 1" >> xdebug.ini \
  && echo "xdebug.remote_host = host.docker.internal" >> xdebug.ini\
- && echo "xdebug.default_enable=1" >> xdebug.ini\
+ && echo "xdebug.default_enable=0" >> xdebug.ini\
  && echo "xdebug.remote_port=9000" >> xdebug.ini\
  && echo "xdebug.remote_connect_back=0" >> xdebug.ini\
  && echo "xdebug.idekey=VSCODE" >> xdebug.ini\
