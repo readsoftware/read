@@ -1,0 +1,94 @@
+text.linktype {
+  font-size: 12px;
+  stroke-width: 0.2pt
+}
+.linkpoint {
+  fill: lightgrey;
+}
+path.pred     {  stroke: blue ;}
+path.sbj      {  stroke:darkgreen;}
+path.obj      {  stroke: darkcyan;}
+path.atr      {  stroke: dodgerblue;}
+path.adv      {  stroke: darkviolet;}
+path.atv-atvv {  stroke: darkorange;}
+path.pnom     {  stroke: chartreuse;}
+path.ocomp    {  stroke: cyan;}
+path.coord    {  stroke: darkolivegreen;}
+path.apos     {  stroke: brown;}
+path.auxp     {  stroke: darkkhaki;}
+path.auxc     {  stroke: darkgoldenrod;}
+path.auxr     {  stroke: forestgreen;}
+path.auxv     {  stroke: indigo;}
+path.new      {  stroke: red;}
+path.unk      {  stroke: darkred;}
+
+
+
+
+textPath.pred     {  fill: blue ;}
+textPath.sbj      {  fill:darkgreen;}
+textPath.obj      {  fill: darkcyan;}
+textPath.atr      {  fill: dodgerblue;}
+textPath.adv      {  fill: darkviolet;}
+textPath.atv-atvv {  fill: darkorange;}
+textPath.pnom     {  fill: chartreuse;}
+textPath.ocomp    {  fill: cyan;}
+textPath.coord    {  fill: darkolivegreen;}
+textPath.apos     {  fill: brown;}
+textPath.auxp     {  fill: darkkhaki;}
+textPath.auxc     {  fill: darkgoldenrod;}
+textPath.auxr     {  fill: forestgreen;}
+textPath.auxv     {  fill: indigo;}
+textPath.new      {  fill: red;}
+textPath.unk      {  fill: darkred;}
+
+
+tspan.marker {
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-weight:normal;
+  font-size: 14px;
+  fill: grey;
+}
+tspan.marker::before{
+  content: "[";
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-weight:normal;
+  font-size: 14px;
+  fill: grey;
+}
+tspan.word {
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-weight:normal;
+  font-size: 14px;
+  fill: black;
+}
+tspan.pos {
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-weight:normal;
+  font-size: 12px;
+  fill: blue;
+}
+tspan.morph {
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-weight:bold;
+  font-size: 8px;
+  fill: green;
+}
+#synfuncselector {
+  width: 50px;
+  font-size: 10px;
+  position: absolute;
+  display: none;
+}
+#texttitle {
+  display: inline-block;
+}
+#textrefresh {
+  display: inline-block;
+  margin-left: 30px;
+}
+#syntaxSave {
+  display: inline-block;
+  margin-left: 15px;
+
+}
