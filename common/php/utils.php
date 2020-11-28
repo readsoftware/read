@@ -3537,16 +3537,13 @@ function getToksBoundaryQueryString($tokIDs){
                     "left join segment on seg_id = scl_segment_id ".
                     "left join sequence c on concat('scl:',scl_id) = ANY(c.seq_entity_ids) ".
                     "left join sequence p on concat('seq:',c.seq_id) = ANY(p.seq_entity_ids) ".
-//                    "left join sequence ct on concat('tok:',tok_id) = ANY(ct.seq_entity_ids) ".
-//                    "left join sequence pt on concat('seq:',ct.seq_id) = ANY(pt.seq_entity_ids) ".
-//                    "left join edition on pt.seq_id = ANY(edn_sequence_ids) ".
          "where tok_id = $tokID and scl_segment_id is not null and ".
-//                "p.seq_id = ANY(edn_sequence_ids) and ".
                 "not scl_owner_id = 1)");
     }
     //lineOrd is position in edition while ord is multiple derived edition ordering of the same line
     return join(" union all ",$subQueries)." order by lineOrd,sylOrd,ord;";
   } else {
+    $tokID = $tokIDs;
     return "select scl_id,seg_baseline_ids,array_position(p.seq_entity_ids::text[],concat('seq:',c.seq_id)::text) as lineOrd, ".
                   "array_position(c.seq_entity_ids::text[],concat('scl:',scl_id)::text) as sylOrd, ".
                   "c.seq_id, seg_scratch::json->>'ordinal' as ord, seg_image_pos ".
@@ -3554,11 +3551,7 @@ function getToksBoundaryQueryString($tokIDs){
                       "left join segment on seg_id = scl_segment_id ".
                       "left join sequence c on concat('scl:',scl_id) = ANY(c.seq_entity_ids) ".
                       "left join sequence p on concat('seq:',c.seq_id) = ANY(p.seq_entity_ids) ".
-//                      "left join sequence ct on concat('tok:',tok_id) = ANY(ct.seq_entity_ids) ".
-//                      "left join sequence pt on concat('seq:',ct.seq_id) = ANY(pt.seq_entity_ids) ".
-//                      "left join edition on pt.seq_id = ANY(edn_sequence_ids) ".
-           "where tok_id = $tokIDs and scl_segment_id is not null and ".
-//                  "p.seq_id = ANY(edn_sequence_ids) and ".
+           "where tok_id = $tokID and scl_segment_id is not null and ".
                   "not scl_owner_id = 1 ".
     //lineOrd is position in edition while ord is multiple derived edition ordering of the same line
            "order by lineOrd,sylOrd,ord;";

@@ -1,43 +1,27 @@
-FROM php:7.4.12-apache
+FROM php:7.3-apache
 
 RUN apt-get update -yqq \
     && apt-get install -y --no-install-recommends \
-        build-essential \
-        apt-utils \
-        zlib1g-dev \
-        libzip-dev \
-        git \
-        nano \
-        unzip \
-        zip \
-        libmagick++-dev \
-        libmagickwand-dev \
-        libpq-dev \
-        libfreetype6-dev \
-        libjpeg62-turbo-dev \
-        libpng-dev \
-        libwebp-dev \ 
-        libxpm-dev 
-
-RUN docker-php-ext-configure gd \
-    --with-jpeg=/usr/include/ \
-    --with-freetype=/usr/include/
-
-RUN docker-php-ext-configure zip
-
-RUN docker-php-ext-install -j$(nproc) \
-      gd \
-      json \
-      opcache \
-  && docker-php-ext-install \
-        pgsql \
-        exif \
-        zip \
-        pdo_pgsql
+    git \
+    nano \
+    unzip \
+    zip \
+    libpq-dev \
+    libzip-dev \
+    zlib1g-dev -y \
+    libmagick++-dev \
+    libmagickwand-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+  && docker-php-ext-configure gd \
+    --with-jpeg-dir=/usr/include/ \
+    --with-freetype-dir=/usr/include/ \
+  && docker-php-ext-configure zip \
+  && docker-php-ext-install gd json opcache \
+  && docker-php-ext-install pgsql exif zip
 
 # Install XDebug to debug php files 
-RUN pecl install imagick-3.4.3
-
 RUN pecl install xdebug
 
 # compose will create a shared folder to postgresql tools like pg_dump and psql
@@ -52,19 +36,15 @@ EXPOSE 80
 
 WORKDIR /usr/local/etc/php
 # create a php.ini file from the development version change to copy php.ini-production => php.ini for production
-RUN cp php.ini-development php.ini \
-  # Update Php Settings
-  && sed -E -i -e 's/max_execution_time = 30/max_execution_time = 200/' php.ini \
-  && sed -E -i -e 's/memory_limit = 128M/memory_limit = 512M/' php.ini \
-  && sed -E -i -e 's/post_max_size = 8M/post_max_size = 35000000/' php.ini \
-  && sed -E -i -e 's/upload_max_filesize = 2M/upload_max_filesize = 35000000/' php.ini
+RUN cp php.ini-development php.ini
+# Update Php Settings
+RUN sed -E -i -e 's/max_execution_time = 30/max_execution_time = 200/' php.ini \
+ && sed -E -i -e 's/memory_limit = 128M/memory_limit = 512M/' php.ini \
+ && sed -E -i -e 's/post_max_size = 8M/post_max_size = 32000000/' php.ini \
+ && sed -E -i -e 's/upload_max_filesize = 2M/upload_max_filesize = 32000000/' php.ini
 
 # enable xdebug
-RUN docker-php-ext-enable xdebug \
-  &&  docker-php-ext-enable imagick
-
-# Clean up
-RUN apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+RUN docker-php-ext-enable xdebug
 
 # precreate log file for xdebug
 RUN echo " " >> xdebug.log \
