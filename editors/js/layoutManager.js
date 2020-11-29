@@ -1298,9 +1298,6 @@ MANAGERS.LayoutManager.prototype = {
               config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype={{type}}';
             }
             config['url'] = basepath + '/plugins/dictionary/index.php?dictionary=' + catCode + '&searchstring=a&searchtype=F&strJSON={"dictionary":"' + catCode + '","mode":"getdictionarystats"}';
-            if (catalog.value == "GD" || catalog.value == "MG") {
-              config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype='+(catalog.value == "MG"?'S':'F');
-            }
             config['entGID'] = entGID;
             this.editors[paneID] = new EDITORS.FrameV(config);
           } else if (catalog.value == "BG") {
