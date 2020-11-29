@@ -393,9 +393,7 @@ EDITORS.threeDVE.prototype = {
               anoTitle = this.dataMgr.entities.tok[parsedTokID.id].transcr;
               anoDescription = this.dataMgr.entities.tok[parsedTokID.id].transcr;
             }
-            console.log(tokIDs[i]);
             transText = this.getTranslationText(tokIDs[i]);
-            console.log(transText);
             if (transText !== null) {
               anoDescription += '<br /><br />Translation: ' + transText;
             }
