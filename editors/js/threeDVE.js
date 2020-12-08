@@ -310,8 +310,8 @@ EDITORS.threeDVE.prototype = {
         for (i = 0; i < sclIDs.length; i++) {
           var sclParsedID = this.parseGID(sclIDs[i]);
           if (sclData.hasOwnProperty(sclParsedID.id)) {
-            anoTitle = sclData[sclParsedID.id].sclTrans;
-            anoDescription = sclData[sclParsedID.id].sclTrans;
+            anoTitle = sclData[sclParsedID.id].sclTrans.replaceAll("ʔ", "");
+            anoDescription = '';
             for (j = 0; j < sclData[sclParsedID.id].annotations.length; j++) {
               anoData.syllable.push({
                 title: anoTitle,
@@ -342,15 +342,15 @@ EDITORS.threeDVE.prototype = {
             }
           }
           for (j = 0; j < sclData[tokAnoSclID].annotations.length; j++) {
-            anoTitle = this.dataMgr.entities.tok[parsedTokID.id].transcr;
-            anoDescription = this.dataMgr.entities.tok[parsedTokID.id].transcr;
+            anoTitle = this.dataMgr.entities.tok[parsedTokID.id].transcr.replaceAll("ʔ", "");
+            anoDescription = '';
             transText = this.getTranslationText(tokIDs[i]);
             if (transText !== null) {
-              anoDescription += '<br /><br />Translation: ' + transText;
+              anoDescription += '<p>Translation: ' + transText + '</p>';
             }
             chayaText = this.getChayaText(tokIDs[i]);
             if (chayaText !== null) {
-              anoDescription += '<br /><br />Chaya: ' + chayaText;
+              anoDescription += '<p>Chaya: ' + chayaText + '</p>';
             }
 
             anoData.token.push({
@@ -387,19 +387,18 @@ EDITORS.threeDVE.prototype = {
           }
           for (j = 0; j < sclData[tokAnoSclID].annotations.length; j++) {
             if (parsedTokID.prefix === 'cmp') {
-              anoTitle = this.dataMgr.entities.cmp[parsedTokID.id].transcr;
-              anoDescription = this.dataMgr.entities.cmp[parsedTokID.id].transcr;
+              anoTitle = this.dataMgr.entities.cmp[parsedTokID.id].transcr.replaceAll("ʔ", "");
             } else {
-              anoTitle = this.dataMgr.entities.tok[parsedTokID.id].transcr;
-              anoDescription = this.dataMgr.entities.tok[parsedTokID.id].transcr;
+              anoTitle = this.dataMgr.entities.tok[parsedTokID.id].transcr.replaceAll("ʔ", "");
             }
             transText = this.getTranslationText(tokIDs[i]);
+            anoDescription = '';
             if (transText !== null) {
-              anoDescription += '<br /><br />Translation: ' + transText;
+              anoDescription += '<p>Translation: ' + transText + '</p>';
             }
             chayaText = this.getChayaText(tokIDs[i]);
             if (chayaText !== null) {
-              anoDescription += '<br /><br />Chaya: ' + chayaText;
+              anoDescription += '<p>Chaya: ' + chayaText + '</p>';
             }
 
             anoData.compound.push({
