@@ -33,9 +33,9 @@
 * The caching app will bring up a check box tree of selected edition or all edition in the database 
 * depending on how it is called
 * 
-* localhost:81/readDev/dev/WordLocations.php?db=gandhari&catID=1&ednIDs=1,2,3,4,5
+* localhost:81/readDev/dev/calcWordLocations.php?db=gandhari&catID=1&ednIDs=1,2,3,4,5
 * or
-* localhost:81/readDev/dev/WordLocations.php?db=gandhari&catID=1
+* localhost:81/readDev/dev/calcWordLocations.php?db=gandhari&catID=1
 * 
 * the glossary catID needs to be supplied in the current version
 * &refresh=n where n is 0,1 or 2 can be added to the url (default is refresh=0)

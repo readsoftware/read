@@ -23,7 +23,7 @@ RUN pecl install xdebug-2.7.2 \
 RUN docker-php-ext-configure gd \
     --with-jpeg-dir=/usr/include/ \
     --with-freetype-dir=/usr/include/ \
-  && docker-php-ext-configure gd \
+  && docker-php-ext-install gd \
   && docker-php-ext-configure zip \
   && docker-php-ext-install zip
 

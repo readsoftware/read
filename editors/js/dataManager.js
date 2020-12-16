@@ -816,11 +816,11 @@ MANAGERS.DataManager.prototype = {
 
 
 /**
-* get text entity id from entity tag
+* get array of catalog ids that contain the given edition id
 *
-* @param string tag Text entity tag
+* @param int ednID edition ID
 *
-*  @returns int | null Text entity id
+*  @returns int[] catIDs array of catalog ids
 */
 
   getCatIDsFromEdnID: function(ednID) {

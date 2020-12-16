@@ -85,7 +85,7 @@ EDITORS.AttrVE.prototype = {
       id = tag.substring(3);
       this.tag = tag;
     }
-    this.showAttrs();
+    this.showAttrs(tag);
     DEBUG.traceExit("setEntity");
   },
 

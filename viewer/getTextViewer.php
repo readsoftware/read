@@ -156,6 +156,15 @@
       }
       $txtID = $text->getID();
     }
+    if (!$catIDs || is_array($catIDs) && count($catIDs) == 0) { //check editions
+      if ($ednID) {
+        $catalogs = new Catalogs("$ednID = ANY(cat_edition_ids)");
+        if ($catalogs && !$catalogs->getError()) {
+          $catalog = $catalogs->current();
+          $catIDs = array($catalog->getID());
+        }
+      }
+    }
     if ($ednIDs && $catIDs) {
       $cntCat = count($catIDs);
       $ednToCatID = array();
