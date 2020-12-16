@@ -978,15 +978,15 @@ EDITORS.SearchVE.prototype = {
         success: function (data, status, xhr) {
               if (typeof data == 'object' && data.success && data.entities) {
                 srchVE.dataMgr.updateLocalCache(data,srchVE.getCursorTextID());
-                if (data && data.entities && data.entities.insert && data.entities.insert.edn) {
+                if (data && data.entities && data.entities.insert && data.entities.insert.bln) {
                   var ednID, text = srchVE.dataMgr.getEntity('txt',srchVE.getCursorTextID());
                   if (text) {
-                    if (!text.ednIDs) {
-                      text.ednIDs = [];
+                    if (!text.blnIDs) {
+                      text.blnIDs = [];
                     }
-                    for (ednID in data.entities.insert.edn) {
-                      if (text.ednIDs.indexOf(ednID) == -1){
-                        text.ednIDs.push(ednID);
+                    for (blnID in data.entities.insert.bln) {
+                      if (text.blnIDs.indexOf(blnID) == -1){
+                        text.blnIDs.push(blnID);
                       }
                     }
                     srchVE.dataMgr.updateTextResourcesCache(text.id);
