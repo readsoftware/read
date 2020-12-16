@@ -109,7 +109,7 @@ if (count($errors) == 0) {
   if (!$baseline || ( $srfID === null && $imgpos === null && $imgID === null)) {
     array_push($errors,"insufficient data to save baseline");
   } else {//use data to update baseline and save
-    if ($srfID !== null) {
+    if ($srfID !== null && $srfID != '') {
       $surface = new Surface($srfID);
     } else if (!$baseline->getSurfaceID() && $txtID) {
       //check if text had existing surface to use
