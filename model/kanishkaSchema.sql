@@ -281,6 +281,74 @@ CREATE INDEX "fki_bibOwner" ON bibliography ("bib_owner_id");
 
 
 
+-- ************* LANGSORT TABLE
+
+DROP TABLE IF EXISTS langsort CASCADE;
+
+CREATE TABLE langsort
+(
+  "srt_id" serial NOT NULL PRIMARY KEY,
+  "srt_iso_name" text NULL,
+  "srt_name" text NULL,
+  "srt_description" text NULL,
+  "srt_lang_weight" text NULL,
+  "modified" TIMESTAMP default CURRENT_TIMESTAMP
+) WITH (
+  OIDS=FALSE
+);
+
+CREATE TRIGGER update_langsort_modtime BEFORE UPDATE OF srt_iso_name ON langsort FOR EACH ROW EXECUTE PROCEDURE update_modified();
+
+ALTER TABLE langsort OWNER TO postgres;
+
+COMMENT ON TABLE langsort IS 'Contains a record storing an orthographic code.';
+COMMENT ON COLUMN langsort."srt_id" IS 'Uniquely identifies a particular langsort.';
+COMMENT ON COLUMN langsort."srt_iso_name" IS 'An iso string to id the language-script-sort_order combination use for the encoding of the orthographic(s).';
+COMMENT ON COLUMN langsort."srt_name" IS 'A human readable name for the language-script-sort_order.';
+COMMENT ON COLUMN langsort."srt_description" IS 'Text that describes the encoding and sorting scheme.';
+COMMENT ON COLUMN langsort."srt_lang_weight" IS 'A string that prepends the weight of an encoding for multi-lang sort cases.';
+
+
+-- Indexes:
+
+
+
+-- ************* ENCODE TABLE
+
+DROP TABLE IF EXISTS encode CASCADE;
+
+CREATE TABLE encode
+(
+  "enc_id" serial NOT NULL PRIMARY KEY,
+  "enc_langsort_id" int NULL,
+  "enc_code" text NULL,
+  "enc_type_id" int NULL,
+  "enc_weight" text NULL,
+  "enc_canonical" text NULL,
+  "enc_attribution_ids" int[] NULL,
+  "modified" TIMESTAMP default CURRENT_TIMESTAMP
+) WITH (
+  OIDS=FALSE
+);
+
+CREATE TRIGGER update_encode_modtime BEFORE UPDATE OF enc_code ON encode FOR EACH ROW EXECUTE PROCEDURE update_modified();
+
+ALTER TABLE encode OWNER TO postgres;
+
+COMMENT ON TABLE encode IS 'Contains a record storing an orthographic code.';
+COMMENT ON COLUMN encode."enc_id" IS 'Uniquely identifies a particular encoding.';
+COMMENT ON COLUMN encode."enc_langsort_id" IS 'Langsort ID that identifies the language-script-sort_order scheme use for this encoding.';
+COMMENT ON COLUMN encode."enc_code" IS 'A string that encode orthographic marking(s).';
+COMMENT ON COLUMN encode."enc_type_id" IS 'Term id for the class/role of this particular encoding used in validation code.';
+COMMENT ON COLUMN encode."enc_weight" IS 'A string that forms the sort weight of this encoding with the format defined by the lang-script-sort_order domain.';
+COMMENT ON COLUMN encode."enc_canonical" IS 'A string canonical form of this encoding for mapping to canonical encoding.';
+COMMENT ON COLUMN encode."enc_attribution_ids" IS 'Link(s) to entity that contains attribution information for this encoding.';
+
+
+-- Indexes:
+
+
+
 -- ************* CACHE TABLE
 
 -- DROP TRIGGER IF EXISTS update_bibliography_modtime ON bibliography;

@@ -27,8 +27,7 @@ RUN docker-php-ext-configure gd \
   && docker-php-ext-configure zip \
   && docker-php-ext-install zip
 
-RUN docker-php-ext-install mbstring \
-  && docker-php-ext-install opcache \
+RUN docker-php-ext-install opcache \
   && docker-php-ext-install pgsql \
   && docker-php-ext-install exif
 

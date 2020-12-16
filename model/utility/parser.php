@@ -1324,10 +1324,16 @@ class Parser {
                   case "N": //Number
                     $typTermID = $this->_termLookups['numbersign-graphemetype'];//term dependency
                     break;
+                  case "L": //Logograph
+                    $typTermID = $this->_termLookups['logograph-graphemetype'];//term dependency
+                    break;
+                  case "A": //Alphabet character
+                    $typTermID = $this->_termLookups['allograph-graphemetype'];//term dependency
+                    break;
                 }
                 if ($typ == "N") {
                   $numberToken = true;
-                }else if (isset($prevNumberTokIndex) && $prevNumberTokIndex) {// non number and had previous number so clear number state info and end any compound
+                } else if (isset($prevNumberTokIndex) && $prevNumberTokIndex) {// non number and had previous number so clear number state info and end any compound
                   $prevNumberTokIndex = $prevNumberTokTempID = null;
                   $cmpIndex = $cmpTempID = null;
                   $numberToken = false;

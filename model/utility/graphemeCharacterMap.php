@@ -42,6 +42,8 @@ $graphemeTypeTermIDMap = array(
 "V" => Entity::getIDofTermParentLabel('vowel-graphemetype'),//term dependency
 "C" => Entity::getIDofTermParentLabel('consonant-graphemetype'),//term dependency
 "O" => Entity::getIDofTermParentLabel('unknown-graphemetype'),//term dependency
+"A" => Entity::getIDofTermParentLabel('allograph-graphemetype'),//term dependency
+"L" => Entity::getIDofTermParentLabel('logograph-graphemetype'),//term dependency
 "I" => Entity::getIDofTermParentLabel('intrasyllablepunctuation-graphemetype'),//term dependency
 "P" => Entity::getIDofTermParentLabel('punctuation-graphemetype'),//term dependency
 "M" => Entity::getIDofTermParentLabel('vowelmodifier-graphemetype'),//term dependency
@@ -396,15 +398,15 @@ $graphemeCharacterMap = array(
 *
 * segmentation use the following state transitions
 * where  S = startSeg, C =Consonant, V = Vowel, VM = V modifier, P = Punctuation,
-*        D = Digit, E = Error and . = missing C or V
+*        N = Number, E = Error, _ = missing C, . = missing V, A = Allograph and L = Logograph
 * S(C)→C(C)→CC(V)→CCV(~VM)→S
 * S(C)→C(C)→CC(V)→CCV(VM)→VM(~VM)→S
 * S(C)→C(C)→CC(.)→CC.(~VM)→S
-* S(C)→C(C)→CC(.)→CC.(VM)→VM(~VM)→S
+* S(C)→C(C)→CC(.)→CC.(VM)→CC.VM(~VM)→S
 * S(C)→C(V)→CV(~VM)→S
-* S(C)→C(V)→CV(VM)→VM(~VM)→S
-* S(C)→C(.)→C.(VM)→VM(~VM)→S
-* S(C)→C(.)→C.→S(~VM)
+* S(C)→C(V)→CV(VM)→CVVM(~VM)→S
+* S(C)→C(.)→C.(VM)→C.VM(~VM)→S
+* S(C)→C(.)→C.(~VM)→S
 * S(V)→V(~VM)→S
 * S(.)→.(~VM && ~V)→S
 * S(.)→.(V)→V(~VM)→S
@@ -412,36 +414,45 @@ $graphemeCharacterMap = array(
 * S(.)→.(VM)→VM(~VM)→S
 * S(V)→V(VM)→VVM(~VM)→S
 * S(P)→P(~VM)→S
-* S(D)→D(~VM)→S
+* S(N)→N(~VM)→S
 * S→*→.→E(.)
 * S→*→VM→E(VM)
 * S→E(VM)
-* S→CC→E(VM|P|D|.|C)
+* S→CC→E(VM|P|N|.|C)
 *
 * Flatten Transissions
 * S(C)→C
 * S(V)→V
+* S(_)→C
 * S(.)→V
 * S(P)→P
-* S(D)→D
+* S(L)→L
+* S(N)→N
 * S(O)→O
 * C(C)→C
 * C(_)→C
 * C(V)→V
 * C(.)→V
 * V(~M)→S
-* V(M)→M
-* M(~M)→S
-* P(~M)→S
-* D(~M)→S
-* O(~M)→S
-* M(M)→E
-* P(M)→E
-* D(M)→E
-* O(M)→E
-* M(M)→E
-* S(M)→E
-* C(M|P|D|O)→E
+* V(VM)→VM
+* L(VM)→E
+* A(A)→A
+* A(~A)→S
+* L(L)→L
+* L(~L)→S
+* VM(~VM)→S
+* P(~VM)→S
+* N(~VM)→S
+* O(~VM)→S
+* VM(VM)→E
+* P(VM)→E
+* A(VM)→E
+* L(VM)→E
+* N(VM)→E
+* O(VM)→E
+* M(VM)→E
+* S(VM)→E
+* C(VM|L|A|P|N|O)→E
 *
 * @param string $curState indicates the current state of segmentation
 * @param string $nextType indicates the type of the next grapheme in sequence
@@ -454,11 +465,37 @@ function getNextSegmentState($curState,$nextType) {
       else return $nextType;
       break;
     case "C"://consonant
-      if ($nextType == "V" || $nextType == "C") return $nextType;
+      if ($nextType == "V" || $nextType == "C" || $nextType == "N") return $nextType;
       return "E";
       break;
     case "V"://vowel
       if ($nextType == "M") return "M";
+      return "S";
+      break;
+    case "N"://Number
+      if ($nextType == "M") {
+        return "E";
+      } else if ($nextType == "N") {//concat digits together
+        return "N";
+      }
+      return "S";
+      break;
+    case "L"://Logograph
+      if ($nextType == "M") {
+        return "E";
+      } else if ($nextType == "L") {//Allow combination of Logograph
+        return "L";
+      } else if ($nextType == "N") {//Allow combination of Logograph with number ending
+        return "N";
+      }
+      return "S";
+      break;
+    case "A"://Alphabetic
+      if ($nextType == "M") {
+        return "E";
+      } else if ($nextType == "A") {//Allow combination of Alphabetic
+        return "A";
+      }
       return "S";
       break;
     case "M"://vowel modifier
@@ -466,8 +503,13 @@ function getNextSegmentState($curState,$nextType) {
       return $nextType;
       break;
     case "I"://IntraSyllable
+      if ($nextType == "M") {
+        return "E";
+      }
+      return $nextType;
+      break;
     case "P"://Punctuation
-    case "N"://Digit
+    case "N"://Number
     case "O"://Other
       if ($nextType == "M") return "E";
       return "S";
