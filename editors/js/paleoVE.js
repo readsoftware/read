@@ -764,7 +764,7 @@ EDITORS.PaleoVE.prototype = {
     //create column header row and append to table
     if (!sktSort) {
       this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr>' +
-        '<td><div class="columnHeader"/></td>' +
+        '<td><div class="col0 columnHeader"/></td>' +
         '<td><div class="columnHeader">a</div></td>' +
         '<td><div class="columnHeader">i</div></td>' +
         '<td><div class="columnHeader">u</div></td>' +
@@ -775,22 +775,22 @@ EDITORS.PaleoVE.prototype = {
       ));
       colNum = 5;
     } else {
-      this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr>' +
-        '<td><div class="columnHeader"/>&nbsp;</td>' +
-        '<td><div class="columnHeader">&nbsp;</div></td>' +
-        '<td><div class="columnHeader">a</div></td>' +
-        '<td><div class="columnHeader">ā</div></td>' +
-        '<td><div class="columnHeader">i</div></td>' +
-        '<td><div class="columnHeader">ī</div></td>' +
-        '<td><div class="columnHeader">u</div></td>' +
-        '<td><div class="columnHeader">ū</div></td>' +
-        '<td><div class="columnHeader">ṛ</div></td>' +
-        '<td><div class="columnHeader">e</div></td>' +
-        '<td><div class="columnHeader">ai</div></td>' +
-        '<td><div class="columnHeader">o</div></td>' +
-        '<td><div class="columnHeader">au</div></td>' +
-        '<td><div class="lastColumnHeader"/></td>' +
-        '</tr></thead>'
+      this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr><td>' +
+        '<div class="col0 columnHeader"/>' +
+        '<div class="noVowel columnHeader">&nbsp;</div>' +
+        '<div class="columnHeader">a</div>' +
+        '<div class="columnHeader">ā</div>' +
+        '<div class="columnHeader">i</div>' +
+        '<div class="columnHeader">ī</div>' +
+        '<div class="columnHeader">u</div>' +
+        '<div class="columnHeader">ū</div>' +
+        '<div class="columnHeader">ṛ</div>' +
+        '<div class="columnHeader">e</div>' +
+        '<div class="columnHeader">ai</div>' +
+        '<div class="columnHeader">o</div>' +
+        '<div class="columnHeader">au</div>' +
+        '<div class="lastColumnHeader"/>' +
+        '</td></tr></thead>'
       ));
       colNum = 12;
     }
@@ -1229,6 +1229,9 @@ function getRowColumnInfo(syllable) {
     sclSort = sclSort.replace(/01$/,"");//remove vowel modifier sort code
     sclSort = sclSort.replace(/24$/,"");//remove vowel modifier sort code
     sclSort = sclSort.replace(/25$/,"");//remove vowel modifier sort code
+    if (sclSort == "0." && sktSort) {
+      sclSort = syllable.sort;
+    }
     if (!sktSort) {
       cOffsetMap = {"a":1,"i":2,"u":3,"e":4,"o":5};
     } else {
@@ -1247,7 +1250,7 @@ function getRowColumnInfo(syllable) {
     } else { // map all single symbol graphemes P, N, O to first column with no header value
       vSort = "";
       cSort = (sclSort.indexOf('0.') == 0 ? sclSort.substring(2): sclSort);
-      columnLabel = "";
+      columnLabel = " ";
       columnOffset = 1;
     }
     if (!cSort.length || cSort == '19') {// vowel only case

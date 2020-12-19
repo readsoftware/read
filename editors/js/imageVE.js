@@ -2425,8 +2425,9 @@ selectPolygons: function () {
         //in link mode and have edition info so call link service
         //sclIDs, segIDs, blnIDs, pattern and ednID
         savedata["ednID"] = linkTargetEdition;
+        savedata["reqBlnID"] = requestSource;
         savedata["blnIDs"] = (blnIDs && blnIDs.length?blnIDs:[imgVE.blnEntity.id]);
-        if (imgVE.autoLinkPatternMode) {// use pattern
+        if (imgVE.autoLinkPatternMode) {// use pattern from configured global linkToSyllablePattern
           savedata["pattern"] = linkToSyllablePattern;
         } else if (sclIDs && sclIDs.length) {
           savedata["sclIDs"] = sclIDs;

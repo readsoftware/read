@@ -181,12 +181,22 @@
 /*  max-height: 450px;*/
   overflow-x: hidden;
 }
+.columnHeader.col0, .noVowel {
+  border: none;
+}
+.columnHeader.col0 {
+  min-width: 95px !important;
+  width: 95px !important;
+}
 .columnHeader{
   background-color: lightgrey;
-  min-width: 98px;
+  min-width: 98px !important;
+  width: 98px !important;
   text-align: center;
   vertical-align: middle;
   min-height: 25px;
+  display: table-cell;
+  border: 1px solid white;
 }
 .tagColumnHeader{
   background-color: lightgrey;

@@ -3077,7 +3077,7 @@ mergeLine: function (direction,cbError) {
         DEBUG.log("err","edition editor in autolink scl to seg mode aborting autolinkord request from source "+ linkSource);
         $('.editContainer').trigger('autoLinkOrdAbort',[this.id,this.autoLinkOrdBln]);
       }
-      ednVE.pendingAutoLinkOrdBln= linkSource;
+      ednVE.pendingAutoLinkOrdBln = linkSource;
       ednVE.pendingAutoLinkOrdMode = (mode == 0?"default":(mode == 1?"start":(mode == 2?"startstop":"multi")));
       //if bln is linked to this text then show highlight
       $(ednVE.editDiv).addClass('autoOrdLinkTarget');

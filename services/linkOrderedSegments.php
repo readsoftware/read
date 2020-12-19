@@ -161,6 +161,12 @@ if (!$data) {
     }
   }
 
+  // request baseline
+  $reqBlnID = null;
+  if (isset($data['reqBlnID'])) {//get requesting baseline id
+    $reqBlnID = $data['reqBlnID'];
+  }
+
   //baseline(s in order)
   $blnIDs = null;
   if (isset($data['blnIDs'])) {//get selection pattern
@@ -175,7 +181,11 @@ if (!$data) {
   }
 
   if (count($blnIDs) == 0) {
-    array_push($errors,"insufficient infomation - must specify at least one baseline");
+    if ($reqBlnID) {
+      $blnIDs = array($reqBlnID);
+    } else {
+      array_push($errors,"insufficient infomation - must specify at least one baseline");
+    }
   }
 
   if (count($errors) == 0) {//check if user specified a start and stop segmentID
@@ -205,17 +215,25 @@ if (!$data) {
         case 0:
           $segIDs = null;
           break;
+        default:
+          // this is case of multiple user selected segIDs in user selection order
       }
     }
 
-    //currently only deal with one baseline at a time.
-    //create query for ordered set of segments
+    if ($segIDs) {
+      //user has selected one or more segments, context is the source baseline
+      $blnIDs = array($reqBlnID);
+    }
+
+    // currently only deal with one baseline at a time.
+    // create query for ordered set of segments
     // get an ordered list of segment IDs for the base lines supplied or for the entire database.
     $query = "select seg_id, seg_baseline_ids[1] as blnID, substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int as ord".
              " from segment".
-             " where substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int is not null and seg_image_pos is not null".
-             " and seg_baseline_ids[1] in (".join(',',$blnIDs).") ";
+             " where seg_baseline_ids[1] in (".join(',',$blnIDs).") and seg_image_pos is not null"; // Todo - update for multipolygon cross baseline segment
     if ($startSegOrd || $endSegOrd) {
+      $query .= " and substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int is not null";
+
       if ($startSegOrd && is_numeric($startSegOrd)) {
         $startSegOrd = intval($startSegOrd);
         $query .= " and substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int >= $startSegOrd";
@@ -224,10 +242,12 @@ if (!$data) {
         $endSegOrd = intval($endSegOrd);
         $query .= " and substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int <= $endSegOrd";
       }
+      $query .= " and not seg_owner_id = 1 order by blnID,ord";
     } else if (count($segIDs)) {
-      $query .= " and seg_id in (".join(",",$segIDs).")";
+      $strSegIDs = join(",",$segIDs);
+      $strSegOrderBy =  "seg_id=".join(",seg_id=",$segIDs);
+      $query .= " and seg_id in ($strSegIDs) and not seg_owner_id = 1 order by $strSegOrderBy ";
     }
-    $query .= " and not seg_owner_id = 1 order by blnID,ord";
     $log .= "query = '$query'\n";
     $dbMgr->query($query);
     $ordSegIDs = array();
@@ -236,12 +256,12 @@ if (!$data) {
       array_push($errors,"no ordinals found in scratch of any segments");
     } else {
       while ($row = $dbMgr->fetchResultRow()) {
-        array_push($ordSegIDs, $row['seg_id']);
+        array_unshift($ordSegIDs, $row['seg_id']);
       }
     }
   }
   $segCnt = count($ordSegIDs);
-  $log .= "segCnt = '$segCnt'\n";
+  $log .= " segCnt = '$segCnt' \n";
   // verify syllable ownership
   $orderedSyllables = array();
 
@@ -259,14 +279,14 @@ if (!$data) {
       break;
     }
     $cntTcmA = 0;
-    //check for scribal addition of entire syllable
+    //check for editorial addition of entire syllable
     foreach ($graphemes as $grapheme){
       if ($grapheme->getTextCriticalMark() == "A") {
         $cntTcmA++;
       }
     }
-    if ($cntTcmA && $cntTcmA == $cntGra) {// scribal addition of aksara
-      array_push($warnings,"syllable $sclID is scribal insertion, skipping");
+    if ($cntTcmA && $cntTcmA == $cntGra) {// editorial addition of aksara
+      array_push($warnings,"syllable $sclID is editorial addition (has no marking), skipping");
       continue;
     }
     array_push($orderedSyllables,$syllable);
