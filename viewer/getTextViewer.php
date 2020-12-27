@@ -159,7 +159,7 @@
     if (!$catIDs || is_array($catIDs) && count($catIDs) == 0) { //check editions
       if ($ednID) {
         $catalogs = new Catalogs("$ednID = ANY(cat_edition_ids)");
-        if ($catalogs && !$catalogs->getError()) {
+        if ($catalogs && !$catalogs->getError() && $catalogs->getCount() > 0) {
           $catalog = $catalogs->current();
           $catIDs = array($catalog->getID());
         }
