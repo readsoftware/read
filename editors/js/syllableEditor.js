@@ -1509,7 +1509,15 @@ EDITORS.sclEditor.prototype = {
         case "I":
         case "P":
           if (posStart == 0 && posEnd == this.state.length - 1 ) {//selection select all
-            this.replaceText(key,"selected","end");
+            if (key == '/') {
+              this.replaceText('///',"selected","end");
+              return false;
+            } else {
+              this.replaceText(key,"selected","end");
+              return false;
+            }
+          } else if (key == "|" && this.curSyl == "|") {
+            this.replaceText(key,"insert","end");
             return false;
           } else {
             UTILITY.beep();
@@ -1525,9 +1533,6 @@ EDITORS.sclEditor.prototype = {
                 key == '+' ||
                 key == '?') {//selection select all
               this.replaceText(key,"selected","end");
-              return false;
-            } else if (key == '/') {
-              this.replaceText('///',"selected","end");
               return false;
             }
           } else if (keyType == 'N' && posStart == this.state.length - 2 && posEnd == this.state.length - 1){
@@ -2462,7 +2467,7 @@ EDITORS.sclEditor.prototype = {
     "❉" :"P",
     "–" :"P",
     "—" :"P",
-    "|" :"P",
+    "|" :"I",
     ":" :"P",
     "⚀" :"P",
     "⚁" :"P",
@@ -2646,8 +2651,8 @@ EDITORS.sclEditor.prototype = {
     "–": { "srt": "890", "typ": "P" },
     "—": { "srt": "890", "typ": "P" },
     "|": {
-      "|": { "srt": "870", "typ": "P" },
-      "srt": "860", "typ": "P" },
+      "|": { "srt": "870", "typ": "I" },
+      "srt": "860", "typ": "I" },
     "◯": { "srt": "821", "typ": "I" },
     ":": { "srt": "803", "typ": "P" },
     "⚀": {"srt": "900","ssrt": "900","typ": "P"},
@@ -2664,7 +2669,7 @@ EDITORS.sclEditor.prototype = {
     "+": { "srt": "953", "typ": "O" },
     "\/": {
       "\/": {
-        "\/": { "srt": "954", "typ": "O" }}},
+        "\/": { "srt": "954", "typ": "I" }}},
     "#": { "srt": "956", "typ": "O" },
     "…": { "srt": "955", "typ": "O" },
     "’": { "srt": "100", "typ": "V" },

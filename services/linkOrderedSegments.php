@@ -228,6 +228,7 @@ if (!$data) {
     // currently only deal with one baseline at a time.
     // create query for ordered set of segments
     // get an ordered list of segment IDs for the base lines supplied or for the entire database.
+    $inOrder = true;
     $query = "select seg_id, seg_baseline_ids[1] as blnID, substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int as ord".
              " from segment".
              " where seg_baseline_ids[1] in (".join(',',$blnIDs).") and seg_image_pos is not null"; // Todo - update for multipolygon cross baseline segment
@@ -243,10 +244,12 @@ if (!$data) {
         $query .= " and substring(seg_scratch from '".'"blnOrdinal":"(\d+)"'."')::int <= $endSegOrd";
       }
       $query .= " and not seg_owner_id = 1 order by blnID,ord";
-    } else if (count($segIDs)) {
+    } else if ($segIDs && count($segIDs)) {
       $strSegIDs = join(",",$segIDs);
       $strSegOrderBy =  "seg_id=".join(",seg_id=",$segIDs);
       $query .= " and seg_id in ($strSegIDs) and not seg_owner_id = 1 order by $strSegOrderBy ";
+    } else {
+      $query .= " and not seg_owner_id = 1 order by blnID,ord";
     }
     $log .= "query = '$query'\n";
     $dbMgr->query($query);
@@ -256,7 +259,11 @@ if (!$data) {
       array_push($errors,"no ordinals found in scratch of any segments");
     } else {
       while ($row = $dbMgr->fetchResultRow()) {
-        array_unshift($ordSegIDs, $row['seg_id']);
+        if ($inOrder) {
+          array_push($ordSegIDs, $row['seg_id']);
+        } else {
+          array_unshift($ordSegIDs, $row['seg_id']);
+        }
       }
     }
   }
@@ -303,7 +310,7 @@ if (!$data) {
         $syllable = array_shift($orderedSyllables);
         $sclID = $syllable->getID();
         $segSclIDs = $segment->getSyllableIDs();
-        if (count($segSclIDs) > 0) {
+        if ($segSclIDs && count($segSclIDs) > 0) {
           foreach ($segSclIDs as $segSclID) {
             if ($segSclID != $sclID && in_array("scl:$segSclID",$orderedSclGIDs)) {//found a syllable already link to this segment so unlink it if possible
               $otherLinkedSyllable = new SyllableCluster($segSclID);
@@ -336,7 +343,7 @@ if (!$data) {
         }
       }
     }
-    if (count($cachePhysLineSeqIDs)>0) {
+    if ($cachePhysLineSeqIDs && count($cachePhysLineSeqIDs)>0) {
       $cachePhysLineSeqIDs = array_unique($cachePhysLineSeqIDs);
       $cacheEdnIDs = array();
       foreach ($cachePhysLineSeqIDs as $physLineSeqID){
@@ -352,7 +359,7 @@ if (!$data) {
         }
         invalidateCachedSeqEntities($physLineSeqID);
       }
-      if (count($cacheEdnIDs)>0) {
+      if ($cacheEdnIDs && count($cacheEdnIDs)>0) {
         $cacheEdnIDs = array_unique($cacheEdnIDs);
         foreach ($cacheEdnIDs as $ednID) {
           invalidateCachedEditionEntities($ednID);
