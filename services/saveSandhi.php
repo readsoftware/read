@@ -123,7 +123,7 @@ if (!$data) {
   if ( isset($data['decomp'])) {//get decomposition string
     $decomp = $data['decomp'];
     if (strlen($decomp)) {
-      $matchCnt = preg_match("/([-‐]|[aāiīïüuūeēoō’l̥̄rṛṝ]+)(?:([\s-‐])([aāiīïüuūeēoō’l̥̄rṛṝ]+))?/",$decomp,$decompParts);
+      $matchCnt = preg_match("/([\‐]|[aāiīïüuūeēoō’l̥̄rṛṝ]+)(?:([\s\‐])([aāiīïüuūeēoō’l̥̄rṛṝ]+))?/",$decomp,$decompParts);
       if ($matchCnt == 1 && $decomp == array_shift($decompParts)) {
         if (count($decompParts) == 1) {
           $decompParts = array("",$decompParts[0],"");
@@ -171,12 +171,12 @@ if (count($errors) == 0 && $graID && $decomp !== null) {
     array_push($errors,"error opening grapheme '".$grapheme->getValue()."' - ".$grapheme->getErrors(true));
   } else {//determine command
     $origDecomp = $grapheme->getDecomposition();
-    if (count($decomp) > 0 && !$origDecomp) {//grapheme doesn't have decomp so add the passed in decomp
+    if ($decomp && strlen($decomp) > 0 && !$origDecomp) {//grapheme doesn't have decomp so add the passed in decomp
       $cmd = "add";
     } else if ($decomp !== $origDecomp) {
       if (strlen($origDecomp) > 0 && strlen($decomp) == 0) {//grapheme has decomp and need to set it to null
         $cmd = 'remove';
-      }else if (count($origDecomp) > 0 && count($decomp)>0) {//grapheme has decomp and need to change it to
+      }else if (strlen($origDecomp) > 0 && strlen($decomp)>0) {//grapheme has decomp and need to change it to
         $cmd = 'change';
       }
     } else {

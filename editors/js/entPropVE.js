@@ -372,7 +372,7 @@ EDITORS.EntityPropVE.prototype = {
 */
 
   createValueDisplay: function() {
-    var entPropVE = this, 
+    var entPropVE = this, $valueInput, $valueLabelDiv,
         valueEditable = (((this.prefix == "cat" || this.prefix == "txt" || this.prefix == "seq") && this.entity && !this.entity.readonly) ||
                          (this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))),
         attrValue = null, value = this.entity.transcr ? this.entity.transcr : (this.entity.value ? this.entity.value : (this.entity.title ? this.entity.title : ""));
@@ -404,32 +404,34 @@ EDITORS.EntityPropVE.prototype = {
     //attach event handlers
       //click to edit
       if (valueEditable) {
-        $('div.valueLabelDiv',this.valueUI).unbind("click").bind("click",function(e) {
+        $valueLabelDiv = $('div.valueLabelDiv',this.valueUI);
+        $valueInput = $('input.valueInput',this.valueUI);
+        $valueLabelDiv.unbind("click").bind("click",function(e) {
           if (!entPropVE.valueUI.hasClass("edit")) {
             $('div.edit',entPropVE.contentDiv).removeClass("edit");
             entPropVE.valueUI.addClass("edit");
           }
-          $('div.valueInputDiv input',this.valueUI).focus();
-          //$('div.valueInputDiv input',this.valueUI).select();
+          $valueInput.focus();
+          //$valueInput.select();
           e.stopImmediatePropagation();
           return false;
         });
         //blur to cancel
-        $('div.valueInputDiv input',this.valueUI).unbind("blur").bind("blur",function(e) {
+        $valueInput.unbind("blur").bind("blur",function(e) {
           if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
               !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
             entPropVE.valueUI.removeClass("edit");
           }
         });
         //stop click in input from propagation
-        $('div.valueInputDiv input',this.valueUI).unbind("click").bind("click",function(e) {
+        $valueInput.unbind("click").bind("click",function(e) {
           e.stopImmediatePropagation();
           return false;
         });
         //mark dirty on input
-        $('div.valueInputDiv input',this.valueUI).unbind("input").bind("input",function(e) {
+        $valueInput.unbind("input").bind("input",function(e) {
           var curInput = $(this).val(), btnText = $('.saveDiv',entPropVE.valueUI).html();
-          if ($('div.valueLabelDiv',this.valueUI).text() != $(this).val()) {
+          if ($valueLabelDiv.text() != $(this).val()) {
             if (!$(this).parent().parent().hasClass("dirty")) {
               $(this).parent().parent().addClass("dirty");
             }
@@ -446,13 +448,35 @@ EDITORS.EntityPropVE.prototype = {
             $('.saveDiv',entPropVE.valueUI).html("Save").css('color','white');
           }
         });
+        // save on enter key
+        $valueInput.unbind("keydown").bind("keydown",function(e) {
+          var val = $(this).val(), btnText = $('.saveDiv',entPropVE.valueUI).html();
+          if (e.keyCode == 13 && val && val.length && val != $valueLabelDiv.text()) {
+            $valueLabelDiv.html(val);
+            $('.propEditUI',entPropVE.valueUI).removeClass('dirty');
+            if (entPropVE.prefix == "seq") {
+                entPropVE.changeSequenceLabel(val);
+            } else if (entPropVE.prefix == "edn") {
+                entPropVE.saveEditionLabel(val);
+            } else if (entPropVE.prefix == "txt") {
+                entPropVE.changeTextTitle(val);
+            } else if (entPropVE.prefix == "cat") {
+                entPropVE.changeCatalogTitle(val);
+            } else {
+              return;
+            }
+            entPropVE.valueUI.removeClass("edit");
+            e.stopImmediatePropagation();
+            return false;
+          }
+        });
         //save data
         $('.saveDiv',this.valueUI).unbind("click").bind("click",function(e) {
           var isSave = ($(this).html()== 'Save'),val,
-              origText = $('div.valueLabelDiv',entPropVE.valueUI).html();
+              origText = $valueLabelDiv.html();
           if ($('.propEditUI',entPropVE.valueUI).hasClass('dirty')) {
-            val = $('div.valueInputDiv input',entPropVE.valueUI).val();
-            $('div.valueLabelDiv',entPropVE.valueUI).html(val);
+            val = $valueInput.val();
+            $valueLabelDiv.html(val);
             $('.propEditUI',entPropVE.valueUI).removeClass('dirty');
             if (isSave) {
               if (entPropVE.prefix == "seq") {
@@ -669,7 +693,7 @@ EDITORS.EntityPropVE.prototype = {
 */
 
   createTextInvDisplay: function() {
-    var entPropVE = this, value = this.entity.CKN ? this.entity.CKN : "";
+    var entPropVE = this, $invInput, $invLabelDiv, value = this.entity.CKN ? this.entity.CKN : "";
     DEBUG.traceEntry("createTextInvDisplay");
 
     //create UI container
@@ -688,29 +712,31 @@ EDITORS.EntityPropVE.prototype = {
     //attach event handlers
       //click to edit
       if (!this.entity.readonly || (this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))) {
-        $('div.valueLabelDiv',this.invUI).unbind("click").bind("click",function(e) {
+        $invInput = $('input.valueInput',this.invUI);
+        $invLabelDiv = $('div.valueLabelDiv',this.invUI);
+        $invLabelDiv.unbind("click").bind("click",function(e) {
           $('div.edit',entPropVE.contentDiv).removeClass("edit");
           entPropVE.invUI.addClass("edit");
-          $('div.valueInputDiv input',this.invUI).focus();
+          $invInput.focus();
           //$('div.valueInputDiv input',this.invUI).select();
           e.stopImmediatePropagation();
           return false;
         });
         //stop click in input from propagation
-        $('div.valueInputDiv input',this.invUI).unbind("click").bind("click",function(e) {
+        $invInput.unbind("click").bind("click",function(e) {
           e.stopImmediatePropagation();
           return false;
         });
         //blur to cancel
-        $('div.valueInputDiv input',this.invUI).unbind("blur").bind("blur",function(e) {
+        $invInput.unbind("blur").bind("blur",function(e) {
           if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
           !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
             entPropVE.invUI.removeClass("edit");
           }
         });
         //mark dirty on input
-        $('div.valueInputDiv input',this.invUI).unbind("input").bind("input",function(e) {
-          if ($('div.valueLabelDiv',this.invUI).text() != $(this).val()) {
+        $invInput.unbind("input").bind("input",function(e) {
+          if ($invLabelDiv.text() != $(this).val()) {
             if (!$(this).parent().parent().hasClass("dirty")) {
               $(this).parent().parent().addClass("dirty");
             }
@@ -718,12 +744,28 @@ EDITORS.EntityPropVE.prototype = {
             $(this).parent().parent().removeClass("dirty");
           }
         });
+        // save on enter key
+        $invInput.unbind("keydown").bind("keydown",function(e) {
+          var val = $(this).val();
+          if (e.keyCode == 13 && val && val.length && val != $invLabelDiv.text()) {
+            $invLabelDiv.html(val);
+            $('.propEditUI',entPropVE.invUI).removeClass('dirty');
+            if (entPropVE.prefix == "txt") {
+                entPropVE.changeTextCKN(val);
+            } else {
+              return;
+            }
+            entPropVE.invUI.removeClass("edit");
+            e.stopImmediatePropagation();
+            return false;
+          }
+        });
         //save data
         $('.saveDiv',this.invUI).unbind("click").bind("click",function(e) {
           var val;
           if ($('.propEditUI',entPropVE.invUI).hasClass('dirty')) {
-            val = $('div.valueInputDiv input',entPropVE.invUI).val();
-            $('div.valueLabelDiv',entPropVE.invUI).html('Inv: '+val);
+            val = $invInput.val();
+            $invLabelDiv.html('Inv: '+val);
             $('.propEditUI',entPropVE.invUI).removeClass('dirty');
             if (entPropVE.prefix == "txt") {
                entPropVE.changeTextCKN(val);
@@ -1385,8 +1427,8 @@ removeLink: function(anoTag) {
 
   createComponentsUI: function() {
     var entPropVE = this, i, j, prefix, id, tag, addBtnLabel = "",
-        treeUnlinkEditionID = this.id+'unlinkededitions', cnt,
-        value, type, entity, entIDs, graIDs;
+        treeUnlinkEditionID = this.id+'unlinkededitions', cnt, $sandhiInput,
+        $sandhiBtn, $sandhiSaveDiv, value, type, entity, entIDs, graIDs;
     if (!this.entity) {
       return;
     }
@@ -1442,61 +1484,88 @@ removeLink: function(anoTag) {
                               '<button class="saveDiv propEditElement">Save</button>'+
                             '</div>'));
           //click to edit
-          $('div.sandhibtn',sandhiUI).unbind("click").bind("click",function(e) {
-            var entTag = $(this).prop('tag'), value = '', graSandhiUI = $(this).parent(),
-                inputElem = $('div.valueInputDiv input',graSandhiUI),
+          $sandhiInput = $('input.valueInput',sandhiUI);
+          $sandhiBtn = $('div.sandhibtn',sandhiUI)
+          $sandhiSaveDiv = $('.saveDiv',sandhiUI)
+          $sandhiBtn.unbind("click").bind("click",function(e) {
+            var entTag = $(this).prop('tag'), $graSandhiUI = $(this).parent(),
+                $valueInput = $graSandhiUI.find('input.valueInput'),
                 entity = entPropVE.dataMgr.getEntityFromGID(entTag);
             if (entity && entity.decomp) {
-              inputElem.val(entity.decomp);
-              $('.saveDiv',sandhiUI).html('Save');
+              $valueInput.val(entity.decomp);
+              $sandhiSaveDiv.html('Save');
             }
             //show edit UI
             $('div.edit',entPropVE.contentDiv).removeClass("edit");
-            graSandhiUI.addClass("edit");//mark component's sandhiUI div
-            inputElem.focus().select();
+            $graSandhiUI.addClass("edit");//mark component's sandhiUI div
+            $valueInput.focus().select();
             e.stopImmediatePropagation();
             return false;
           });
           //blur to cancel
-          $('div.valueInputDiv input',sandhiUI).unbind("blur").bind("blur",function(e) {
+          $sandhiInput.unbind("blur").bind("blur",function(e) {
             if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
             !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
               $(this).parent().parent().parent().removeClass("edit");
             }
           });
           //mark dirty on input
-          $('div.valueInputDiv input',sandhiUI).unbind("input").bind("input",function(e) {
-            var graSandhiUI = $(this).parent().parent().parent(),
-                entTag = $('div.sandhibtn',graSandhiUI).prop('tag'),
+          $sandhiInput.unbind("input").bind("input",function(e) {
+            var $graSandhiUI = $(this).parent().parent().parent(),
+                $sandhiEditUI = $graSandhiUI.find('.sandhiEditUI'),
+                $sandhiBtn = $graSandhiUI.find('.sandhibtn'),
+                $sandhiSaveBtn = $graSandhiUI.find('.saveDiv'),
+                entTag = $sandhiBtn.prop('tag'),
                 entity = entPropVE.dataMgr.getEntityFromGID(entTag),
                 val = $(this).val();
             if (entity &&
                   ((entity.decomp && !val) ||
                    (val &&
                     (!entity.decomp || entity.decomp != val) &&
-                    val.toLowerCase().match(/^([-‐]|[aāiīïüuūeēoō’l̥̄rṛṝ]+|[aāiīïüuūeēoō’l̥̄rṛṝ]+[\s-‐][aāiīïüuūeēoō’l̥̄rṛṝ]+)$/)))) {//todo extract to config for lang-script
-              if (!$(this).parent().parent().hasClass("dirty")) {
-                $(this).parent().parent().addClass("dirty");
+                    val.toLowerCase().match(/^([\‐]|[aāiīïüuūeēoō’l̥̄rṛṝ]+|[aāiīïüuūeēoō’l̥̄rṛṝ]+[\s\‐][aāiīïüuūeēoō’l̥̄rṛṝ]+)$/)))) {//todo extract to config for lang-script
+              if (!$sandhiEditUI.hasClass("dirty")) {
+                $sandhiEditUI.addClass("dirty");
               }
-            } else if ($(this).parent().parent().hasClass("dirty")) {
-              $(this).parent().parent().removeClass("dirty");
+            } else if ($sandhiEditUI.hasClass("dirty")) {
+              $sandhiEditUI.removeClass("dirty");
             }
             if (entity.decomp && (!val || val.length == 0)){
-              $('.saveDiv',sandhiUI).html('Delete').css('color','red');
+              $sandhiSaveBtn.html('Delete').css('color','red');
             } else {
-              $('.saveDiv',sandhiUI).html('Save').css('color','white');
+              $sandhiSaveBtn.html('Save').css('color','white');
+            }
+          });
+          // save on enter key
+          $sandhiInput.unbind("keydown").bind("keydown",function(e) {
+            var $valueInput = $(this),
+                val = $valueInput.val(),
+                $graSandhiUI = $(this).parent().parent().parent(),
+                $sandhiEditUI = $graSandhiUI.find('.sandhiEditUI'),
+                $sandhiBtn = $graSandhiUI.find('.sandhibtn'),
+                entTag = $sandhiBtn.prop('tag');
+            if (e.keyCode == 13 ) {
+              if ($sandhiEditUI.hasClass('dirty')) {
+                $sandhiEditUI.removeClass('dirty');
+                entPropVE.saveSandhi(entTag,val);
+              }
+              $graSandhiUI.removeClass("edit");
+              e.stopImmediatePropagation();
+              return false;
             }
           });
           //save data
           $('.saveDiv',sandhiUI).unbind("click").bind("click",function(e) {
-            var val = '',graSandhiUI = $(this).parent().parent(),
+            var val,
+                $graSandhiUI = $(this).parent().parent(),
+                $valueInput = $graSandhiUI.find('input.valueInput'),
+                $sandhiEditUI = $graSandhiUI.find('.sandhiEditUI'),
                 entTag = $('div.sandhibtn',graSandhiUI).prop('tag');
-            if ($('.sandhiEditUI',graSandhiUI).hasClass('dirty')) {
-              val = $('div.valueInputDiv input',graSandhiUI).val();
-              $('.sandhiEditUI',graSandhiUI).removeClass('dirty');
+            if ($sandhiEditUI.hasClass('dirty')) {
+              val = $valueInput.val();
+              $sandhiEditUI.removeClass('dirty');
               entPropVE.saveSandhi(entTag,val);
             }
-            graSandhiUI.removeClass("edit");
+            $graSandhiUI.removeClass("edit");
             e.stopImmediatePropagation();
             return false;
           });

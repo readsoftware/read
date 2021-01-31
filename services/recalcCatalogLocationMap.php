@@ -18,7 +18,7 @@
   /**
   * recalcCatalogLocationMap.php
   *
-  *  A service that returns recalculates a text:line location map for each token and caches it.
+  *  A service that recalculates a text:line location map for each token and caches it.
   *
   * @author      Stephen White  <stephenawhite57@gmail.com>
   * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
