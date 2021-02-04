@@ -482,11 +482,11 @@ EDITORS.EntityPropVE.prototype = {
               if (entPropVE.prefix == "seq") {
                  entPropVE.changeSequenceLabel(val);
               } else if (entPropVE.prefix == "edn") {
-                 entPropVE.saveEditionLabel(val);
+                entPropVE.saveEditionLabel(val);
               } else if (entPropVE.prefix == "txt") {
-                 entPropVE.changeTextTitle(val);
+                entPropVE.changeTextTitle(val);
               } else if (entPropVE.prefix == "cat") {
-                 entPropVE.changeCatalogTitle(val);
+                entPropVE.changeCatalogTitle(val);
               }
             } else { //delete case
               switch (entPropVE.prefix) {
@@ -1522,7 +1522,7 @@ removeLink: function(anoTag) {
                   ((entity.decomp && !val) ||
                    (val &&
                     (!entity.decomp || entity.decomp != val) &&
-                    val.toLowerCase().match(/^([\‐]|[aāiīïüuūeēoō’l̥̄rṛṝ]+|[aāiīïüuūeēoō’l̥̄rṛṝ]+[\s\‐][aāiīïüuūeēoō’l̥̄rṛṝ]+)$/)))) {//todo extract to config for lang-script
+                    val.toLowerCase().match(/^(-[aāiīïüuūeēoō’l̥̄rṛṝ]{1,2}|[aāiīïüuūeēoō’l̥̄rṛṝ]{1,2}[\s-‐][aāiīïüuūeēoō’l̥̄rṛṝ]{1,2})$/)))) {//todo extract to config for lang-script
               if (!$sandhiEditUI.hasClass("dirty")) {
                 $sandhiEditUI.addClass("dirty");
               }
@@ -1559,7 +1559,7 @@ removeLink: function(anoTag) {
                 $graSandhiUI = $(this).parent().parent(),
                 $valueInput = $graSandhiUI.find('input.valueInput'),
                 $sandhiEditUI = $graSandhiUI.find('.sandhiEditUI'),
-                entTag = $('div.sandhibtn',graSandhiUI).prop('tag');
+                entTag = $('div.sandhibtn',$graSandhiUI).prop('tag');
             if ($sandhiEditUI.hasClass('dirty')) {
               val = $valueInput.val();
               $sandhiEditUI.removeClass('dirty');

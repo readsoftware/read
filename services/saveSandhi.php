@@ -123,7 +123,7 @@ if (!$data) {
   if ( isset($data['decomp'])) {//get decomposition string
     $decomp = $data['decomp'];
     if (strlen($decomp)) {
-      $matchCnt = preg_match("/([\‐]|[aāiīïüuūeēoō’l̥̄rṛṝ]+)(?:([\s\‐])([aāiīïüuūeēoō’l̥̄rṛṝ]+))?/",$decomp,$decompParts);
+      $matchCnt = preg_match("/^(-[aāiīïüuūeēoō’l̥̄rṛṝ]{1,2}|[aāiīïüuūeēoō’l̥̄rṛṝ]{1,2}[‐\s][aāiīïüuūeēoō’l̥̄rṛṝ]{1,2})$/",$decomp,$decompParts);
       if ($matchCnt == 1 && $decomp == array_shift($decompParts)) {
         if (count($decompParts) == 1) {
           $decompParts = array("",$decompParts[0],"");
