@@ -123,7 +123,7 @@ if (!$data) {
   if ( isset($data['decomp'])) {//get decomposition string
     $decomp = $data['decomp'];
     if (strlen($decomp)) {
-      $matchCnt = preg_match("/^(-[aāiīïüuūeēoō’l̥̄rṛṝ]{1,2}|[aāiīïüuūeēoō’l̥̄rṛṝ]{1,2}[‐\s][aāiīïüuūeēoō’l̥̄rṛṝ]{1,2})$/",$decomp,$decompParts);
+      $matchCnt = preg_match("/^([aāiīïüuūeēoō’l̥̄rṛṝ])?(-|\s)([aāiīïüuūeēoō’l̥̄rṛṝ])$/",$decomp,$decompParts);
       if ($matchCnt == 1 && $decomp == array_shift($decompParts)) {
         if (count($decompParts) == 1) {
           $decompParts = array("",$decompParts[0],"");
@@ -391,7 +391,7 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
         addUpdateEntityReturnData('gra',$grapheme->getID(),'decomp',preg_replace("/\:/",'',$grapheme->getDecomposition()));
       }
       if ($token1) {
-        if ($cmd == "update") {
+        if ($cmd == "change") {
           $token1->getValue(true);
           $token1->save();
           addUpdateEntityReturnData('tok',$token1->getID(),'value',$token1->getValue());
@@ -402,7 +402,7 @@ if (count($errors) == 0 && $grapheme && $cmd && $cmd != "NOP") {
         }
       }
       if ($token2) {
-        if ($cmd == "update") {
+        if ($cmd == "change") {
           $token2->getValue(true);
           $token2->save();
           addUpdateEntityReturnData('tok',$token2->getID(),'value',$token2->getValue());
