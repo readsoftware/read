@@ -185,7 +185,7 @@ if (count($errors) == 0) {
     }
   } else {
     if ($fromLinkGIDs && count($fromLinkGIDs) > 0) {
-    array_push($warnings,"warning replacing(".join(',',$fromLinkGIDs).") $linkType links with $fromGID in".$link->getEntityTag());
+      array_push($warnings,"warning replacing(".join(',',$fromLinkGIDs).") $linkType links with $fromGID in".$link->getEntityTag());
     }
     $fromLinkGIDs = array($fromGID);
   }
@@ -205,6 +205,7 @@ if (count($errors) == 0) {
     $linkFromEntity = EntityFactory::createEntityFromGlobalID($fromGID);//assumed to be a tok or cmp  GID
     addUpdateEntityReturnData($linkFromEntity->getEntityTypeCode(),$linkFromEntity->getID(),'relatedEntGIDsByType', $linkFromEntity->getRelatedEntitiesByLinkType());
     //check for syntactic function and store scratch information
+    $linkToEntity = null;
     if (Entity::getTermFromID(Entity::getParentIDFromID($linkTypeID)) == 'SyntacticFunction') {//warning!! term dependency
       $dependencyWord = "";
       if ($toGID) {
@@ -215,7 +216,7 @@ if (count($errors) == 0) {
           $dependencyWord = preg_replace("/ʔ/","",$tempWord);
         }
       }
-      $targetTag = $linkToEntity->getEntityTag();
+      $targetTag = ($linkToEntity?$linkToEntity->getEntityTag():null);
       $linkFromEntity->storeScratchProperty('syntacticRelation',$linkType.' → '.$dependencyWord);
       $linkFromEntity->storeScratchProperty('syntaxData',"{\"type\":\"$linkType\",\"target\":\"$targetTag\"}");
       $linkFromEntity->save();

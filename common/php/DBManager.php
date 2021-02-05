@@ -454,7 +454,7 @@
     * @param type desc
     */
     private function _connect( ) {
-      $this->_dbHandle = @pg_pconnect($this->_conn);
+      $this->_dbHandle = @pg_connect($this->_conn);
       if (!$this->_dbHandle){
         $this->_error = "Unable to connect to database using ".$this->_conn;
         error_log($this->_error);

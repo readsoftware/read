@@ -983,7 +983,7 @@ EDITORS.EntityPropVE.prototype = {
         var sfLinkType = entPropVE.dataMgr.getTermFromID(entPropVE.sfLinkTypeID),
             sfLinkToEntValue;
         if (entPropVE.sfLinkToEntGID) {
-          sfLinkToEntValue = entPropVE.dataMgr.getEntityFromGID(sfLinkToEntGID).value;
+          sfLinkToEntValue = entPropVE.dataMgr.getEntityFromGID(entPropVE.sfLinkToEntGID).value;
         }
         $('div.valueLabelDiv',entPropVE.sfLinkTypeUI).html(sfLinkType+' → '+(sfLinkToEntValue?sfLinkToEntValue:""));
         $('span.addButton',entPropVE.sfLinkTypeUI).html("<u>"+(entPropVE.sfLinkToEntGID?'Change':'Select')+" dependency</u>");
