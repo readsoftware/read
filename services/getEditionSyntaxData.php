@@ -119,7 +119,7 @@ if (!$data) {
             $charAverage = mb_strlen($word->getValue())/count($wrdSclIDs);
             $offset = round($charAverage * $sclIndex);
             $linemarker = $physLineInfosBySclGID[$plStartSclGID];
-            $linemarker['offset'] = $offset;
+            $linemarker['offset'] = $offset;  // approximation of physical line break
           }
         }
 

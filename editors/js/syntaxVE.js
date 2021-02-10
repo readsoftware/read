@@ -59,6 +59,8 @@ EDITORS.SyntaxVE = function(syntaxCfg) {
   this.relType2Index = null;
   this.linemarkerPrefix = '[';
   this.linemarkerSuffix = ']';
+  this.changes = {};
+  this.incompChanges = {};
   this.init();
   return this;
 };
@@ -82,7 +84,10 @@ EDITORS.SyntaxVE.prototype = {
 
 
   getRelTypeClass:  function (type) {
-    return type.replace('/','-').toLowerCase();
+    if (!type){
+      type = 'unk';
+    }
+    return type.replace('/','-').replace('?','unk').toLowerCase();
   //return this.relTypes[this.relType2Index[type]].code;
   },
 
@@ -245,7 +250,7 @@ showProperties: function (bShow) {
     $(syntaxVE.editDiv).unbind('updateselection').bind('updateselection', updateSelectionHandler);
   },
 
-  loadEditionSyntaxData: function(ednID) {
+  loadEditionSyntaxData: function(ednID, cb = null) {
     var syntaxVE = this;
     $.ajax({
       type: 'POST',
@@ -260,7 +265,13 @@ showProperties: function (bShow) {
             syntaxVE.relTypes = data.syntaxInfo;
             syntaxVE.relType2Index = syntaxVE.createRelType2Index();
             syntaxVE.data = data.data;
+            syntaxVE.changes = {};
             syntaxVE.createSyntaxUI();
+            syntaxVE.restoreIncompleteChanges();
+            syntaxVE.redrawSvgLinks(d3.select(`#${syntaxVE.data.nodegrps[0].id}`));
+            if (cb) {
+              cb();
+            }
           } else if (data.errors) {
             alert("An error occurred while trying to load edition "+ ednID +
                   " syntax data.\nError: " + data.errors.join());
@@ -282,21 +293,122 @@ showProperties: function (bShow) {
     }
   },
 
-  refresh: function() {
+  refresh: function(scrollleft = 0) {
     var syntaxVE = this;
     syntaxVE.contentDiv.html("");
-    syntaxVE.loadEditionSyntaxData(syntaxVE.ednID);
+    syntaxVE.loadEditionSyntaxData(syntaxVE.ednID, function(){
+              syntaxVE.d3CanvasDiv.node().scrollLeft = scrollleft;
+    });
+    //todo check which case we need scrolltop
   },
 
-  hasChanges: function() {
+  hasSaveChanges: function() {
+    var syntaxVE = this, cnt=0;
+    for (wrdGID in syntaxVE.changes) {
+      if (!syntaxVE.changes[wrdGID][0].match(/^add\:new(\:|\|\?)/)){
+        cnt++;
+      }
+    }
+    return cnt;
+  },
+
+  hasIncompleteChanges: function() {
+    var syntaxVE = this, cnt=0;
+    for (wrdGID in syntaxVE.changes) {
+      if (syntaxVE.changes[wrdGID][0].match(/^add\:new(\:|\|\?)/)){
+        cnt++;
+      }
+    }
+    return cnt;
+  },
+
+  saveIncompleteChanges: function() {
     var syntaxVE = this;
-    //TODO implement changes array for to be saved also need to track this for delete
-    return true;
+    syntaxVE.incompChanges = {};
+    for (wrdGID in syntaxVE.changes) {
+      if (syntaxVE.changes[wrdGID][0].match(/^add\:new(\:|\|\?)/)){
+        syntaxVE.incompChanges[wrdGID] = syntaxVE.changes[wrdGID];
+      }
+    }
+  },
+
+  restoreIncompleteChanges: function() {
+    var syntaxVE = this, wrdTag, iDist, chngParts,
+        rels, typ, toTag,
+        nodeTag2Index = syntaxVE.data.nodegrps[0].nodeID2Index;
+
+    if (syntaxVE.incompChanges && Object.keys(syntaxVE.incompChanges).length){
+      if (!syntaxVE.changes) {
+        syntaxVE.changes = {};
+      }
+      for (wrdTag in syntaxVE.incompChanges) {
+        syntaxVE.changes[wrdTag] = syntaxVE.incompChanges[wrdTag];
+        chngParts = syntaxVE.incompChanges[wrdTag][0].split(':');
+        typ = chngParts[1].split('|').pop();
+        toTag = chngParts[2].split('|').pop();
+        iDist = Math.abs(nodeTag2Index[wrdTag] - nodeTag2Index[toTag]);
+        //create relation list
+        if (!syntaxVE.data.nodegrps[0].rels) { //create distance list if none
+          syntaxVE.data.nodegrps[0].rels = [];
+        }
+        rels = syntaxVE.data.nodegrps[0].rels;
+        //add relation to list
+        if (!rels[iDist]) {
+          rels[iDist] = [];
+        }
+        rels[iDist].push({
+          from: wrdTag,
+          type: typ,
+          to: toTag,
+          dirty:1
+        });
+      }
+    }
+  },
+
+  getCompleteChanges: function() {
+    var syntaxVE = this,
+        compChanges = {};
+    for (wrdGID in syntaxVE.changes) {
+      if (!syntaxVE.changes[wrdGID][0].match(/^add\:new(\:|\|\?)/)){
+        compChanges[wrdGID] = syntaxVE.changes[wrdGID];
+      }
+    }
+    return compChanges;
   },
 
   save: function() {
-    var syntaxVE = this;
-    //TODO save/update links function
+    var syntaxVE = this,
+        savedata = {};
+    if (syntaxVE.hasSaveChanges()) {
+      DEBUG.log("gen","saving all changes to syntax is under construction");
+      //get savedata
+      savedata['changes'] = syntaxVE.getCompleteChanges();
+      savedata['ednID'] = syntaxVE.ednID;
+      $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        data: savedata,
+        url: basepath+'/services/saveSyntaxChanges.php?db='+dbName,//caution dependency on context having basepath and dbName
+        async: true,
+        success: function (data, status, xhr) {
+            if (typeof data == 'object' && data.success) {
+              syntaxVE.dataMgr.updateLocalCache(data,null);
+              syntaxVE.refresh(syntaxVE.d3CanvasDiv.node().scrollLeft);
+            } else if (data.errors) {
+              alert("An error occurred while trying to load edition "+ ednID +
+                    " syntax data.\nError: " + data.errors.join());
+            }
+          },
+          error: function (xhr,status,error) {
+              // add record failed.
+              alert("An error occurred while trying to load syntax information.\nError: " + error);
+          }
+      });
+    } else {
+      syntaxVE.enableSave(false);
+    }
+//TODO save/update links function
   },
 
   createSyntaxUI: function() {
@@ -316,13 +428,15 @@ showProperties: function (bShow) {
                           .text("Refresh")
                           .on('click', function(){
                             let doRefresh = true;
-                            if (syntaxVE.hasChanges() &&
-                                !confirm("You are about to refresh which will reload the current edition from the "+
-                                    "database. All unsaves changes will be lost. Would you like to proceed?")) {
-                              doRefresh = false;
+                            if (syntaxVE.hasIncompleteChanges() &&
+                                confirm("You are about to refresh which will reload the current edition from the "+
+                                    "database. Would you like keep incomplete changes?")) {
+                              syntaxVE.saveIncompleteChanges();
+                            } else {
+                              syntaxVE.incompChanges = {}
                             }
                             if (doRefresh) {
-                              syntaxVE.refresh();
+                              syntaxVE.refresh(syntaxVE.d3CanvasDiv.node().scrollLeft);
                             }
                           });
 
@@ -332,11 +446,14 @@ showProperties: function (bShow) {
                           .attr('tabindex', "-1")
                           .text("Save")
                           .on('click', function(){
-                                         if (syntaxVE.hasChanges() && 
+                                        if (syntaxVE.hasSaveChanges() &&
                                              confirm("Save all changes?")) {
-                                           syntaxVE.save();
-                                         }
-                                       })
+                                          syntaxVE.saveIncompleteChanges();
+                                          syntaxVE.save();
+                                        } else {
+                                          syntaxVE.enableSave(false);
+                                        }
+                                      })
                           .attr("disabled","disabled");
 
     syntaxVE.d3CanvasDiv = d3UxDiv.append('div')
@@ -361,8 +478,8 @@ showProperties: function (bShow) {
               .data(syntaxVE.relTypes)
               .enter()
                 .append("option")
-                .text(function(relType) { 
-                  return relType.type; 
+                .text(function(relType) {
+                  return relType.type;
                 })
                 .attr("value", function (_, i) {
                   return i;
@@ -395,7 +512,7 @@ showProperties: function (bShow) {
                     .enter()
                     .append('g')
                     .attr('class', nodegrp => nodegrp.id);
-            nodegrp.nodeID2Index = {}; 
+            nodegrp.nodeID2Index = {};
             nodegrp.nodes.forEach((word,i) => {
               word.no = i+1;
               nodegrp.nodeID2Index[word.id] = i;
@@ -418,7 +535,7 @@ showProperties: function (bShow) {
               }
             });
           });
-          
+
     syntaxVE.svgGraphs.each((nodegrp)=> {
             //set start point
             var wLoc = {x:syntaxVE.startOffset.x, y:syntaxVE.startOffset.y},
@@ -487,7 +604,7 @@ showProperties: function (bShow) {
                                   .attr('text-anchor', 'middle')
                                   .attr('x',0)
                                   .attr('y', wLoc.y + 20)
-                                  .text(word.text);
+                                  .text(word.text.replace(/ʔ/g,''));
                 tWidth = parseInt(wordTSpan.node().scrollWidth);
                 wordStartOffsetX = -tWidth/2;
                 if (word.linemarker) {
@@ -518,9 +635,9 @@ showProperties: function (bShow) {
                                     .attr('cx', 0)
                                     .attr('cy', wLoc.y + 65)
                                     .attr('r', 4)
-                                    .on('click',(word,i,n) => { 
+                                    .on('click',(word,i,n) => {
                                       // user clicked on linkpoint circle under a word
-                                      var startLoc, endLoc, svgData = svg.data()[0], word;
+                                      var startLoc, endLoc, svgData = svg.data()[0];
                                       // user selected a source word (clicked on linkpoint circle)
                                       if (!svg.newRel) {
                                         // user selected a source word
@@ -568,7 +685,7 @@ showProperties: function (bShow) {
                                         svg.newRel.type = "new";
                                         iDist = Math.abs(svg.newRel.index - svg.data()[0].nodeID2Index[word.id]);
                                         //create relation list
-                                        if (!svgData.rels) { //create distance list if none 
+                                        if (!svgData.rels) { //create distance list if none
                                           svgData.rels = [];
                                         }
                                         //add relation to list
@@ -576,11 +693,13 @@ showProperties: function (bShow) {
                                           svgData.rels[iDist] = [];
                                         }
                                         svgData.rels[iDist].push({
-                                          from: svg.newRel.from, 
-                                          type: svg.newRel.type, 
+                                          from: svg.newRel.from,
+                                          type: svg.newRel.type,
                                           to: svg.newRel.to,
                                           dirty:1
                                         });
+                                        cmd = 'add:'+svg.newRel.type+':'+svg.newRel.to;
+                                        syntaxVE.addSyntaxChange(svg.newRel.from,cmd);
                                         //update word with relation data
                                         word = svgData.nodes[svg.newRel.index];
                                         if (!word.rel) {
@@ -591,7 +710,9 @@ showProperties: function (bShow) {
                                         //remove rel create data
                                         svg.newpath.remove();
                                         //enable the save button
-                                        syntaxVE.enableSave(true);
+                                        if (syntaxVE.hasSaveChanges()) {
+                                          syntaxVE.enableSave(true);
+                                        }
                                         //redraw all links for correct selection overlay
                                         syntaxVE.redrawSvgLinks(svg);
                                         //clear relation drag temporary data
@@ -609,7 +730,7 @@ showProperties: function (bShow) {
       svg.attr('width', wLoc.x);
     })
 
-    syntaxVE.svgGraphs.data().forEach((nodegrp,i)  => { 
+    syntaxVE.svgGraphs.data().forEach((nodegrp,i)  => {
       var svg = d3.select(`#${nodegrp.id}`);
       syntaxVE.drawSvgLinks(svg);
     });
@@ -617,6 +738,7 @@ showProperties: function (bShow) {
 
   redrawSvgLinks:  function (svg) {
       var syntaxVE = this;
+
       svg.selectAll("text.linktype").remove();
       svg.selectAll("path.linkpath").remove();
 //          .each((_,i,elem) => {
@@ -627,38 +749,111 @@ showProperties: function (bShow) {
       syntaxVE.drawSvgLinks(svg);
   },
 
+  addSyntaxChange:  function(relFrom, cmdStr) {
+    var syntaxVE = this, curCmdStrs, curCmdStr, compCmd,
+        curParts, newParts, cmd1, cmd2, typ1, typ2, trg1, trg2;
+    if (!syntaxVE.changes[relFrom]) {
+      syntaxVE.changes[relFrom]=[cmdStr];
+      DEBUG.log("gen",relFrom+" first command = "+cmdStr);
+    } else {
+      curCmdStrs = syntaxVE.changes[relFrom];
+      if (curCmdStrs.length > 1) {
+        DEBUG.log("gen",relFrom+" has multiple commands stacked"+
+                        curCmdStrs.join(' -> '));
+      }
+      curCmdStr = curCmdStrs.pop();
+      curParts = curCmdStr.split(':');
+      cmd1 = curParts[0];
+      typ1 = curParts[1].split('|')[0];
+      trg1 = curParts[2].split('|')[0];
+      newParts = cmdStr.split(':');
+      cmd2 = newParts[0];
+      typ2 = newParts[1].split('|').pop();
+      trg2 = newParts[2].split('|').pop();
+      switch (cmd1) {
+        case 'add':
+          //add followed by del => NOP
+          if (cmd2 == 'del') {
+            compCmd = null;
+          } else if (cmd2 == 'chng' && trg1 == trg2) {
+            compCmd = 'add:'+typ1+"|"+typ2+':'+trg1;
+          } else {
+            DEBUG.log("err",relFrom+" has "+cmd2+" after add which is not possible");
+          }
+          break;
+        case 'del':
+          //del followed by add => change oldtype to newtype and/or oldtarget to newtarget
+          if (cmd2 == 'add') {
+            compCmd = 'chng:'+typ1+"|"+typ2+':'+(trg1 == trg2?trg1:trg1+'|'+trg2);
+          } else {
+            DEBUG.log("err",relFrom+" has "+cmd2+" after del which is not possible");
+          }
+          break;
+        case 'chng':
+          //chng followed by del => del, chng followed by chng => chng
+          if (cmd2 == 'del') {
+            compCmd = 'del:'+typ1+"|"+typ2+':'+(trg1 == trg2?trg1:trg1+'|'+trg2);
+          } else if (cmd2 == 'chng') {
+            if (typ1 == typ2 && trg1 == trg2) {
+              compCmd = null;
+            } else {
+              compCmd = 'chng:'+typ1+"|"+typ2+':'+(trg1 == trg2?trg1:trg1+'|'+trg2);
+            }
+          } else {
+            DEBUG.log("err",relFrom+" has "+cmd2+" after chng which is not possible");
+          }
+          break;
+      }
+      DEBUG.log("gen",relFrom+" "+curCmdStr+" + "+cmdStr+" = "+compCmd);
+      if (!compCmd){
+        delete syntaxVE.changes[relFrom];
+      } else {
+        syntaxVE.changes[relFrom] = [compCmd];
+      }
+    }
+  },
+
   removeLink:  function (nodegrp, rel, iDist) {
-      var index, word;
+      var syntaxVE = this, index, word;
       //remove from rels
-        index = -1;
-        //find index of relation in nodegrp.rels
-        nodegrp.rels[iDist].forEach((arel,i) => { 
-            if (arel.from == rel.from) { 
-              index=i;
-              return; //found so terminate forEach
-            };
-          });
-        if (index != -1) {
-          nodegrp.rels[iDist].splice(index,1);
-        }
+      index = -1;
+      //find index of relation in nodegrp.rels
+      nodegrp.rels[iDist].forEach((arel,i) => {
+          if (arel.from == rel.from) {
+            index=i;
+            return; //found so terminate forEach
+          };
+        });
+      if (index != -1) {
+        nodegrp.rels[iDist].splice(index,1);
+      }
       //remove from word.rel
-        word = nodegrp.nodes[nodegrp.nodeID2Index[rel.from]];
-        word.rel.from = "";
-        word.rel.type = "";
-        word.rel.target = "";
+      word = nodegrp.nodes[nodegrp.nodeID2Index[rel.from]];
+      word.rel.from = "";
+      word.rel.type = "";
+      word.rel.target = "";
+      //save command to changes
+      cmd = 'del:'+rel.type+':'+rel.to;
+      syntaxVE.addSyntaxChange(rel.from,cmd);
+      //enable the save button
+      if (syntaxVE.hasSaveChanges()) {
+        syntaxVE.enableSave(true);
+      }
+
       //remove text .wrdTag
-        d3.selectAll(`text.linktype.${rel.from}`).remove();
+      d3.selectAll(`text.linktype.${rel.from}`).remove();
       //remove path
-        d3.selectAll(`path#link${rel.from}`).remove();
+      d3.selectAll(`path#link${rel.from}`).remove();
   },
 
   changeLinkType:  function (nodegrp, rel, iDist, newType) {
-      var index, word;
+      var syntaxVE = this, index, word,
+          curType = rel.type;
       //find current from rels
       index = -1;
       //find index of relation in nodegrp.rels
-      nodegrp.rels[iDist].forEach((arel,i) => { 
-          if (arel.from == rel.from) { 
+      nodegrp.rels[iDist].forEach((arel,i) => {
+          if (arel.from == rel.from) {
             index=i;
             return;
           };
@@ -669,9 +864,16 @@ showProperties: function (bShow) {
       } else { // should not get here, but if not relation found abort
         return;
       }
-      //remove from word.rel
+      //change type for word.rel
       word = nodegrp.nodes[nodegrp.nodeID2Index[rel.from]];
       word.rel.type = newType;
+      //add command for change to changes
+      cmd = 'chng:'+curType+'|'+rel.type+':'+rel.to;
+      syntaxVE.addSyntaxChange(rel.from,cmd);
+      //enable the save button
+      if (syntaxVE.hasSaveChanges()) {
+        syntaxVE.enableSave(true);
+      }
   },
 
   drawLink:  function (svg, nodegrp, rel, iDist) {
@@ -722,7 +924,6 @@ showProperties: function (bShow) {
                                         .style("display","block")
                                         .on("change", function() {
                                             //console.log(this,this.getBoundingClientRect());
-                                          
                                             var newType = syntaxVE.relTypes[this.value].type;
                                             if (newType != rel.type) {
                                               syntaxVE.changeLinkType(nodegrp, rel, iDist, newType);
@@ -748,10 +949,10 @@ showProperties: function (bShow) {
       nodegrp.rels.forEach((rels,iDist) => {
         distIndices.push(iDist);
       });
-      distIndices.sort(function(a, b) { 
-        return parseInt(a) > parseInt(b) 
+      distIndices.sort(function(a, b) {
+        return parseInt(a) > parseInt(b)
       }).reverse();
-      distIndices.forEach( iDist => { 
+      distIndices.forEach( iDist => {
         nodegrp.rels[iDist].forEach( rel => {
           syntaxVE.drawLink(svg, nodegrp, rel, iDist);
         });
