@@ -540,7 +540,7 @@ showProperties: function (bShow) {
             //set start point
             var wLoc = {x:syntaxVE.startOffset.x, y:syntaxVE.startOffset.y},
                 svg = d3.select(`#${nodegrp.id}`); //get each svg graph
-            svg.on('mousemove', function() {
+            svg.on('pointermove', function() {
                   var startLoc, endLoc, point = d3.mouse(this);
                   if (svg.dragrel) {
                     //console.log( point) // log the mouse x,y position
@@ -635,7 +635,7 @@ showProperties: function (bShow) {
                                     .attr('cx', 0)
                                     .attr('cy', wLoc.y + 65)
                                     .attr('r', 4)
-                                    .on('click',(word,i,n) => {
+                                    .on('pointerdown',(word,i,n) => {
                                       // user clicked on linkpoint circle under a word
                                       var startLoc, endLoc, svgData = svg.data()[0];
                                       // user selected a source word (clicked on linkpoint circle)
