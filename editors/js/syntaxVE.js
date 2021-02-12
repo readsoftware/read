@@ -462,7 +462,7 @@ showProperties: function (bShow) {
                           .style("overflow","auto")
                           .on('click', function (_,_,elem) {
                                          if (elem != syntaxVE.d3SynFuncSelect.node()) {
-                                          syntaxVE.d3SynFuncSelect.style("display","none");
+                                         // syntaxVE.d3SynFuncSelect.style("display","none");
                                          }
                                        })
                           .on('scroll', function () {
@@ -894,6 +894,9 @@ showProperties: function (bShow) {
           .attr('fill','transparent')
           .attr('d',`M${startLoc.x},${startLoc.y} C${startLoc.x +(reverse?-6*iDist -5:6*iDist+5)},${startLoc.y + cpOffset} ${endLoc.x},${endLoc.y + cpOffset} ${endLoc.x},${endLoc.y + 5}`)
           .attr('marker-end','url(#arrowhead)')
+          .on('pointerover', function() {
+            syntaxVE.d3SynFuncSelect.style("display","none");
+          })
           .on('click', function() {
             if (!svg.dragrel && confirm(`Would you like to remove link from ${nodegrp.nodes[nodegrp.nodeID2Index[rel.from]].text} to ${nodegrp.nodes[nodegrp.nodeID2Index[rel.to]].text} of type ${rel.type} ?`)) {
               syntaxVE.removeLink(nodegrp, rel, iDist);
@@ -912,7 +915,7 @@ showProperties: function (bShow) {
             .attr('side',(reverse?'right':'left'))
             .text(rel.type)
             .attr("transform", `rotate(${(reverse?180:0)},0,0)`)
-            .on('dblclick', function() {
+            .on('pointerover', function() {
                 var relBBox = this.getBoundingClientRect(),
                     offset = syntaxVE.contentDiv.offset(),
                     typeIndex = syntaxVE.relType2Index[this.textContent];

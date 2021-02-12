@@ -3393,7 +3393,9 @@ mergeLine: function (direction,cbError) {
 
     function contentDivMouseLeaveHandler(e) {
       DEBUG.log("event","leave contentDiv of editionVE in "+ednVE.id);
-      ednVE.lastSelection = ednVE.getSelectionEntityGIDs();
+      if (ednVE.editDiv.classList.contains('hasFocus')) {
+        ednVE.lastSelection = ednVE.getSelectionEntityGIDs();
+      }
     }
     $(this.contentDiv).unbind('mouseleave').bind('mouseleave', contentDivMouseLeaveHandler);
 
