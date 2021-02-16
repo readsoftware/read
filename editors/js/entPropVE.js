@@ -373,10 +373,17 @@ EDITORS.EntityPropVE.prototype = {
 
   createValueDisplay: function() {
     var entPropVE = this, $valueInput, $valueLabelDiv,
-        valueEditable = (((this.prefix == "cat" || this.prefix == "txt" || this.prefix == "seq") && this.entity && !this.entity.readonly) ||
+        valueEditable = (((this.prefix == "cat" || this.prefix == "txt" || 
+                           this.prefix == "seg" || this.prefix == "seq") 
+                           && this.entity && !this.entity.readonly) ||
                          (this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))),
-        attrValue = null, value = this.entity.transcr ? this.entity.transcr : (this.entity.value ? this.entity.value : (this.entity.title ? this.entity.title : ""));
+        attrValue = null, value;
     DEBUG.traceEntry("createValueUI");
+    if (this.prefix == 'seg') {
+      value = this.entity.loc ? this.entity.loc  : (this.entity.value ? this.entity.value : "");
+    } else {
+      value  = this.entity.transcr ? this.entity.transcr : (this.entity.value ? this.entity.value : (this.entity.title ? this.entity.title : ""));
+    }
     value = value.replace(/ʔ/g,"");
     if (this.entity.attributionIDs && this.entity.attributionIDs.length &&
           this.dataMgr.entities.atb &&
@@ -460,6 +467,8 @@ EDITORS.EntityPropVE.prototype = {
                 entPropVE.saveEditionLabel(val);
             } else if (entPropVE.prefix == "txt") {
                 entPropVE.changeTextTitle(val);
+            } else if (entPropVE.prefix == "seg") {
+              entPropVE.saveSegmentLocation(val);
             } else if (entPropVE.prefix == "cat") {
                 entPropVE.changeCatalogTitle(val);
             } else {
@@ -485,6 +494,8 @@ EDITORS.EntityPropVE.prototype = {
                 entPropVE.saveEditionLabel(val);
               } else if (entPropVE.prefix == "txt") {
                 entPropVE.changeTextTitle(val);
+              } else if (entPropVE.prefix == "seg") {
+                entPropVE.saveSegmentLocation(val);
               } else if (entPropVE.prefix == "cat") {
                 entPropVE.changeCatalogTitle(val);
               }
@@ -2587,6 +2598,48 @@ removeBln: function(blnTag) {
       });// end ajax
     DEBUG.traceExit("saveEditionLabel");
   },
+
+
+/**
+* save segment location
+*
+* @param string location that identifies the segment's position on the artefact
+*/
+
+saveSegmentLocation: function(loc) {
+  var entPropVE = this, savedata = {},
+      segLabel = 'seg'+entPropVE.entID;
+  DEBUG.traceEntry("saveSegmentLocation");
+    savedata = {segID:entPropVE.entID, loc:loc};
+    //save data
+    $.ajax({
+      dataType: 'json',
+      url: basepath+'/services/saveSegment.php?db='+dbName,
+      data: savedata,
+      asynch: true,
+      success: function (data, status, xhr) {
+        if (typeof data == 'object' && data.success && data.entities) {
+          entPropVE.dataMgr.updateLocalCache(data,null);
+          if (entPropVE.controlVE && entPropVE.controlVE.polygonLookup) {
+            entPropVE.controlVE.polygons[entPropVE.controlVE.polygonLookup[segLabel]-1].loc = loc;
+          }
+//          }
+//          if (entPropVE.entity.txtID) { //updating edition requires to update textResources cache
+//            entPropVE.dataMgr.updateTextResourcesCache(entPropVE.entity.txtID);
+//          }
+          if (data['errors']) {
+            alert("Error(s) occurred while trying to save location to a Segment record. Error(s): " +
+                  data['errors'].join());
+          }
+        }
+      },// end success cb
+      error: function (xhr,status,error) {
+        // add record failed.
+        alert("An error occurred while trying to Save Segment location. Error: " + error);
+      }
+    });// end ajax
+  DEBUG.traceExit("saveSegmentLocation");
+},
 
 
 /**

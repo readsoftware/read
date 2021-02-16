@@ -471,6 +471,7 @@ showProperties: function (bShow) {
 
     syntaxVE.d3SynFuncSelect = syntaxVE.d3CanvasDiv.append('select')
                                 .attr("id","synfuncselector")
+                                .style("width","70px")
                                 .attr('tabindex', "-1");
 
 
@@ -634,7 +635,7 @@ showProperties: function (bShow) {
                                     .attr('class',`linkpoint ${word.id}`)
                                     .attr('cx', 0)
                                     .attr('cy', wLoc.y + 65)
-                                    .attr('r', 4)
+                                    .attr('r', 5)
                                     .on('pointerdown',(word,i,n) => {
                                       // user clicked on linkpoint circle under a word
                                       var startLoc, endLoc, svgData = svg.data()[0];
