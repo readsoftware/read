@@ -92,6 +92,7 @@ class Parser {
             $_textID,
             $_textdivisionID,
             $_publishedID,
+            $_researchID,
             $_idLookup,
             $_sessUid,
             $_breakOnError,
@@ -150,6 +151,7 @@ class Parser {
     $this->_textdivisionID = $this->_termLookups['textdivision-text'];
     $this->_linephysicalID = $this->_termLookups['linephysical-textphysical'];//warning!!! term dependency
     $this->_publishedID = $this->_termLookups['published-editiontype'];//warning!!! term dependency
+    $this->_researchID = $this->_termLookups['research-editiontype'];//warning!!! term dependency
     $this->_idLookup = array();
   }
 
@@ -596,7 +598,7 @@ class Parser {
           $curEdition = new Edition();
           $curEdition->setVisibilityIDs($vis);
           $curEdition->setOwnerID($ownerID);
-          $curEdition->setTypeID($this->_publishedID);
+          $curEdition->setTypeID($this->_researchID);
           $curEdition->setSequenceIDs(array($txtEdTokSeqTempID,$txtEdPhysSeqTempID,$analysisSeqTempID));
           $description = (array_key_exists('editionDescription',$lnCfg)?$lnCfg['editionDescription']:"Edition for $ckn");
           $curEdition->setDescription($description);
@@ -1990,15 +1992,19 @@ class Parser {
 * @param $attr mixed array|string listing the attribution ids for this line
 * @param $ckn string label for the text
 * @param $trid string identifying the table:id this metadata comes from
-* @param $side string indicating the side of the artefact the script is on
-* @param $txtid string mark this text line
+* @param $ktxtid string indicating the id of the text we are parsing the edition of
+* @param $textid string mark this text line
 * @param $mask string label used to identify the line
 * @param $order int identifying the line order within the text
 * @param $scribe string identifying the scribe of this line
-* @param $edition string of an editors transliterated line
+* @param $translit string of an editors transliterated line
+* @param $side string label for surface
+* @param $part string label for part
+* @param $fragment string label for fragment
+* @param $ednDescrip string describing the edition
 * @return array of parser configuration metadata
 */
-function createParserConfig($ownerID = 4,$vis,$attr,$ckn,$trid,$ktxtid,$textid,$mask,$order,$scribe,$edition,$side = null,$part = null,$fragment = null,$ednDescrip = null) {
+function createParserConfig($ownerID = 4,$vis,$attr,$ckn,$trid,$ktxtid,$textid,$mask,$order,$scribe,$translit,$side = null,$part = null,$fragment = null,$ednDescrip = null) {
   $parseConfig = array();
   $parseConfig["ownerID"] =$ownerID;
   $parseConfig["visibilityIDs"] =$vis;
@@ -2047,7 +2053,7 @@ function createParserConfig($ownerID = 4,$vis,$attr,$ckn,$trid,$ktxtid,$textid,$
                                           "CKN" => $ckn,
                                           "AzesTRID" => $trid));
   }
-  $parseConfig["transliteration"] = $edition;
+  $parseConfig["transliteration"] = $translit;
   return $parseConfig;
 }
 

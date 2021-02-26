@@ -138,9 +138,18 @@
     }
   }
 
+  // prep text query condition
+  if ($txtIDs && strlen($txtIDs)) { //param is a string if supplies
+    $condition = "txt_id in ($txtIDs) and not txt_owner_id = 1";
+  } else {
+    $condition = "not txt_owner_id = 1";
+    $isLoadAll = true;
+  }
+
   // call to remove text from cache
   if ($removeTextFromCache && $txtIDs && $jsonRetVal) {
     $curCache = json_decode($jsonRetVal,true);
+    $txtIDs = explode(',',$txtIDs);
     foreach ($txtIDs as $txtID) {
       if (array_key_exists($txtID,$curCache['entities']['insert']['txt'])) {
         unset($curCache['entities']['insert']['txt'][$txtID]);
@@ -161,16 +170,8 @@
     $anoIDs = array();
     $atbIDs = array();
     $orderBy = (defined('TEXT_INV_SORT')?TEXT_INV_SORT:'txt_ckn');
-    if ($txtIDs && strlen($txtIDs)) {
-      if (is_array($txtIDs)){
-        $condition = "txt_id in (".join(',',$txtIDs).") and not txt_owner_id = 1";
-      } else {
-        $condition = "txt_id in ($txtIDs) and not txt_owner_id = 1";
-      }
+    if ($condition) {
       $texts = new Texts($condition,$orderBy,null,null);
-    } else {
-      $texts = new Texts("not txt_owner_id = 1",$orderBy,null,null);
-      $isLoadAll = true;
     }
     $termInfo = getTermInfoForLangCode('en');
     $dictionaryCatalogTypeID = $termInfo['idByTerm_ParentLabel']['dictionary-catalogtype'];//term dependency

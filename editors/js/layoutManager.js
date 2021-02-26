@@ -1709,84 +1709,146 @@ MANAGERS.LayoutManager.prototype = {
   initEditionWizard: function (ckn = null) {
     var layoutMgr = this;
     DEBUG.traceEntry("layoutMgr.initEditionWizard", "");
-    $('#btnEditionValidate').jqxButton({ width: '80px', disabled: true });
-    $('#btnEditionValidate').unbind('click').bind('click', function (e) { layoutMgr.importNewEdition(false); });
-    $('#btnEditionSave').jqxButton({ width: '80px', disabled: false });
-    $('#btnEditionSave').unbind('click').bind('click', function (e) { layoutMgr.importNewEdition(false); });
+    $('#btnImportFreeTextLines').jqxButton({ width: '120px', disabled: true });
+    $('#btnImportFreeTextLines').unbind('click').bind('click', function (e) { layoutMgr.importPlainTextEdition(); });
+    $('#btnEditionValidate').jqxButton({ width: '140px', disabled: false });
+    $('#btnEditionValidate').unbind('click').bind('click', function (e) { layoutMgr.validateNewEdition(false); });
+    $('#btnEditionCommit').jqxButton({ width: '140px', disabled: true });
+    $('#btnEditionCommit').unbind('click').bind('click', function (e) { layoutMgr.validateNewEdition(true); });
     $('#btnEditionWizardCancel').jqxButton({ width: '80px', disabled: false });
     $('#txtInv').val((ckn ? ckn : null));
     $('#ednTitle').val();
-    $('#freetextCheckBox').jqxCheckBox({ width: '150px', checked: true, disabled: true });
-    //    $('#verboseCheckBox').jqxCheckBox({ width: '150px', checked:false});
+    $('#freetextCheckBox').jqxCheckBox({ width: '250px', checked: false});
+    $('#freetextCheckBox').unbind('change').bind('change', function (e) {
+      var checked = e.args.checked;
+      $('#btnEditionCommit').jqxButton({disabled:true});
+      $('#importResultsContent').html("");
+      if (checked) {
+        $('#btnImportFreeTextLines').jqxButton({disabled:false});
+        $('#btnEditionValidate').jqxButton({disabled:true});
+      } else {
+        $('#btnImportFreeTextLines').jqxButton({disabled:true});
+        $('#btnEditionValidate').jqxButton({disabled:false});
+      }
+    });
     DEBUG.traceExit("layoutMgr.initEditionWizard", "");
   },
 
 
 
   /**
-  * import new edition
+  * validate new edition
   */
 
-  importNewEdition: function (saveAfterValidation = false) {
-    DEBUG.traceEntry("layoutMgr.importNewEdition", "");
-    var layoutMgr = this, savedata = {};
-    savedata['txtInv'] = $('#txtInv').val()
-    savedata['ednTitle'] = $('#ednTitle').val(),
-      savedata['transcription'] = $('#transcript').val(),
-      savedata['freetextImport'] = true,
-      savedata['verbose'] = false;
-    savedata['save'] = saveAfterValidation;
-    if (!$('#freetextCheckBox').jqxCheckBox('checked')) {
-      savedata.freetextImport = false;
-    }
-    if ($('#verboseCheckBox').jqxCheckBox('checked')) {
-      savedata.verbose = true;
-    }
-    //make ajax call to create plain Text
-    $.ajax({
-      type: "POST",
-      dataType: 'json',
-      url: basepath + '/services/createPlainTextEdition.php?db=' + dbName,
-      data: savedata,
-      asynch: true,
-      success: function (data, status, xhr) {
-        var srchVE = layoutMgr.editors.searchVE;
-        if (data && data.resultMsg) {
-          $('#importResultsContent').html(data.resultMsg);
-        }
-        if (typeof data == 'object' && data.success && data.entities) {
-          layoutMgr.dataMgr.updateLocalCache(data, srchVE.getCursorTextID());
-          if (data && data.entities && data.entities.insert && data.entities.insert.edn) {
-            var ednID, text = srchVE.dataMgr.getEntity('txt', srchVE.getCursorTextID());
-            if (text) {
-              if (!text.ednIDs) {
-                text.ednIDs = [];
-              }
-              for (ednID in data.entities.insert.edn) {
-                if (text.ednIDs.indexOf(ednID) == -1) {
-                  text.ednIDs.push(ednID);
-                }
-              }
-              srchVE.dataMgr.updateTextResourcesCache(text.id);
-            }
+ validateNewEdition: function (saveAfterValidation = false) {
+  DEBUG.traceEntry("layoutMgr.validateNewEdition", "");
+  var layoutMgr = this, savedata = {},
+      transcr = $('#transcript').val();
+  $('#btnEditionCommit').jqxButton({ disabled: !saveAfterValidation });
+  $('#importResultsContent').val('')
+  if (!transcr) return;
+  savedata['txtInv'] = $('#txtInv').val();
+  savedata['ednTitle'] = $('#ednTitle').val();
+  savedata['transcription'] = transcr;
+  savedata['saveAfterValidation'] = saveAfterValidation?1:0;
+  //make ajax call to create plain Text
+  $.ajax({
+    type: "POST",
+    dataType: 'json',
+    url: basepath + '/services/validateNewEditionString.php?db=' + dbName,
+    data: savedata,
+    asynch: true,
+    success: function (data, status, xhr) {
+      var srchVE = layoutMgr.editors.searchVE;
+      if (data && typeof data == 'object' && data.success) {
+        if (data.validateMsg) {
+          $('#importResultsContent').html(data.validateMsg);
+          $('#btnEditionCommit').jqxButton({ disabled: false });
+        } else if (data.commitMsg) {
+          if (data.txtID) {
+            srchVE.dataMgr.updateTextResourcesCache(data.txtID);
           }
           srchVE.updateCursorInfoBar();
-          $('#btnEditionSave').jqxButton({ disabled: false });
+          $('#btnEditionCommit').jqxButton({ disabled: true });
+          $('#importResultsContent').html(data.commitMsg);
           $('#transcript').val('')
         }
-      },
-      error: function (xhr, status, error) {
-        // parsing text input failed.
-        errStr = "<div class=\"errmsg\">An error occurred while trying to parser text input. Error: " + error + "</div>";
-        $('#importResultsContent').val(errStr);
+      } else {
+        $('#importResultsContent').html(data.errors.join(' '));
+        $('#btnEditionCommit').jqxButton({ disabled: true });
       }
-    });// end ajax
-    DEBUG.traceExit("layoutMgr.importNewEdition", "");
-  },
+    },
+    error: function (xhr, status, error) {
+      // parsing text input failed.
+      errStr = "<div class=\"errmsg\">An error occurred while trying to parser multiline text input. Error: " + error + "</div>";
+      $('#importResultsContent').val(errStr);
+    }
+  });// end ajax
+  DEBUG.traceExit("layoutMgr.validateNewEdition", "");
+},
 
 
 
   /**
+  * import new edition as freetext lines
+  */
+
+ importPlainTextEdition: function () {
+  DEBUG.traceEntry("layoutMgr.importPlainTextEdition", "");
+  var layoutMgr = this, savedata = {},
+      transcr = $('#transcript').val();
+  savedata['txtInv'] = $('#txtInv').val();
+  savedata['ednTitle'] = $('#ednTitle').val();
+  savedata['transcription'] = transcr;
+  if (!$('#freetextCheckBox').jqxCheckBox('checked')) {
+    savedata.freetextImport = false;
+  }
+  //make ajax call to create plain Text
+  $.ajax({
+    type: "POST",
+    dataType: 'json',
+    url: basepath + '/services/createPlainTextEdition.php?db=' + dbName,
+    data: savedata,
+    asynch: true,
+    success: function (data, status, xhr) {
+      var srchVE = layoutMgr.editors.searchVE;
+      if (data && data.resultMsg) {
+        $('#importResultsContent').html(data.resultMsg);
+      }
+      if (typeof data == 'object' && data.success && data.entities) {
+        layoutMgr.dataMgr.updateLocalCache(data, srchVE.getCursorTextID());
+        if (data && data.entities && data.entities.insert && data.entities.insert.edn) {
+          var ednID, text = srchVE.dataMgr.getEntity('txt', srchVE.getCursorTextID());
+          if (text) {
+            if (!text.ednIDs) {
+              text.ednIDs = [];
+            }
+            for (ednID in data.entities.insert.edn) {
+              if (text.ednIDs.indexOf(ednID) == -1) {
+                text.ednIDs.push(ednID);
+              }
+            }
+            srchVE.dataMgr.updateTextResourcesCache(text.id);
+          }
+        }
+        srchVE.updateCursorInfoBar();
+        $('#btnEditionCommit').jqxButton({ disabled: true });
+        $('#btnEditionValidate').jqxButton({ disabled: true });
+        $('#transcript').val('')
+      }
+    },
+    error: function (xhr, status, error) {
+      // parsing text input failed.
+      errStr = "<div class=\"errmsg\">An error occurred while trying create plain freetext edition. Error: " + error + "</div>";
+      $('#importResultsContent').val(errStr);
+    }
+  });// end ajax
+  DEBUG.traceExit("layoutMgr.importPlainTextEdition", "");
+},
+
+
+
+/**
   * create new edition wizard
   */
 

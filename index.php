@@ -206,8 +206,7 @@
       <div class="wzImportOptionsBox">
         <span class="wzOptionsGroupLabel">import option :</span>
         <div id="importOptions" >
-          <div id="freetextCheckBox" class="wzCheckBox">freetext only</div>
-          <div id="verboseCheckBox"  class="wzCheckBox">verbose</div>
+          <div id="freetextCheckBox" class="wzCheckBox"> import as individual freetext lines</div>
         </div>
       </div>
       <div class="wzTextareaBox">
@@ -216,13 +215,14 @@
       </div>
       <div  class="wzButtonBox">
         <div style="float: right">
-          <input type="button" class="wzButton" value="Validate" id="btnEditionValidate" />
-          <input type="button" class="wzButton" value="Save" id="btnEditionSave" />
-          <input type="button" class="wzButton" value="Cancel" id="btnEditionWizardCancel" />
+          <input type="button" class="wzButton" value="Import Lines" id="btnImportFreeTextLines" />
+          <input type="button" class="wzButton" value="Validate Multiline" id="btnEditionValidate" />
+          <input type="button" class="wzButton" value="Commit Multiline" id="btnEditionCommit" />
+          <input type="button" class="wzButton" value="Close" id="btnEditionWizardCancel" />
         </div>
       </div>
       <div class="wzTextareaBox">
-        <div id="importResultsHeader" class="wzInputLabel">Import Results :</div>
+        <div id="importResultsHeader" class="wzInputLabel">Results :</div>
         <div id="importResultsContent"  class="wzResultArea" ></div>
       </div>
     </div>
