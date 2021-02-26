@@ -145,7 +145,7 @@ if (count($errors) == 0) {
     }
   }
 }
-
+$ednIDs = array();
 if (count($errors) == 0 && count($parserConfigs) > 0) {
   $parser = new Parser($parserConfigs);
   $parser->parse();
@@ -157,6 +157,11 @@ if (count($errors) == 0 && count($parserConfigs) > 0) {
     }
   } else if ($saveAfterParse) {
     $parser->saveParseResults();
+
+    foreach($parser->getEditions() as $edition) {
+      array_push($ednIDs, $edition->getID());
+      addNewEntityReturnData('edn',$edition);
+    }
     if ($parser->getErrors()) {
       array_push($errors,"<h2> Saving Errors </h2>");
       foreach ($parser->getErrors() as $error) {
@@ -173,6 +178,7 @@ if (count($errors)) {
 } else {
   $retVal["success"] = true;
   $retVal['txtID'] = $text->getID();
+  $retVal['ednIDs'] = $ednIDs;
   if ($saveAfterParse) {
     $retVal['commitMsg'] = "<div class=\"successMsg\">Text edition '$description' successfully commited.</div>";
   } else  {
