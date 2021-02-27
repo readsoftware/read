@@ -1765,8 +1765,20 @@ MANAGERS.LayoutManager.prototype = {
           $('#importResultsContent').html(data.validateMsg);
           $('#btnEditionCommit').jqxButton({ disabled: false });
         } else if (data.commitMsg) {
-          if (data.txtID) {
-            srchVE.dataMgr.updateTextResourcesCache(data.txtID);
+          layoutMgr.dataMgr.updateLocalCache(data, srchVE.getCursorTextID());
+          if (data && data.entities && data.entities.insert && data.entities.insert.edn) {
+            var ednID, text = srchVE.dataMgr.getEntity('txt', srchVE.getCursorTextID());
+            if (text) {
+              if (!text.ednIDs) {
+                text.ednIDs = [];
+              }
+              for (ednID in data.entities.insert.edn) {
+                if (text.ednIDs.indexOf(ednID) == -1) {
+                  text.ednIDs.push(ednID);
+                }
+              }
+              srchVE.dataMgr.updateTextResourcesCache(text.id);
+            }
           }
           srchVE.updateCursorInfoBar();
           $('#btnEditionCommit').jqxButton({ disabled: true });
