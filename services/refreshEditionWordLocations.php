@@ -16,7 +16,7 @@
 * If not, see <http://www.gnu.org/licenses/>.
 */
   /**
-  * loadCatalogEntities
+  * refreshEditionWordLocations.php
   *
   *  A service that returns a json structure of the catalog (unrestricted type) requested along with its
   *  lemma and the lemma's inflections, compounds, and tokens.

@@ -105,7 +105,7 @@ if ( isset($data['lemIDs'])) {//specifying lemmas
 if ($gcalc) {
   $condition = null;
   if ($graIDs) {
-    $condition = "gra_id in ($graIDs)";
+    $condition = "gra_id in ($graIDs) and not gra_owner_id = 1";
   }
   $graphemes = new Graphemes($condition,null,0,500);
   $graphemes->setAutoAdvance(true);
@@ -123,7 +123,7 @@ if ($gcalc) {
 if ($scalc) {
   $condition = null;
   if ($sclIDs) {
-    $condition = "scl_id in ($sclIDs)";
+    $condition = "scl_id in ($sclIDs) and not scl_owner_id = 1";
   }
   $syllables = new SyllableClusters($condition,null,0,500);
   $syllables->setAutoAdvance(true);
@@ -140,7 +140,7 @@ if ($scalc) {
 if ($tcalc) {
   $condition = null;
   if ($tokIDs) {
-    $condition = "tok_id in ($tokIDs)";
+    $condition = "tok_id in ($tokIDs) and not tok_owner_id = 1";
   }
   $tokens = new Tokens($condition,null,0,500);
   $tokens->setAutoAdvance(true);
@@ -158,7 +158,7 @@ if ($tcalc) {
 if ($lcalc) {
   $condition = null;
   if ($lemIDs) {
-    $condition = "lem_id in ($lemIDs)";
+    $condition = "lem_id in ($lemIDs) and not lem_owner_id = 1";
   }
   $lemmas = new Lemmas($condition,null,0,500);
   $lemmas->setAutoAdvance(true);
@@ -176,7 +176,7 @@ if ($lcalc) {
 if ($ccalc) {
   $condition = "not cmp_id=0";
   if ($cmpIDs) {
-    $condition = "cmp_id in ($cmpIDs)";
+    $condition = "cmp_id in ($cmpIDs) and not cmp_owner_id = 1";
   }
   $compounds = new Compounds($condition,null,0,500);
   $compounds->setAutoAdvance(true);
