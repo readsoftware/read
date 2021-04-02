@@ -25,14 +25,14 @@
 */
 require_once (dirname(__FILE__) . '/../entities/Entity.php');
 //setup internal configuration to ensure that array key lookup works
-if (function_exists('iconv') && PHP_VERSION_ID < 50295)
+if (function_exists('iconv') && PHP_VERSION_ID < 50600)
 {
   // These are settings that can be set inside code
   iconv_set_encoding("internal_encoding", "UTF-8");
   iconv_set_encoding("output_encoding", "UTF-8");
   iconv_set_encoding("input_encoding", "UTF-8");
 }
-else if (PHP_VERSION_ID >= 50295)
+else if (PHP_VERSION_ID >= 50600)
 {
   ini_set('default_charset', 'UTF-8');
 }
@@ -333,8 +333,7 @@ $graphemeCharacterMap = array(
 	"ο"=>array("srt"=>"545","typ"=>"I"),
 	"π"=>array("srt"=>"555","typ"=>"I"),
 	"ρ"=>array("srt"=>"565","typ"=>"I"),
-	"ς"=>array("srt"=>"575","typ"=>"I"),
-	"ϲ"=>array("srt"=>"575","typ"=>"I"),
+	"ϲ"=>array("srt"=>"576","typ"=>"I"),
 	"ϛ"=>array("srt"=>"575","typ"=>"I"),
 	"σ"=>array("srt"=>"585","typ"=>"I"),
 	"τ"=>array("srt"=>"595","typ"=>"I"),
@@ -391,9 +390,9 @@ $graphemeCharacterMap = array(
 * S(C)→C(C)→CC(.)→CC.(~VM)→S
 * S(C)→C(C)→CC(.)→CC.(VM)→CC.VM(~VM)→S
 * S(C)→C(V)→CV(~VM)→S
-* S(C)→C(V)→CV(VM)→VM(~VM)→S
-* S(C)→C(.)→C.(VM)→VM(~VM)→S
-* S(C)→C(.)→C.→S(~VM)
+* S(C)→C(V)→CV(VM)→CVVM(~VM)→S
+* S(C)→C(.)→C.(VM)→C.VM(~VM)→S
+* S(C)→C(.)→C.(~VM)→S
 * S(V)→V(~VM)→S
 * S(.)→.(~VM && ~V)→S
 * S(.)→.(V)→V(~VM)→S
