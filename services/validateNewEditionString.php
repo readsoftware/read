@@ -151,11 +151,17 @@ if (count($errors) == 0 && count($parserConfigs) > 0) {
   $parser->parse();
 
   if ($parser->getErrors()) {
-    array_push($errors,"<h2> Errors </h2>");
     foreach ($parser->getErrors() as $error) {
+      if (!$error) {
+        continue;
+      }
+      if (count($errors) == 0) {
+        array_push($errors,"<h2> Errors </h2>");
+      }
       array_push($errors,"<span style=\"color:red;\">error -   $error </span><br>");
     }
-  } else if ($saveAfterParse) {
+  }
+  if (count($errors) == 0 && $saveAfterParse) {
     $parser->saveParseResults();
 
     foreach($parser->getEditions() as $edition) {
