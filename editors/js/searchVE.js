@@ -378,8 +378,7 @@ EDITORS.SearchVE.prototype = {
   updateResultGrid: function (searchResults) {
     var srchVE = this, txtData, newRow, dataAdapter,
         selectedTxtIDs = {},selectedNewRowIndexes = [],
-        textResults = searchResults.entities.insert.txt,
-        sortedTxtIDs = searchResults.sortOrder,
+        textResults, sortedTxtIDs,
         i,cnt=0,txtID,ckn,dataArray = [];
 //    for (txtID in textResults) {
 //      txtData = textResults[txtID];

@@ -197,7 +197,8 @@
     $anoIDs = array();
     $atbIDs = array();
     //load dictionaries
-    if (isset($termInfo) && array_key_exists("dictionary-catalogtype",$termInfo['idByTerm_ParentLabel'])) {
+    if (isset($termInfo) && isset($termInfo['idByTerm_ParentLabel']) &&
+        array_key_exists("dictionary-catalogtype",$termInfo['idByTerm_ParentLabel'])) {
       $dictCatTypeID = $termInfo['idByTerm_ParentLabel']["dictionary-catalogtype"];//term dependency
       // get all defined dictionaries
       $catalogs = new Catalogs("cat_type_id = $dictCatTypeID",'cat_id',null,null);

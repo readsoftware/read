@@ -44,6 +44,32 @@ services:
     depends_on: 
       - db
 
+#  redis:
+#    image: 'redis:3.0-alpine'
+#    command: redis-server --requirepass devpassword
+#    volumes:
+#      - 'redis:/var/lib/redis/data'
+#    ports:
+#      - '6379:6379'
+
+  readmin:
+    build: ../admin
+    command: >
+      gunicorn -b 0.0.0.0:8000
+        --access-logfile -
+        --reload
+        --workers=2
+        "wsgi:application"
+    environment:
+      PYTHONUNBUFFERED: 'true'
+    volumes:
+      - '../admin:/readadmin'
+      - sharebin:/usr/lib/postgresql/bin # share postgres tools with php server to help maintain databases
+      - ../../../readfilestore:/var/www/readfilestore # path_to_database_sql's:absolute path to apache container of readfilestore
+    ports:
+      - '8001:8000'
+
 volumes: #these volumes will be saved in docker storage until deleted
   sharebin:
   db-data:
+#  redis:

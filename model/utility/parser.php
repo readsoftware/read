@@ -1330,7 +1330,7 @@ class Parser {
                     $typTermID = $this->_termLookups['logograph-graphemetype'];//term dependency
                     break;
                   case "A": //Alphabet character
-                    $typTermID = $this->_termLookups['allograph-graphemetype'];//term dependency
+                    $typTermID = $this->_termLookups['alphabetic-graphemetype'];//term dependency
                     break;
                 }
                 if ($typ == "N") {

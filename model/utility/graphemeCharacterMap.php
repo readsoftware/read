@@ -42,7 +42,7 @@ $graphemeTypeTermIDMap = array(
 "V" => Entity::getIDofTermParentLabel('vowel-graphemetype'),//term dependency
 "C" => Entity::getIDofTermParentLabel('consonant-graphemetype'),//term dependency
 "O" => Entity::getIDofTermParentLabel('unknown-graphemetype'),//term dependency
-"A" => Entity::getIDofTermParentLabel('allograph-graphemetype'),//term dependency
+"A" => Entity::getIDofTermParentLabel('alphabetic-graphemetype'),//term dependency
 "L" => Entity::getIDofTermParentLabel('logograph-graphemetype'),//term dependency
 "I" => Entity::getIDofTermParentLabel('intrasyllablepunctuation-graphemetype'),//term dependency
 "P" => Entity::getIDofTermParentLabel('punctuation-graphemetype'),//term dependency
@@ -194,6 +194,8 @@ $graphemeCharacterMap = array(
 "g"=>array(
     "̱"=>array("srt"=>"291","ssrt"=>"291","typ"=>"C", 
         "̄"=>array("srt"=>"293","ssrt"=>"293","typ"=>"C")), 
+    "̄"=>array("srt"=>"292","ssrt"=>"292","typ"=>"C", 
+        "̱"=>array("srt"=>"293","ssrt"=>"293","typ"=>"C")), 
     "h"=>array("srt"=>"300","ssrt"=>"300","typ"=>"C"),
     "srt"=>"290","ssrt"=>"290","typ"=>"C"),
 "ḡ"=>array(
@@ -231,7 +233,8 @@ $graphemeCharacterMap = array(
     "h"=>array("srt"=>"350","ssrt"=>"350","typ"=>"C"),
     "srt"=>"340","ssrt"=>"340","typ"=>"C"),
 "ĵ"=>array("srt"=>"349","ssrt"=>"349","typ"=>"C"),
-"k"=>array( "̄"=>array("srt"=>"262","ssrt"=>"262","typ"=>"C"),
+"k"=>array( 
+    "̄"=>array("srt"=>"262","ssrt"=>"262","typ"=>"C"),
     "͟" => array( "h"=>array("srt"=>"281","ssrt"=>"281","typ"=>"C")),
     "h"=>array("srt"=>"280","ssrt"=>"280","typ"=>"C"),
     "srt"=>"260","ssrt"=>"260","typ"=>"C"),
@@ -398,7 +401,7 @@ $graphemeCharacterMap = array(
 *
 * segmentation use the following state transitions
 * where  S = startSeg, C =Consonant, V = Vowel, VM = V modifier, P = Punctuation,
-*        N = Number, E = Error, _ = missing C, . = missing V, A = Allograph and L = Logograph
+*        N = Number, E = Error, _ = missing C, . = missing V, A = Alphabetic and L = Logograph
 * S(C)→C(C)→CC(V)→CCV(~VM)→S
 * S(C)→C(C)→CC(V)→CCV(VM)→VM(~VM)→S
 * S(C)→C(C)→CC(.)→CC.(~VM)→S
@@ -493,8 +496,6 @@ function getNextSegmentState($curState,$nextType) {
     case "A"://Alphabetic
       if ($nextType == "M") {
         return "E";
-      } else if ($nextType == "A") {//Allow combination of Alphabetic
-        return "A";
       }
       return "S";
       break;

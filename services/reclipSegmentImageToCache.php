@@ -52,7 +52,7 @@ if (!$data) {
   if (isset($data['blnIDs'])) {
     if (is_array($data['blnIDs'])) {
       $blnIDs = $data['blnIDs'];
-    } else if (is_numeric($data['blnID'])) {
+    } else if (is_numeric($data['blnIDs'])) {
       $blnIDs = array($data['blnIDs']);
     } else if (strpos(',',$data['blnIDs'])!==false) {
       $blnIDs = explode(',',$data['blnIDs']);
