@@ -288,7 +288,8 @@ if (!$data) {
     $cntTcmA = 0;
     //check for editorial addition of entire syllable
     foreach ($graphemes as $grapheme){
-      if ($grapheme->getTextCriticalMark() == "A") {
+      $graTCM = $grapheme->getTextCriticalMark();
+      if ($graTCM && (strpos($graTCM,"A") !== false || strpos($graTCM,"R") !== false)) {
         $cntTcmA++;
       }
     }
