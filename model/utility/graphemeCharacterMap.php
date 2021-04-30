@@ -65,28 +65,33 @@ $graphemeCharacterMap = array(
 	"9"=>array("srt"=>"790","typ"=>"N"),
 	// Punctuation and Intra-word Punctuation
 	","=>array("srt"=>"800","typ"=>"P"),
-	"ʼ"=>array("srt"=>"805","typ"=>"P"),
-	"’"=>array("srt"=>"805","typ"=>"P"),
+	"ʼ"=>array("srt"=>"805","typ"=>"I"),
+	"’"=>array("srt"=>"805","typ"=>"I"),
 	"᾽"=>array("srt"=>"805","typ"=>"P"),
 	"."=>array("srt"=>"810","typ"=>"I"),
 	";"=>array("srt"=>"820","typ"=>"P"),
 	":"=>array("srt"=>"830","typ"=>"I"),
 	"!"=>array("srt"=>"840","typ"=>"P"),
 	"?"=>array("srt"=>"850","typ"=>"P"),
-	"["=>array("srt"=>"860","typ"=>"I"), //Open - space before
-	"]"=>array("srt"=>"870","typ"=>"I"), //Close - space after
-	"{"=>array("srt"=>"860","typ"=>"I"), //Open - space before
-	"}"=>array("srt"=>"870","typ"=>"I"), //Close - space after
-	"("=>array("srt"=>"860","typ"=>"I"), //Open - space before
-	")"=>array("srt"=>"870","typ"=>"I"), //Close - space after
-	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
-	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
+//	"["=>array("srt"=>"860","typ"=>"I"), //Open - space before
+//	"]"=>array("srt"=>"870","typ"=>"I"), //Close - space after
+//	"{"=>array("srt"=>"860","typ"=>"I"), //Open - space before
+//	"}"=>array("srt"=>"870","typ"=>"I"), //Close - space after
+//	"("=>array("srt"=>"860","typ"=>"I"), //Open - space before
+//	")"=>array("srt"=>"870","typ"=>"I"), //Close - space after
+//	"«"=>array("srt"=>"880","typ"=>"P"), //Open - space before
+//	"»"=>array("srt"=>"890","typ"=>"P"), //Close - space after
 	"ϴ"=>array("srt"=>"920","typ"=>"I"), //Theta nigrum
 	"☧"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ ☧ Chi Rho
 	"⳩"=>array("srt"=>"921","typ"=>"I"), //Christogram ⳩ Coptic Khi Ro
 	"⸱"=>array("srt"=>"922","typ"=>"P"), //Word Sep Middle Dot
 	"·"=>array("srt"=>"922","typ"=>"P"), //Middle Dot
 	"˙"=>array("srt"=>"923","typ"=>"P"), //Above Dot
+	"͂"=>array("srt"=>"924","typ"=>"I"), //Greek perispomeni like tilde
+	"͜"=>array("srt"=>"924","typ"=>"I"), //Breve below
+	"҆"=>array("srt"=>"924","typ"=>"I"), //PSili Pneumata
+	"̈́"=>array("srt"=>"925","typ"=>"I"), //Dialytika tonos
+	"‾"=>array("srt"=>"925","typ"=>"P"), //Overline Greek BOL
 	// Other Symbols 
 	"+"=>array("srt"=>"900","typ"=>"O"), //Placeholder, not yet observed in data
 	"-"=>array("srt"=>"910","typ"=>"I"), //Placeholder, not yet observed in data
@@ -349,6 +354,7 @@ $graphemeCharacterMap = array(
 "ῌ"=>array("srt"=>"460","typ"=>"A"),
 "Θ"=>array("srt"=>"470","typ"=>"A"),
 "Ι"=>array("srt"=>"480","typ"=>"A"),
+"Ɩ"=>array("srt"=>"480","typ"=>"A"),//latin IOTA
 "Ἰ"=>array("srt"=>"480","typ"=>"A"),
 "Ἱ"=>array("srt"=>"480","typ"=>"A"),
 "Ἲ"=>array("srt"=>"480","typ"=>"A"),
@@ -482,8 +488,9 @@ $graphemeCharacterMap = array(
 "ῆ"=>array("srt"=>"465","typ"=>"A"),
 "ῇ"=>array("srt"=>"465","typ"=>"A"),  
 "θ"=>array("srt"=>"475","typ"=>"A"),
+"ɩ"=>array("srt"=>"485","typ"=>"A"),
 "ι"=>array("srt"=>"485","typ"=>"A"),
-"ί"=>array("srt"=>"485","typ"=>"A"),	  
+"ί"=>array("srt"=>"485","typ"=>"A"),
 "ἰ"=>array("srt"=>"485","typ"=>"A"),
 "ἱ"=>array("srt"=>"485","typ"=>"A"),
 "ἲ"=>array("srt"=>"485","typ"=>"A"),

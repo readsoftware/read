@@ -721,7 +721,7 @@ class Parser {
           }
 
           switch ($char) {
-/*            case "<"://quote
+            case "<"://quote
               //check if quote start <b>
               if (mb_substr($script,$i,3) == '<b>'){
                 if (isset($inQuote) && $inQuote) {
@@ -1075,8 +1075,7 @@ class Parser {
                 if (mb_substr($script,$i+1,1)== '*') {
                   $tcm = $char."*";
                   $i+=2;
-                }else{
-//LATIN relax                  array_push($this->_errors,"found no * for $char at character $i for TCM brackets for cknLine $ckn.$lineMask"." cfg line # $cfgLnCnt");
+                }else{  //relax requirement for *  in TCM encoding getNextTCMState accepts both
                   $i++;
                   $tcm = $char;
                 }
@@ -1097,7 +1096,7 @@ class Parser {
                 $tcmState = $nextTCMS;
               }
               break;
-*/            case "=":// token break intra syllable or cross line token
+            case "=":// token break intra syllable or cross line token
               // set all current entity vars to null except segment and syllable
               $i++;
               if ($i >= $cnt) {// check if cross line
