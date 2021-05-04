@@ -1,3 +1,13 @@
+'''
+@author      Stephen White  <stephenawhite57@gmail.com>
+@copyright   Stephen White
+@link        https://github.com/readsoftware
+@version     1.0
+@license     <http://www.gnu.org/licenses/>
+@package     READ.Admin.ORM
+
+Flask Admin Views for READ data model
+'''
 from functools import partial
 from sqlalchemy.orm import load_only
 from flask_admin.contrib.sqla import ModelView

@@ -1,3 +1,13 @@
+'''
+@author      Stephen White  <stephenawhite57@gmail.com>
+@copyright   Stephen White
+@link        https://github.com/readsoftware
+@version     1.0
+@license     <http://www.gnu.org/licenses/>
+@package     READ.Admin
+
+Flask Admin Application Generator  WSGI
+'''
 from threading import Lock
 from werkzeug.wsgi import pop_path_info, peek_path_info
 from app import create_dbAdmin, default_app, get_dbname_for_path

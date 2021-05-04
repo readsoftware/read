@@ -1,3 +1,13 @@
+'''
+@author      Stephen White  <stephenawhite57@gmail.com>
+@copyright   Stephen White
+@link        https://github.com/readsoftware
+@version     1.0
+@license     <http://www.gnu.org/licenses/>
+@package     READ.Admin
+
+Flask Admin Main Application
+'''
 from flask import Flask, redirect
 from flask_admin import Admin, AdminIndexView
 import ORM.readFlaskModel as rfm
