@@ -62,7 +62,7 @@ class ReadQueryCursor:
             self._error = "Error while connecting to PostgreSQL : " + error
         finally:
             if (self._cursor):
-                print("connected to db",readConnConfig['database'])
+                print("connected to db",conf['database'])
 
     def __del(self):
       self.close()

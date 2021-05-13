@@ -2760,7 +2760,7 @@ function checkEditionHealth($ednID, $verbose = true) {
               }
               $txtDivGIDs = $sequence->getEntityIDs();
               if (!$txtDivGIDs) {
-                array_push($hltherrors,"Error TextDivision Sequence ($seqLabel/seq:$seqID) is Empty");
+                array_push($hlthwarnings,"warning TextDivision Sequence ($seqLabel/seq:$seqID) is Empty");
               } else {
                 $stripTokCmpGIDs = preg_replace("/(tok|cmp)\:/","",$txtDivGIDs);
                 if (strpos(join(' ',$stripTokCmpGIDs),":") !== false) {
@@ -2785,9 +2785,9 @@ function checkEditionHealth($ednID, $verbose = true) {
         if ($tokCmpGIDs && count($tokCmpGIDs) > 0) {
           foreach ($tokCmpGIDs as $tokCmpGID) {
             $txtDivSeqGID = $gid2SeqMap[$tokCmpGID];
-            if (($index = array_search($tokCmpGID,$txtDivGIDs)) !== false) {
-              array_splice($txtDivGIDs,$index,1);
-            }
+//            if (($index = array_search($tokCmpGID,$txtDivGIDs)) !== false) {
+//              array_splice($txtDivGIDs,$index,1);
+//            }
             $seqLabel =  $seqGID2Label[$txtDivSeqGID];
             $ctxMessage = "Text Division Sequence ($seqLabel/$txtDivSeqGID)";
             validateTokCmp($tokCmpGID,$ctxMessage,$tokCmpGID);
@@ -2830,7 +2830,7 @@ function checkEditionHealth($ednID, $verbose = true) {
           while ($seqID = array_shift($structuralSeqIDs)) {
             $sequence = new Sequence($seqID);
             if ($sequence->hasError()) {
-              array_push($hltherrors,"Error Strucutral Sequence (seq:$seqID) cannot be loaded. Error:".$sequence->getErrors(true));
+              array_push($hltherrors,"Error Structural Sequence (seq:$seqID) cannot be loaded. Error:".$sequence->getErrors(true));
               break;
             }
             $seqGID = $sequence->getGlobalID();
@@ -2852,7 +2852,7 @@ function checkEditionHealth($ednID, $verbose = true) {
                   $subSeqID = substr($seqEntityGID,4);
                   $subsequence = new Sequence($subSeqID);
                   if ($subsequence->hasError()) {
-                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has subsequence $seqEntityGID with loading error. Error:".$subsequence->getErrors(true));
+                    array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has subsequence $seqEntityGID with loading error. Error:".$subsequence->getErrors(true));
                     break;
                   }
                   $subSeqLabel = $subsequence->getLabel()?$subsequence->getLabel():$subsequence->getSuperScript();
@@ -2863,10 +2863,10 @@ function checkEditionHealth($ednID, $verbose = true) {
                     //ToDo:  add code to add <a> for a service to correct the issue.
                   }
                   if ( $seqGID == $seqEntityGID ) {//recursion
-                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has $seqEntityGID as contained entity (recursion)");
+                    array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has $seqEntityGID as contained entity (recursion)");
                   } else {
                     if (array_key_exists($seqEntityGID,$processedSeqIDs)) {
-                      array_push($hlthwarnings,"Warning Strucutral Sequence ($seqLabel/$seqGID) has child $subSeqLabel/$seqEntityGID already processed as child of ".join(",",$processedSeqIDs[$seqEntityGID]));
+                      array_push($hlthwarnings,"Warning Structural Sequence ($seqLabel/$seqGID) has child $subSeqLabel/$seqEntityGID already processed as child of ".join(",",$processedSeqIDs[$seqEntityGID]));
                       array_push($processedSeqIDs[$seqEntityGID],$seqGID);
                     } else {
                       if (!in_array($subSeqID,$structuralSeqIDs)) {
@@ -2878,10 +2878,10 @@ function checkEditionHealth($ednID, $verbose = true) {
                   break;
                 case 'tok':
                   if (!in_array($seqEntityGID,$tokCmpGIDs)) {// structure with non edition tok/cmp
-                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) contains token $seqEntityGID which is not part of the edition.");
+                    array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) contains token $seqEntityGID which is not part of the edition.");
                     $token = new Token(substr($seqEntityGID,4));
                     if ($token->hasError()) {
-                      array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has token $seqEntityGID with loading error. Error:".$token->getErrors(true));
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has token $seqEntityGID with loading error. Error:".$token->getErrors(true));
                       break;
                     }
                     if ($token->isMarkedDelete()) {
@@ -2896,10 +2896,10 @@ function checkEditionHealth($ednID, $verbose = true) {
                   break;
                 case 'cmp':
                   if (!in_array($seqEntityGID,$tokCmpGIDs)) {// structure with non edition tok/cmp
-                    array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) contains compound $seqEntityGID which is not part of the edition.");
+                    array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) contains compound $seqEntityGID which is not part of the edition.");
                     $compound = new Compound(substr($seqEntityGID,4));
                     if ($compound->hasError()) {
-                      array_push($hltherrors,"Error Strucutral Sequence ($seqLabel/$seqGID) has compound $seqEntityGID with loading error. Error:".$compound->getErrors(true));
+                      array_push($hltherrors,"Error Structural Sequence ($seqLabel/$seqGID) has compound $seqEntityGID with loading error. Error:".$compound->getErrors(true));
                       break;
                     }
                     if ($compound->isMarkedDelete()) {
