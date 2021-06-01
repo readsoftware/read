@@ -2481,7 +2481,7 @@ $hlthtokGID2CtxLabel = array();
 * @param boolean $verbose indicate the level of output information.
 */
 
-function checkEditionHealth($ednID, $verbose = true) {
+function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false) {
   global $hltherrors, $hlthwarnings, $hlthgra2TokGID, $hlthtokGID2CtxLabel, $hlthtokGraphemeIDs;
 
   $retStr = "";
@@ -2655,7 +2655,7 @@ function checkEditionHealth($ednID, $verbose = true) {
                 if ($segment) {
                   $segGID = $segment->getGlobalID();
                   if ($segment->isMarkedDelete()) {
-                    array_push($hltherrors,"Error Syllable ($aksaraPos/scl:$sclID) of Physical Line Sequence ($seqLabel/$lineSeqGID) is linked to segement ($segGID) that is marked for delete.");
+                    array_push($hltherrors,"Error Syllable ($aksaraPos/scl:$sclID) of Physical Line Sequence ($seqLabel/$lineSeqGID) is linked to segment ($segGID) that is marked for delete.");
                     //ToDo:  add code to add <a> for a service to correct the issue.
                   } else {
                     $segBlnIDs = $segment->getBaselineIDs();
@@ -2842,7 +2842,7 @@ function checkEditionHealth($ednID, $verbose = true) {
             }
             $seqEntityGIDs = $sequence->getEntityIDs();
             if (!$seqEntityGIDs || count($seqEntityGIDs) == 0) {
-              array_push($hltherrors,"Error Structural Sequence (seq:$seqID) has no entity ids.");
+              array_push($hlthwarnings,"Warnings Structural Sequence (seq:$seqID) has no entity ids.");
               break;
             }
             foreach ($seqEntityGIDs as $seqEntityGID) {
@@ -2919,11 +2919,11 @@ function checkEditionHealth($ednID, $verbose = true) {
       }
     }
   }
-  if ($verbose) {
-    $retStr .= "\t\t\t Health Report for (edn$ednID) - ".$edition->getDescription()."\n\n";
+  if ($verbose || ($errorsOnly && (count($hltherrors) > 0))) {
+    $retStr .= "\t\t\t Health Report for (edn$ednID) - ".$edition->getDescription()."\n";
   }
 
-  if (count($hlthwarnings) > 0) {
+  if (!$errorsOnly && count($hlthwarnings) > 0) {
     if ($verbose) {
       $retStr .= "WARNING:\n";
     }
@@ -2939,10 +2939,10 @@ function checkEditionHealth($ednID, $verbose = true) {
       $retStr .= $error."\n";
     }
   }
-  if (count($hlthwarnings) == 0 && count($hltherrors) == 0) {
+  if ($verbose && count($hlthwarnings) == 0 && count($hltherrors) == 0) {
     $retStr .= " Edition links check ok for edition (edn$ednID).";
   }
-  if ($verbose) {
+  if ($verbose || $errorsOnly && count($hltherrors) > 0) {
     $retStr .= "\t\t\t End of Health Report for (edn$ednID) - ".$edition->getDescription()."\n\n";
   }
 

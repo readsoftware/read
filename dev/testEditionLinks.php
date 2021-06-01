@@ -102,6 +102,7 @@
   $ednIDs = (array_key_exists('ednIDs',$_REQUEST)? $_REQUEST['ednIDs']:null);
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $compact = (array_key_exists('compact',$_REQUEST)? true:false);
+  $errorsOnly = (array_key_exists('errorsOnly',$_REQUEST)? true:false);
   if ($ednID && !$ednIDs) {
      echo checkEditionHealth($ednID,!$compact);
   } else if ($ednIDs) {// edns
@@ -132,14 +133,14 @@
     }
     if (is_array($ednIDs)) {
       foreach ($ednIDs as $ednID) {
-        echo checkEditionHealth($ednID);
+        echo checkEditionHealth($ednID,!$compact,$errorsOnly);
       }
     } else if (is_numeric($ednIDs)) {// single edition id case
      echo checkEditionHealth($ednIDs);
     } else if ($ednIDs == "all") {
       $editions = new Editions(null,"edn_id",null,null);
       foreach ($editions as $edition) {
-        echo checkEditionHealth($edition->getID(),!$compact);
+        echo checkEditionHealth($edition->getID(),!$compact,$errorsOnly);
       }
     }
   }
