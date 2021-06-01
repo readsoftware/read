@@ -105,8 +105,30 @@
   if ($ednID && !$ednIDs) {
      echo checkEditionHealth($ednID,!$compact);
   } else if ($ednIDs) {// edns
-    if (is_string($ednIDs) && strpos($ednIDs,',')) {// list of numbers
-      $ednIDs = explode(",",$ednIDs);
+    if (is_string($ednIDs)) {
+      $hasRange = false;
+      if (strpos($ednIDs,'-')) {// range
+        $hasRange = true;
+      }
+      if (strpos($ednIDs,',')) {// list of numbers
+        $ednIDs = explode(",",$ednIDs);
+      } else if ($hasRange){ // handle case for single range making it an array
+        $ednIDs = array($ednIDs);
+      }
+      if ($hasRange) {
+        $expandedEdnIDs = array();
+        foreach ($ednIDs as $ednID) {
+          if (strpos($ednID,'-')) {
+            list($startID,$stopID) = explode("-",$ednID);
+            for( $i = intval($startID); $i<= intval($stopID); $i++) {
+              array_push($expandedEdnIDs,$i);
+            }
+          } else {
+            array_push($expandedEdnIDs,intval($ednID));
+          }
+        }
+        $ednIDs = $expandedEdnIDs;
+      }
     }
     if (is_array($ednIDs)) {
       foreach ($ednIDs as $ednID) {
