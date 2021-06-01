@@ -3476,7 +3476,7 @@ mergeLine: function (direction,cbError) {
           ednVE.sclEd.synchSelection();
         }
       }
-      e.stopImmediatePropagation();
+      // e.stopImmediatePropagation();
       return false;
     };
 

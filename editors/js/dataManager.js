@@ -1761,6 +1761,11 @@ MANAGERS.DataManager.prototype = {
                                       },50);
               }
               DEBUG.traceExit("dataMgr.loadTextResource.SuccessCB");
+
+              // Trigger text resource load event in read rendition plugin.
+              if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
+                READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_TEXT_RESOURCE_LOADED, [dataMgr]);
+              }
           },
           error: function (xhr,status,error) {
               // add record failed.

@@ -226,6 +226,21 @@
       </div>
     </div>
   </div>
-
+  <?php
+    if(defined("RENDITION_PLUGIN_BASE_PATH")) {
+      $readRenditionPluginBasePath = RENDITION_PLUGIN_BASE_PATH;
+    } elseif (file_exists(__DIR__ . '/plugins/read-rendition-plugin/read-rendition-plugin.js')) {
+      $readRenditionPluginBasePath = SITE_BASE_PATH . '/plugins/read-rendition-plugin';
+    }
+  ?>
+  <?php if(!empty($readRenditionPluginBasePath)) : ?>
+    <script src="<?= $readRenditionPluginBasePath ?>/read-rendition-plugin.js"></script>
+    <script>
+      READRendPlugin.pluginBasePath = '<?= $readRenditionPluginBasePath ?>';
+      $(document).ready( function () {
+        READRendPlugin.READApp.init();
+      });
+    </script>
+  <?php endif; ?>
 </body>
 </html>
