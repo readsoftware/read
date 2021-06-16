@@ -1,3 +1,30 @@
+/**
+ * This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
+ * and copyright holders of READ, please refer to the file AUTHORS in this distribution or
+ * at <https://github.com/readsoftware>.
+ *
+ * READ is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with READ.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
+/**
+ * 3D VE object
+ *
+ * @author      Yang Li
+ * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
+ * @link        https://github.com/readsoftware
+ * @version     1.0
+ * @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+ * @package     READ Research Environment for Ancient Documents
+ * @subpackage  Editor Classes
+ */
 var EDITORS = EDITORS || {};
 
 /**
@@ -23,7 +50,16 @@ EDITORS.threeDVE = function (config) {
   this.layoutMgr = config['layoutMgr'] ? config['layoutMgr'] : null;
   this.id = config['id'] ? config['id'] : (this.editDiv.id ? this.editDiv.id : null);
   this.api = null;
-  this.annotationData = [];
+  this.annotationData = {};
+  this.viewToolbar = null;
+  this.editToolbar = null;
+  this.toolAnnotateDiv = null;
+  this.toolPropertyDiv = null;
+  this.toolAnnotateBtn = null;
+  this.toolPropertyBtn = null;
+  this.annotateMode = false;
+  this.contentWrapperElement = null;
+  this.propPaneExpanded = false;
   this.init();
   return this;
 };
@@ -38,12 +74,33 @@ EDITORS.threeDVE.prototype = {
    */
   init: function () {
     var tdVE = this;
+    this.contentWrapperElement = $('<div class="tdv-content"></div>');
     var frameWidth = $(this.editDiv).width();
     var frameHeight = $(this.editDiv).height();
-    var frameElement = $('<div class="iframe-wrapper"><div class="iframe-overlay"></div><iframe src="" id="tdvFrame" allow="autoplay; fullscreen; vr" ' +
+    var frameElement = $('<div class="iframe-wrapper"><div class="iframe-status">Adjust the camera and click on the model</div><div class="iframe-overlay"></div><iframe src="" id="tdvFrame" allow="autoplay; fullscreen; vr" ' +
         'allowvr allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true">' +
         '</iframe></div>');
-    $(this.editDiv).append(frameElement);
+    var propertyPane = $('<div class="tdv-prop-pane"></div>');
+    propertyPane.css({
+      "padding": '10px',
+      'background-color': '#d9d9d9',
+      'border-left': '2px solid #828181'
+    });
+    this.contentWrapperElement.append(frameElement);
+    this.contentWrapperElement.append(propertyPane);
+    $(this.editDiv).append(this.contentWrapperElement);
+    this.contentWrapperElement.jqxSplitter({
+      width: '100%',
+      height: '100%',
+      orientation: 'vertical',
+      splitBarSize: 1,
+      showSplitBar:false,
+      panels: [
+          { size: '60%', min: '250', collapsible: false},
+          { size: '40%', min: '150', collapsed: true, collapsible: true}
+      ]
+    });
+    this.loadDefaultPropertyView();
 
     // Initiate the viewer.
     $(this.editDiv).find('.iframe-wrapper').width(frameWidth);
@@ -52,9 +109,20 @@ EDITORS.threeDVE.prototype = {
       "display": "inline-block",
       "position": "relative"
     });
-    $(this.editDiv).find('.iframe-overlay').css({
+    $(this.editDiv).find('.iframe-status').css({
       "position": "absolute",
       "z-index": "1",
+      "width": "100%",
+      "height": "20px",
+      "left": "0",
+      "top": "0",
+      "background-color": 'orange',
+      "padding-left": '5px',
+      "display": 'none'
+    });
+    $(this.editDiv).find('.iframe-overlay').css({
+      "position": "absolute",
+      "z-index": "2",
       "width": "100%",
       "height": "100%",
       "left": "0",
@@ -81,17 +149,32 @@ EDITORS.threeDVE.prototype = {
               if (tdVE.id === tdVE.layoutMgr.focusPaneID) {
                 tdVE.showAllCurrentAnnotations();
               }
-              tdVE.api.addEventListener('annotationFocus', function(index) {
-                var segIDs = tdVE.findSegIDByAnnotationIndex(index);
-                if (segIDs) {
-                  $('.editContainer').trigger('updateselection',[tdVE.id, segIDs]);
-                }
-              });
-
             }
+            tdVE.api.addEventListener('annotationFocus', function(index) {
+              var segIDs = tdVE.findSegIDByAnnotationIndex(index);
+              if (segIDs) {
+                $('.editContainer').trigger('updateselection',[tdVE.id, segIDs]);
+              }
+              tdVE.loadAnnotationPropertyView(index);
+            });
+            tdVE.api.addEventListener('click', function (info) {
+              if (tdVE.annotateMode) {
+                tdVE.api.getCameraLookAt(function(err, camera) {
+                  var segID = tdVE.getEdnVESelectedSegID();
+                  var sclID = tdVE.getEdnVESelectedSclID();
+                  if (segID && sclID) {
+                    tdVE.addSyllableAnnotation(segID, sclID, info.position3D, camera.position, camera.target);
+                  } else {
+                    alert('A segment must be selected from the edition VE');
+                  }
+                  tdVE.exitAnnotateMode();
+                });
+              }
+            });
             tdVE.addEventHandlers();
           });
           tdVE.api.start();
+          tdVE.createStaticToolbar();
         },
         error: function onError() {
           alert('Failed to load the 3D viewer');
@@ -163,35 +246,35 @@ EDITORS.threeDVE.prototype = {
     switch (objLevel) {
       case 'token':
         for (i = 0; i < this.annotationData.token.length; i++) {
-          this.api.showAnnotation(this.annotationData.token[i].index);
+          this.showAnnotationByDatum(this.annotationData.token[i]);
         }
         for (i = 0; i < this.annotationData.compound.length; i++) {
-          this.api.hideAnnotation(this.annotationData.compound[i].index);
+          this.hideAnnotationByDatum(this.annotationData.compound[i]);
         }
         for (i = 0; i < this.annotationData.syllable.length; i++) {
-          this.api.hideAnnotation(this.annotationData.syllable[i].index);
+          this.hideAnnotationByDatum(this.annotationData.syllable[i]);
         }
         break;
       case 'compound':
         for (i = 0; i < this.annotationData.compound.length; i++) {
-          this.api.showAnnotation(this.annotationData.compound[i].index);
+          this.showAnnotationByDatum(this.annotationData.compound[i]);
         }
         for (i = 0; i < this.annotationData.token.length; i++) {
-          this.api.hideAnnotation(this.annotationData.token[i].index);
+          this.hideAnnotationByDatum(this.annotationData.token[i]);
         }
         for (i = 0; i < this.annotationData.syllable.length; i++) {
-          this.api.hideAnnotation(this.annotationData.syllable[i].index);
+          this.hideAnnotationByDatum(this.annotationData.syllable[i]);
         }
         break;
       default:
         for (i = 0; i < this.annotationData.syllable.length; i++) {
-          this.api.showAnnotation(this.annotationData.syllable[i].index);
+          this.showAnnotationByDatum(this.annotationData.syllable[i]);
         }
         for (i = 0; i < this.annotationData.token.length; i++) {
-          this.api.hideAnnotation(this.annotationData.token[i].index);
+          this.hideAnnotationByDatum(this.annotationData.token[i]);
         }
         for (i = 0; i < this.annotationData.compound.length; i++) {
-          this.api.hideAnnotation(this.annotationData.compound[i].index);
+          this.hideAnnotationByDatum(this.annotationData.compound[i]);
         }
     }
   },
@@ -205,9 +288,7 @@ EDITORS.threeDVE.prototype = {
     for (objLevel in this.annotationData) {
       if (this.annotationData.hasOwnProperty(objLevel)) {
         for (i = 0; i < this.annotationData[objLevel].length; i++) {
-          if (typeof this.annotationData[objLevel][i].index !== 'undefined') {
-            this.api.hideAnnotation(this.annotationData[objLevel][i].index);
-          }
+          this.hideAnnotationByDatum(this.annotationData[objLevel][i]);
         }
       }
     }
@@ -221,9 +302,7 @@ EDITORS.threeDVE.prototype = {
     var i;
     if (this.annotationData[objLevel]) {
       for (i = 0; i < this.annotationData[objLevel].length; i++) {
-        if (typeof this.annotationData[objLevel][i].index !== 'undefined') {
-          this.api.hideAnnotation(this.annotationData[objLevel][i].index);
-        }
+        this.hideAnnotationByDatum(this.annotationData[objLevel][i]);
       }
     }
   },
@@ -236,9 +315,41 @@ EDITORS.threeDVE.prototype = {
     var i;
     if (this.annotationData[objLevel]) {
       for (i = 0; i < this.annotationData[objLevel].length; i++) {
-        if (typeof this.annotationData[objLevel][i].index !== 'undefined') {
-          this.api.showAnnotation(this.annotationData[objLevel][i].index);
-        }
+        this.showAnnotationByDatum(this.annotationData[objLevel][i]);
+      }
+    }
+  },
+
+  /**
+   * Show an 3D annotation by the annotation data item.
+   *
+   * @param {object} datum The single item of the annotation data array.
+   * @param {function} callback Any callback function to execute after the
+   *   annotation is shown.
+   */
+  showAnnotationByDatum: function (datum, callback) {
+    if (typeof datum.index !== 'undefined' && (typeof datum.deleted === 'undefined' || !datum.deleted)) {
+      if (typeof callback === 'function') {
+        this.api.showAnnotation(datum.index, callback);
+      } else {
+        this.api.showAnnotation(datum.index);
+      }
+    }
+  },
+
+  /**
+   * Hide an 3D annotation by the annotation data item.
+   *
+   * @param {object} datum The single item of the annotation data array.
+   * @param {function} callback Any callback function to execute after the
+   *   annotation is hidden.
+   */
+  hideAnnotationByDatum: function (datum, callback) {
+    if (typeof datum.index !== 'undefined') {
+      if (typeof callback === 'function') {
+        this.api.hideAnnotation(datum.index, callback);
+      } else {
+        this.api.hideAnnotation(datum.index);
       }
     }
   },
@@ -284,7 +395,11 @@ EDITORS.threeDVE.prototype = {
    */
   getAnnotationData: function () {
     var objLevel = this.layoutMgr.getEditionObjectLevel();
-    var anoData = {};
+    var anoData = {
+      syllable: [],
+      token: [],
+      compound: []
+    };
     var i, j;
 
     if (
@@ -320,7 +435,8 @@ EDITORS.threeDVE.prototype = {
                 cameraPosition: sclData[sclParsedID.id].annotations[j].cameraPosition.split(','),
                 cameraTarget: sclData[sclParsedID.id].annotations[j].cameraTarget.split(','),
                 segIDs: ['seg' + sclData[sclParsedID.id].segID],
-                entityID: 'scl:' + sclIDs[i]
+                entityID: sclIDs[i],
+                type: 'syllable'
               });
             }
           }
@@ -360,7 +476,8 @@ EDITORS.threeDVE.prototype = {
               cameraPosition: sclData[tokAnoSclID].annotations[j].cameraPosition.split(','),
               cameraTarget: sclData[tokAnoSclID].annotations[j].cameraTarget.split(','),
               segIDs: anoSegIDs,
-              entityID: tokIDs[i]
+              entityID: tokIDs[i],
+              type: 'token'
             });
           }
         }
@@ -408,7 +525,8 @@ EDITORS.threeDVE.prototype = {
               cameraPosition: sclData[tokAnoSclID].annotations[j].cameraPosition.split(','),
               cameraTarget: sclData[tokAnoSclID].annotations[j].cameraTarget.split(','),
               segIDs: anoSegIDs,
-              entityID: tokIDs[i]
+              entityID: tokIDs[i],
+              type: 'compound'
             });
           }
         }
@@ -617,16 +735,30 @@ EDITORS.threeDVE.prototype = {
    * Find the annotation index by the segment IDs.
    *
    * @param {array} segIDs
+   * @param string objLevel The object level of the annotation. If omitted, it
+   *     will search across all object levels.
    * @return {int}
    */
-  findAnnotationIndexBySegID: function (segIDs) {
+  findAnnotationIndexBySegID: function (segIDs, objLevel) {
     var i;
-    var objLevel = this.layoutMgr.getEditionObjectLevel();
-    for (i = 0; i < this.annotationData[objLevel].length; i++) {
-      if (this.arrayEqual(this.annotationData[objLevel][i].segIDs, segIDs)) {
-        return this.annotationData[objLevel][i].index;
+    if (typeof objLevel !== 'undefined' && objLevel) {
+      for (i = 0; i < this.annotationData[objLevel].length; i++) {
+        if (this.arrayEqual(this.annotationData[objLevel][i].segIDs, segIDs) && !this.annotationData[objLevel][i].deleted) {
+          return this.annotationData[objLevel][i].index;
+        }
+      }
+    } else {
+      for (objLevel in this.annotationData) {
+        if (this.annotationData.hasOwnProperty(objLevel)) {
+          for (i = 0; i < this.annotationData[objLevel].length; i++) {
+            if (this.arrayEqual(this.annotationData[objLevel][i].segIDs, segIDs) && !this.annotationData[objLevel][i].deleted) {
+              return this.annotationData[objLevel][i].index;
+            }
+          }
+        }
       }
     }
+
     return null;
   },
 
@@ -699,7 +831,8 @@ EDITORS.threeDVE.prototype = {
       DEBUG.log("event","selection changed recieved by 3DVE in " + tdVE.id + " from "+senderID+" selected ids "+ selectionGIDs.join());
       if (selectionGIDs.length > 0) {
         if (segID) {
-          var annoIndex = tdVE.findAnnotationIndexBySegID(selectionGIDs);
+          var objLevel = tdVE.layoutMgr.getEditionObjectLevel();
+          var annoIndex = tdVE.findAnnotationIndexBySegID(selectionGIDs, objLevel);
           if (annoIndex !== null) {
             tdVE.hideAllCurrentAnnotations();
             tdVE.api.showAnnotation(annoIndex, function(err, index) {
@@ -739,9 +872,458 @@ EDITORS.threeDVE.prototype = {
      */
     function focusoutHandler() {
       $(this).find('.iframe-overlay').show();
+      tdVE.api.unselectAnnotation();
       tdVE.hideAllAnnotations();
+
     }
 
     $(this.editDiv).unbind('focusout').bind('focusout', focusoutHandler);
+  },
+
+  /**
+   * Create the tool pane UI for the 3D VE.
+   */
+  createStaticToolbar: function() {
+    var tdv = this;
+    var btnAnnotateID = this.id + 'annotate';
+    var btnPropertyID = this.id + 'properties';
+    this.viewToolbar = $('<div class="viewtoolbar"/>');
+    this.editToolbar = $('<div class="edittoolbar"/>');
+
+    // Create annotation button.
+    this.toolAnnotateDiv = $('<div class="toolbuttondiv">' +
+        '<button class="toolbutton" id="' + btnAnnotateID +
+        '" title="Create a 3D annotation">Annotate</button>'+
+        '<div class="toolbuttonlabel">Create 3D annotations</div>'+
+        '</div>');
+    this.toolAnnotateBtn = $('#' + btnAnnotateID, this.toolAnnotateDiv);
+    this.editToolbar.append(this.toolAnnotateDiv);
+    this.toolAnnotateBtn.unbind('click').bind('click', function () {
+      if (tdv.layoutMgr.getEditionObjectLevel() === 'syllable') {
+        var segID = tdv.getEdnVESelectedSegID();
+        if (segID) {
+          if (tdv.findAnnotationIndexBySegID(['seg' + segID]) !== null) {
+            alert('An annotation has already been associated with this syllable. Delete the existing annotation before creating the new annotation.');
+          } else {
+            if (tdv.annotateMode) {
+              tdv.exitAnnotateMode();
+            } else {
+              tdv.enterAnnotateMode();
+            }
+          }
+        } else {
+          alert('A syllable must be selected from the edition VE');
+        }
+      } else {
+        alert('This operation must be performed under syllable object level.');
+      }
+    });
+
+    // Create properties button.
+    this.toolPropertyDiv = $('<div class="toolbuttondiv">' +
+        '<button class="toolbutton iconbutton" id="' + btnPropertyID +
+        '" title="Show/Hide property panel">&#x25E8;</button>' +
+        '<div class="toolbuttonlabel">Properties</div>' +
+        '</div>');
+    this.toolPropertyBtn = $('#' + btnPropertyID, this.toolPropertyDiv);
+    this.viewToolbar.append(this.toolPropertyDiv);
+    this.toolPropertyBtn.unbind('click').bind('click', function () {
+      tdv.togglePropertyPane();
+      tdv.refreshModelSize();
+    });
+
+    this.layoutMgr.registerViewToolbar(this.id, this.viewToolbar);
+    this.layoutMgr.registerEditToolbar(this.id, this.editToolbar);
+  },
+
+  /**
+   * Enter the annotate mode.
+   *
+   * Once entered, the 3D model will wait for the click to create the annotation
+   * on that position.
+   */
+  enterAnnotateMode: function () {
+    this.api.unselectAnnotation();
+    this.annotateMode = true;
+    this.contentWrapperElement.find('.iframe-status').show();
+    this.toolAnnotateBtn.html('Cancel');
+  },
+
+  /**
+   * Exit the annotate mode.
+   */
+  exitAnnotateMode: function () {
+    this.annotateMode = false;
+    this.contentWrapperElement.find('.iframe-status').hide();
+    this.toolAnnotateBtn.html('Annotate');
+  },
+
+  /**
+   * Get the current active Edition VE.
+   *
+   * @return {object} The edition VE instance, or null if no edition VE is active.
+   */
+  getActivatedEdnVE: function () {
+    var paneID;
+    for (paneID in this.layoutMgr.editors) {
+      if (this.layoutMgr.editors.hasOwnProperty(paneID) && this.layoutMgr.editors[paneID].type === 'EditionVE') {
+        return this.layoutMgr.editors[paneID];
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Get the segment ID of the current selected syllable in the edition VE.
+   *
+   * @return {int} Returns null if not found.
+   */
+  getEdnVESelectedSegID: function () {
+    return this.getEdnVESelectedEntityID('seg');
+  },
+
+  /**
+   * Get the syllable ID of the current selected syllable in the edition VE.
+   *
+   * @return {int} Returns null if not found.
+   */
+  getEdnVESelectedSclID: function () {
+    return this.getEdnVESelectedEntityID('scl');
+  },
+
+  /**
+   * Get the entity ID of the current selected entity in the edition VE.
+   *
+   * @param {string} entityCode The short code of the entity.
+   * @return {int} Returns null if not found.
+   */
+  getEdnVESelectedEntityID: function (entityCode) {
+    var ednVE = this.getActivatedEdnVE();
+    if (ednVE) {
+      var selectedScl = $('.grpGra.selected', ednVE.contentDiv);
+      if (selectedScl.length > 0) {
+        var regex = new RegExp(entityCode + '\\d+');
+        var selectedSegLabel = selectedScl.get(0).className.match(regex);
+        if (selectedSegLabel.length > 0) {
+          return selectedSegLabel[0].substring(3);
+        }
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Create the datum for the annotation data in the data manager.
+   *
+   * @param {int} sclID The syllable ID.
+   * @param {int} segID The segment ID.
+   * @param {array} coords The coordinates of the annotation.
+   * @param {array} cameraPosition The camera position of the annotation.
+   * @param {array} cameraTarget The camera target of the annotation.
+   * @return {object}
+   */
+  createSyllableAnnotationSourceDatum: function (sclID, segID, coords, cameraPosition, cameraTarget) {
+    var sclTrans = '';
+    if (typeof this.dataMgr.entities.scl[sclID].value !== 'undefined') {
+      sclTrans = this.dataMgr.entities.scl[sclID].value;
+    }
+    return {
+      sclID: sclID,
+      sclTrans: sclTrans,
+      segID: segID,
+      annotations: [{
+        coords: coords,
+        cameraPosition: cameraPosition,
+        cameraTarget: cameraTarget
+      }]
+    };
+  },
+
+  /**
+   * Toggle the property pane of the VE.
+   */
+  togglePropertyPane: function() {
+    if (this.propPaneExpanded) {
+      this.collapsePropertyPane();
+    } else {
+      this.expandPropertyPane();
+    }
+  },
+
+  /**
+   * Expand the property pane of the VE.
+   */
+  expandPropertyPane: function () {
+    this.propPaneExpanded = true;
+    this.contentWrapperElement.jqxSplitter('expand');
+    this.contentWrapperElement.jqxSplitter({ showSplitBar: true });
+  },
+
+  /**
+   * Collapse the property pane of the VE.
+   */
+  collapsePropertyPane: function () {
+    this.propPaneExpanded = false;
+    this.contentWrapperElement.jqxSplitter('collapse');
+    this.contentWrapperElement.jqxSplitter({ showSplitBar: false });
+  },
+
+  /**
+   * Refresh the 3D model size based on the current container size.
+   */
+  refreshModelSize: function () {
+    var width = $('.iframe-wrapper', this.contentWrapperElement).width();
+    var height = $('.iframe-wrapper', this.contentWrapperElement).height();
+    $('#tdvFrame', this.contentWrapperElement).width(width);
+    $('#tdvFrame', this.contentWrapperElement).height(height);
+  },
+
+  /**
+   * Load the default view of the property pane.
+   */
+  loadDefaultPropertyView: function () {
+    var content = '<p>Select an annotation to see properties.</p>';
+    this.contentWrapperElement.find('.tdv-prop-pane').html(content);
+  },
+
+  /**
+   * Load the view of the annotation in the property pane.
+   *
+   * @param {int} anoIndex The index of the 3D annotation.
+   */
+  loadAnnotationPropertyView: function (anoIndex) {
+    var tdVE = this;
+    var anoDatum = this.findAnnotationDatumByIndex(anoIndex);
+    if (anoDatum) {
+      var content = '<h4>Annotation: ' + anoDatum.title + '</h4>';
+      content += '<p>' + anoDatum.text + '</p>';
+      if (anoDatum.type === 'syllable') {
+        content += '<p>' +
+            '<button class="toolbutton" style="margin-bottom:10px" id="tdvPropBtnAnoEdit">Edit</button> ' +
+            '<button class="toolbutton" style="margin-bottom:10px" id="tdvPropBtnAnoDelete">Delete</button> ' +
+            '<button class="toolbutton" style="margin-bottom:10px" id="tdvPropBtnAnoNext">Create Next</button> ' +
+            '</p>';
+      }
+      this.contentWrapperElement.find('.tdv-prop-pane').html(content);
+      this.contentWrapperElement.find('#tdvPropBtnAnoEdit').unbind('click').bind('click', function () {
+        if (tdVE.layoutMgr.getEditionObjectLevel() === 'syllable') {
+          tdVE.editAnnotationByIndex(anoIndex);
+        } else {
+          alert('This operation must be performed under syllable object level.');
+        }
+      });
+      this.contentWrapperElement.find('#tdvPropBtnAnoDelete').unbind('click').bind('click', function () {
+        if (tdVE.layoutMgr.getEditionObjectLevel() === 'syllable') {
+          tdVE.deleteAnnotationByIndex(anoIndex);
+        } else {
+          alert('This operation must be performed under syllable object level.');
+        }
+      });
+
+      this.contentWrapperElement.find('#tdvPropBtnAnoNext').unbind('click').bind('click', function () {
+        if (tdVE.layoutMgr.getEditionObjectLevel() === 'syllable') {
+          var segPrefixedID = anoDatum.segIDs[0];
+          var nextSegID = tdVE.advanceEdnVESyllableSelection(segPrefixedID);
+          if (nextSegID) {
+            if (tdVE.findAnnotationIndexBySegID(['seg' + nextSegID]) !== null) {
+              alert('An annotation has already been associated with this syllable. Delete the existing annotation before creating the new annotation.');
+            } else {
+              tdVE.enterAnnotateMode();
+            }
+          } else {
+            alert('Reached end of the line.');
+          }
+        } else {
+          alert('This operation must be performed under syllable object level.');
+        }
+      });
+    }
+  },
+
+  /**
+   * Find the datum from the annotation data based on the 3D annotation index.
+   *
+   * @param {int} index
+   * @return {object}
+   */
+  findAnnotationDatumByIndex: function (index) {
+    if (Object.keys(this.annotationData).length > 0) {
+      var anoType;
+      var i;
+      for (anoType in this.annotationData) {
+        if (this.annotationData.hasOwnProperty(anoType) && this.annotationData[anoType].length > 0) {
+          for (i = 0; i < this.annotationData[anoType].length; i++) {
+            if (typeof this.annotationData[anoType][i].index !== 'undefined' && this.annotationData[anoType][i].index === index) {
+              this.annotationData[anoType][i].type = anoType;
+              return this.annotationData[anoType][i];
+            }
+          }
+        }
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Delete an annotation by its index.
+   *
+   * @param {int} index
+   */
+  deleteAnnotationByIndex: function (index) {
+    var tdVE = this;
+    if (Object.keys(this.annotationData).length > 0) {
+      var anoType;
+      var i;
+      for (anoType in this.annotationData) {
+        if (this.annotationData.hasOwnProperty(anoType) && this.annotationData[anoType].length > 0) {
+          for (i = 0; i < this.annotationData[anoType].length; i++) {
+            if (typeof this.annotationData[anoType][i].index !== 'undefined' && this.annotationData[anoType][i].index === index) {
+              var segID = this.annotationData[anoType][i]['segIDs'][0].substr(3);
+              var sclID = this.annotationData[anoType][i]['entityID'].substr(4);
+              if (typeof this.dataMgr.tdViewerData.annotations.syllables[sclID] !== 'undefined') {
+                delete this.dataMgr.tdViewerData.annotations.syllables[sclID];
+              }
+              this.annotationData[anoType][i].deleted = true;
+              this.api.unselectAnnotation();
+              this.hideAnnotationByDatum(this.annotationData[anoType][i]);
+              this.loadDefaultPropertyView();
+              $.ajax({
+                type:"POST",
+                dataType: 'json',
+                url: this.dataMgr.basepath + '/services/saveSegment3DAnnotation.php?db=' + this.dataMgr.dbName,
+                data: {
+                  segID: segID
+                },
+                success: function (data, status, xhr) {
+                  if (!data.success) {
+                    alert("An error occurred while trying to delete the 3D model Annotation. Error: " + data.errors.join(','))
+                  }
+                },
+                error: function (xhr,status,error) {
+                  alert("An error occurred while trying to delete the 3D model annotation. Error: " + error);
+                }
+              });
+              break;
+            }
+          }
+        }
+      }
+    }
+  },
+
+  /**
+   * Edit an annotation by its index.
+   *
+   * @param {int} index
+   */
+  editAnnotationByIndex: function (index) {
+    this.deleteAnnotationByIndex(index);
+    this.enterAnnotateMode();
+  },
+
+  /**
+   * Add an annotation for a syllable.
+   *
+   * @param {int} segID The segment ID of the syllable.
+   * @param {int} sclID The syllable ID.
+   * @param {array} position The position of the annotation.
+   * @param {array} camPosition The camera position of the annotation.
+   * @param {array} camTarget The camera target of the annotation.
+   */
+  addSyllableAnnotation: function (segID, sclID, position, camPosition, camTarget) {
+    var tdVE = this;
+    $.ajax({
+      type:"POST",
+      dataType: 'json',
+      url: this.dataMgr.basepath + '/services/saveSegment3DAnnotation.php?db=' + this.dataMgr.dbName,
+      data: {
+        segID: segID,
+        coords: position.join(','),
+        cameraPosition: camPosition.join(','),
+        cameraTarget: camTarget.join(',')
+      },
+      success: function (data, status, xhr) {
+        if (!data.success) {
+          alert("An error occurred while trying to save the 3D model Annotation. Error: " + data.errors.join(','))
+        } else {
+          var anoSourceDatum = tdVE.createSyllableAnnotationSourceDatum(
+              sclID,
+              segID,
+              position.join(','),
+              camPosition.join(','),
+              camTarget.join(',')
+          );
+          var anoTitle = anoSourceDatum.sclTrans.replaceAll("ʔ", "");
+          var anoDescription = '';
+          tdVE.api.createAnnotationFromWorldPosition( //creates annotation
+              position,
+              camPosition,
+              camTarget,
+              anoTitle,
+              anoDescription,
+              function(err, index){
+                if (typeof tdVE.dataMgr.tdViewerData === 'undefined') {
+                  tdVE.dataMgr.tdViewerData = {};
+                }
+                if (typeof tdVE.dataMgr.tdViewerData.annotations === 'undefined') {
+                  tdVE.dataMgr.tdViewerData.annotations = {};
+                }
+                if (typeof tdVE.dataMgr.tdViewerData.annotations.syllables === 'undefined') {
+                  tdVE.dataMgr.tdViewerData.annotations.syllables = {};
+                }
+                tdVE.dataMgr.tdViewerData.annotations.syllables[sclID] = anoSourceDatum;
+
+                tdVE.annotationData.syllable.push({
+                  title: anoTitle,
+                  text: anoDescription,
+                  coords: position,
+                  cameraPosition: camPosition,
+                  cameraTarget: camTarget,
+                  segIDs: ['seg' + segID],
+                  entityID: 'scl:' + sclID,
+                  index: index
+                });
+                tdVE.api.gotoAnnotation(index, {preventCameraAnimation: false, preventCameraMove: false});
+              });
+        }
+      },
+      error: function (xhr,status,error) {
+        alert("An error occurred while trying to save the 3D model annotation. Error: " + error);
+      }
+    });
+  },
+
+  /**
+   * Advance to the next syllable of the current selected syllable in the edition VE.
+   *
+   * @param {string} segPrefixedID The segment ID with the prefix "seg".
+   * @return {int} The segment ID of the next syllable, or null if there's no
+   *   following syllable.
+   */
+  advanceEdnVESyllableSelection: function (segPrefixedID) {
+    var ednVE = this.getActivatedEdnVE();
+    var nextSclElement = null;
+    var nextSegID = null;
+    if (ednVE) {
+      var sclElement = ednVE.contentDiv.find('span.grpGra.' + segPrefixedID).last();
+      var regex = new RegExp('seg\\d+');
+      var elementClass;
+      var segIDMatch;
+      sclElement.nextAll('span.grpGra').each(function () {
+        elementClass = $(this).attr('class');
+        segIDMatch = elementClass.match(regex);
+        if (segIDMatch.length > 0) {
+          nextSclElement = $(this);
+          nextSegID = segIDMatch[0].substr(3);
+          return false;
+        }
+      });
+      if (nextSegID !== null) {
+        $(".selected", ednVE.contentDiv).removeClass("selected");
+        nextSclElement.addClass('selected');
+        nextSclElement.nextAll('span.grpGra.seg' + nextSegID).addClass('selected');
+      }
+    }
+    return nextSegID;
   }
 };
