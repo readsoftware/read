@@ -44,6 +44,8 @@ $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true)
 if (!$data) {
   array_push($errors,"invalid json data - decode failed");
 } else {
+//  print json_encode($_REQUEST);
+  $blnIDs = null;
   if (isset($data['force'])) {
     $forceReclip = true;
   } else {

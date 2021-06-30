@@ -1237,7 +1237,7 @@ function getRowColumnInfo(syllable) {
     } else {
       cOffsetMap = {" ":1,"a":2,"ā":3,"i":4,"ī":5,"u":6,"ū":7,"ṛ":8,"e":9,"ai":10,"o":11,"au":12};
     }
-    if (sclSort.length > 4) {//multi character syllable so has vowel
+    if (sclSort.length > 4 && sclSort[2] != '7') {//multi character syllable so has vowel
       vSort = sclSort.substring(sclSort.length-2);
       if (vSort == "09" || vSort == "01") {//map virama to first column
         columnLabel = sortCodeToCharLookup[(sktSort?"000":"100")][0];
@@ -1267,7 +1267,7 @@ function getRowColumnInfo(syllable) {
         rowLabel += sortCodeToCharLookup[lkIndex][0];
         gSort += lkIndex;
         cSort = cSort.substring(2);
-        sort2 = sort2.substring(2);
+        sort2 = sort2.substring(1);
       }
     }
     gSort += vSort;

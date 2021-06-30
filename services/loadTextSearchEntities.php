@@ -229,7 +229,7 @@
     $sortOrder = array();
     $texts = new Texts($condition,$orderBy,null,null);//get all user visible text
     foreach ($texts as $text){
-      $replacementIDs = $text->getReplacementIDs(true);
+      $replacementIDs = $text->getReplacementIDs();
       if ($replacementIDs && count($replacementIDs)) continue; // skip forwarding references
       $txtID = $text->getID();
       $ckn = $text->getCKN();
