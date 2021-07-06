@@ -95,12 +95,15 @@ if (!$data) {
     $plStartSclGIDs = array();
     // get information to calculate the physical marker positions.
     foreach($seqPhys->getEntities(true) as $edPhysLineSeq) {
-      $startSclGID = ($edPhysLineSeq->getEntityIDs())[0];
-      $physLineInfosBySclGID[$startSclGID] = array(
-                                                    "id" => $edPhysLineSeq->getEntityTag(),
-                                                    "text" => $edPhysLineSeq->getLabel()
-                                                  );
-      array_push($plStartSclGIDs,$startSclGID);
+      $entIDs = $edPhysLineSeq->getEntityIDs();
+      if ($entIDs && count($entIDs) > 0) {
+        $startSclGID = $entIDs[0];
+        $physLineInfosBySclGID[$startSclGID] = array(
+                                                      "id" => $edPhysLineSeq->getEntityTag(),
+                                                      "text" => $edPhysLineSeq->getLabel()   
+                                                    );
+         array_push($plStartSclGIDs,$startSclGID);
+      }
     }
     // all edition words on a display line
     $allWordsNodeGrp = array("id" => $seqText->getEntityTag());
