@@ -60,6 +60,8 @@ if (!$data) {
 } else if (!isset($data['ednID'])) {
   array_push($errors,"must specify an edition using 'ednID=##'");
 } else {
+  $refresh = (isset($data['refresh'])?$data['refresh']:
+              (isset($_REQUEST['refresh'])?$_REQUEST['refresh']:0));
   $ednID = $data['ednID'];
   $edition = new Edition($ednID);
   if ($edition->hasError()) {
@@ -123,7 +125,7 @@ if (!$data) {
           }
         }
 
-        $morphology = $word->getMorphology(null,true);
+        $morphology = $word->getMorphology(null,!$refresh);
         $node = array(
                       "id" => $word->getEntityTag(),
                       "text" => $value,
