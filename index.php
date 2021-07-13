@@ -59,6 +59,7 @@
     <link rel="stylesheet" href="./editors/css/lemmaVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/searchVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/propertyVE.css" type="text/css" />
+    <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.8.2.js"></script>
     <script src="/jquery/jquery-1.11.1.min.js"></script>
     <script src="/d3/d3.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
@@ -140,6 +141,7 @@
     <script src="./editors/js/imgVE.js"></script>
     <script src="./editors/js/attrVE.js"></script>
     <script src="./editors/js/entPropVE.js"></script>
+    <script src="./editors/js/threeDVE.js"></script>
     <script type="text/javascript">
       var navPanelDiv, contDiv, layoutManager,dataManager;
       $(document).ready( function () {
@@ -227,6 +229,21 @@
       </div>
     </div>
   </div>
-
+  <?php
+    if(defined("RENDITION_PLUGIN_BASE_PATH")) {
+      $readRenditionPluginBasePath = RENDITION_PLUGIN_BASE_PATH;
+    } elseif (file_exists(__DIR__ . '/plugins/read-rendition-plugin/read-rendition-plugin.js')) {
+      $readRenditionPluginBasePath = SITE_BASE_PATH . '/plugins/read-rendition-plugin';
+    }
+  ?>
+  <?php if(!empty($readRenditionPluginBasePath)) : ?>
+    <script src="<?= $readRenditionPluginBasePath ?>/read-rendition-plugin.js"></script>
+    <script>
+      READRendPlugin.pluginBasePath = '<?= $readRenditionPluginBasePath ?>';
+      $(document).ready( function () {
+        READRendPlugin.READApp.init();
+      });
+    </script>
+  <?php endif; ?>
 </body>
 </html>

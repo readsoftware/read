@@ -851,6 +851,11 @@ MANAGERS.LayoutManager.prototype = {
     if (paneID) {
       $targetPane = $('.editContainer.' + paneID + ':not(:has(div.editPlaceholder))');
       if (this.focusPaneID && this.focusPaneID != paneID) {
+        // Fire focus out event for the current focus editor.
+        if (this.editors && this.editors[this.focusPaneID]) {
+          $(this.editors[this.focusPaneID].editDiv).trigger('focusout');
+        }
+
         $('#viewToolBarPanel').removeClass('show' + this.focusPaneID + 'TB');
         $('#editToolBarPanel').removeClass('show' + this.focusPaneID + 'TB');
         if ($('.editContainer.' + this.focusPaneID).hasClass('hasFocus')) {
@@ -869,6 +874,10 @@ MANAGERS.LayoutManager.prototype = {
         if (this.editors && this.editors[paneID] && this.editors[paneID].setFocus) {
           this.editors[paneID].setFocus();
         }
+      }
+      // Trigger pane focus event in read rendition plugin.
+      if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
+        READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_PANE_FOCUSED, [paneID]);
       }
     }
   },
@@ -1246,6 +1255,11 @@ MANAGERS.LayoutManager.prototype = {
                 baseline: entity,
                 navSizePercent: 10
               });
+
+            // Trigger image load event in read rendition plugin.
+            if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
+              READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_IMAGE_LOADED, [this.editors[paneID]]);
+            }
           } else {//todo add new transcription implement
             DEBUG.log("warn", "VE for " + this.dataMgr.getTermFromID(entity.type) + " baselines not implemented yet.");
           }
@@ -1263,6 +1277,11 @@ MANAGERS.LayoutManager.prototype = {
               imgEntity: entity,
               navSizePercent: 10
             });
+
+          // Trigger image load event in read rendition plugin.
+          if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
+            READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_IMAGE_LOADED, [this.editors[paneID]]);
+          }
           break;
         case 'edn':
           //todo adjust this so that all editors have interface for setting entity and reinitialising
@@ -1277,6 +1296,11 @@ MANAGERS.LayoutManager.prototype = {
               id: paneID,
               editionEditDiv: $("." + paneID, this.curLayout)[0]
             });
+
+          // Trigger edition load event in read rendition plugin.
+          if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
+            READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_EDITION_LOADED, [this.editors[paneID]]);
+          }
           break;
         case 'cat'://dictionary or glossary
           var catCode, catalog = this.dataMgr.getEntity('cat', entID);
@@ -1325,6 +1349,11 @@ MANAGERS.LayoutManager.prototype = {
               if (prefix == "edn" || prefix == "cat") {
                 config[prefix + 'ID'] = entID;
                 this.editors[paneID] = new EDITORS.WordlistVE(config);
+
+                // Trigger word list load event in read rendition plugin.
+                if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
+                  READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_WORD_LIST_LOADED, [this.editors[paneID]]);
+                }
               } else {
                 $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">unknown report entity.</div>');
               }
@@ -1428,6 +1457,22 @@ MANAGERS.LayoutManager.prototype = {
             case 'bi'://Bibliography
               rptLabel = 'Bibliography';
               $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">' + rptLabel + ' report is under construction.</div>');
+              break;
+            case 'tdv':
+              config = {
+                eventMgr: layoutMgr,
+                layoutMgr: layoutMgr,
+                entGID: 'tdv-' + entGID,
+                dataMgr: this.dataMgr,
+                edition: entity,
+                id: paneID,
+                editDiv: $("." + paneID, this.curLayout)[0]
+              };
+              if (prefix == "edn") {
+                this.editors[paneID] = new EDITORS.threeDVE(config);
+              } else {
+                $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">3D Viewer/Editor currently starts with an edition entity.</div>');
+              }
               break;
             default:
               DEBUG.log("warn", "No report generator for rptID " + rpt + " and entity " + entGID);
