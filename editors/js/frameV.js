@@ -138,6 +138,9 @@ EDITORS.FrameV.prototype = {
           if (frameV.selectURL) {
             //template url where entity value field replaces {{value}} in url string
             url = frameV.selectURL.replace(/\{\{value\}\}/g,value);
+            if (url.indexOf('{{type}}')) {
+              url = url.replace(/\{\{type\}\}/g,'F'); // Warning API mapping  S is mapped to  phonetic for maya and F lemma
+            }
           } else { 
             if (frameV.serviceURL) {
               url = frameV.serviceURL;

@@ -179,7 +179,7 @@
                 }
                 $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
                 if ($segBlnOrder) {
-                  $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
+                  $entities['seg'][$segID]['ordinal'] = $segBlnOrder;
                 }
                 $stringpos = $segment->getStringPos();
                 if ($stringpos && count($stringpos) > 0) {

@@ -1295,7 +1295,7 @@ MANAGERS.LayoutManager.prototype = {
             if (catalog.value == "GD") {
               config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype=F';
             } else if (catalog.value == "MG") {
-              config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}\\??\\)|{{value}}\\??,&searchtype=S';
+              config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype={{type}}';
             }
             config['url'] = basepath + '/plugins/dictionary/index.php?dictionary=' + catCode + '&searchstring=a&searchtype=F&strJSON={"dictionary":"' + catCode + '","mode":"getdictionarystats"}';
             config['entGID'] = entGID;

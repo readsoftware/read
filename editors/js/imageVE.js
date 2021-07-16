@@ -2079,7 +2079,7 @@ selectPolygons: function () {
         if (imgVE.linkMode) {
           $('.editContainer').trigger('linkResponse',[imgVE.id,imgVE.getSelectedPolygonLabels()[0]]);
         } else {
-          $('.editContainer').trigger('updateselection',[imgVE.id,imgVE.getSelectedPolygonLabels()]);
+          $('.editContainer').trigger('updateselection',[imgVE.id,imgVE.getSelectedPolygonLabels(),imgVE.getSelectedPolygonLabels()[0]]);
         }
       }
     };

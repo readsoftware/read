@@ -605,7 +605,7 @@
         }
         $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
         if ($segBlnOrder) {
-          $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
+          $entities['seg'][$segID]['ordinal'] = $segBlnOrder;
         }
         $AnoIDs = $segment->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {
@@ -650,8 +650,13 @@
                                'boundary' => $image->getBoundary());
         if ($url) {
           $info = pathinfo($url);
-          $thumbUrl = $info['dirname']."/th".$info['basename'];
-          $entities['img'][$imgID]['thumbUrl'] = $thumbUrl;
+          $dirname = $info['dirname'];
+          if (strpos($dirname,'full/full') > -1) { //assume iiif
+            $fullpath = str_replace('full/full','full/pct:5',$dirname).'/'.$info['basename'];
+          } else {
+            $fullpath =  $dirname."/th".$info['basename'];
+          }
+          $entities['img'][$imgID]['thumbUrl'] = $fullpath;
         }
         $AnoIDs = $image->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {

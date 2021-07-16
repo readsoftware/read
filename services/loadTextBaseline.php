@@ -262,8 +262,13 @@
                                                      'boundary' => $image->getBoundary());
         if ($url) {
           $info = pathinfo($url);
-          $thumbUrl = $info['dirname']."/th".$info['basename'];
-          $entities['update']['img'][$imgID]['thumbUrl'] = $thumbUrl;
+          $dirname = $info['dirname'];
+          if (strpos($dirname,'full/full') > -1) { //assume iiif
+            $fullpath = str_replace('full/full','full/pct:5',$dirname).'/'.$info['basename'];
+          } else {
+            $fullpath =  $dirname."/th".$info['basename'];
+          }
+          $entities['update']['img'][$imgID]['thumbUrl'] = $fullpath;
         }
         $AnoIDs = $image->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {

@@ -1776,7 +1776,13 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false, $isMultiTe
             $imgURLsbyBlnImgTag['img'][$sort]['title'] = $title?$title:"";
             if ($url) {
               $info = pathinfo($url);
-              $imgURLsbyBlnImgTag['img'][$sort]['thumbUrl'] = $info['dirname']."/th".$info['basename'];
+              $dirname = $info['dirname'];
+              if (strpos($dirname,'full/full') > -1) { //assume iiif
+                $fullpath = str_replace('full/full','full/pct:5',$dirname).'/'.$info['basename'];
+              } else {
+                $fullpath =  $dirname."/th".$info['basename'];
+              }
+              $imgURLsbyBlnImgTag['img'][$sort]['thumbUrl'] = $fullpath;
             }
           }
         }

@@ -761,8 +761,12 @@
                   $entities['seg'][$segID]['sclIDs']= $segID2sclIDs[$segID];
                 }
                 if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
-                  $boundary = $boundary[0];//WARNING todo handle multipolygon boundary case???
-                  $entities['seg'][$segID]['boundary']= array($boundary->getPoints());
+//                  $boundary = $boundary[0];//WARNING todo handle multipolygon boundary case???
+//                  $entities['seg'][$segID]['boundary']= array($boundary->getPoints());
+                  $entities['seg'][$segID]['boundary']= array();
+                  foreach($boundary as $polygon) {
+                    array_push($entities['seg'][$segID]['boundary'], $polygon->getPoints());
+                  }
                   $entities['seg'][$segID]['urls']= $segment->getURLs();
                 }
                 $mappedSegIDs = $segment->getMappedSegmentIDs();
@@ -771,7 +775,7 @@
                 }
                 $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
                 if ($segBlnOrder) {
-                  $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
+                  $entities['seg'][$segID]['ordinal'] = $segBlnOrder;
                 }
                 $sBlnIDs = $segment->getBaselineIDs();
                 if ($sBlnIDs && count($sBlnIDs) > 0) {

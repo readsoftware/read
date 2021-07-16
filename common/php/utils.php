@@ -3355,7 +3355,7 @@ function validateTokCmp ($tokCmpGID, $ctxMessage, $topTokCmpGID) {
       //ToDo:  add code to add <a> for a service to correct the issue.
     } else {// process each token or compound depth first
       $label = $entity->getValue();
-      if(!$label || strlen($label) == 0) {
+      if(is_null($label) || $label === '' || strlen($label) == 0) {
         array_push($hltherrors,"Error tok/cmp ($tokCmpGID) located in $ctxMessage has no value.");
       }
       $newCtxMessage = "$ctxMessage, token/compound ($label/$tokCmpGID)";
@@ -3980,7 +3980,13 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
           $blnInfoBySort[$sort]['title'] = $title?$title:"";
           if ($url) {
             $info = pathinfo($url);
-            $blnInfoBySort[$sort]['thumbUrl'] = $info['dirname']."/th".$info['basename'];
+            $dirname = $info['dirname'];
+            if (strpos($dirname,'full/full') > -1) { //assume iiif
+              $fullpath = str_replace('full/full','full/pct:5',$dirname).'/'.$info['basename'];
+            } else {
+              $fullpath =  $dirname."/th".$info['basename'];
+            }
+            $blnInfoBySort[$sort]['thumbUrl'] = $fullpath;
           }
         }
         $ednLookupInfo['blnInfoBySort'] = $blnInfoBySort;
@@ -4428,6 +4434,10 @@ function getThumbFromFilename($filename) {
 
 function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $maxSizeX = 150, $maxSizeY = 150) {
   $sourcefile = $srcPath.$srcFilename;
+  if (strpos($sourcefile,'full/full') > -1) { //assume iiif
+    return str_replace('full/full','full/pct:5',$sourcefile);
+  }
+
   $thumbfile = $targetPath.getThumbFromFilename($srcFilename);
   list($imageW,$imageH) = getimagesize($sourcefile);
   if ($imageW <= $maxSizeX && $imageH <= $maxSizeY && preg_match("/^th/",$srcFilename)) { // small image or likely a thumbnail
