@@ -1179,6 +1179,7 @@ EDITORS.SearchVE.prototype = {
     rptDiv.append($('<div id="cy-'+ednGID+'" class="draghandle"/>'));
     rptPanel.append(rptDiv);
     if (
+      (typeof Sketchfab !== 'undefined') &&
       (typeof this.dataMgr.tdViewerData !== 'undefined') &&
       (typeof this.dataMgr.tdViewerData.models !== 'undefined') &&
       ednGID &&

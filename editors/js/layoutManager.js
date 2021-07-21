@@ -1435,19 +1435,21 @@ MANAGERS.LayoutManager.prototype = {
               $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">' + rptLabel + ' report is under construction.</div>');
               break;
             case 'tdv':
-              config = {
-                eventMgr: layoutMgr,
-                layoutMgr: layoutMgr,
-                entGID: 'tdv-' + entGID,
-                dataMgr: this.dataMgr,
-                edition: entity,
-                id: paneID,
-                editDiv: $("." + paneID, this.curLayout)[0]
-              };
-              if (prefix == "edn") {
-                this.editors[paneID] = new EDITORS.threeDVE(config);
-              } else {
-                $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">3D Viewer/Editor currently starts with an edition entity.</div>');
+              if (typeof Sketchfab !== 'undefined') {
+                config = {
+                  eventMgr: layoutMgr,
+                  layoutMgr: layoutMgr,
+                  entGID: 'tdv-' + entGID,
+                  dataMgr: this.dataMgr,
+                  edition: entity,
+                  id: paneID,
+                  editDiv: $("." + paneID, this.curLayout)[0]
+                };
+                if (prefix == "edn") {
+                  this.editors[paneID] = new EDITORS.threeDVE(config);
+                } else {
+                  $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">3D Viewer/Editor currently starts with an edition entity.</div>');
+                }
               }
               break;
             default:
