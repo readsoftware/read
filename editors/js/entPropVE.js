@@ -2315,7 +2315,6 @@ removeBln: function(blnTag) {
       if (typeof this.dataMgr.tdViewerData.models[this.entID] !== 'undefined') {
         modelID = this.dataMgr.tdViewerData.models[this.entID].modelUID;
       }
-      // uiHtml += ' <span><a href="https://sketchfab.com/models/' + modelID  + '" target="_blank">' + modelID + '</a></span>';
       uiHtml += ' <span><input type="text" id="tdInfoUIDInput"></span>';
 
     }
@@ -2332,6 +2331,7 @@ removeBln: function(blnTag) {
     this.tdinfoUI.find('#tdInfoUIDSaveBtn').unbind('click').bind('click', function () {
       var txtID = propVE.entID;
       var uid = $(this).parent().parent().find('#tdInfoUIDInput').val();
+      // Update the 3D UID in the database. Empty input will delete the UID from the text.
       $.ajax({
         type:"POST",
         dataType: 'json',
@@ -2345,6 +2345,7 @@ removeBln: function(blnTag) {
             alert("An error occurred while trying to save the 3D model UID. Error: " + data.errors.join(','))
           } else {
             if (uid) {
+              // Sync the data manager with the 3D model UID.
               if (typeof propVE.dataMgr.tdViewerData === 'undefined') {
                 propVE.dataMgr.tdViewerData = {};
               }
@@ -2356,6 +2357,7 @@ removeBln: function(blnTag) {
                 modelUID: uid
               };
             } else {
+              // Delete the 3D model UID from the data manager.
               if (typeof propVE.dataMgr.tdViewerData.models[txtID] !== 'undefined') {
                 delete propVE.dataMgr.tdViewerData.models[txtID];
               }

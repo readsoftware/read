@@ -201,6 +201,9 @@ EDITORS.threeDVE.prototype = {
    * annotations. Once one annotation is created, it will continue to create
    * the next until all the annotation data are consumed.
    *
+   * The method is written in this way due to the async nature of Sketchfab
+   * api to ensure the sequence of 3D annotation creation.
+   *
    * @param {string} objLevel The annotation object level, which could be
    *   'syllable', 'token' or 'compound'.
    * @param {int} anoDataIndex The index of the annotation data item.
@@ -541,14 +544,15 @@ EDITORS.threeDVE.prototype = {
    * @return {Array} An list of syllable GIDs.
    */
   getEditionSyllableIDs: function () {
-    var sclIDs = [];
+    var sclGIDs = [];
     var i, j;
     if (this.edition !== null) {
       var ednSeqIDs = this.edition.seqIDs;
       if (ednSeqIDs) {
         var ednSclSeq = null;
         for (i = 0; i < ednSeqIDs.length; i++) {
-          if (this.dataMgr.entities.seq[ednSeqIDs[i]].typeID === '736') {
+          // !!!warning term dependency
+          if (this.dataMgr.entities.seq[ednSeqIDs[i]].typeID === this.dataMgr.getIDFromTermParentTerm('TextPhysical', 'SequenceType').toString()) {
             ednSclSeq = this.dataMgr.entities.seq[ednSeqIDs[i]];
             break;
           }
@@ -564,7 +568,7 @@ EDITORS.threeDVE.prototype = {
                   for (j = 0; j < subSeq.entityIDs.length; j++) {
                     var parsedEntityID = this.parseGID(subSeq.entityIDs[j]);
                     if (parsedEntityID.prefix === 'scl') {
-                      sclIDs.push(subSeq.entityIDs[j]);
+                      sclGIDs.push(subSeq.entityIDs[j]);
                     }
                   }
                 }
@@ -574,7 +578,7 @@ EDITORS.threeDVE.prototype = {
         }
       }
     }
-    return sclIDs;
+    return sclGIDs;
   },
 
   /**
@@ -591,7 +595,8 @@ EDITORS.threeDVE.prototype = {
       if (ednSeqIDs) {
         var ednTokSeq = null;
         for (i = 0; i < ednSeqIDs.length; i++) {
-          if (this.dataMgr.entities.seq[ednSeqIDs[i]].typeID === '738') {
+          // !!!warning term dependency
+          if (this.dataMgr.entities.seq[ednSeqIDs[i]].typeID === this.dataMgr.getIDFromTermParentTerm('Text', 'SequenceType').toString()) {
             ednTokSeq = this.dataMgr.entities.seq[ednSeqIDs[i]];
             break;
           }
@@ -664,7 +669,9 @@ EDITORS.threeDVE.prototype = {
    * @return {*|string}
    */
   getTranslationText: function (entityGID) {
-    return this.getEntityAnnotationText(entityGID, "761");
+    // !!!warning term dependency
+    var anoTypeID = this.dataMgr.getIDFromTermParentTerm('Translation', 'AnnotationType').toString();
+    return this.getEntityAnnotationText(entityGID, anoTypeID);
   },
 
   /**
@@ -674,7 +681,9 @@ EDITORS.threeDVE.prototype = {
    * @return {*|string}
    */
   getChayaText: function (entityGID) {
-    return this.getEntityAnnotationText(entityGID, "1421");
+    // !!!warning term dependency
+    var anoTypeID = this.dataMgr.getIDFromTermParentTerm('Chaya', 'Translation').toString();
+    return this.getEntityAnnotationText(entityGID, anoTypeID);
   },
 
   /**

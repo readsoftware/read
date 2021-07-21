@@ -486,9 +486,9 @@
      * @return string|null
      */
     public function get3DModelUID() {
-      $scratch = $this->getScratchProperty('tdViewer');
-      if (isset($scratch['uid'])) {
-        return $scratch['uid'];
+      $modelData = $this->getScratchProperty('tdViewer');
+      if (isset($modelData['uid'])) {
+        return $modelData['uid'];
       }
       return null;
     }

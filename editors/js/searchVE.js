@@ -1181,6 +1181,8 @@ EDITORS.SearchVE.prototype = {
     if (
       (typeof this.dataMgr.tdViewerData !== 'undefined') &&
       (typeof this.dataMgr.tdViewerData.models !== 'undefined') &&
+      ednGID &&
+      edition.txtID &&
       (this.dataMgr.tdViewerData.models.hasOwnProperty(edition.txtID))
     ) {
       rptDiv =$('<div class="reportmenuitem"><div class="reportmenuitemlabellvl2">3D Viewer</div></div>');

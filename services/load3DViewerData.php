@@ -49,11 +49,11 @@ $texts = new Texts('', 'txt_id', null, null);
 if ($texts->getCount() > 0) {
   $responseData['models'] = [];
   foreach ($texts as $text) {
-    $tdvData = $text->getScratchProperty('tdViewer');
-    if (isset($tdvData['uid'])) {
+    $modelData = $text->getScratchProperty('tdViewer');
+    if (isset($modelData['uid'])) {
       $responseData['models'][$text->getID()] = [
         'txtID' => $text->getID(),
-        'modelUID' => $tdvData['uid'],
+        'modelUID' => $modelData['uid'],
       ];
     }
   }
@@ -67,8 +67,8 @@ $syllables = new SyllableClusters('', 'scl_id', null, null);
 foreach ($syllables as $syllable) {
   $sclSeg = $syllable->getSegment(TRUE);
   if ($sclSeg) {
-    $sclSegTDVData = $sclSeg->getScratchProperty('tdViewer');
-    if (isset($sclSegTDVData['annotations']) && count($sclSegTDVData['annotations']) > 0) {
+    $modelData = $sclSeg->getScratchProperty('tdViewer');
+    if (isset($modelData['annotations']) && count($modelData['annotations']) > 0) {
       $sclAnoItem = [
         'sclID' => $syllable->getID(),
         'segID' => $sclSeg->getID(),
@@ -82,7 +82,7 @@ foreach ($syllables as $syllable) {
         $sclGraphemeValues[] = $sclGrapheme->getGrapheme();
       }
       $sclAnoItem['sclTrans'] = implode('', $sclGraphemeValues);
-      $sclAnoItem['annotations'] = $sclSegTDVData['annotations'];
+      $sclAnoItem['annotations'] = $modelData['annotations'];
       $sclAnoData[$syllable->getID()] = $sclAnoItem;
     }
   }

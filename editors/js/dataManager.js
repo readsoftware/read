@@ -2075,6 +2075,9 @@ removeTextResourcesCache: function(txtID) {
     DEBUG.traceExit("dataMgr.loadTextSearch","search = " + search);
   },
 
+  /**
+   * Call service to load the required data for 3D VE.
+   */
   loadTDViewerData: function () {
     DEBUG.traceEntry("dataMgr.loadTDViewerData");
     var dataMgr = this, dataQuery = "",

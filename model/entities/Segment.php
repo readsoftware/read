@@ -484,9 +484,9 @@
      * @return array|null The annotations in an array.
      */
     public function get3DModelAnnotations() {
-      $scratch = $this->getScratchProperty('tdViewer');
-      if (isset($scratch['annotations'])) {
-        return $scratch['annotations'];
+      $modelData = $this->getScratchProperty('tdViewer');
+      if (isset($modelData['annotations'])) {
+        return $modelData['annotations'];
       }
       return null;
     }

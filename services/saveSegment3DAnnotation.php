@@ -22,9 +22,9 @@
  * the request body.
  *
  * - segID: (required) The segment ID.
- * - coords: (optional) The 3D position of the annotation.
- * - cameraPosition: (optional) The camera position of the annotation.
- * - cameraTarget: (optional) The camera target of the annotation.
+ * - coords: (optional) The 3D position of the 3D annotation.
+ * - cameraPosition: (optional) The camera position of the 3D annotation.
+ * - cameraTarget: (optional) The camera target of the 3D annotation.
  *
  * If only the segment ID is passed in, it will delete the current annotation
  * of the segment.
