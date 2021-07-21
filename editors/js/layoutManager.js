@@ -875,10 +875,6 @@ MANAGERS.LayoutManager.prototype = {
           this.editors[paneID].setFocus();
         }
       }
-      // Trigger pane focus event in read rendition plugin.
-      if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
-        READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_PANE_FOCUSED, [paneID]);
-      }
     }
   },
 
@@ -1255,11 +1251,6 @@ MANAGERS.LayoutManager.prototype = {
                 baseline: entity,
                 navSizePercent: 10
               });
-
-            // Trigger image load event in read rendition plugin.
-            if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
-              READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_IMAGE_LOADED, [this.editors[paneID]]);
-            }
           } else {//todo add new transcription implement
             DEBUG.log("warn", "VE for " + this.dataMgr.getTermFromID(entity.type) + " baselines not implemented yet.");
           }
@@ -1277,11 +1268,6 @@ MANAGERS.LayoutManager.prototype = {
               imgEntity: entity,
               navSizePercent: 10
             });
-
-          // Trigger image load event in read rendition plugin.
-          if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
-            READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_IMAGE_LOADED, [this.editors[paneID]]);
-          }
           break;
         case 'edn':
           //todo adjust this so that all editors have interface for setting entity and reinitialising
@@ -1296,11 +1282,6 @@ MANAGERS.LayoutManager.prototype = {
               id: paneID,
               editionEditDiv: $("." + paneID, this.curLayout)[0]
             });
-
-          // Trigger edition load event in read rendition plugin.
-          if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
-            READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_EDITION_LOADED, [this.editors[paneID]]);
-          }
           break;
         case 'cat'://dictionary or glossary
           var catCode, catalog = this.dataMgr.getEntity('cat', entID);
@@ -1349,11 +1330,6 @@ MANAGERS.LayoutManager.prototype = {
               if (prefix == "edn" || prefix == "cat") {
                 config[prefix + 'ID'] = entID;
                 this.editors[paneID] = new EDITORS.WordlistVE(config);
-
-                // Trigger word list load event in read rendition plugin.
-                if (typeof READRendPlugin !== 'undefined' && READRendPlugin.READApp.eventManager) {
-                  READRendPlugin.READApp.eventManager.trigger(READRendPlugin.EventManager.EVENT_WORD_LIST_LOADED, [this.editors[paneID]]);
-                }
               } else {
                 $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">unknown report entity.</div>');
               }
