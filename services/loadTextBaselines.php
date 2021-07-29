@@ -185,6 +185,20 @@
                 if ($stringpos && count($stringpos) > 0) {
                   $entities['seg'][$segID]['stringpos']= $stringpos;
                 }
+                $segCode = $segment->getScratchProperty("sgnCode");
+                if ($segCode) {
+                  $entities['seg'][$segID]['code'] = $segCode;
+                  $entities['seg'][$segID]['value'] = $segCode;
+                }
+                $segCatCode = $segment->getScratchProperty("sgnCatCode");
+                if ($segCatCode) {
+                  $entities['seg'][$segID]['pcat'] = $segCatCode;
+          //        $entities['seg'][$segID]['value'] = $segCatCode;
+                }
+                $segLoc = $segment->getScratchProperty("sgnLoc");
+                if ($segLoc) {
+                  $entities['seg'][$segID]['loc'] = $segLoc;
+                }
                 foreach ($segment->getSpans(true) as $span) {
                   $spnID = $span->getID();
                   if ($spnID && !array_key_exists($spnID, $entities['spn'])) {
@@ -385,6 +399,20 @@
           $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
           if ($segBlnOrder) {
             $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
+          }
+          $segCode = $segment->getScratchProperty("sgnCode");
+          if ($segCode) {
+            $entities['seg'][$entID]['code'] = $segCode;
+            $entities['seg'][$entID]['value'] = $segCode;
+          }
+          $segCatCode = $segment->getScratchProperty("sgnCatCode");
+          if ($segCatCode) {
+            $entities['seg'][$entID]['pcat'] = $segCatCode;
+    //        $entities['seg'][$entID]['value'] = $segCatCode;
+          }
+          $segLoc = $segment->getScratchProperty("sgnLoc");
+          if ($segLoc) {
+            $entities['seg'][$entID]['loc'] = $segLoc;
           }
           break;
         case 'atb':

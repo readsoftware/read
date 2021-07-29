@@ -1262,7 +1262,55 @@ class Parser {
                                 $char10 = mb_substr($script,$i+9,1);
                                 if (array_key_exists($char10,$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9])){ // another char for grapheme
                                   $inc++;
-                                  if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10])){ // invalid sequence
+                                  $char11 = mb_substr($script,$i+10,1);
+                                  if (array_key_exists($char11,$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10])){ // another char for grapheme
+                                    $inc++;
+                                    $char12 = mb_substr($script,$i+11,1);
+                                    if (array_key_exists($char12,$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11])){ // another char for grapheme
+                                      $inc++;
+                                      $char13 = mb_substr($script,$i+12,1);
+                                      if (array_key_exists($char13,$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12])){ // another char for grapheme
+                                        $inc++;
+                                        if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12][$char13])){ // invalid sequence
+                                          array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2$char3$char4$char5$char6$char7$char8$char9$char10$char11$char12$char13 has no sort code"." cfg line # $cfgLnCnt");
+                                          return false;
+                                        }else{//found valid grapheme, save it
+                                          $str = $char.$char2.$char3.$char4.$char5.$char6.$char7.$char8.$char9.$char10.$char11.$char12.$char13;
+                                          $ustr = $testChar.$char2.$char3.$char4.$char5.$char6.$char7.$char8.$char9.$char10.$char11.$char12.$char13;
+                                          $typ = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12][$char13]['typ'];
+                                          if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12][$char13])) {
+                                            $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12][$char13]['ssrt'];
+                                          } else {
+                                            $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12][$char13]['srt'];
+                                          }
+                                        }
+                                      } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12])){ // invalid sequence
+                                        array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2$char3$char4$char5$char6$char7$char8$char9$char10$char11$char12 has no sort code"." cfg line # $cfgLnCnt");
+                                        return false;
+                                      }else{//found valid grapheme, save it
+                                        $str = $char.$char2.$char3.$char4.$char5.$char6.$char7.$char8.$char9.$char10.$char11.$char12;
+                                        $ustr = $testChar.$char2.$char3.$char4.$char5.$char6.$char7.$char8.$char9.$char10.$char11.$char12;
+                                        $typ = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12]['typ'];
+                                        if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12])) {
+                                          $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12]['ssrt'];
+                                        } else {
+                                          $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11][$char12]['srt'];
+                                        }
+                                      }
+                                    } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11])){ // invalid sequence
+                                      array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2$char3$char4$char5$char6$char7$char8$char9$char10$char11 has no sort code"." cfg line # $cfgLnCnt");
+                                      return false;
+                                    }else{//found valid grapheme, save it
+                                      $str = $char.$char2.$char3.$char4.$char5.$char6.$char7.$char8.$char9.$char10.$char11;
+                                      $ustr = $testChar.$char2.$char3.$char4.$char5.$char6.$char7.$char8.$char9.$char10.$char11;
+                                      $typ = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11]['typ'];
+                                      if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11])) {
+                                        $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11]['ssrt'];
+                                      } else {
+                                        $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10][$char11]['srt'];
+                                      }
+                                    }
+                                  } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5][$char6][$char7][$char8][$char9][$char10])){ // invalid sequence
                                     array_push($this->_errors,"incomplete trascription at character $i line $lineMask, grapheme $char$char2$char3$char4$char5$char6$char7$char8$char9$char10 has no sort code"." cfg line # $cfgLnCnt");
                                     return false;
                                   }else{//found valid grapheme, save it

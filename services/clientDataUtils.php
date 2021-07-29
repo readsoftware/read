@@ -280,10 +280,15 @@ function addNewEntityReturnData($prefix,$entity) {
       if ($segBlnOrder) {
         $entities["insert"]['seg'][$entID]['ordinal'] = $segBlnOrder;
       }
-      $segCode = $segment->getScratchProperty("code");
+      $segCode = $segment->getScratchProperty("sgnCode");
       if ($segCode) {
         $entities["insert"]['seg'][$entID]['code'] = $segCode;
         $entities["insert"]['seg'][$entID]['value'] = $segCode;
+      }
+      $segCatCode = $segment->getScratchProperty("sgnCatCode");
+      if ($segCatCode) {
+        $entities["insert"]['seg'][$entID]['pcat'] = $segCatCode;
+//        $entities["insert"]['seg'][$entID]['value'] = $segCatCode;
       }
       $segLoc = $segment->getScratchProperty("sgnLoc");
       if ($segLoc) {

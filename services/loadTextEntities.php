@@ -607,6 +607,20 @@
         if ($segBlnOrder) {
           $entities['seg'][$segID]['ordinal'] = $segBlnOrder;
         }
+        $segCode = $segment->getScratchProperty("sgnCode");
+        if ($segCode) {
+          $entities['seg'][$segID]['code'] = $segCode;
+          $entities['seg'][$segID]['value'] = $segCode;
+        }
+        $segCatCode = $segment->getScratchProperty("sgnCatCode");
+        if ($segCatCode) {
+          $entities['seg'][$segID]['pcat'] = $segCatCode;
+  //        $entities['seg'][$segID]['value'] = $segCatCode;
+        }
+        $segLoc = $segment->getScratchProperty("sgnLoc");
+        if ($segLoc) {
+          $entities['seg'][$segID]['loc'] = $segLoc;
+        }
         $AnoIDs = $segment->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {
           $entities['seg'][$segID]['annotationIDs'] = $AnoIDs;

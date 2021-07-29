@@ -214,10 +214,15 @@
           if ($segBlnOrder) {
             $entities["insert"]['seg'][$segID]['ordinal'] = $segBlnOrder;
           }
-          $segCode = $segment->getScratchProperty("code");
+          $segCode = $segment->getScratchProperty("sgnCode");
           if ($segCode) {
             $entities["insert"]['seg'][$segID]['code'] = $segCode;
             $entities["insert"]['seg'][$segID]['value'] = $segCode;
+          }
+          $segCatCode = $segment->getScratchProperty("sgnCatCode");
+          if ($segCatCode) {
+            $entities["insert"]['seg'][$segID]['pcat'] = $segCatCode;
+    //        $entities["insert"]['seg'][$segID]['value'] = $segCatCode;
           }
           $segLoc = $segment->getScratchProperty("sgnLoc");
           if ($segLoc) {

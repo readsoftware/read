@@ -420,6 +420,9 @@ savePolygons: function () {
                     if (segment.code) {
                       imgVE.polygons[imgVE.polygonLookup[segLabel]-1].code = segment.code;
                     }
+                    if (segment.pcat) {
+                      imgVE.polygons[imgVE.polygonLookup[segLabel]-1].pcat = segment.pcat;
+                    }
                     if (segment.loc) {
                       imgVE.polygons[imgVE.polygonLookup[segLabel]-1].loc = segment.loc;
                     }
