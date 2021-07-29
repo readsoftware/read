@@ -409,6 +409,10 @@
           $segCatCode = $segment->getScratchProperty("sgnCatCode");
           if ($segCatCode) {
             $entities['seg'][$entID]['pcat'] = $segCatCode;
+<<<<<<< HEAD
+=======
+    //        $entities['seg'][$entID]['value'] = $segCatCode;
+>>>>>>> 227e52a7 (Readmayan pcats interact change.)
           }
           $segLoc = $segment->getScratchProperty("sgnLoc");
           if ($segLoc) {

@@ -137,10 +137,13 @@ EDITORS.FrameV.prototype = {
           resLabel = frameV.dictionary;
           //reset src with value of word
           if (frameV.selectURL) {
+            if (frameV.dictionary == 'mg') {
+              value = value + '\\??\\)|' + value + '\\??,'
+            }
             //template url where entity value field replaces {{value}} in url string
             url = frameV.selectURL.replace(/\{\{value\}\}/g,value);
             if (url.indexOf('{{type}}')) {
-              url = url.replace(/\{\{type\}\}/g,'F'); // Warning API mapping  S is mapped to  phonetic for maya and F lemma
+              url = url.replace(/\{\{type\}\}/g,frameV.dictionary == 'mg'?'S':'F'); // Warning API mapping  S is mapped to  phonetic for maya and F lemma
             }
           } else { 
             if (frameV.serviceURL) {
@@ -151,6 +154,39 @@ EDITORS.FrameV.prototype = {
             url += '?dictionary='+frameV.dictionary+'&searchstring='+value+'&searchtype=S&strJSON={"dictionary":"'+frameV.dictionary+'","mode":"F:'+value+'"}';
           }
           frameV.frameElem.attr("src",url);
+        } else if (prefix == 'seg' && frameV.dictionary && frameV.dictionary == 'mg'){//seg link to  Maya Glyphary
+          entity = frameV.dataMgr.getEntity(prefix,id);
+          type = 'O';
+          value = null;
+          if (entity.pcat){
+            value = entity.pcat;
+          } else if (entity.mlc){
+            value = 'ml' + entity.mlc;
+          } else if (entity.mvc){
+            value = 'mv' + entity.mvc;
+          } else if (entity.thc){
+            value = 'th' + entity.thc;
+          } else if (entity.ykc){
+            value = 'yk' + entity.ykc;
+          } else if (entity.atc){
+            value = 'at' + entity.atc;
+          } else if (entity.evr){
+            value = 'evr' + entity.evr;
+          } else if (entity.gates){
+            value = 'gates' + entity.gates;
+          } else if (entity.zimm){
+            value = 'zimm' + entity.zimm;
+          }
+          resLabel = frameV.dictionary;
+          //reset src with value of word
+          if (value && frameV.selectURL) {
+            //template url where entity value field replaces {{value}} in url string
+            url = frameV.selectURL.replace(/\{\{value\}\}/g,value);
+            if (url.indexOf('{{type}}')) {
+              url = url.replace(/\{\{type\}\}/g,type); // Warning API mapping for maya signs is type O for otherID
+            }
+            frameV.frameElem.attr("src",url);
+          }
         }
       }
     };

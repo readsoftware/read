@@ -101,6 +101,10 @@ if (!$data) {
   if ( isset($data['loc'])) {//get loc for segment
     $loc = $data['loc'];
   }
+  $pcat = null;
+  if ( isset($data['pcat'])) {//get pcat for segment
+    $pcat = $data['pcat'];
+  }
   $ord = null;
   if ( isset($data['ordinal'])) {//get ordinal for segment
     $ord = $data['ordinal'];
@@ -185,6 +189,12 @@ if (count($errors) == 0) {
       $segment->storeScratchProperty('sgnLoc', $loc);
       if ($isSegmentUpdate) {
         addUpdateEntityReturnData("seg",$segID,'loc', $segment->getScratchProperty('sgnLoc'));
+      }
+    }
+    if ($pcat !== null) {
+      $segment->storeScratchProperty('sgnCatCode', $pcat);
+      if ($isSegmentUpdate) {
+        addUpdateEntityReturnData("seg",$segID,'pcat', $segment->getScratchProperty('sgnCatCode'));
       }
     }
     if ($ord !== null) {

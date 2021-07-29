@@ -148,10 +148,6 @@ function getNextSegmentState($curState,$nextType) {
     case "L"://Logograph
       if ($nextType == "M") {
         return "E";
-      } else if ($nextType == "L") {//Allow combination of Logograph
-        return "L";
-      } else if ($nextType == "N") {//Allow combination of Logograph with number ending
-        return "N";
       }
       return "S";
       break;
