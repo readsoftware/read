@@ -435,7 +435,7 @@
     */
     protected function kvPairsStringToArray($kvPairsString){
       if (is_string($kvPairsString)) {
-        preg_match_all("/\"?([^\"\'\{\},:]+)\"?=>\"?([^\"\'\{\},:]+)\"?/",$kvPairsString,$matches);
+        preg_match_all("/\"?([^\"\'\{\},:]+)\"?=>\"?([^\"\'\{\}:]+)\"?/",$kvPairsString,$matches);
         if (count($matches) == 3){// we have a match so process
           $pairs = array();
           $cnt = count($matches[0]);
