@@ -1449,6 +1449,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1488,'en=>"Alphabetic"',502,778,NULL,NULL,'A',NULL,NULL,NULL,1,'{2}'),
 (1489,'en=>"copper alloy"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1490,'en=>"lead"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1491,'en=>"metal"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}');
+(1491,'en=>"metal"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1492,'en=>"wood"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}');
 
 ALTER SEQUENCE term_trm_id_seq RESTART WITH 1481;
