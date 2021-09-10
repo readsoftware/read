@@ -50,6 +50,7 @@
     $multiText = (!isset($data['multiText']) || !$data['multiText'])? false:true;//default (parameter missing) not multi edition
     $isStaticView = (!isset($data['staticView'])||$data['staticView']==0)?false:true;
     $hAdjustPX = (!isset($data['hAdjustPX'])||$data['hAdjustPX']==0)?15:$data['hAdjustPX']; // panel height pixel adjustment
+    $hideTitle = (!isset($data['hideTitle'])||$data['hideTitle']==0)?false:true; //used for hiding the title when hosted in iframe
     $cfgEntityTag = null;
     $entityCfgStaticView = null;
     if(!$isStaticView) {
@@ -1407,9 +1408,11 @@
   <div class="headline"><div class="tocNavButton" title="Table of Contents">&#9776;</div><div class="titleDiv"><?=$title?></div>
 <?php
   } else {
+    if (!$hideTitle) {
 ?>
-  <div class="headline"><div class="titleDiv"><?=$title?></div>
+      <div class="headline"><div class="titleDiv"><?=$title?></div>
 <?php
+    }
   }
   if (!$isStaticView && $showExportButton) {
 ?>
