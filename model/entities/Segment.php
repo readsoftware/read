@@ -478,6 +478,19 @@
       return $this->_mapped_segs;
     }
 
+    /**
+     * Get the 3D model annotations.
+     *
+     * @return array|null The annotations in an array.
+     */
+    public function get3DModelAnnotations() {
+      $modelData = $this->getScratchProperty('tdViewer');
+      if (isset($modelData['annotations'])) {
+        return $modelData['annotations'];
+      }
+      return null;
+    }
+
     //********SETTERS*********
     
     /**
@@ -593,6 +606,34 @@
         $this->setDataKeyValuePair("seg_mapped_seg_ids",$this->idsToString($ids));
       }
       $this->_mapped_seg_ids = $ids;
+    }
+
+    /**
+     * Set the 3D model annotations.
+     *
+     * @param array $annotations
+     */
+    public function set3DModelAnnotations(array $annotations) {
+      $modelData = $this->getScratchProperty('tdViewer');
+      if (empty($modelData)) {
+        $modelData = [];
+      }
+      $modelData['annotations'] = $annotations;
+      $this->storeScratchProperty('tdViewer', $modelData);
+    }
+
+    /**
+     * Delete the 3D model annotations.
+     */
+    public function clear3DModelAnnotations() {
+      $modelData = $this->getScratchProperty('tdViewer');
+      if (!empty($modelData)) {
+        unset($modelData['annotations']);
+      }
+      if (empty($modelData)) {
+        $modelData = null;
+      }
+      $this->storeScratchProperty('tdViewer', $modelData);
     }
 
     //*******************************PRIVATE FUNCTIONS************************************

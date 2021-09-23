@@ -851,6 +851,11 @@ MANAGERS.LayoutManager.prototype = {
     if (paneID) {
       $targetPane = $('.editContainer.' + paneID + ':not(:has(div.editPlaceholder))');
       if (this.focusPaneID && this.focusPaneID != paneID) {
+        // Fire focus out event for the current focus editor.
+        if (this.editors && this.editors[this.focusPaneID]) {
+          $(this.editors[this.focusPaneID].editDiv).trigger('focusout');
+        }
+
         $('#viewToolBarPanel').removeClass('show' + this.focusPaneID + 'TB');
         $('#editToolBarPanel').removeClass('show' + this.focusPaneID + 'TB');
         if ($('.editContainer.' + this.focusPaneID).hasClass('hasFocus')) {
@@ -1428,6 +1433,24 @@ MANAGERS.LayoutManager.prototype = {
             case 'bi'://Bibliography
               rptLabel = 'Bibliography';
               $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">' + rptLabel + ' report is under construction.</div>');
+              break;
+            case 'tdv':
+              if (typeof Sketchfab !== 'undefined') {
+                config = {
+                  eventMgr: layoutMgr,
+                  layoutMgr: layoutMgr,
+                  entGID: 'tdv-' + entGID,
+                  dataMgr: this.dataMgr,
+                  edition: entity,
+                  id: paneID,
+                  editDiv: $("." + paneID, this.curLayout)[0]
+                };
+                if (prefix == "edn") {
+                  this.editors[paneID] = new EDITORS.threeDVE(config);
+                } else {
+                  $("." + paneID, this.curLayout).html('<div class="panelMsgDiv">3D Viewer/Editor currently starts with an edition entity.</div>');
+                }
+              }
               break;
             default:
               DEBUG.log("warn", "No report generator for rptID " + rpt + " and entity " + entGID);

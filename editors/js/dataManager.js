@@ -1,18 +1,20 @@
 /**
-* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
-* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
-* at <https://github.com/readsoftware>.
+* This file is part of the Research Environment for Ancient Documents (READ).
+* For information on the authors and copyright holders of READ, please refer to
+* the file AUTHORS in this distribution or at
+* <https://github.com/readsoftware>.
 *
-* READ is free software: you can redistribute it and/or modify it under the terms of the
-* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
-* or (at your option) any later version.
+* READ is free software: you can redistribute it and/or modify it under the
+* terms of the GNU General Public License as published by the Free Software
+* Foundation, either version 3 of the License, or (at your option) any later
+* version.
 *
-* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-* See the GNU General Public License for more details.
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY
+* WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+* A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 *
-* You should have received a copy of the GNU General Public License along with READ.
-* If not, see <http://www.gnu.org/licenses/>.
+* You should have received a copy of the GNU General Public License along with
+* READ. If not, see <http://www.gnu.org/licenses/>.
 */
 
 /**
@@ -21,10 +23,12 @@
 * handles retreieval and update of data
 *
 * @author      Stephen White  <stephenawhite57@gmail.com>
-* @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
+* @copyright   @see AUTHORS in repository root
+*     <https://github.com/readsoftware/read>
 * @link        https://github.com/readsoftware
 * @version     1.0
-* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @license     @see COPYING in repository root or
+*     <http://www.gnu.org/licenses/>
 * @package     READ Research Environment for Ancient Documents
 * @subpackage  Managers
 */
@@ -40,22 +44,29 @@ var MANAGERS = MANAGERS || {};
 * @param dataMgrCfg is a JSON object with the following possible properties
 *  "entTagToLabel" reference to lookup table for term entTag to location label
 *  "entTagToPath" reference to lookup table for term entTag to location label
-*  "tagIDToAnoID" reference to lookup table for tag term id to Annotation entity id
+*  "tagIDToAnoID" reference to lookup table for tag term id to Annotation
+*     entity id
 *  "tags" reference to tag items hierarchical information structure
-*  "seqTypeTagToLabel" reference to lookup table for sequence type term entTag to label
-*  "seqTypeTagToList" reference to lookup table for sequence type term entTag to term list ids
-*  "seqTypes" reference to sequence type items hierarchical information structure
-*  "linkTypeTagToLabel" reference to lookup table for link type term entTag to label
-*  "linkTypeTagToList" reference to lookup table for link type term entTag to term list ids
-*  "linkTypes" reference to linkage type items hierarchical information structure
-*  "sfLinkTypes" reference to Syntatic Function linkage type items hierarchical information structure
+*  "seqTypeTagToLabel" reference to lookup table for sequence type term entTag
+*     to label
+*  "seqTypeTagToList" reference to lookup table for sequence type term entTag
+*     to term list ids
+*  "seqTypes" reference to sequence type items hierarchical information
+*     structure
+*  "linkTypeTagToLabel" reference to lookup table for link type term entTag to
+*     label
+*  "linkTypeTagToList" reference to lookup table for link type term entTag to
+*     term list ids
+*  "linkTypes" reference to linkage type items hierarchical information
+*     structure
+*  "sfLinkTypes" reference to Syntatic Function linkage type items hierarchical
+*     information structure
 *  "basepath" string for basepath of READ
 *  "dbname" string for database name of the current session
 *  "entityInfo" structure of information of entity types
 *  "username" current user name
 *
 * @returns {DataManager}
-
 */
 
 MANAGERS.DataManager =  function(dataMgrCfg) {
@@ -122,6 +133,8 @@ MANAGERS.DataManager.prototype = {
     this.loadAttributions();
     this.entTag2LinkedByAnoIDsByType = {};
     this.entTag2LinkedAnoIDsByType = {};
+    this.tdViewerData = {};
+    this.loadTDViewerData();
     DEBUG.traceExit("dataMgr.init","");
   },
 
@@ -164,7 +177,8 @@ MANAGERS.DataManager.prototype = {
 /**
 * update local cache from passed data
 *
-* @param object retData Structure of entity and lookup data to be updated,added, or removed for cache
+* @param object retData Structure of entity and lookup data to be
+*     updated,added, or removed for cache
 * @param int txtID Text entity id
 */
 
@@ -414,7 +428,8 @@ MANAGERS.DataManager.prototype = {
 
 
 /**
-* checkLinksDissolvable - determine if entity links can be dissolved (ids removed)
+* checkLinksDissolvable - determine if entity links can be dissolved (ids
+* removed)
 *
 * @param string array entGIDs identifying the entities to be checked
 *
@@ -2058,6 +2073,33 @@ removeTextResourcesCache: function(txtID) {
         }
     });
     DEBUG.traceExit("dataMgr.loadTextSearch","search = " + search);
+  },
+
+  /**
+   * Call service to load the required data for 3D VE.
+   */
+  loadTDViewerData: function () {
+    DEBUG.traceEntry("dataMgr.loadTDViewerData");
+    var dataMgr = this, dataQuery = "",
+        i,temp,id,prefix;
+    $.ajax({
+      type:"POST",
+      dataType: 'json',
+      url: this.basepath+'/services/load3DViewerData.php?db='+this.dbName,//caution dependency on context having basepath and dbName
+      async: true,
+      success: function (data, status, xhr) {
+        DEBUG.traceEntry("dataMgr.loadTDViewerData.SuccessCB");
+        if (typeof data == 'object') {
+          dataMgr.tdViewerData = data;
+        }
+        DEBUG.traceExit("dataMgr.loadTDViewerData.SuccessCB");
+      },
+      error: function (xhr,status,error) {
+        // add record failed.
+        alert("An error occurred while trying to retrieve 3D viewer data. Error: " + error);
+      }
+    });
+    DEBUG.traceExit("dataMgr.loadTDViewerData");
   }
 
 }

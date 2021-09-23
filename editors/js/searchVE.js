@@ -1178,6 +1178,18 @@ EDITORS.SearchVE.prototype = {
     rptDiv =$('<div class="reportmenuitem"><div class="reportmenuitemlabellvl2">Chāyā</div></div>');
     rptDiv.append($('<div id="cy-'+ednGID+'" class="draghandle"/>'));
     rptPanel.append(rptDiv);
+    if (
+      (typeof Sketchfab !== 'undefined') &&
+      (typeof this.dataMgr.tdViewerData !== 'undefined') &&
+      (typeof this.dataMgr.tdViewerData.models !== 'undefined') &&
+      ednGID &&
+      edition.txtID &&
+      (this.dataMgr.tdViewerData.models.hasOwnProperty(edition.txtID))
+    ) {
+      rptDiv =$('<div class="reportmenuitem"><div class="reportmenuitemlabellvl2">3D Viewer</div></div>');
+      rptDiv.append($('<div id="tdv-'+ednGID+'" class="draghandle"/>'));
+      rptPanel.append(rptDiv);
+    }
 /*    rptDiv =($('<div class="reportmenuitem">Phonology</div>'));
     rptDiv.append($('<div id="ph-'+ednGID+'" class="draghandle"/>'));
     rptPanel.append(rptDiv);

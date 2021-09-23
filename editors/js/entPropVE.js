@@ -1,27 +1,31 @@
 /**
-* This file is part of the Research Environment for Ancient Documents (READ). For information on the authors
-* and copyright holders of READ, please refer to the file AUTHORS in this distribution or
-* at <https://github.com/readsoftware>.
+* This file is part of the Research Environment for Ancient Documents (READ).
+* For information on the authors and copyright holders of READ, please refer to
+* the file AUTHORS in this distribution or at
+* <https://github.com/readsoftware>.
 *
-* READ is free software: you can redistribute it and/or modify it under the terms of the
-* GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
-* or (at your option) any later version.
+* READ is free software: you can redistribute it and/or modify it under the
+* terms of the GNU General Public License as published by the Free Software
+* Foundation, either version 3 of the License, or (at your option) any later
+* version.
 *
-* READ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-* See the GNU General Public License for more details.
+* READ is distributed in the hope that it will be useful, but WITHOUT ANY
+* WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+* A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 *
-* You should have received a copy of the GNU General Public License along with READ.
-* If not, see <http://www.gnu.org/licenses/>.
+* You should have received a copy of the GNU General Public License along with
+* READ. If not, see <http://www.gnu.org/licenses/>.
 */
 /**
 * editors entPropVE object
 *
 * @author      Stephen White  <stephenawhite57@gmail.com>
-* @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
+* @copyright   @see AUTHORS in repository root
+*     <https://github.com/readsoftware/read>
 * @link        https://github.com/readsoftware
 * @version     1.0
-* @license     @see COPYING in repository root or <http://www.gnu.org/licenses/>
+* @license     @see COPYING in repository root or
+*     <http://www.gnu.org/licenses/>
 * @package     READ Research Environment for Ancient Documents
 * @subpackage  Editors
 */
@@ -230,6 +234,7 @@ EDITORS.EntityPropVE.prototype = {
       if (this.prefix == "txt" && this.entity ) {
         this.createTextInvDisplay();
         this.createTextRefDisplay();
+        this.create3DModelInfoUI();
         this.createImageUI();
         if (this.entity.blnIDs && this.entity.blnIDs.length) {
           this.createBaselineUI();
@@ -2294,6 +2299,79 @@ removeBln: function(blnTag) {
     DEBUG.traceExit("removeAttr");
   },
 
+  /**
+   * Create the text property UI of the 3D VE.
+   */
+  create3DModelInfoUI: function() {
+    DEBUG.traceEntry("create3DModelInfoUI");
+    var modelID = null;
+    var propVE = this;
+    //create UI container
+    this.tdinfoUI = $('<div class="tdinfoUI"></div>');
+    this.contentDiv.append(this.tdinfoUI);
+    var displayUI = $('<div class="propDisplayUI"/>');
+    var uiHtml = '<div class="tdinfoUIHeader"><span>3D Model UID (Sketchfeb):</span>';
+    if (this.prefix === 'txt' && this.entID) {
+      if (typeof this.dataMgr.tdViewerData.models[this.entID] !== 'undefined') {
+        modelID = this.dataMgr.tdViewerData.models[this.entID].modelUID;
+      }
+      uiHtml += ' <span><input type="text" id="tdInfoUIDInput"></span>';
+
+    }
+    if (!(this.entity.readonly && !(this.prefix === "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility)))) {
+      // uiHtml += '<span id="tdInfoUIDEditBtn" class="addButton"><u>Edit</u></span>';
+      uiHtml += ' <span><button class="toolbutton" id="tdInfoUIDSaveBtn">Save</button></span>';
+    }
+    uiHtml += '</div>';
+    displayUI.append($(uiHtml));
+    this.tdinfoUI.append(displayUI);
+    if (modelID) {
+      this.tdinfoUI.find('#tdInfoUIDInput').val(modelID);
+    }
+    this.tdinfoUI.find('#tdInfoUIDSaveBtn').unbind('click').bind('click', function () {
+      var txtID = propVE.entID;
+      var uid = $(this).parent().parent().find('#tdInfoUIDInput').val();
+      // Update the 3D UID in the database. Empty input will delete the UID from the text.
+      $.ajax({
+        type:"POST",
+        dataType: 'json',
+        url: propVE.dataMgr.basepath + '/services/saveText3DModelUID.php?db=' + propVE.dataMgr.dbName,
+        data: {
+          txtID: txtID,
+          uid: uid
+        },
+        success: function (data, status, xhr) {
+          if (!data.success) {
+            alert("An error occurred while trying to save the 3D model UID. Error: " + data.errors.join(','))
+          } else {
+            if (uid) {
+              // Sync the data manager with the 3D model UID.
+              if (typeof propVE.dataMgr.tdViewerData === 'undefined') {
+                propVE.dataMgr.tdViewerData = {};
+              }
+              if (typeof propVE.dataMgr.tdViewerData.models === 'undefined') {
+                propVE.dataMgr.tdViewerData.models = {};
+              }
+              propVE.dataMgr.tdViewerData.models[txtID] = {
+                txtID: txtID,
+                modelUID: uid
+              };
+            } else {
+              // Delete the 3D model UID from the data manager.
+              if (typeof propVE.dataMgr.tdViewerData.models[txtID] !== 'undefined') {
+                delete propVE.dataMgr.tdViewerData.models[txtID];
+              }
+            }
+          }
+        },
+        error: function (xhr,status,error) {
+          alert("An error occurred while trying to save the 3D model UID. Error: " + error);
+        }
+      });
+    });
+    DEBUG.traceExit("create3DModelInfoUI");
+  },
+
 
 /**
 * create annotation UI
@@ -2989,7 +3067,8 @@ saveSegmentLocation: function(loc) {
 /**
 * remove edition entity id from catalog entity
 *
-* @param int removeEditionID Edition entity id to be removed to catalog editionIDs
+* @param int removeEditionID Edition entity id to be removed to catalog
+*     editionIDs
 */
 
   removeCatalogEditionID: function(removeEditionGID) {
@@ -3020,7 +3099,8 @@ saveSegmentLocation: function(loc) {
 * @param string title
 * @param string description
 * @param int[] editionIDs Array of edition ids
-* @param int removeEditionID Edition entity id to be removed to catalog editionIDs
+* @param int removeEditionID Edition entity id to be removed to catalog
+*     editionIDs
 * @param int addEditionID Edition entity id to be added to catalog editionIDs
 */
 

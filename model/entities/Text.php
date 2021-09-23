@@ -480,6 +480,19 @@
       return $this->_lines;
     }
 
+    /**
+     * Get the 3D model UID of the text.
+     *
+     * @return string|null
+     */
+    public function get3DModelUID() {
+      $modelData = $this->getScratchProperty('tdViewer');
+      if (isset($modelData['uid'])) {
+        return $modelData['uid'];
+      }
+      return null;
+    }
+
 
     //********SETTERS*********
 
@@ -585,6 +598,34 @@
         $this->setDataKeyValuePair($this->getGlobalPrefix()."_jsoncache_id",$jsonCacheID);
       }
       $this->_jsoncache_id = $jsonCacheID;
+    }
+
+    /**
+     * Set the 3D model UID for the text.
+     *
+     * @param string $uid
+     */
+    public function set3DModelUID($uid) {
+      $modelData = $this->getScratchProperty('tdViewer');
+      if (empty($modelData)) {
+        $modelData = [];
+      }
+      $modelData['uid'] = $uid;
+      $this->storeScratchProperty('tdViewer', $modelData);
+    }
+
+    /**
+     * Delete the 3D model UID of the text.
+     */
+    public function clear3DModelUID() {
+      $modelData = $this->getScratchProperty('tdViewer');
+      if (!empty($modelData)) {
+        unset($modelData['uid']);
+      }
+      if (empty($modelData)) {
+        $modelData = null;
+      }
+      $this->storeScratchProperty('tdViewer', $modelData);
     }
 
 
