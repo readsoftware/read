@@ -169,18 +169,15 @@ VIEWERS.ImageViewer.prototype = {
   },
 
 
-/**
-* put your comment there...
-*
-*/
-
   initImageUI: function() {
     var imgV = this, blnImgTags = [], otherImgTags = [],sourceNames = [], atbID;
     if (this.$resSourceDiv && this.imgInfo) {
       this.imgTitle = this.imgInfo.title;
       if (this.imgInfo.source && Object.keys(this.imgInfo.source).length) {
         for (atbID in this.imgInfo.source) {
-          sourceNames.push(this.imgInfo.source[atbID]);
+          var sourceName = this.imgInfo.source[atbID];
+          sourceName = sourceName.replace('_',' ');
+          sourceNames.push(sourceName);
         }
       } else {
         sourceNames.push("unknown");
@@ -350,8 +347,10 @@ VIEWERS.ImageViewer.prototype = {
     this.imgTitle = blnInfo.title;
     if (blnInfo.source && Object.keys(blnInfo.source).length) {
       for (atbID in blnInfo.source) {
-        sourceNames.push(blnInfo.source[atbID]);
-      }
+        var sourceName = blnInfo.source[atbID];
+        sourceName = sourceName.replace('_',' ');
+        sourceNames.push(sourceName);
+    }
     } else {
       sourceNames.push("unknown");
     }
@@ -375,7 +374,9 @@ VIEWERS.ImageViewer.prototype = {
     this.imgTitle = imgInfo.title;
     if (imgInfo.source && Object.keys(imgInfo.source).length) {
       for (atbID in imgInfo.source) {
-        sourceNames.push(imgInfo.source[atbID]);
+        var sourceName = imgInfo.source[atbID];
+        sourceName = sourceName.replace('_',' ');
+        sourceNames.push(sourceName);
       }
     } else {
       sourceNames.push("unknown");
