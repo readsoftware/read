@@ -59,9 +59,15 @@
     <link rel="stylesheet" href="./editors/css/lemmaVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/searchVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/propertyVE.css" type="text/css" />
-    <script type="text/javascript" src="/sketchfab/sketchfab-viewer-1.8.2.js"></script>
+    <?php
+    if (USE_SKETCHFAB) {
+      echo '<script type=\"text/javascript\" src=\"/sketchfab/sketchfab-viewer-1.8.2.js\"></script>';
+    }
+    if (USE_D3PATH) {
+      echo '<script src=\"/d3/d3.js\"></script>';
+    }
+    ?>
     <script src="/jquery/jquery-1.11.1.min.js"></script>
-    <script src="/d3/d3.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtouch.js"></script>
     <script src="/jqwidget/jqwidgets/jqxdata.js"></script>

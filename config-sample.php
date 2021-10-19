@@ -211,6 +211,12 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   // String used to calculate the URL for the static READ Viewer files
   if(!defined("VIEWER_BASE_URL")) define("VIEWER_BASE_URL",SITE_ROOT.VIEWER_EXPORT_SUBDIR);
 
+//Configure includes
+  // include the sketchfab source
+  if(!defined("USE_SKETCHFAB")) define("USE_SKETCHFAB","1");
+  // include the d3path source
+  if(!defined("USE_D3PATH")) define("USE_D3PATH","1");
+
 // Upper Model Configuration constants
   // New Catalog Id No. service URL. 
       //If present the Item wizard will call this service 
