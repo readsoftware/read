@@ -60,10 +60,10 @@
     <link rel="stylesheet" href="./editors/css/searchVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/propertyVE.css" type="text/css" />
     <?php
-    if (SKETCHFAB) {
+    if (USE_SKETCHFAB) {
       echo '<script type=\"text/javascript\" src=\"/sketchfab/sketchfab-viewer-1.8.2.js\"></script>';
     }
-    if (D3PATH) {
+    if (USE_D3) {
       echo '<script src=\"/d3/d3.js\"></script>';
     }
     ?>
