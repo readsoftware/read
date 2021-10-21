@@ -213,9 +213,7 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
 
 //Configure includes
   // include the sketchfab source
-  if(!defined("USE_SKETCHFAB")) define("USE_SKETCHFAB","1");
-  // include the d3path source
-  if(!defined("USE_D3PATH")) define("USE_D3PATH","1");
+  if(!defined("SKETCHFAB")) define("SKETCHFAB","1");
 
 // Upper Model Configuration constants
   // New Catalog Id No. service URL. 

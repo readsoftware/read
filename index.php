@@ -63,10 +63,8 @@
     if (USE_SKETCHFAB) {
       echo '<script type=\"text/javascript\" src=\"/sketchfab/sketchfab-viewer-1.8.2.js\"></script>';
     }
-    if (USE_D3PATH) {
-      echo '<script src=\"/d3/d3.js\"></script>';
-    }
     ?>
+    <script src="/d3/d3.js"></script>
     <script src="/jquery/jquery-1.11.1.min.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtouch.js"></script>
