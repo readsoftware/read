@@ -901,16 +901,25 @@ EDITORS.SequenceVE.prototype = {
 /**
 * put your comment there...
 *
-* @param string array entGIDs Entity global identifiers\n* @param cntSubLevels
+* @param string array entGIDs Entity global identifiers
+* @param cntSubLevels
+* @param {boolean} isRoot Whether the current level is at the root level.
 *
 * @returns {Array}
 */
 
-  getSubItems: function(entGIDs, cntSubLevels) {
+  getSubItems: function(entGIDs, cntSubLevels, isRoot) {
     var seqGID, i, j, trmTypeTag, entType, prefix,
         typeID, sequence, item, id, entity,
         subItems, itemHTML, items = [],
         gid, tag, entTag;
+  var subEntityGIDs;
+  var subEntityID;
+  var subEntity;
+  var k;
+  var foundSystemSeq = false;
+  var includeSubEntity;
+  var sectionTypeTermID = parseInt(this.dataMgr.getIDFromTermParentTerm('Section', 'Chapter'));
 
     if (entGIDs.length){
       for (i=0; i<entGIDs.length; i++) {
@@ -960,8 +969,39 @@ EDITORS.SequenceVE.prototype = {
                                           (entity.value?entity.value:
                                             (entType?entType+'('+tag+')':tag))))+'</div>';
         if (prefix == "seq" && entity.entityIDs && entity.entityIDs.length) {
+          subEntityGIDs = [];
+          if (isRoot) {
+            // Check whether the top level entities should be included in the tree.
+            // This will exclude any read only entities from the top level.
+            for (k = 0; k < entity.entityIDs.length; k++) {
+              includeSubEntity = false;
+              subEntityID = this.parseEntityGID(entity.entityIDs[k]);
+              if (subEntityID) {
+                subEntity = this.dataMgr.getEntity(subEntityID.prefix, subEntityID.id);
+                if (subEntity) {
+                  if (subEntityID.prefix === 'seq') {
+                    // Exclude the system generated section sequence. It will treat
+                    // the first sub sequence in 'Section' type as the system generated
+                    // sequence and exclude it from displaying.
+                    if (i === 0 && !foundSystemSeq && parseInt(subEntity.typeID) === sectionTypeTermID) {
+                      foundSystemSeq = true;
+                    } else if (!subEntity.readonly) {
+                      includeSubEntity = true;
+                    }
+                  } else if (!subEntity.readonly) {
+                    includeSubEntity = true;
+                  }
+                }
+              }
+              if (includeSubEntity) {
+                subEntityGIDs.push(entity.entityIDs[k]);
+              }
+            }
+          } else {
+            subEntityGIDs = entity.entityIDs;
+          }
           if (cntSubLevels) {
-            subItems = this.getSubItems(entity.entityIDs,cntSubLevels-1);
+            subItems = this.getSubItems(subEntityGIDs, cntSubLevels-1);
           } else {
             subItems = [{label:"Loading...",id:tag+"children"}];
           }
@@ -979,6 +1019,24 @@ EDITORS.SequenceVE.prototype = {
       return items;
     }
     return null;
+  },
+
+  /**
+    * Parse an entity GID and return the parts of GID.
+    *
+    * @param {string} entGID
+    * @return {Object} The prefix and id parts of the GID in an object. Returns
+    *   false if the GID is not valid.
+    */
+  parseEntityGID: function (entGID) {
+    var parts = entGID.split(':');
+    if (parts.length === 2 && parts[0].length === 3) {
+      return {
+        prefix: parts[0],
+        id: parseInt(parts[1])
+      }
+    }
+    return false;
   },
 
 
@@ -1449,7 +1507,7 @@ EDITORS.SequenceVE.prototype = {
     }
     */
     seqVE.$structTree.jqxTree({
-          source: seqVE.getSubItems(seqGIDs,1),
+          source: seqVE.getSubItems(seqGIDs, 1, true),
           enableHover: false,
           allowDrag: true,
           allowDrop: true,
