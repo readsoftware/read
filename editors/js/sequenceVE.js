@@ -1593,6 +1593,10 @@ EDITORS.SequenceVE.prototype = {
       }
       $('.linktarget',seqVE.$structTree).removeClass('linktarget');
       seqVE.linkTargetTag = null;
+      // Display properties if it's closed.
+      if (!seqVE.propertyBtn.hasClass("showUI")) {
+        seqVE.showProperties(true);
+      }
     });
     seqVE.$structTree.unbind("expand").bind("expand", function (e) {
       var elem = e.args.element, 
