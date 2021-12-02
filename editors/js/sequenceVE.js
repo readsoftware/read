@@ -848,9 +848,27 @@ EDITORS.SequenceVE.prototype = {
         item = { label: itemLabel,
                     id: itemID,
                  value: trmTypeID };
+        // Add menu group description
+        if (items.length === 0) {
+          items.push({
+            label: "------Add------",
+            id: "SeparatorAdd",
+            value: 'SeparatorAdd',
+            disabled: true
+          });
+        }
         items.push(item);
       }
     }
+    if (items.length > 0) {
+      items.push({
+        label: "---------------",
+        id: "Separator",
+        value: 'Separator',
+        disabled: true
+      });
+    }
+
     if (canLinkComponenets) {
       linkItem = { label: "Link",
                       id: "Link",
