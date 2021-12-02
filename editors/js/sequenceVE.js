@@ -1513,13 +1513,28 @@ EDITORS.SequenceVE.prototype = {
           allowDrop: true,
           theme:'energyblue',
           dragStart: function (item) {
-            if (seqVE.edition.readonly) {
-                return false;
+            // Check whether the dragged item parent is editable. Prevent draging
+            // if it's read only.
+            var parentEntity;
+            if (item.parentId) {
+              parentEntity = seqVE.dataMgr.getEntityFromGID(item.parentId);
+              if (parentEntity && !parentEntity.readonly) {
+                return true;
+              }
             }
+            return false;
           },
           dragEnd: function (item, dropItem, args, dropPosition, tree) {
             var fromParentTag = item.parentId, toParentTag = dropItem.parentId,
                 refEntTag = dropItem.id;
+            if (!seqVE.isDroppedLocationWritable(dropItem)) {
+              alert("The dropped location is not writable");
+              return false;
+            }
+            if (!seqVE.isItemDroppable(item, dropItem, dropPosition)) {
+              alert("This item can't be dropped at this location");
+              return false;
+            }
               if (!fromParentTag){
                 fromParentTag = "edn"+ednID;
               }
@@ -1601,6 +1616,82 @@ EDITORS.SequenceVE.prototype = {
         return true;
     });
     return true;
+  },
+
+  /**
+   * Parse an entity tag and return the parts of the tag.
+   *
+   * @param {string} tag The entity tag (eg. seg123).
+   * @return {Object} The entity prefix and id in an object. Returns false if
+   *   the tag is invalid.
+   */
+  parseEntityTag: function (tag) {
+    var expression = new RegExp('^([a-z]{3})(\\d+)$');
+    var matches = expression.exec(tag);
+    if (matches) {
+      return {
+        prefix: matches[1],
+        id: matches[2]
+      };
+    }
+    return false;
+  },
+
+  /**
+   * Test whether the dropped location is writable.
+   *
+   * @param {Object} dropItem The target item where the item is dropped.
+   * @param {string} dropPosition The drop position related to the target item.
+   *   Eg. 'before', 'after', 'inside'.
+   * @return {boolean}
+   */
+  isDroppedLocationWritable: function (dropItem, dropPosition) {
+    var parentEntity;
+    if (dropPosition === 'inside') {
+      parentEntity = this.dataMgr.getEntityFromGID(dropItem.id);
+    } else if (dropItem.parentId) {
+      parentEntity = this.dataMgr.getEntityFromGID(dropItem.parentId);
+    }
+    if (parentEntity && !parentEntity.readonly) {
+      return true;
+    }
+    return false;
+  },
+
+  isItemDroppable: function (item, dropItem, dropPosition) {
+    var parentEntity;
+    var parentIDObj;
+    var entity;
+    var entityIDObj;
+    var allowedChildItems;
+    var i;
+    if (dropPosition === 'inside') {
+      parentEntity = this.dataMgr.getEntityFromGID(dropItem.id);
+      parentIDObj = this.parseEntityTag(dropItem.id);
+    } else if (dropItem.parentId) {
+      parentEntity = this.dataMgr.getEntityFromGID(dropItem.parentId);
+      parentIDObj = this.parseEntityTag(dropItem.parentId);
+    }
+    entity = this.dataMgr.getEntityFromGID(item.id);
+    entityIDObj = this.parseEntityTag(item.id);
+    if (parentEntity && parentIDObj && entity && entityIDObj) {
+      if (parentIDObj.prefix === 'seq' && parentEntity.typeID) {
+        allowedChildItems = this.getTermListMenuItems('trm' + parentEntity.typeID);
+        for (i = 0; i < allowedChildItems.length; i++) {
+          if (entityIDObj.prefix === 'seq') {
+            if (allowedChildItems[i].id === item.value) {
+              return true;
+            }
+          } else {
+            // Token, Compound, Syllable.
+            if (allowedChildItems[i].id === 'Link') {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
 };
