@@ -437,8 +437,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $valueInput.unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-              !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
             entPropVE.valueUI.removeClass("edit");
           }
         });
@@ -596,8 +595,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $('div.valueInputDiv input',this.supUI).unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-          !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
             entPropVE.supUI.removeClass("edit");
           }
         });
@@ -676,8 +674,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $('div.valueInputDiv input',this.refUI).unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-          !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
             entPropVE.refUI.removeClass("edit");
           }
         });
@@ -752,8 +749,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $invInput.unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-          !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
             entPropVE.invUI.removeClass("edit");
           }
         });
@@ -1527,8 +1523,7 @@ removeLink: function(anoTag) {
           });
           //blur to cancel
           $sandhiInput.unbind("blur").bind("blur",function(e) {
-            if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-            !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+            if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
               $(this).parent().parent().parent().removeClass("edit");
             }
           });
@@ -3375,6 +3370,30 @@ saveSegmentLocation: function(loc) {
       });
     }
     DEBUG.traceExit("saveText");
+  },
+
+  /**
+   * Test whether it's a save button click when the value input is focused out.
+   *
+   * @param {Object} event The original Jquery event object.
+   * @return {boolean}
+   */
+  isSaveClickOnInputBlur: function (event) {
+    // For firefox use explicitOriginalTarget to check clicked element.
+    if (
+      $(event.originalEvent.explicitOriginalTarget).hasClass('saveDiv') ||
+      $(event.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')
+    ) {
+      return true;
+    }
+    // For Edge and Chrome use relatedTarget to check clicked element.
+    if (
+      $(event.relatedTarget).hasClass('saveDiv') ||
+      $(event.relatedTarget).parent().hasClass('saveDiv')
+    ) {
+      return true;
+    }
+    return false;
   }
 }
 
