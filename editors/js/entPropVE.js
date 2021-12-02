@@ -383,6 +383,7 @@ EDITORS.EntityPropVE.prototype = {
                            && this.entity && !this.entity.readonly) ||
                          (this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))),
         attrValue = null, value;
+    var placeholderText = 'entity has no value';
     DEBUG.traceEntry("createValueUI");
     if (this.prefix == 'seg') {
       value = this.entity.loc ? this.entity.loc  : (this.entity.value ? this.entity.value : "");
@@ -390,6 +391,12 @@ EDITORS.EntityPropVE.prototype = {
       value  = this.entity.transcr ? this.entity.transcr : (this.entity.value ? this.entity.value : (this.entity.title ? this.entity.title : ""));
     }
     value = value.replace(/ʔ/g,"");
+    // Set placeholder text for sequences.
+    if (this.prefix === 'seq' && !value) {
+      if (this.entity.typeID) {
+        placeholderText = this.dataMgr.getTermFromID(this.entity.typeID) + '(seq' + this.entity.id + ')';
+      }
+    }
     if (this.entity.attributionIDs && this.entity.attributionIDs.length &&
           this.dataMgr.entities.atb &&
           this.dataMgr.entities.atb[this.entity.attributionIDs[0]]) {//attributions for now use first
@@ -405,12 +412,12 @@ EDITORS.EntityPropVE.prototype = {
     this.valueUI.append($('<div class="propDisplayUI">'+
                     '<div class="propFlipNavDiv propDisplayElement"><div class="med-flip editionNavButton"><span/></div></div>'+
                     '<div class="valueLabelDiv propDisplayElement'+(!valueEditable?' readonly':'')+
-                      (attrValue?'" title="'+attrValue+'">':'">')+(value?value:'entity has no value')+'</div>'+
+                      (attrValue?'" title="'+attrValue+'">':'">')+(value?value:placeholderText)+'</div>'+
 //                    '<div class="editionNavDiv propDisplayElement"><div class="med-prevword editionNavButton"><span/></div><div class="med-nextword editionNavButton"><span/></div></div>'+
                     '</div>'));
     //create input with save button
     this.valueUI.append($('<div class="propEditUI">'+
-                    '<div class="valueInputDiv propEditElement"><input class="valueInput" placeholder="entity has no value" value="'+value+'"/></div>'+
+                    '<div class="valueInputDiv propEditElement"><input class="valueInput" placeholder="' + placeholderText + '" value="'+value+'"/></div>'+
                     '<button class="saveDiv propEditElement" type="button">Save</button>'+
                     '</div>'));
     //attach event handlers
