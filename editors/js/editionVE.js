@@ -100,6 +100,8 @@ EDITORS.EditionVE.prototype = {
                                       showSplitBar:false,
                                       panels: [{ size: '60%', min: '250', collapsible: false},
                                                { size: '40%', min: '150', collapsed: true, collapsible: true}] });
+    // Add message overlay to the container.
+    this.splitterDiv.append('<div class="top-message-overlay">Select constituents from edition (double click on individual constituents OR drag for a continuous selection). Select another sequence to exit link mode.</div>');
     this.propMgr = new MANAGERS.PropertyManager({id: this.id,
                                                  propertyMgrDiv: this.propertyMgrDiv,
                                                  editor: ednVE,
@@ -3055,6 +3057,41 @@ mergeLine: function (direction,cbError) {
   };
 
   $(this.editDiv).unbind('structureChange').bind('structureChange', structureChangeHandler);
+
+  /**
+   * Handle structure link mode start event.
+   *
+   * @param {Object} e
+   * @param {string} senderID
+   * @param {string} structEdnTag
+   * @param {string} linkTargetTag
+   */
+  function structureLinkModeStartHandler(e, senderID, structEdnTag, linkTargetTag) {
+    if (senderID == ednVE.id) {
+      return;
+    }
+    DEBUG.log("event", "Structure link mode started in editionVE " + ednVE.id + " by " + senderID + " with edntion tag " + structEdnTag +
+        "linking to " + linkTargetTag);
+    ednVE.splitterDiv.find('.top-message-overlay').show();
+  }
+
+  $(this.editDiv).unbind('structureLinkModeStart').bind('structureLinkModeStart', structureLinkModeStartHandler);
+
+  /**
+   * Handle structure link mode end event.
+   *
+   * @param {Object} e
+   * @param {string} senderID
+   */
+  function structureLinkModeEndHandler(e, senderID) {
+    if (senderID == ednVE.id) {
+      return;
+    }
+    DEBUG.log("event", "Structure link mode ended in editionVE " + ednVE.id + " by " + senderID);
+    ednVE.splitterDiv.find('.top-message-overlay').hide();
+  }
+
+  $(this.editDiv).unbind('structureLinkModeEnd').bind('structureLinkModeEnd', structureLinkModeEndHandler);
 
 
   /**

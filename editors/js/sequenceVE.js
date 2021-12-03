@@ -1206,6 +1206,8 @@ EDITORS.SequenceVE.prototype = {
                   $(selectedItem.element).addClass('linktarget');
                   if (seqVE.edition) {
                     ednTag = "edn"+ seqVE.edition.id;
+                    // Start the link mode.
+                    $('.editContainer').trigger('structureLinkModeStart',[seqVE.id,ednTag,seqVE.linkTargetTag]);
                     $('.editContainer').trigger('linkStructRequest',[seqVE.id,ednTag,seqVE.linkTargetTag]);
                   }
                 }
@@ -1592,6 +1594,10 @@ EDITORS.SequenceVE.prototype = {
         seqVE.propMgr.showVE('entPropVE',entTag);
       }
       $('.linktarget',seqVE.$structTree).removeClass('linktarget');
+      // Exit structure link mode if link target is not empty.
+      if (seqVE.linkTargetTag) {
+        $('.editContainer').trigger('structureLinkModeEnd', [seqVE.id]);
+      }
       seqVE.linkTargetTag = null;
       // Display properties if it's closed.
       if (!seqVE.propertyBtn.hasClass("showUI")) {
