@@ -2184,6 +2184,10 @@ removeBln: function(blnTag) {
                   entPropVE.controlVE.type == "EditionVE"  && entPropVE.controlVE.showTagTree) {
                 entPropVE.controlVE.refreshTagMarkers();
               }
+              // Refresh structure VE node icon.
+              if (entPropVE.controlVE.type === 'SequenceVE') {
+                entPropVE.controlVE.refreshNode(savedata["entGID"]);
+              }
             }
             if (data.errors) {
               alert("An error occurred while trying to retrieve a record. Error: " + data.errors.join());

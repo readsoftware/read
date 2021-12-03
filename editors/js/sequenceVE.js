@@ -606,6 +606,9 @@ EDITORS.SequenceVE.prototype = {
           }
           if (data.errors) {
             alert("An error occurred while trying to retrieve a record. Error: " + data.errors.join());
+          } else {
+            // Refresh node.
+            seqVE.refreshNode(entGID);
           }
       },
       error: function (xhr,status,error) {
@@ -935,6 +938,7 @@ EDITORS.SequenceVE.prototype = {
   var subEntityID;
   var subEntity;
   var k;
+  var itemLabel;
   var foundSystemSeq = false;
   var includeSubEntity;
   var sectionTypeTermID = parseInt(this.dataMgr.getIDFromTermParentTerm('Section', 'Chapter'));
@@ -980,12 +984,28 @@ EDITORS.SequenceVE.prototype = {
             }
         }
         item['value'] = trmTypeTag;
+        itemLabel = (entity.sup?entity.sup + (entity.label?" " +entity.label:""):
+                    (entity.label?entity.label:
+                    (entity.value?entity.value:
+                    (entType?entType+'('+tag+')':tag))));
+        // Add icons for different entity types.
+        var anoTags = this.dataMgr.getEntityAnoTagIDsByType(tag);
+        if (prefix === 'seq') {
+          if (Object.keys(anoTags).length > 0) {
+            itemLabel = "&#x1F5D0;&nbsp;" + itemLabel;
+          } else {
+            itemLabel = "&#x1F5CD;&nbsp;" + itemLabel;
+          }
+
+        } else {
+          if (Object.keys(anoTags).length > 0) {
+            itemLabel = "&#x1F5CE;&nbsp;" + itemLabel;
+          } else {
+            itemLabel = "&#x1F5CB;&nbsp;" + itemLabel;
+          }
+        }
         itemHTML = '<div class="'+(entType?entType+' ':'')+tag+(trmTypeTag?' '+trmTypeTag:'')+'"'+
-                       ' title="'+(entType?entType+' ':'')+tag+'" >'+
-                       (entity.sup?entity.sup + (entity.label?" " +entity.label:""):
-                                        (entity.label?entity.label:
-                                          (entity.value?entity.value:
-                                            (entType?entType+'('+tag+')':tag))))+'</div>';
+                       ' title="'+(entType?entType+' ':'')+tag+'" >' + itemLabel + '</div>';
         if (prefix == "seq" && entity.entityIDs && entity.entityIDs.length) {
           subEntityGIDs = [];
           if (isRoot) {
