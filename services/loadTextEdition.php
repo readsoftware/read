@@ -132,7 +132,7 @@
   if (!$edition || $edition->hasError()) {//no edition or unavailable so warn
     array_push($warnings,"Warning no edition available for id $ednID .");
   } else if ($edition->isReadonly() && !$edition->isMarkedDelete()){// edition non owner check cached snapshot
-    $publicOnly = $edition->isPublic();
+    $publicOnly = $edition->isPublic() && !isLoggedIn();
     $userOnly = isLoggedIn();
     if (USECACHE) {
       $retString = getCachedEdition($ednID);//get user or public cached edition if there is one.
@@ -761,8 +761,6 @@
                   $entities['seg'][$segID]['sclIDs']= $segID2sclIDs[$segID];
                 }
                 if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
-//                  $boundary = $boundary[0];//WARNING todo handle multipolygon boundary case???
-//                  $entities['seg'][$segID]['boundary']= array($boundary->getPoints());
                   $entities['seg'][$segID]['boundary']= array();
                   foreach($boundary as $polygon) {
                     array_push($entities['seg'][$segID]['boundary'], $polygon->getPoints());
@@ -784,6 +782,20 @@
                 $stringpos = $segment->getStringPos();
                 if ($stringpos && count($stringpos) > 0) {
                   $entities['seg'][$segID]['stringpos']= $stringpos;
+                }
+                $segCode = $segment->getScratchProperty("sgnCode");
+                if ($segCode) {
+                  $entities['seg'][$segID]['code'] = $segCode;
+                  $entities['seg'][$segID]['value'] = $segCode;
+                }
+                $segCatCode = $segment->getScratchProperty("sgnCatCode");
+                if ($segCatCode) {
+                  $entities['seg'][$segID]['pcat'] = $segCatCode;
+          //        $entities['seg'][$segID]['value'] = $segCatCode;
+                }
+                $segLoc = $segment->getScratchProperty("sgnLoc");
+                if ($segLoc) {
+                  $entities['seg'][$segID]['loc'] = $segLoc;
                 }
                 // ??? do we need to get spans??? mapped segments???
                 $AnoIDs = $segment->getAnnotationIDs();

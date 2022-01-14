@@ -185,6 +185,20 @@
                 if ($stringpos && count($stringpos) > 0) {
                   $entities['seg'][$segID]['stringpos']= $stringpos;
                 }
+                $segCode = $segment->getScratchProperty("sgnCode");
+                if ($segCode) {
+                  $entities['seg'][$segID]['code'] = $segCode;
+                  $entities['seg'][$segID]['value'] = $segCode;
+                }
+                $segCatCode = $segment->getScratchProperty("sgnCatCode");
+                if ($segCatCode) {
+                  $entities['seg'][$segID]['pcat'] = $segCatCode;
+          //        $entities['seg'][$segID]['value'] = $segCatCode;
+                }
+                $segLoc = $segment->getScratchProperty("sgnLoc");
+                if ($segLoc) {
+                  $entities['seg'][$segID]['loc'] = $segLoc;
+                }
                 foreach ($segment->getSpans(true) as $span) {
                   $spnID = $span->getID();
                   if ($spnID && !array_key_exists($spnID, $entities['spn'])) {
@@ -370,8 +384,10 @@
           }
           $boundary = $segment->getImageBoundary();
           if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
-            $boundary = $boundary[0];
-            $entities['seg'][$entID]['boundary']= array($boundary->getPoints());
+            $entities['seg'][$entID]['boundary']= array();
+            foreach($boundary as $polygon) {
+              array_push($entities['seg'][$entID]['boundary'], $polygon->getPoints());
+            }
             $entities['seg'][$entID]['urls']= $segment->getURLs();
           }
           $stringpos = $segment->getStringPos();
@@ -385,6 +401,20 @@
           $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
           if ($segBlnOrder) {
             $entities['seg'][$entID]['ordinal'] = $segBlnOrder;
+          }
+          $segCode = $segment->getScratchProperty("sgnCode");
+          if ($segCode) {
+            $entities['seg'][$entID]['code'] = $segCode;
+            $entities['seg'][$entID]['value'] = $segCode;
+          }
+          $segCatCode = $segment->getScratchProperty("sgnCatCode");
+          if ($segCatCode) {
+            $entities['seg'][$entID]['pcat'] = $segCatCode;
+    //        $entities['seg'][$entID]['value'] = $segCatCode;
+          }
+          $segLoc = $segment->getScratchProperty("sgnLoc");
+          if ($segLoc) {
+            $entities['seg'][$entID]['loc'] = $segLoc;
           }
           break;
         case 'atb':
