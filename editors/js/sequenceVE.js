@@ -606,6 +606,9 @@ EDITORS.SequenceVE.prototype = {
           }
           if (data.errors) {
             alert("An error occurred while trying to retrieve a record. Error: " + data.errors.join());
+          } else {
+            // Refresh node.
+            seqVE.refreshNode(entGID);
           }
       },
       error: function (xhr,status,error) {
@@ -848,9 +851,27 @@ EDITORS.SequenceVE.prototype = {
         item = { label: itemLabel,
                     id: itemID,
                  value: trmTypeID };
+        // Add menu group description
+        if (items.length === 0) {
+          items.push({
+            label: "------Add------",
+            id: "SeparatorAdd",
+            value: 'SeparatorAdd',
+            disabled: true
+          });
+        }
         items.push(item);
       }
     }
+    if (items.length > 0) {
+      items.push({
+        label: "---------------",
+        id: "Separator",
+        value: 'Separator',
+        disabled: true
+      });
+    }
+
     if (canLinkComponenets) {
       linkItem = { label: "Link",
                       id: "Link",
@@ -901,16 +922,26 @@ EDITORS.SequenceVE.prototype = {
 /**
 * put your comment there...
 *
-* @param string array entGIDs Entity global identifiers\n* @param cntSubLevels
+* @param string array entGIDs Entity global identifiers
+* @param cntSubLevels
+* @param {boolean} isRoot Whether the current level is at the root level.
 *
 * @returns {Array}
 */
 
-  getSubItems: function(entGIDs, cntSubLevels) {
+  getSubItems: function(entGIDs, cntSubLevels, isRoot) {
     var seqGID, i, j, trmTypeTag, entType, prefix,
         typeID, sequence, item, id, entity,
         subItems, itemHTML, items = [],
         gid, tag, entTag;
+  var subEntityGIDs;
+  var subEntityID;
+  var subEntity;
+  var k;
+  var itemLabel;
+  var foundSystemSeq = false;
+  var includeSubEntity;
+  var sectionTypeTermID = parseInt(this.dataMgr.getIDFromTermParentTerm('Section', 'Chapter'));
 
     if (entGIDs.length){
       for (i=0; i<entGIDs.length; i++) {
@@ -953,15 +984,62 @@ EDITORS.SequenceVE.prototype = {
             }
         }
         item['value'] = trmTypeTag;
+        itemLabel = (entity.sup?entity.sup + (entity.label?" " +entity.label:""):
+                    (entity.label?entity.label:
+                    (entity.value?entity.value:
+                    (entType?entType+'('+tag+')':tag))));
+        // Add icons for different entity types.
+        var anoTags = this.dataMgr.getEntityAnoTagIDsByType(tag);
+        if (prefix === 'seq') {
+          if (Object.keys(anoTags).length > 0) {
+            itemLabel = "&#x1F5D0;&nbsp;" + itemLabel;
+          } else {
+            itemLabel = "&#x1F5CD;&nbsp;" + itemLabel;
+          }
+
+        } else {
+          if (Object.keys(anoTags).length > 0) {
+            itemLabel = "&#x1F5CE;&nbsp;" + itemLabel;
+          } else {
+            itemLabel = "&#x1F5CB;&nbsp;" + itemLabel;
+          }
+        }
         itemHTML = '<div class="'+(entType?entType+' ':'')+tag+(trmTypeTag?' '+trmTypeTag:'')+'"'+
-                       ' title="'+(entType?entType+' ':'')+tag+'" >'+
-                       (entity.sup?entity.sup + (entity.label?" " +entity.label:""):
-                                        (entity.label?entity.label:
-                                          (entity.value?entity.value:
-                                            (entType?entType+'('+tag+')':tag))))+'</div>';
+                       ' title="'+(entType?entType+' ':'')+tag+'" >' + itemLabel + '</div>';
         if (prefix == "seq" && entity.entityIDs && entity.entityIDs.length) {
+          subEntityGIDs = [];
+          if (isRoot) {
+            // Check whether the top level entities should be included in the tree.
+            // This will exclude any read only entities from the top level.
+            for (k = 0; k < entity.entityIDs.length; k++) {
+              includeSubEntity = false;
+              subEntityID = this.parseEntityGID(entity.entityIDs[k]);
+              if (subEntityID) {
+                subEntity = this.dataMgr.getEntity(subEntityID.prefix, subEntityID.id);
+                if (subEntity) {
+                  if (subEntityID.prefix === 'seq') {
+                    // Exclude the system generated section sequence. It will treat
+                    // the first sub sequence in 'Section' type as the system generated
+                    // sequence and exclude it from displaying.
+                    if (i === 0 && !foundSystemSeq && parseInt(subEntity.typeID) === sectionTypeTermID) {
+                      foundSystemSeq = true;
+                    } else if (!subEntity.readonly) {
+                      includeSubEntity = true;
+                    }
+                  } else if (!subEntity.readonly) {
+                    includeSubEntity = true;
+                  }
+                }
+              }
+              if (includeSubEntity) {
+                subEntityGIDs.push(entity.entityIDs[k]);
+              }
+            }
+          } else {
+            subEntityGIDs = entity.entityIDs;
+          }
           if (cntSubLevels) {
-            subItems = this.getSubItems(entity.entityIDs,cntSubLevels-1);
+            subItems = this.getSubItems(subEntityGIDs, cntSubLevels-1);
           } else {
             subItems = [{label:"Loading...",id:tag+"children"}];
           }
@@ -979,6 +1057,24 @@ EDITORS.SequenceVE.prototype = {
       return items;
     }
     return null;
+  },
+
+  /**
+    * Parse an entity GID and return the parts of GID.
+    *
+    * @param {string} entGID
+    * @return {Object} The prefix and id parts of the GID in an object. Returns
+    *   false if the GID is not valid.
+    */
+  parseEntityGID: function (entGID) {
+    var parts = entGID.split(':');
+    if (parts.length === 2 && parts[0].length === 3) {
+      return {
+        prefix: parts[0],
+        id: parseInt(parts[1])
+      }
+    }
+    return false;
   },
 
 
@@ -1130,6 +1226,8 @@ EDITORS.SequenceVE.prototype = {
                   $(selectedItem.element).addClass('linktarget');
                   if (seqVE.edition) {
                     ednTag = "edn"+ seqVE.edition.id;
+                    // Start the link mode.
+                    $('.editContainer').trigger('structureLinkModeStart',[seqVE.id,ednTag,seqVE.linkTargetTag]);
                     $('.editContainer').trigger('linkStructRequest',[seqVE.id,ednTag,seqVE.linkTargetTag]);
                   }
                 }
@@ -1449,19 +1547,34 @@ EDITORS.SequenceVE.prototype = {
     }
     */
     seqVE.$structTree.jqxTree({
-          source: seqVE.getSubItems(seqGIDs,1),
+          source: seqVE.getSubItems(seqGIDs, 1, true),
           enableHover: false,
           allowDrag: true,
           allowDrop: true,
           theme:'energyblue',
           dragStart: function (item) {
-            if (seqVE.edition.readonly) {
-                return false;
+            // Check whether the dragged item parent is editable. Prevent draging
+            // if it's read only.
+            var parentEntity;
+            if (item.parentId) {
+              parentEntity = seqVE.dataMgr.getEntityFromGID(item.parentId);
+              if (parentEntity && !parentEntity.readonly) {
+                return true;
+              }
             }
+            return false;
           },
           dragEnd: function (item, dropItem, args, dropPosition, tree) {
             var fromParentTag = item.parentId, toParentTag = dropItem.parentId,
                 refEntTag = dropItem.id;
+            if (!seqVE.isDroppedLocationWritable(dropItem)) {
+              alert("The dropped location is not writable");
+              return false;
+            }
+            if (!seqVE.isItemDroppable(item, dropItem, dropPosition)) {
+              alert("This item can't be dropped at this location");
+              return false;
+            }
               if (!fromParentTag){
                 fromParentTag = "edn"+ednID;
               }
@@ -1501,7 +1614,15 @@ EDITORS.SequenceVE.prototype = {
         seqVE.propMgr.showVE('entPropVE',entTag);
       }
       $('.linktarget',seqVE.$structTree).removeClass('linktarget');
+      // Exit structure link mode if link target is not empty.
+      if (seqVE.linkTargetTag) {
+        $('.editContainer').trigger('structureLinkModeEnd', [seqVE.id]);
+      }
       seqVE.linkTargetTag = null;
+      // Display properties if it's closed.
+      if (!seqVE.propertyBtn.hasClass("showUI")) {
+        seqVE.showProperties(true);
+      }
     });
     seqVE.$structTree.unbind("expand").bind("expand", function (e) {
       var elem = e.args.element, 
@@ -1543,6 +1664,82 @@ EDITORS.SequenceVE.prototype = {
         return true;
     });
     return true;
+  },
+
+  /**
+   * Parse an entity tag and return the parts of the tag.
+   *
+   * @param {string} tag The entity tag (eg. seg123).
+   * @return {Object} The entity prefix and id in an object. Returns false if
+   *   the tag is invalid.
+   */
+  parseEntityTag: function (tag) {
+    var expression = new RegExp('^([a-z]{3})(\\d+)$');
+    var matches = expression.exec(tag);
+    if (matches) {
+      return {
+        prefix: matches[1],
+        id: matches[2]
+      };
+    }
+    return false;
+  },
+
+  /**
+   * Test whether the dropped location is writable.
+   *
+   * @param {Object} dropItem The target item where the item is dropped.
+   * @param {string} dropPosition The drop position related to the target item.
+   *   Eg. 'before', 'after', 'inside'.
+   * @return {boolean}
+   */
+  isDroppedLocationWritable: function (dropItem, dropPosition) {
+    var parentEntity;
+    if (dropPosition === 'inside') {
+      parentEntity = this.dataMgr.getEntityFromGID(dropItem.id);
+    } else if (dropItem.parentId) {
+      parentEntity = this.dataMgr.getEntityFromGID(dropItem.parentId);
+    }
+    if (parentEntity && !parentEntity.readonly) {
+      return true;
+    }
+    return false;
+  },
+
+  isItemDroppable: function (item, dropItem, dropPosition) {
+    var parentEntity;
+    var parentIDObj;
+    var entity;
+    var entityIDObj;
+    var allowedChildItems;
+    var i;
+    if (dropPosition === 'inside') {
+      parentEntity = this.dataMgr.getEntityFromGID(dropItem.id);
+      parentIDObj = this.parseEntityTag(dropItem.id);
+    } else if (dropItem.parentId) {
+      parentEntity = this.dataMgr.getEntityFromGID(dropItem.parentId);
+      parentIDObj = this.parseEntityTag(dropItem.parentId);
+    }
+    entity = this.dataMgr.getEntityFromGID(item.id);
+    entityIDObj = this.parseEntityTag(item.id);
+    if (parentEntity && parentIDObj && entity && entityIDObj) {
+      if (parentIDObj.prefix === 'seq' && parentEntity.typeID) {
+        allowedChildItems = this.getTermListMenuItems('trm' + parentEntity.typeID);
+        for (i = 0; i < allowedChildItems.length; i++) {
+          if (entityIDObj.prefix === 'seq') {
+            if (allowedChildItems[i].id === item.value) {
+              return true;
+            }
+          } else {
+            // Token, Compound, Syllable.
+            if (allowedChildItems[i].id === 'Link') {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
 };

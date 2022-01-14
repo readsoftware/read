@@ -643,6 +643,11 @@ EDITORS.TagVE.prototype = {
                 }
                 tagVE.controlVE.refreshTagMarkers();
               }
+              // Refresh structure VE node icon once the tag is added.
+              if (tagVE.controlVE.type === 'SequenceVE') {
+                var entityGID = savedata.entGID.substr(0, 3) + ':' + savedata.entGID.substr(3);
+                tagVE.controlVE.refreshNode(entityGID);
+              }
               if (data.errors) {
                 alert("An error occurred while trying to save annotation record. Error: " + data.errors.join());
               }

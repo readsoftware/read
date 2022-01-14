@@ -383,6 +383,7 @@ EDITORS.EntityPropVE.prototype = {
                            && this.entity && !this.entity.readonly) ||
                          (this.prefix == "edn" && this.dataMgr.layoutMgr.userVE.isEditAsEditibilityMatch(this.entity.editibility))),
         attrValue = null, value;
+    var placeholderText = 'entity has no value';
     DEBUG.traceEntry("createValueUI");
     if (this.prefix == 'seg') {
       value = this.entity.loc ? this.entity.loc  : (this.entity.value ? this.entity.value : "");
@@ -390,6 +391,12 @@ EDITORS.EntityPropVE.prototype = {
       value  = this.entity.transcr ? this.entity.transcr : (this.entity.value ? this.entity.value : (this.entity.title ? this.entity.title : ""));
     }
     value = value.replace(/ʔ/g,"");
+    // Set placeholder text for sequences.
+    if (this.prefix === 'seq' && !value) {
+      if (this.entity.typeID) {
+        placeholderText = this.dataMgr.getTermFromID(this.entity.typeID) + '(seq' + this.entity.id + ')';
+      }
+    }
     if (this.entity.attributionIDs && this.entity.attributionIDs.length &&
           this.dataMgr.entities.atb &&
           this.dataMgr.entities.atb[this.entity.attributionIDs[0]]) {//attributions for now use first
@@ -405,12 +412,12 @@ EDITORS.EntityPropVE.prototype = {
     this.valueUI.append($('<div class="propDisplayUI">'+
                     '<div class="propFlipNavDiv propDisplayElement"><div class="med-flip editionNavButton"><span/></div></div>'+
                     '<div class="valueLabelDiv propDisplayElement'+(!valueEditable?' readonly':'')+
-                      (attrValue?'" title="'+attrValue+'">':'">')+(value?value:'entity has no value')+'</div>'+
+                      (attrValue?'" title="'+attrValue+'">':'">')+(value?value:placeholderText)+'</div>'+
 //                    '<div class="editionNavDiv propDisplayElement"><div class="med-prevword editionNavButton"><span/></div><div class="med-nextword editionNavButton"><span/></div></div>'+
                     '</div>'));
     //create input with save button
     this.valueUI.append($('<div class="propEditUI">'+
-                    '<div class="valueInputDiv propEditElement"><input class="valueInput" placeholder="entity has no value" value="'+value+'"/></div>'+
+                    '<div class="valueInputDiv propEditElement"><input class="valueInput" placeholder="' + placeholderText + '" value="'+value+'"/></div>'+
                     '<button class="saveDiv propEditElement" type="button">Save</button>'+
                     '</div>'));
     //attach event handlers
@@ -430,8 +437,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $valueInput.unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-              !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
             entPropVE.valueUI.removeClass("edit");
           }
         });
@@ -589,8 +595,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $('div.valueInputDiv input',this.supUI).unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-          !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
             entPropVE.supUI.removeClass("edit");
           }
         });
@@ -669,8 +674,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $('div.valueInputDiv input',this.refUI).unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-          !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
             entPropVE.refUI.removeClass("edit");
           }
         });
@@ -745,8 +749,7 @@ EDITORS.EntityPropVE.prototype = {
         });
         //blur to cancel
         $invInput.unbind("blur").bind("blur",function(e) {
-          if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-          !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+          if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
             entPropVE.invUI.removeClass("edit");
           }
         });
@@ -1520,8 +1523,7 @@ removeLink: function(anoTag) {
           });
           //blur to cancel
           $sandhiInput.unbind("blur").bind("blur",function(e) {
-            if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-            !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+            if (!entPropVE.isSaveClickOnInputBlur(e)) {//all but save button
               $(this).parent().parent().parent().removeClass("edit");
             }
           });
@@ -2181,6 +2183,10 @@ removeBln: function(blnTag) {
               if (entPropVE.controlVE &&
                   entPropVE.controlVE.type == "EditionVE"  && entPropVE.controlVE.showTagTree) {
                 entPropVE.controlVE.refreshTagMarkers();
+              }
+              // Refresh structure VE node icon.
+              if (entPropVE.controlVE.type === 'SequenceVE') {
+                entPropVE.controlVE.refreshNode(savedata["entGID"]);
               }
             }
             if (data.errors) {
@@ -3368,6 +3374,30 @@ saveSegmentLocation: function(loc) {
       });
     }
     DEBUG.traceExit("saveText");
+  },
+
+  /**
+   * Test whether it's a save button click when the value input is focused out.
+   *
+   * @param {Object} event The original Jquery event object.
+   * @return {boolean}
+   */
+  isSaveClickOnInputBlur: function (event) {
+    // For firefox use explicitOriginalTarget to check clicked element.
+    if (
+      $(event.originalEvent.explicitOriginalTarget).hasClass('saveDiv') ||
+      $(event.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')
+    ) {
+      return true;
+    }
+    // For Edge and Chrome use relatedTarget to check clicked element.
+    if (
+      $(event.relatedTarget).hasClass('saveDiv') ||
+      $(event.relatedTarget).parent().hasClass('saveDiv')
+    ) {
+      return true;
+    }
+    return false;
   }
 }
 
