@@ -813,7 +813,7 @@ EDITORS.PaleoVE.prototype = {
           }
           curCellNum = 0;
           if (sclCell.rLabel) {
-            curRowLabel = sclCell.rLabel.toUpperCase();
+            curRowLabel = sclCell.rLabel;
           } else {
             curRowLabel = "unk";
           }
@@ -1727,3 +1727,58 @@ if (!sktSort) {
     "990": [ "?" ]
   }
 }
+/**
+* nextCell moves UI to next glyph cell
+* and skips blank (no glyph) cells
+*/
+
+function nextCell(){
+  var temp = $('div.selectedd')
+
+  // if you are on the last syllable and click next button, beep for feedback
+  if(temp.parent().next(".paleoChartRow").length==0 && temp.next(".paleoChartCell").length==0){
+    UTILITY.beep();
+  }else{
+    temp.removeClass('selectedd')
+    // if there is another syllable on the current row, go to that
+    if(temp.next(".paleoChartCell").length!=0){
+      temp.next(".paleoChartCell").trigger("dblclick")
+    }else{
+      // go to the next row
+      temp.parent().next(".paleoChartRow").children(".paleoChartCell").first().trigger("dblclick")
+    }
+  }
+  // if at the current cell there isn't any pictures, and you are not at the last cell, then go to the next cell
+  if($('div.taggingDiv').children().length===0 && temp[0]!=temp.parent().parent().children().last(".paleoChartRow").children(".paleoChartCell").last()[0]){
+    nextCell()
+  }
+};
+
+/**
+* prevCell moves UI to previous glyph cell
+* and skips blank (no glyph) cells
+*
+*/
+
+function prevCell() {
+  var temp = $('div.selectedd')
+  // if there is another cell in the row, go to the prev cell of the same row
+  if(temp.prev().hasClass("paleoChartCell")){
+    temp.removeClass('selectedd')
+    temp.prev().trigger('dblclick')
+  }
+  // if you are on the first syllable and click previous button, beep for feedback
+  else if(temp.parent().prev(".paleoChartRow").length==0){
+    UTILITY.beep();
+  }
+  else{
+    // go to the previous row
+    temp.removeClass('selectedd')
+    temp.parent().prev(".paleoChartRow").children(".paleoChartCell").last().trigger('dblclick')
+  }
+ 
+  // if at the current cell there isn't any pictures, and you are not at the first cell, then go to the previous cell
+  if($('div.taggingDiv').children().length===0 && temp.parent().prev(".paleoChartRow").length!=0){
+    prevCell()
+    }
+  };

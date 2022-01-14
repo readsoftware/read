@@ -1436,10 +1436,10 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1475,'en=>"StartBlock"',1478,778,'{1474,1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1476,'en=>"ImageGlyphBlock"',1472,778,'{1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1477,'en=>"CaptionBlock"',1472,778,'{1470}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1478,'en=>"Frame"',1481,778,'{1470,1471,1472,1473,1475,1476,1477,1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1478,'en=>"Frame"',1481,778,'{1470,1471,1472,1473,1475,1476,1477,1495,1496,1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1479,'en=>"Logograph"',502,778,NULL,NULL,'L',NULL,NULL,NULL,1,'{2}'),
 (1480,'en=>"Alphabetic"',502,778,NULL,NULL,'A',NULL,NULL,NULL,1,'{2}'),
-(1481,'en=>"TextLayout"',735,778,'{1478}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1481,'en=>"TextLayout"',735,778,'{1478,1495,1496,1500}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1482,'en=>"NumberingStyle"',1,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1483,'en=>"Continuous"',1482,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1484,'en=>"Country"',704,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
@@ -1451,6 +1451,14 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1490,'en=>"lead"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1491,'en=>"metal"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1492,'en=>"wood"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1493,'en=>"copper alloy"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}');
+(1493,'en=>"copper alloy"',29,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1494,'en=>"Span"',1481,778,'{1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1495,'en=>"Line"',1481,778,'{1494,1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1496,'en=>"VLine"',1481,778,'{1494,1229}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1497,'en=>"Cell"',1481,778,'{1495,1496}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1498,'en=>"Row"',1481,778,'{1497}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1499,'en=>"Column"',1481,778,'{1497}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1500,'en=>"Table"',1481,778,'{1498,1499}',NULL,NULL,NULL,NULL,NULL,1,'{2}');
 
-ALTER SEQUENCE term_trm_id_seq RESTART WITH 1494;
+
+ALTER SEQUENCE term_trm_id_seq RESTART WITH 1501;
