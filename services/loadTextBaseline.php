@@ -222,7 +222,6 @@
           $segCatCode = $segment->getScratchProperty("sgnCatCode");
           if ($segCatCode) {
             $entities["insert"]['seg'][$segID]['pcat'] = $segCatCode;
-    //        $entities["insert"]['seg'][$segID]['value'] = $segCatCode;
           }
           $segLoc = $segment->getScratchProperty("sgnLoc");
           if ($segLoc) {

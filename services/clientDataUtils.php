@@ -288,7 +288,6 @@ function addNewEntityReturnData($prefix,$entity) {
       $segCatCode = $segment->getScratchProperty("sgnCatCode");
       if ($segCatCode) {
         $entities["insert"]['seg'][$entID]['pcat'] = $segCatCode;
-//        $entities["insert"]['seg'][$entID]['value'] = $segCatCode;
       }
       $segLoc = $segment->getScratchProperty("sgnLoc");
       if ($segLoc) {
