@@ -590,8 +590,10 @@
                                'layer' => $segment->getLayer());
         $boundary = $segment->getImageBoundary();
         if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
-          $boundary = $boundary[0];//WARNING  todo alter this for multi-polygon case
-          $entities['seg'][$segID]['boundary']= array($boundary->getPoints());
+          $entities['seg'][$segID]['boundary']= array();
+          foreach($boundary as $polygon) {
+            array_push($entities['seg'][$segID]['boundary'], $polygon->getPoints());
+          }
           $entities['seg'][$segID]['urls']= $segment->getURLs();
         }
         $stringpos = $segment->getStringPos();
@@ -606,6 +608,19 @@
         $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
         if ($segBlnOrder) {
           $entities['seg'][$segID]['ordinal'] = $segBlnOrder;
+        }
+        $segCode = $segment->getScratchProperty("sgnCode");
+        if ($segCode) {
+          $entities['seg'][$segID]['code'] = $segCode;
+          $entities['seg'][$segID]['value'] = $segCode;
+        }
+        $segCatCode = $segment->getScratchProperty("sgnCatCode");
+        if ($segCatCode) {
+          $entities['seg'][$segID]['pcat'] = $segCatCode;
+        }
+        $segLoc = $segment->getScratchProperty("sgnLoc");
+        if ($segLoc) {
+          $entities['seg'][$segID]['loc'] = $segLoc;
         }
         $AnoIDs = $segment->getAnnotationIDs();
         if ($AnoIDs && count($AnoIDs) > 0) {
@@ -1418,13 +1433,15 @@
                                                 'readonly' => $segment->isReadonly(),
                                                 'center' => $segment->getCenter(),
                                                 'value' => 'seg'.$segID);
-              $boundary = $segment->getImageBoundary();
               if (array_key_exists($segID,$segID2sclIDs)) {
                 $entities['seg'][$segID]['sclIDs']= $segID2sclIDs[$segID];
               }
+              $boundary = $segment->getImageBoundary();
               if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
-                $boundary = $boundary[0];//WARNING todo handle multipolygon boundary case???
-                $entities['seg'][$segID]['boundary']= array($boundary->getPoints());
+                $entities['seg'][$segID]['boundary']= array();
+                foreach($boundary as $polygon) {
+                  array_push($entities['seg'][$segID]['boundary'], $polygon->getPoints());
+                }
                 $entities['seg'][$segID]['urls']= $segment->getURLs();
               }
               $mappedSegIDs = $segment->getMappedSegmentIDs();

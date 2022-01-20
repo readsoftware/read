@@ -200,8 +200,10 @@
           }
           $boundary = $segment->getImageBoundary();
           if ($boundary && array_key_exists(0,$boundary) && method_exists($boundary[0],'getPoints')) {
-            $boundary = $boundary[0];
-            $entities["insert"]['seg'][$segID]['boundary']= array($boundary->getPoints());
+            $entities["insert"]['seg'][$segID]['boundary']= array();
+            foreach($boundary as $polygon) {
+              array_push($entities["insert"]['seg'][$segID]['boundary'], $polygon->getPoints());
+            }
             $entities["insert"]['seg'][$segID]['urls']= $segment->getURLs();
           }
           $mappedSegIDs = $segment->getMappedSegmentIDs();
@@ -211,6 +213,20 @@
           $segBlnOrder = $segment->getScratchProperty("blnOrdinal");
           if ($segBlnOrder) {
             $entities["insert"]['seg'][$segID]['ordinal'] = $segBlnOrder;
+          }
+          $segCode = $segment->getScratchProperty("sgnCode");
+          if ($segCode) {
+            $entities["insert"]['seg'][$segID]['code'] = $segCode;
+            $entities["insert"]['seg'][$segID]['value'] = $segCode;
+          }
+          $segCatCode = $segment->getScratchProperty("sgnCatCode");
+          if ($segCatCode) {
+            $entities["insert"]['seg'][$segID]['pcat'] = $segCatCode;
+          }
+          $segLoc = $segment->getScratchProperty("sgnLoc");
+          if ($segLoc) {
+            $entities["insert"]['seg'][$segID]['loc'] = $segLoc;
+            $entities["insert"]['seg'][$segID]['value'] = $segLoc;
           }
           $stringpos = $segment->getStringPos();
           if ($stringpos && count($stringpos) > 0) {

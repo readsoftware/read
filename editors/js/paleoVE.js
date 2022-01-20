@@ -18,6 +18,7 @@
 * editors editionVE object
 *
 * @author      Stephen White  <stephenawhite57@gmail.com>
+* @author      Selaudin Agolli <a.selaudin@gmail.com>
 * @copyright   @see AUTHORS in repository root <https://github.com/readsoftware/read>
 * @link        https://github.com/readsoftware
 * @version     1.0
@@ -308,40 +309,6 @@ EDITORS.PaleoVE.prototype = {
 /**
 * put your comment there...
 *
-*/
-
-  prevCell: function () {
-    /* TBD
-    var curEntry = $('.selected',this.contentDiv).parent();
-    if (curEntry.length && curEntry.prev().hasClass('sclCell')) {
-    curEntry.prev().children().first().trigger('dblclick');
-    } else {
-    UTILITY.beep();
-    }
-    */
-  },
-
-
-/**
-* put your comment there...
-*
-*/
-
-  nextCell: function () {
-    /* TBD
-    var curEntry = $('.selected',this.contentDiv).parent();
-    if (curEntry.length && curEntry.next().length && curEntry.next().hasClass('sclCell')) {
-    curEntry.next().children().first().trigger('dblclick');
-    } else {
-    UTILITY.beep();
-    }
-    */
-  },
-
-
-/**
-* put your comment there...
-*
 * @returns {Object}
 */
 
@@ -599,9 +566,11 @@ EDITORS.PaleoVE.prototype = {
     if (untypedLinkedSyls.length) {
       //create row
       //add header cell
-      curRow = $('<div class="taggingGroupRow">' +
+      curRow = $(
+        '<div class="taggingGroupRow">' +
         '<div class="taggingRowHeader">unknown</div>' +
-        '</div>' );
+        '</div>'
+        );
       this.pTaggingDiv.append(curRow);
       curGrpCell = $('<div class="taggingGrpCell"/>')
       curRow.append(curGrpCell);
@@ -630,7 +599,7 @@ EDITORS.PaleoVE.prototype = {
   createTaggingSclCell: function (syllable) {
     var segment = this.dataMgr.getEntity('seg',syllable.segID),
     url,segDiv,themeDiv;
-    if (segment.urls && segment.urls.length) {
+    if (segment && segment.urls && segment.urls.length) {
       url = segment.urls[0];//tod add code to handle separate urls
       title = syllable.value.replace('ʔ','')+ " (Line: "+syllable.line+" Akṣara:"+syllable.pos+")";
       segDiv = $('<div class="tagSegDiv scl'+syllable.id+' seg'+syllable.segID+'" title="'+title+'"/>');
@@ -801,11 +770,26 @@ EDITORS.PaleoVE.prototype = {
     this.pTaggingFrame.append(this.pTaggingTable);
     this.contentDiv.append(this.pTaggingFrame);
     //create column header row and append to table
-    this.pTaggingTable.append($('<thead class="paleoTaggingHeaderRow"><tr>' +
-      '<td class="tagNameColumnHeader"><div>Sort: base</div></td>' +
-      '<td><div class="tagColumnHeader">Tagging Syllable Group <span class="taggingSyllableSpan"/></div></td>' +
-      '<td class="scrollColumnHeader"><div/></td>' +
-      '</tr></thead>'
+    this.pTaggingTable.append(
+      $('<thead class="paleoTaggingHeaderRow">' +
+          '<tr>'+
+            '<td class="tagNameColumnHeader"><div>Sort: base</div></td>' +
+            '<td><div class="tagColumnHeader">Tagging Orthographic Group <span class="taggingSyllableSpan"/></div></td>' +
+            '<td class="scrollColumnHeader"><div/></td>' +
+          '</tr>'+
+          '<tr>' +
+            '<td>' +
+              '<button class="toolbutton iconbutton" onclick="prevCell()" id="prev"' +
+              'title="Previous syllable">&#8592;</button>'+
+              '<div class="toolbuttonlabel">Previous</div>'+
+            '</td>'+
+            '<td>'+
+              '<button class="toolbutton iconbutton" onclick="nextCell()" id="next"' + 
+              'title="Next syllable">&#8594;</button>'+
+              '<div class="toolbuttonlabel">Next</div>'+
+            '</td>'+
+          '</tr>' +
+        '</thead>' 
     ));
     this.pTaggingTable.append($('<tbody><tr><td colspan="3"><div class="taggingDiv" /></td></tr></tbody>'));
     this.pTaggingDiv = $('.taggingDiv',this.pTaggingTable);
@@ -828,7 +812,11 @@ EDITORS.PaleoVE.prototype = {
             curRow.append($('<div class="padCell"/>'));//scrollbar space
           }
           curCellNum = 0;
-          curRowLabel = sclCell.rLabel;
+          if (sclCell.rLabel) {
+            curRowLabel = sclCell.rLabel;
+          } else {
+            curRowLabel = "unk";
+          }
           curRow = $('<div class="paleoChartRow">' +
             '<div class="paleoChartRowHeader">'+curRowLabel+'</div>' +
             '</div>' );
@@ -1071,6 +1059,7 @@ EDITORS.PaleoVE.prototype = {
           paleoVE.displaySclCell(sclCell,gSort);
         }
       }//trigger selection change
+      $(this).addClass("selectedd");
       $('.editContainer').trigger('updateselection',[paleoVE.id,[],null]);
       e.stopImmediatePropagation();
       return false;
@@ -1157,7 +1146,7 @@ EDITORS.PaleoVE.prototype = {
           savedata['tagAddToGIDs'] = [paleoVE.curTagID];
         }
         savedata['tagRemoveFromGIDs'] = [syllable.vt.value.replace(":","")];
-      } else if (this.curTagLabel.match(/^default/)) {
+      } else if (this.curTagLabel.match(/^default/i)) {
         if (!syllable.def) {
           savedata['tagAddToGIDs'] = [paleoVE.curTagID];
         } else {
@@ -1738,3 +1727,58 @@ if (!sktSort) {
     "990": [ "?" ]
   }
 }
+/**
+* nextCell moves UI to next glyph cell
+* and skips blank (no glyph) cells
+*/
+
+function nextCell(){
+  var temp = $('div.selectedd')
+
+  // if you are on the last syllable and click next button, beep for feedback
+  if(temp.parent().next(".paleoChartRow").length==0 && temp.next(".paleoChartCell").length==0){
+    UTILITY.beep();
+  }else{
+    temp.removeClass('selectedd')
+    // if there is another syllable on the current row, go to that
+    if(temp.next(".paleoChartCell").length!=0){
+      temp.next(".paleoChartCell").trigger("dblclick")
+    }else{
+      // go to the next row
+      temp.parent().next(".paleoChartRow").children(".paleoChartCell").first().trigger("dblclick")
+    }
+  }
+  // if at the current cell there isn't any pictures, and you are not at the last cell, then go to the next cell
+  if($('div.taggingDiv').children().length===0 && temp[0]!=temp.parent().parent().children().last(".paleoChartRow").children(".paleoChartCell").last()[0]){
+    nextCell()
+  }
+};
+
+/**
+* prevCell moves UI to previous glyph cell
+* and skips blank (no glyph) cells
+*
+*/
+
+function prevCell() {
+  var temp = $('div.selectedd')
+  // if there is another cell in the row, go to the prev cell of the same row
+  if(temp.prev().hasClass("paleoChartCell")){
+    temp.removeClass('selectedd')
+    temp.prev().trigger('dblclick')
+  }
+  // if you are on the first syllable and click previous button, beep for feedback
+  else if(temp.parent().prev(".paleoChartRow").length==0){
+    UTILITY.beep();
+  }
+  else{
+    // go to the previous row
+    temp.removeClass('selectedd')
+    temp.parent().prev(".paleoChartRow").children(".paleoChartCell").last().trigger('dblclick')
+  }
+ 
+  // if at the current cell there isn't any pictures, and you are not at the first cell, then go to the previous cell
+  if($('div.taggingDiv').children().length===0 && temp.parent().prev(".paleoChartRow").length!=0){
+    prevCell()
+    }
+  };
