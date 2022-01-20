@@ -15,7 +15,7 @@ ipython==7.19.0
 ipython-genutils==0.2.0
 itsdangerous==1.1.0
 jedi==0.17.2
-Jinja2==2.11.2
+jinja2>=2.11.3
 jupyter-client==6.1.7
 jupyter-core==4.7.0
 MarkupSafe==1.1.1
