@@ -639,16 +639,16 @@ EDITORS.PaleoVE.prototype = {
       //for each edition find token sequences and find physical sequences and create sclID to label lookup
       for (i=0; i<ednIDs.length; i++) {
         ednID = ednIDs[i];
-        edition = this.dataMgr.getEntity('edn',ednIDs[i]);
+        edition = paleoVE.dataMgr.getEntity('edn',ednIDs[i]);
         physSeqGIDs = [];
         if ( edition && edition.seqIDs && edition.seqIDs.length) {
           seqIDs = edition.seqIDs;
           for (j=0; j<seqIDs.length; j++) {
-            sequence =  this.dataMgr.getEntity('seq',seqIDs[j]);;
+            sequence =  paleoVE.dataMgr.getEntity('seq',seqIDs[j]);;
             //            if (sequence.typeID == this.dataMgr.termInfo.idByTerm_ParentLabel['text-sequencetype']) {
             //              txtSeqGIDs = txtSeqGIDs.concat(sequence.entityIDs);
             //            }
-            if (sequence && sequence.typeID == this.dataMgr.termInfo.idByTerm_ParentLabel['textphysical-sequencetype']) {//term dependency
+            if (sequence && sequence.typeID == paleoVE.dataMgr.termInfo.idByTerm_ParentLabel['textphysical-sequencetype']) {//term dependency
               physSeqGIDs = physSeqGIDs.concat(sequence.entityIDs);
             }
           }
@@ -661,7 +661,7 @@ EDITORS.PaleoVE.prototype = {
         }*/
         if (physSeqGIDs && physSeqGIDs.length) {// capture each sequence once
           for (j=0; j<physSeqGIDs.length; j++) {
-            sequence =  this.dataMgr.getEntityFromGID(physSeqGIDs[j]);
+            sequence =  paleoVE.dataMgr.getEntityFromGID(physSeqGIDs[j]);
             if (!sequence) {
               DEBUG.log('err',"physical line sequence not found in paleoVE for tag "+physSeqGIDs[j]);
               continue;
@@ -672,7 +672,7 @@ EDITORS.PaleoVE.prototype = {
               for (k=0; k<sclGIDs.length; k++) {
                 tag = sclGIDs[k].replace(":","");
                 //                sclTagToLabel[tag] = label;
-                syllable = this.dataMgr.getEntityFromGID(tag);
+                syllable = paleoVE.dataMgr.getEntityFromGID(tag);
                 if (syllable) {
                   if (sclTag2Types.base[tag]) {
                     syllable.bt = sclTag2Types.base[tag];
@@ -720,19 +720,19 @@ EDITORS.PaleoVE.prototype = {
         sclCellsBySortCode[sclGrpSort]['syllables'].push(syllable);
       }
     }
-    this.sclCellsBySortCode = sclCellsBySortCode;
+    paleoVE.sclCellsBySortCode = sclCellsBySortCode;
     // create Report Title
-    html = '<h3 class="paleographicReportHeader '+(this.catID?'cat'+this.catID:'edn'+this.ednID)+'">'+
+    html = '<h3 class="paleographicReportHeader '+(paleoVE.catID?'cat'+paleoVE.catID:'edn'+paleoVE.ednID)+'">'+
             (catalog?catalog.value:'Paleography for '+edition.value)+'</h3>';
     //create chart table div
-    this.contentDiv.html(html);
-    this.pChartFrame = $('<div class="paleoFrameDiv"/>');
-    this.pChartTable = $('<table class="paleoReportTable" />');
-    this.pChartFrame.append(this.pChartTable);
-    this.contentDiv.append(this.pChartFrame);
+    paleoVE.contentDiv.html(html);
+    paleoVE.pChartFrame = $('<div class="paleoFrameDiv"/>');
+    paleoVE.pChartTable = $('<table class="paleoReportTable" />');
+    paleoVE.pChartFrame.append(paleoVE.pChartTable);
+    paleoVE.contentDiv.append(paleoVE.pChartFrame);
     //create column header row and append to table
     if (!sktSort) {
-      this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr>' +
+      paleoVE.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr>' +
         '<td><div class="col0 columnHeader"/></td>' +
         '<td><div class="columnHeader">a</div></td>' +
         '<td><div class="columnHeader">i</div></td>' +
@@ -744,7 +744,7 @@ EDITORS.PaleoVE.prototype = {
       ));
       colNum = 5;
     } else {
-      this.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr><td>' +
+      paleoVE.pChartTable.append($('<thead class="paleoReportHeaderRow"><tr><td>' +
         '<div class="col0 columnHeader"/>' +
         '<div class="noVowel columnHeader">&nbsp;</div>' +
         '<div class="columnHeader">a</div>' +
@@ -763,14 +763,14 @@ EDITORS.PaleoVE.prototype = {
       ));
       colNum = 12;
     }
-    this.pChartTable.append($('<tbody><tr><td colspan="'+(colNum+2)+'"><div class="paleoChart" /></td></tr></tbody>'));
-    this.pChart = $('.paleoChart',this.pChartTable);
-    this.pTaggingFrame = $('<div class="paleoSclGrpTaggingDiv" />');
-    this.pTaggingTable = $('<table class="paleoTaggingTable" />');
-    this.pTaggingFrame.append(this.pTaggingTable);
-    this.contentDiv.append(this.pTaggingFrame);
+    paleoVE.pChartTable.append($('<tbody><tr><td colspan="'+(colNum+2)+'"><div class="paleoChart" /></td></tr></tbody>'));
+    paleoVE.pChart = $('.paleoChart',paleoVE.pChartTable);
+    paleoVE.pTaggingFrame = $('<div class="paleoSclGrpTaggingDiv" />');
+    paleoVE.pTaggingTable = $('<table class="paleoTaggingTable" />');
+    paleoVE.pTaggingFrame.append(paleoVE.pTaggingTable);
+    paleoVE.contentDiv.append(paleoVE.pTaggingFrame);
     //create column header row and append to table
-    this.pTaggingTable.append(
+    paleoVE.pTaggingTable.append(
       $('<thead class="paleoTaggingHeaderRow">' +
           '<tr>'+
             '<td class="tagNameColumnHeader"><div>Sort: base</div></td>' +
@@ -779,29 +779,29 @@ EDITORS.PaleoVE.prototype = {
           '</tr>'+
           '<tr>' +
             '<td>' +
-              '<button class="toolbutton iconbutton" onclick="prevCell()" id="prev"' +
-              'title="Previous syllable">&#8592;</button>'+
+              '<button class="toolbutton iconbutton btnprevcell" title="Previous syllable">&#8592;</button>'+
               '<div class="toolbuttonlabel">Previous</div>'+
             '</td>'+
             '<td>'+
-              '<button class="toolbutton iconbutton" onclick="nextCell()" id="next"' + 
-              'title="Next syllable">&#8594;</button>'+
+              '<button class="toolbutton iconbutton btnnextcell" title="Next syllable">&#8594;</button>'+
               '<div class="toolbuttonlabel">Next</div>'+
             '</td>'+
           '</tr>' +
         '</thead>' 
     ));
-    this.pTaggingTable.append($('<tbody><tr><td colspan="3"><div class="taggingDiv" /></td></tr></tbody>'));
-    this.pTaggingDiv = $('.taggingDiv',this.pTaggingTable);
-    this.pTaggingHeaderSpan = $('.taggingSyllableSpan',this.pTaggingTable);
-    this.btnSortMode = $('.tagNameColumnHeader',this.pTaggingTable);
-    this.sortMode = "base";
+    paleoVE.pTaggingTable.append($('<tbody><tr><td colspan="3"><div class="taggingDiv" /></td></tr></tbody>'));
+    paleoVE.pTaggingDiv = $('.taggingDiv',paleoVE.pTaggingTable);
+    paleoVE.pTaggingHeaderSpan = $('.taggingSyllableSpan',paleoVE.pTaggingTable);
+    paleoVE.btnSortMode = $('.tagNameColumnHeader',paleoVE.pTaggingTable);
+    paleoVE.btnPrevCell = $('.btnprevcell',paleoVE.pTaggingTable);
+    paleoVE.btnNextCell = $('.btnnextcell',paleoVE.pTaggingTable);
+    paleoVE.sortMode = "base";
     //init position tracking variables
     curCellNum = 0;
     curRowLabel = '';
     //iterate through all syllable groups and calculate sclCells
-    for (gSort in this.sclCellsBySortCode) {
-      sclCell = this.sclCellsBySortCode[gSort];
+    for (gSort in paleoVE.sclCellsBySortCode) {
+      sclCell = paleoVE.sclCellsBySortCode[gSort];
       if (sclCell) { //output syllable cell
         //if new row header create new row and append to table
         if (sclCell.rLabel != curRowLabel) {
@@ -820,7 +820,7 @@ EDITORS.PaleoVE.prototype = {
           curRow = $('<div class="paleoChartRow">' +
             '<div class="paleoChartRowHeader">'+curRowLabel+'</div>' +
             '</div>' );
-          this.pChart.append(curRow);
+            paleoVE.pChart.append(curRow);
         }
         //before creating sclCell div prefill blanks as needed
         if (sclCell.cNum > 1+curCellNum) { // prefill
@@ -829,7 +829,7 @@ EDITORS.PaleoVE.prototype = {
           }
         }
         //add syllable Group cell
-        curRow.append(this.getSclCellDiv(sclCell,gSort));
+        curRow.append(paleoVE.getSclCellDiv(sclCell,gSort));
         curCellNum = sclCell.cNum;
       }
     }
@@ -839,7 +839,7 @@ EDITORS.PaleoVE.prototype = {
       }
       curRow.append($('<div class="padCell">'));//scrollbar space
     }
-    this.addEventHandlers();
+    paleoVE.addEventHandlers();
   },
 
 
@@ -851,23 +851,23 @@ EDITORS.PaleoVE.prototype = {
 */
 
   getSclCellDiv: function(sclCell,gSort) {
-    var segment,syllable,i,segDiv = null,segImg = null, title,
+    var paleoVE= this, segment,syllable,i,segDiv = null,segImg = null, title,
     sclCellDiv = $('<div class="paleoChartCell srt'+gSort.substring(2)+'"/>'),
     sclStr, url, defaultUrl,
     serviceBaseUrl = basepath+'/services/getSegmentImage.php';
     if (!sclCell && gSort) {
-      sclCell = this.sclCellsBySortCode[gSort];
+      sclCell = paleoVE.sclCellsBySortCode[gSort];
     }
     if (sclCell) {
       sclStr = (sclCell.rLabel == "vowel"?"":sclCell.rLabel)+sclCell.cLabel;
       defaultUrl = imgbasepath+'/karoshti_default/'+sclStr+'.jpg'
-      this.calcSclCellGroups(sclCell);
+      paleoVE.calcSclCellGroups(sclCell);
       //find the segment for each syllable
       for(i in sclCell.syllables) {
         syllable = sclCell.syllables[i];
         if (syllable) {
           if(syllable.segID) {
-            segment = this.dataMgr.getEntity('seg',syllable.segID);
+            segment = paleoVE.dataMgr.getEntity('seg',syllable.segID);
             if (segment && segment.urls && segment.urls.length) {//tod add code to handle separate urls
               if (!url || syllable.def) {
                 url = segment.urls[0];
@@ -1117,6 +1117,73 @@ EDITORS.PaleoVE.prototype = {
 
     //assign handler for all grapheme group elements
     $(".paleographicReportHeader", this.editDiv).unbind('dblclick').bind('dblclick',titleDblClickHandler);
+
+
+    /**
+    * btnNextCellClickHandler
+    * moves UI to next glyph cell in the paleography chart using row-column order
+    * and skips blank (no glyph) cells
+    */
+
+    function btnNextCellClickHandler(paleoVE){
+      var curPaleoCell = $('div.selectedd', paleoVE.contentDiv);
+
+      // if you are on the last syllable and click next button, beep for feedback
+      if(curPaleoCell.parent().next(".paleoChartRow").length==0 && curPaleoCell.next(".paleoChartCell").length==0){
+        UTILITY.beep();
+      }else{
+        curPaleoCell.removeClass('selectedd');
+        // if there is another syllable on the current row, go to that
+        if(curPaleoCell.next(".paleoChartCell").length!=0){
+          curPaleoCell.next(".paleoChartCell").trigger("dblclick");
+        }else{
+          // go to the next row
+          curPaleoCell.parent().next(".paleoChartRow").children(".paleoChartCell").first().trigger("dblclick")
+        }
+      }
+      // if at the current cell there isn't any pictures, and you are not at the last cell, then go to the next cell
+      if($('div.selectedd', paleoVE.contentDiv).children().length===0 && curPaleoCell[0]!=curPaleoCell.parent().parent().children().last(".paleoChartRow").children(".paleoChartCell").last()[0]){
+        btnNextCellClickHandler(paleoVE);
+      }
+    };
+
+    //assign handler for NextCell navigation button in paleo tagging mode
+    paleoVE.btnNextCell.unbind('click').bind('click',function () {btnNextCellClickHandler(paleoVE);});
+
+
+    /**
+    * btnPrevCellClickHandler
+    * moves UI to previous glyph cell in the paleography chart using row-column order
+    * and skips blank (no glyph) cells
+    *
+    */
+
+    function btnPrevCellClickHandler(paleoVE) {
+      var curPaleoCell = $('div.selectedd', paleoVE.contentDiv);
+      // if there is another cell in the row, go to the prev cell of the same row
+      if(curPaleoCell.prev().hasClass("paleoChartCell")){
+        curPaleoCell.removeClass('selectedd');
+        curPaleoCell.prev().trigger('dblclick');
+      }
+      // if you are on the first syllable and click previous button, beep for feedback
+      else if(curPaleoCell.parent().prev(".paleoChartRow").length==0){
+        UTILITY.beep();
+      }
+      else{
+        // go to the previous row
+        curPaleoCell.removeClass('selectedd');
+        curPaleoCell.parent().prev(".paleoChartRow").children(".paleoChartCell").last().trigger('dblclick');
+      }
+
+      // if at the current cell there isn't any pictures, and you are not at the first cell, then go to the previous cell
+      if($('div.selectedd', paleoVE.contentDiv).children().length===0 && curPaleoCell.parent().prev(".paleoChartRow").length!=0){
+        btnPrevCellClickHandler(paleoVE);
+      }
+    };
+
+    //assign handler for NextCell navigation button in paleo tagging mode
+    paleoVE.btnPrevCell.unbind('click').bind('click',function () {btnPrevCellClickHandler(paleoVE);});
+
   },
 
 /**
@@ -1727,58 +1794,3 @@ if (!sktSort) {
     "990": [ "?" ]
   }
 }
-/**
-* nextCell moves UI to next glyph cell
-* and skips blank (no glyph) cells
-*/
-
-function nextCell(){
-  var temp = $('div.selectedd')
-
-  // if you are on the last syllable and click next button, beep for feedback
-  if(temp.parent().next(".paleoChartRow").length==0 && temp.next(".paleoChartCell").length==0){
-    UTILITY.beep();
-  }else{
-    temp.removeClass('selectedd')
-    // if there is another syllable on the current row, go to that
-    if(temp.next(".paleoChartCell").length!=0){
-      temp.next(".paleoChartCell").trigger("dblclick")
-    }else{
-      // go to the next row
-      temp.parent().next(".paleoChartRow").children(".paleoChartCell").first().trigger("dblclick")
-    }
-  }
-  // if at the current cell there isn't any pictures, and you are not at the last cell, then go to the next cell
-  if($('div.taggingDiv').children().length===0 && temp[0]!=temp.parent().parent().children().last(".paleoChartRow").children(".paleoChartCell").last()[0]){
-    nextCell()
-  }
-};
-
-/**
-* prevCell moves UI to previous glyph cell
-* and skips blank (no glyph) cells
-*
-*/
-
-function prevCell() {
-  var temp = $('div.selectedd')
-  // if there is another cell in the row, go to the prev cell of the same row
-  if(temp.prev().hasClass("paleoChartCell")){
-    temp.removeClass('selectedd')
-    temp.prev().trigger('dblclick')
-  }
-  // if you are on the first syllable and click previous button, beep for feedback
-  else if(temp.parent().prev(".paleoChartRow").length==0){
-    UTILITY.beep();
-  }
-  else{
-    // go to the previous row
-    temp.removeClass('selectedd')
-    temp.parent().prev(".paleoChartRow").children(".paleoChartCell").last().trigger('dblclick')
-  }
- 
-  // if at the current cell there isn't any pictures, and you are not at the first cell, then go to the previous cell
-  if($('div.taggingDiv').children().length===0 && temp.parent().prev(".paleoChartRow").length!=0){
-    prevCell()
-    }
-  };
