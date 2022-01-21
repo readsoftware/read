@@ -61,11 +61,15 @@
     <link rel="stylesheet" href="./editors/css/propertyVE.css" type="text/css" />
     <link rel="stylesheet" href="./editors/css/sequenceVE.css" type="text/css" />
     <?php
-    if (USE_SKETCHFAB) {
-      echo '<script type=\"text/javascript\" src=\"/sketchfab/sketchfab-viewer-1.8.2.js\"></script>';
+    if (defined("USE_SKETCHFAB") && USE_SKETCHFAB) {
+    ?>
+    <script type="text/javascript" src="/sketchfab/sketchfab-viewer-1.8.2.js"></script>
+    <?php
     }
-    if (USE_D3) {
-      echo '<script src=\"/d3/d3.js\"></script>';
+    if (defined("USE_D3") && USE_D3) {
+    ?>
+    <script src="/d3/d3.js"></script>
+    <?php
     }
     ?>
     <script src="/jquery/jquery-1.11.1.min.js"></script>
