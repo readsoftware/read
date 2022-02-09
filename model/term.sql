@@ -1110,7 +1110,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1138,'en=>"Declension"',1135,806,'{452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473}','A Term record with a constrained vocabulary derived from Declemsion.','lem_declension_id','http://www.gandhari.org/kanishka/model/document/Lemma-Declension.htm',NULL,NULL,1,'{2}'),
 (1139,'en=>"HomographOrder"',1135,531,NULL,'Numeric identifier to disambiguate Homographs','lem_homographOrder','http://www.gandhari.org/kanishka/model/document/Lemma-Lemma-HomographOrder.htm',NULL,NULL,1,'{2}'),
 (1140,'en=>"ID"',1135,784,'{1135}',NULL,'lem_id','http://www.gandhari.org/kanishka/model/document/Lemma-Lemma-ID.htm',NULL,NULL,1,'{2}'),
-(1141,'en=>"Lemma"',1135,785,NULL,'The Citation Form of the Lemma.  The Language of the Lemma is identified through its inclusion in a Catalog of Catalog-Type of ''Glossary'' or ''Dictionary'' and specification in the Catalog-SourceLanguage field. Lemma-Lemma may, in circumstances where the only Attested Form of a Token or Compound has Text Critical Marks, include those Text Critical Marks.  Lemma-Lemma may also include Morpheme markers implemented as a center dot character.  Need to elaborate on the actual character.  (middle dot Alt+183/U+00B7 )','lem_value','http://www.gandhari.org/kanishka/model/document/Lemma-Lemma-Lemma.htm',NULL,NULL,1,'{2}'),
+(1141,'en=>"Lemma"',1135,785,NULL,'The Citation Form of the Lemma.  The Language of the Lemma is identified through its inclusion in a Catalog of Catalog-Type of ''Glossary'' or ''Dictionary'' and specification in the Catalog-SourceLanguage field. Lemma-Lemma may, in circumstances where the only Attested Form of a Token or Compound has Text Critical Marks, include those Text Critical Marks.  Lemma-Lemma may also include Morpheme markers implemented as a center dot character.  Need to elaborate on the actual character.  (middle dot Alt+183/U+00B7)','lem_value','http://www.gandhari.org/kanishka/model/document/Lemma-Lemma-Lemma.htm',NULL,NULL,1,'{2}'),
 (1142,'en=>"Search"',1141,785,NULL,'The search value of the Lemma.  Lemma-Search is calculated from Lemma-Lemma by stripping out any Text Critical Marks and Morpheme markers.','lem_search','http://www.gandhari.org/kanishka/model/document/Lemma-Lemma-Search.htm',NULL,NULL,1,'{2}'),
 (1143,'en=>"NominalGender"',1141,806,'{489,490,491,492,493,494,495,1383,1384}','A Term record with a constrained vocabulary derived from Gender.','lem_nominal_gender_id','http://www.gandhari.org/kanishka/model/document/Lemma-NominalGender.htm',NULL,NULL,1,'{2}'),
 (1144,'en=>"Owner"',1141,802,'{1369}','UserGroup record linked to this record.  It defines which UserGroup owns this record.','lem_owner_id','http://www.gandhari.org/kanishka/model/document/Lemma-Owner.htm',NULL,NULL,1,'{2}'),
@@ -1458,7 +1458,11 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1497,'en=>"Cell"',1481,778,'{1495,1496}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1498,'en=>"Row"',1481,778,'{1497}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (1499,'en=>"Column"',1481,778,'{1497}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
-(1500,'en=>"Table"',1481,778,'{1498,1499}',NULL,NULL,NULL,NULL,NULL,1,'{2}');
+(1500,'en=>"Table"',1481,778,'{1498,1499}',NULL,NULL,NULL,NULL,NULL,1,'{2}'),
+(1501,'en=>"6"',1399,778,NULL,NULL,'ft6',NULL,NULL,NULL,1,'{2}'),
+(1502,'en=>"7"',1399,778,NULL,NULL,'ft7',NULL,NULL,NULL,1,'{2}'),
+(1503,'en=>"8"',1399,778,NULL,NULL,'ft8',NULL,NULL,NULL,1,'{2}'),
+(1504,'en=>"9"',1399,778,NULL,NULL,'ft9',NULL,NULL,NULL,1,'{2}');
 
 
-ALTER SEQUENCE term_trm_id_seq RESTART WITH 1501;
+ALTER SEQUENCE term_trm_id_seq RESTART WITH 1505;

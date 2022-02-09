@@ -1127,7 +1127,8 @@ function getCustomTags($trmID,$ctxPos = "") {
 
 function getTagGIDValue($trmID) {
   $annoRepresentations = new Annotations("ano_type_id = $trmID and not ano_owner_id in (2,3,6)".
-                                              " and ano_owner_id in (".join(",",getUserMembership()).")",
+                                          " and not 5 = ANY(ano_visibility_ids)".
+                                          " and ano_owner_id in (".join(",",getUserMembership()).")",
                                           "ano_text",null,null);
   if ($annoRepresentations && $annoRepresentations->getCount() > 0 ) {
     return "ano:".$annoRepresentations->current()->getID();
