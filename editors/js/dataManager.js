@@ -133,8 +133,10 @@ MANAGERS.DataManager.prototype = {
     this.loadAttributions();
     this.entTag2LinkedByAnoIDsByType = {};
     this.entTag2LinkedAnoIDsByType = {};
-    this.tdViewerData = {};
-    this.loadTDViewerData();
+    if (EDITORS.config.enable3DViewer) {
+      this.tdViewerData = {};
+      this.loadTDViewerData();
+    }
     DEBUG.traceExit("dataMgr.init","");
   },
 

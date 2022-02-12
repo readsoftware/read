@@ -126,6 +126,7 @@
         EDITORS.config.viewToolsOpenOnStart = ('<?=defined("VIEWTOOLSOPENONSTART")?VIEWTOOLSOPENONSTART:1?>' == "1") ;
         EDITORS.config.layoutToolsOpenOnStart = ('<?=defined("LAYOUTTOOLSOPENONSTART")?LAYOUTTOOLSOPENONSTART:1?>' == "1") ;
         EDITORS.config.toolSidebarOpenOnStart = ('<?=defined("TOOLSIDEBAROPENONSTART")?TOOLSIDEBAROPENONSTART:1?>' == "1") ;
+        EDITORS.config.enable3DViewer = ('<?=defined("USE_SKETCHFAB")?USE_SKETCHFAB:"0"?>' == "1") ;
     </script>
     <script src="./editors/js/utility.js"></script>
     <script src="./editors/js/debug.js"></script>
