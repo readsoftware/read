@@ -65,7 +65,7 @@ if (!$data) {
   $subpath = (array_key_exists('subpath',$data)? $data['subpath']:null);
   $entTag = (array_key_exists('entTag',$data)? $data['entTag']:null);
   if (!$path && !$subpath && !$entTag) {
-		array_push($warnings,"Neither path or entTag data supplied, file(s) will be upload to '".DBNAME."' image root");
+		array_push($warnings,"Neither path or entTag data supplied, thumb(s) will be created for file(s) in '".DBNAME."' image root");
     $path = IMAGE_ROOT."/".DBNAME;
     $url = IMAGE_SITE_BASE_URL."/".DBNAME;
   } else if (!$path && $subpath) {

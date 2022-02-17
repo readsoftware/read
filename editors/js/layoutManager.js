@@ -1294,15 +1294,17 @@ MANAGERS.LayoutManager.prototype = {
             id: paneID,
             editDiv: $("." + paneID, this.curLayout)[0]
           }
-          if (catalog.value == "GD" || catalog.value == "MW" || catalog.value == "MG") {
+          if (catalog.value == "GD" || catalog.value == "MW" || catalog.value == "CG"  || catalog.value == "MG") {
             catCode = catalog.value.toLowerCase();
             config['dictionary'] = catCode;
+            defSrchStr = 'a';
             if (catalog.value == "GD") {
               config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype=F';
-            } else if (catalog.value == "MG") {
-              config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&dictionary=' + catCode + '&searchstring={{value}}&searchtype={{type}}';
+            } else if (catalog.value == "CG" || catalog.value == "MG") {
+              defSrchStr = 'a';
+              config['selectURL'] = basepath + '/plugins/dictionary/index.php?db=' + dbName +'&section=' + catCode + '&searchstring={{value}}&searchtype={{type}}';
             }
-            config['url'] = basepath + '/plugins/dictionary/index.php?dictionary=' + catCode + '&searchstring=a&searchtype=F&strJSON={"dictionary":"' + catCode + '","mode":"getdictionarystats"}';
+            config['url'] = basepath + '/plugins/dictionary/index.php?dictionary=' + catCode + '&searchstring='+defSrchStr+'&searchtype=F&strJSON={"dictionary":"' + catCode + '","mode":"getdictionarystats"}';
             config['entGID'] = entGID;
             this.editors[paneID] = new EDITORS.FrameV(config);
           } else if (catalog.value == "BG") {

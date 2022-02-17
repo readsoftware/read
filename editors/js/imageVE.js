@@ -320,6 +320,7 @@ savePolygons: function () {
     savedata["segs"] = segs;
     $.ajax({
         dataType: 'json',
+        type: 'post',
         url: basepath+'/services/updateSegments.php?db='+dbName, //TODO: convert this to saveSegment service with update cache model
         data: savedata,
         asynch: true,

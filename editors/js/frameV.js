@@ -126,7 +126,8 @@ EDITORS.FrameV.prototype = {
       if (senderID == frameV.id || !frameV.dictionary) {
         return;
       }
-      var i, id, prefix, url, entity, value, resLabel;
+      var isGlyphary = ['mg','cg'].indexOf(frameV.dictionary.toLowerCase()) > -1,
+          id, prefix, url, entity, value, resLabel;
       DEBUG.log("event","selection changed recieved by "+frameV.id+" from "+senderID+" selected ids "+ selectionIDs.join());
       if (entID && entID.length && entID.length > 3) {
         prefix = entID.substr(0,3);
@@ -137,13 +138,13 @@ EDITORS.FrameV.prototype = {
           resLabel = frameV.dictionary;
           //reset src with value of word
           if (frameV.selectURL) {
-            if (frameV.dictionary == 'mg') {
+            if (isGlyphary) {
               value = value + '\\??\\)|' + value + '\\??,'
             }
             //template url where entity value field replaces {{value}} in url string
             url = frameV.selectURL.replace(/\{\{value\}\}/g,value);
             if (url.indexOf('{{type}}')) {
-              url = url.replace(/\{\{type\}\}/g,frameV.dictionary == 'mg'?'S':'F'); // Warning API mapping  S is mapped to  phonetic for maya and F lemma
+              url = url.replace(/\{\{type\}\}/g,isGlyphary?'S':'F'); // Warning API mapping  S is mapped to  phonetic for maya and F lemma
             }
           } else { 
             if (frameV.serviceURL) {
@@ -154,7 +155,7 @@ EDITORS.FrameV.prototype = {
             url += '?dictionary='+frameV.dictionary+'&searchstring='+value+'&searchtype=S&strJSON={"dictionary":"'+frameV.dictionary+'","mode":"F:'+value+'"}';
           }
           frameV.frameElem.attr("src",url);
-        } else if (prefix == 'seg' && frameV.dictionary && frameV.dictionary == 'mg'){//seg link to  Maya Glyphary
+        } else if (prefix == 'seg' && frameV.dictionary && isGlyphary){//seg link to  Maya Glyphary
           entity = frameV.dataMgr.getEntity(prefix,id);
           type = 'O';
           value = null;
