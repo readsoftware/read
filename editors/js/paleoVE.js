@@ -800,6 +800,7 @@ EDITORS.PaleoVE.prototype = {
     curCellNum = 0;
     curRowLabel = '';
     //iterate through all syllable groups and calculate sclCells
+    firstChartRow = true;
     for (gSort in paleoVE.sclCellsBySortCode) {
       sclCell = paleoVE.sclCellsBySortCode[gSort];
       if (sclCell) { //output syllable cell
@@ -810,6 +811,11 @@ EDITORS.PaleoVE.prototype = {
               curRow.append($('<div class="paleoChartCell"/>'));//mark it so dblclick has context
             }
             curRow.append($('<div class="padCell"/>'));//scrollbar space
+            //mark the first rows first cell
+          }
+          if (curRow && firstChartRow) {
+            curRow.find('.paleoChartCell:first').addClass('firstChartCell');
+            firstChartRow = false;
           }
           curCellNum = 0;
           if (sclCell.rLabel) {
@@ -838,6 +844,10 @@ EDITORS.PaleoVE.prototype = {
         curRow.append($('<div class="paleoChartCell">'));
       }
       curRow.append($('<div class="padCell">'));//scrollbar space
+    }
+    // mark last chart cell
+    if (curRow){
+      curRow.find('.paleoChartCell:last').addClass('lastChartCell');
     }
     paleoVE.addEventHandlers();
   },
@@ -888,6 +898,9 @@ EDITORS.PaleoVE.prototype = {
             segDiv.addClass('seg'+syllable.segID);
           }
         }
+      }
+      if (!url) {
+        segDiv.addClass('noglyphs');
       }
       if (segImg) {
         segImg.attr('src',(url?url:defaultUrl));
@@ -1142,7 +1155,9 @@ EDITORS.PaleoVE.prototype = {
         }
       }
       // if at the current cell there isn't any pictures, and you are not at the last cell, then go to the next cell
-      if($('div.selectedd', paleoVE.contentDiv).children().length===0 && curPaleoCell[0]!=curPaleoCell.parent().parent().children().last(".paleoChartRow").children(".paleoChartCell").last()[0]){
+      if (($('div.selectedd .noglyphs', paleoVE.contentDiv).length!==0 ||
+           $('div.selectedd', paleoVE.contentDiv).children().length===0) &&
+          !curPaleoCell.hasClass('lastChartCell')){
         btnNextCellClickHandler(paleoVE);
       }
     };
@@ -1176,7 +1191,9 @@ EDITORS.PaleoVE.prototype = {
       }
 
       // if at the current cell there isn't any pictures, and you are not at the first cell, then go to the previous cell
-      if($('div.selectedd', paleoVE.contentDiv).children().length===0 && curPaleoCell.parent().prev(".paleoChartRow").length!=0){
+      if (($('div.selectedd .noglyphs', paleoVE.contentDiv).length!==0 ||
+           $('div.selectedd', paleoVE.contentDiv).children().length===0) &&
+          !curPaleoCell.hasClass('firstChartCell')){
         btnPrevCellClickHandler(paleoVE);
       }
     };

@@ -220,7 +220,7 @@
         $this->_graphemes = null; // and ensure refresh
       }
       $graphemes = $this->getGraphemes(true);
-      $value = null;
+      $value = $sort = $sort2 = null;
       $transcription = null;
       if (@$graphemes){
         $value = "";
@@ -481,9 +481,13 @@
         if (strpos($this->idsToString($this->_grapheme_ids),"-") !== false){ //found temp id
           $this->_graphemes = null;
         }else{
-          $this->_graphemes = new Graphemes("gra_id in (".join(",",$this->getGraphemeIDs()).")",null,null,null);
-          $this->_graphemes->setAutoAdvance(false);
-          $this->_graphemes->setOrderMap($this->getGraphemeIDs());//ensure the iterator will server objects as in order list of ids.
+          $this->_graphemes = new Graphemes("gra_id in (".join(",",$this->getGraphemeIDs()).") and not gra_owner_id = 1",null,null,null);
+          if ($this->_graphemes && $this->_graphemes->getCount() > 0) {
+            $this->_graphemes->setAutoAdvance(false);
+            $this->_graphemes->setOrderMap($this->getGraphemeIDs());//ensure the iterator will server objects as in order list of ids.
+          } else {
+            $this->_graphemes = null;
+          }
         }
       }
       return $this->_graphemes;

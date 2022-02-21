@@ -24,7 +24,7 @@ def default_app():
 
     @app.route("/")
     def index():
-        return "<h2> READ Central Admin coming soon.</h2> <br/> <span>Type going direct to admin your database using localhost:8001/<i>yourdbname</i></span>"
+        return "<h2> READ Central Admin coming soon.</h2> <br/> <span>Try going direct to admin your database using localhost:8001/<i>yourdbname</i></span>"
 
     @app.route("/readadmin/<name>")
     def unknown(name):

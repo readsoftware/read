@@ -110,7 +110,7 @@
     <title>Calculate Edition Word Locations</title>
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.base.css" type="text/css" />
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.energyblue.css" type="text/css" />
-    <link rel="stylesheet" href="./css/readviewer.css" type="text/css" />
+    <link rel="stylesheet" href="../viewer/css/readviewer.css" type="text/css" />
     <script src="/jquery/jquery-1.11.1.min.js"></script>
     <script src="/jqwidget/jqwidgets/jqxcore.js"></script>
     <script src="/jqwidget/jqwidgets/jqxtouch.js"></script>
