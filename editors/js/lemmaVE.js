@@ -1515,21 +1515,22 @@ createDeclensionUI: function() {
         vclass = this.isLemma && this.entity['class'] ? this.entity['class']:null,
         cf = this.isLemma && this.entity.certainty ? this.entity.certainty:[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
         posEdit = $('<div class="posEditUI radioUI"></div>'),
-        listPOS = [{label: "adj.",trmID:674,showSub:"showSubAdj",showInfl:"showCase showAdjGender showNumber showAdjConj"},
+        listPOS = [{label: "adj.",trmID:674,showSub:"showSubAdj",showInfl:"showCase showAdjGender showNumber showAConj"},
                    {label: "adp.",trmID:661,showSub:""},
                    {label: "adv.",trmID:655,showSub:""},
                    {label: "ind.",trmID:656,showSub:""},
-                   {label: "noun",trmID:664,showSub:"showSubNoun showGramGender",showInfl:"showGender showCase showNumber"},
+                   {label: "noun",trmID:664,showSub:"showSubNoun showGramGender",showInfl:"showCase showGender showNumber showAConj"},
                    {label: "num.",trmID:662,showSub:"showSubNum"},
                    {label: "pron.",trmID:667,showSub:"showSubPron"},
                    {label: "v.",trmID:685,showSub:"",showInfl:"showSubVerb"}],
-        listSubAdj = [{label: "common",trmID:675,showInfl:"showCase showAdjGender showNumber showAdjConj"},
-                      {label: "gdv.",trmID:676,showInfl:"showCase showAdjGender showNumber showAdjConj"},
-                       {label: "pp.",trmID:677,showInfl:"showCase showAdjGender showNumber showAdjConj"},
-                       {label: "pres. part.",trmID:678}],
+        listSubAdj = [{label: "common",trmID:675,showInfl:"showCase showAdjGender showNumber showAConj"},
+                      {label: "gdv.",trmID:676,showInfl:"showCase showAdjGender showNumber showAConj"},
+                      {label: "bv.",trmID:1505,showInfl:"showCase showAdjGender showNumber showAConj"},
+                      {label: "pp.",trmID:677,showInfl:"showCase showAdjGender showNumber showAConj"},
+                      {label: "pres. part.",trmID:678}],
         listSubNum = [{label: "ord.",trmID:683,showInfl:"showCase showGender showNumber"},
-                       {label: "card.",trmID:682,showInfl:"showCase showGender showNumber"}],
-        listSubNoun = [{label: "common",trmID:665,showInfl:"showCase showGender showNumber"},
+                      {label: "card.",trmID:682,showInfl:"showCase showGender showNumber"}],
+        listSubNoun = [{label: "common",trmID:665,showInfl:"showCase showGender showNumber showAConj"},
                        {label: "proper",trmID:666,showInfl:"showCase showGender showNumber"}],
         listSubPron = [{label: "dem.",trmID:669,showInfl:"showCase showAdjGender showNumber"},
                        {label: "indef.",trmID:670,showInfl:"showCase showAdjGender showNumber"},
@@ -1537,13 +1538,13 @@ createDeclensionUI: function() {
                        {label: "pers.",trmID:668,showInfl:"showCase showNumber"},
                        {label: "rel.",trmID:672,showInfl:"showCase showAdjGender showNumber"},
                        {label: "refl.",trmID:673,showInfl:"showCase showNumber"}],
-        listGramGen = [{label: "m.",trmID:491},
+        listGramGen = [{label: "m.",trmID:491,showInfl:""},
                        {label: "mn.",trmID:494,showInfl:"showGender"},
-                       {label: "n.",trmID:492},
-                       {label: "mfn.",trmID:1383,showInfl:"showGender"},
+                       {label: "n.",trmID:492,showInfl:""},
                        {label: "nf.",trmID:1384,showInfl:"showGender"},
-                       {label: "f.",trmID:493},
-                       {label: "mf.",trmID:495,showInfl:"showGender"}],
+                       {label: "f.",trmID:493,showInfl:""},
+                       {label: "mf.",trmID:495,showInfl:"showGender"},
+                       {label: "mfn.",trmID:1383,showInfl:"showGender"}],
         listClass = [{label: "1",trmID:831},
                      {label: "2",trmID:832},
                      {label: "3",trmID:833},
@@ -1709,30 +1710,30 @@ createDeclensionUI: function() {
     }
     DEBUG.traceEntry("createPOSUI");
     //create UI container
-    this.posUI = $('<div class="posUI"></div>');
-    this.editDiv.append(this.posUI);
+    lemmaVE.posUI = $('<div class="posUI"></div>');
+    lemmaVE.editDiv.append(lemmaVE.posUI);
     //create label
-    this.posUI.append($('<div class="propDisplayUI">'+
+    lemmaVE.posUI.append($('<div class="propDisplayUI">'+
                           '<div class="valueLabelDiv propDisplayElement">'+(value?value:"POS")+'</div>'+
                           '</div>'));
     //create input with save button
-    this.posUI.append(this.createPOSEditUI());
+    lemmaVE.posUI.append(lemmaVE.createPOSEditUI());
     //attach event handlers
       //click to edit
-      $('div.valueLabelDiv',this.posUI).unbind("click").bind("click",function(e) {
+      $('div.valueLabelDiv',lemmaVE.posUI).unbind("click").bind("click",function(e) {
         $('div.edit',lemmaVE.editDiv).removeClass("edit");
         lemmaVE.posUI.addClass("edit");
-        $('div.posEditUI input',this.posUI).focus();
+        $('div.posEditUI input',lemmaVE.posUI).focus();
         e.stopImmediatePropagation();
         return false;
       });
       //click to cancel
-      $('div.posEditUI input',this.posUI).unbind("blur").bind("blur",function(e) {
+      $('div.posEditUI input',lemmaVE.posUI).unbind("blur").bind("blur",function(e) {
         lemmaVE.posUI.removeClass("edit");
       });
       //mark dirty on input
-      $('div.posEditUI',this.posUI).unbind("input").bind("input",function(e) {
-        if ($('div.valueLabelDiv',this.posUI).text() != $(this).val()) {
+      $('div.posEditUI',lemmaVE.posUI).unbind("input").bind("input",function(e) {
+        if ($('div.valueLabelDiv',lemmaVE.posUI).text() != $(this).val()) {
           if (!$(this).parent().parent().hasClass("dirty")) {
             $(this).parent().parent().addClass("dirty");
           }
@@ -1872,46 +1873,58 @@ createDeclensionUI: function() {
         vclass = this.isLemma && this.entity['class'] ? this.entity['class']:null,
         inflection, sverb = '686', gen, num, infcase, per, tense , mood, conj2nd, icf = [3,3,3,3,3,3,3,3],
         infEdit = this.inflectionEditUI, lemmaShowInf = [], posSelectedBtns,
-        listSubVerb = [{label: "Finite",trmID:'686',showSub:"showSubVerb showNumber showPerson showTense showMood"},
-                       {label: "Derivative",trmID:'687',showSub:"showSubVerb showV2ndConj"}],
-        listGen = [{label: "m.",trmID:485},
-                   {label: "n.",trmID:486},
-                   {label: "f.",trmID:487}],
+        listSubVerb = [{label: "Finite",trmID:'686',showSub:"showSubVerb showVConj showVoice showTense showMood showNumber showPerson"},
+                       {label: "Non-Finite",trmID:'687',showSub:"showSubVerb showV2ndConj"}],
+        listGen = [{label: "m.",trmID:491},//change from 485 check data!!!
+                   {label: "mn.",trmID:494},
+                   {label: "n.",trmID:492},//change from 486 check data!!!
+                   {label: "nf.",trmID:1384},
+                   {label: "f.",trmID:493},//change from 487 check data!!!
+                   {label: "mf.",trmID:495},
+                   {label: "mfn.",trmID:1383}],
         listAdjGen = [{label: "m.",trmID:491},
-                       {label: "mn.",trmID:494},
-                       {label: "n.",trmID:492},
-                       {label: "mfn.",trmID:1383},
-                       {label: "nf.",trmID:1384},
-                       {label: "f.",trmID:493},
-                       {label: "mf.",trmID:495}],
+                      {label: "mn.",trmID:494},
+                      {label: "n.",trmID:492},
+                      {label: "nf.",trmID:1384},
+                      {label: "f.",trmID:493},
+                      {label: "mf.",trmID:495},
+                      {label: "mfn.",trmID:1383}],
         listNum = [{label: "sg.",trmID:499},
                    {label: "du.",trmID:500},
                    {label: "pl.",trmID:501}],
-        listCase = [//{label: "dir.",trmID:361},
-                   {label: "nom.",trmID:362},
+        listCase = [{label: "nom.",trmID:362},
                    {label: "acc.",trmID:363},
                    {label: "instr.",trmID:364},
                    {label: "dat.",trmID:365},
-//                   {label: "dat/gen.",trmID:366},
                    {label: "abl.",trmID:367},
                    {label: "gen.",trmID:368},
                    {label: "loc.",trmID:369},
-                   {label: "voc.",trmID:370}/*,
-                   {label: "stem.",trmID:1069}*/],
+                   {label: "voc.",trmID:370}],
         listPerson = [{label: "1st",trmID:850},
                      {label: "2nd",trmID:851},
                      {label: "3rd",trmID:852}],
+        listVoice = [{label: "P.",trmID:875},
+                     {label: "Ā.",trmID:876},
+                     {label: "pass.",trmID:877}],
         listTense = [{label: "pres.",trmID:865},
                      {label: "fut.",trmID:868},
+                     {label: "p.fut.",trmID:869},
+                     {label: "cond.",trmID:871},
                      {label: "perf.",trmID:867},
+                     {label: "imp.",trmID:866},
+                     {label: "aor.",trmID:870},
                      {label: "pret.",trmID:872}],
         listMood = [{label:  "ind.",trmID:846},
                      {label: "opt.",trmID:845},
                      {label: "impv.",trmID:844}],
         listV2ndConj = [{label: "abs.",trmID:860},
                        {label:  "inf.",trmID:861}],
-        list2ndConj = [{label: "desid.",trmID:857},
-                       {label: "intens.",trmID:859}],
+        listVConj = [{label: "caus.",trmID:856},
+                       {label: "des.",trmID:857},
+                       {label: "int.",trmID:859},
+                       {label: "den.",trmID:858}],
+        listAConj = [{label: "des.",trmID:548},
+                       {label: "int.",trmID:549}],
         listCtrl = [{label: "Save",type:"saveBtnDiv"},
                     {label: "Clear",type:"clearBtnDiv"},
                     {label: "Cancel",type:"cancelBtnDiv"}];
@@ -1941,23 +1954,26 @@ createDeclensionUI: function() {
       infcase = inflection['case'];
       per = inflection.person;
       tense = inflection.tense;
-//      voice = inflection.voice;
+      voice = inflection.voice;
       mood = inflection.mood;
       conj2nd = inflection.conj2nd;
-      if (conj2nd) {
+      if (conj2nd == 860 || conj2nd == 861) {
         sverb = '687';
+      } else {
+        sverb = '686';
       }
     }
     infEdit.html('');
             //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
     if (lemmaShowInf.indexOf('showSubVerb') > -1) {
       infEdit.append(this.createRadioGroupUI("spos", "SubVerbUI", listSubVerb,sverb,null,null,1));
+      infEdit.append(this.createRadioGroupUI("conj2nd", "VConjUI", listVConj,conj2nd,null,icf[7] == 2));
+      infEdit.append(this.createRadioGroupUI("conj2nd", "V2ndConjUI", listV2ndConj,conj2nd,null,icf[7] == 2));
+      infEdit.append(this.createRadioGroupUI("voice", "VoiceUI", listVoice,voice,null,icf[1] == 2));
       infEdit.append(this.createRadioGroupUI("tense", "TenseUI", listTense,tense,null,icf[0] == 2));
-//      infEdit.append(this.createRadioGroupUI("voice", "VoiceUI", listVoice,voice,null,icf[1] == 2));
       infEdit.append(this.createRadioGroupUI("mood", "MoodUI", listMood,mood,null,icf[2] == 2));
       infEdit.append(this.createRadioGroupUI("num", "NumberUI", listNum,num,null,icf[4] == 2));
       infEdit.append(this.createRadioGroupUI("person", "PersonUI", listPerson,per,null,icf[6] == 2));
-      infEdit.append(this.createRadioGroupUI("conj2nd", "V2ndConjUI", listV2ndConj,conj2nd,null,icf[7] == 2));
     } else {// other inflectables use a subset of the following
       if (lemmaShowInf.indexOf('showGender') > -1) {
         infEdit.append(this.createRadioGroupUI("gender", "GenderUI", listGen, gen,null,icf[3] == 2));
@@ -1971,8 +1987,8 @@ createDeclensionUI: function() {
       if (lemmaShowInf.indexOf('showCase') > -1) {
         infEdit.append(this.createRadioGroupUI("case", "CaseUI", listCase,infcase,null,icf[5] == 2));
       }
-      if (lemmaShowInf.indexOf('showAdjConj') > -1) {
-        infEdit.append(this.createRadioGroupUI("conj2nd", "A2ndConjUI", list2ndConj,conj2nd,null,icf[7] == 2));
+      if (lemmaShowInf.indexOf('showAConj') > -1) {
+        infEdit.append(this.createRadioGroupUI("conj2nd", "AConjUI", listAConj,conj2nd,null,icf[7] == 2));
       }
     }
     infEdit.append(this.createRadioGroupUI(null, null, listCtrl));
@@ -2100,7 +2116,8 @@ createDeclensionUI: function() {
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['adj.-partofspeech'] ||//term dependency
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['noun-partofspeech'] ||//term dependency
                                pos == this.dataMgr.termInfo.idByTerm_ParentLabel['pron.-partofspeech'] ||//term dependency
-                               pos == this.dataMgr.termInfo.idByTerm_ParentLabel['num.-partofspeech']))? true:false,//term dependency
+                               pos == this.dataMgr.termInfo.idByTerm_ParentLabel['num.-partofspeech'])//term dependency
+                              )? true:false,
         entities = [], infMap = {},entity, displayUI, infVal, inflection,
         attested, attestedAnnoTag, attestedAnno, attestedAnnoLabel, entIDs = this.isLemma ? this.entity.entityIDs:"";
     DEBUG.traceEntry("createAttestedUI");
@@ -2154,15 +2171,21 @@ createDeclensionUI: function() {
           if (infID) { //calc inflection string
             inflection = this.dataMgr.getEntity('inf',infID);
             //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
-            if (inflection.tense && this.dataMgr.getTermFromID(inflection.tense)) {
-              infVal += (infVal?' ':'') + this.dataMgr.getTermFromID(inflection.tense);
-              if (inflection.certainty && inflection.certainty[0] == 2) {
+            if ((pos == verbID || pos == adjID) && inflection.conj2nd && this.dataMgr.getTermFromID(inflection.conj2nd)) {
+              infVal += (infVal?' ':'') + this.dataMgr.getTermFromID(inflection.conj2nd);
+              if (inflection.certainty && inflection.certainty[7] == 2) {
                 infVal += '(?)';
               }
             }
             if (inflection.voice && this.dataMgr.getTermFromID(inflection.voice)) {
               infVal += (infVal?' ':'') + this.dataMgr.getTermFromID(inflection.voice);
               if (inflection.certainty && inflection.certainty[1] == 2) {
+                infVal += '(?)';
+              }
+            }
+            if (inflection.tense && this.dataMgr.getTermFromID(inflection.tense)) {
+              infVal += (infVal?' ':'') + this.dataMgr.getTermFromID(inflection.tense);
+              if (inflection.certainty && inflection.certainty[0] == 2) {
                 infVal += '(?)';
               }
             }
@@ -2194,12 +2217,6 @@ createDeclensionUI: function() {
             if (inflection.person && this.dataMgr.getTermFromID(inflection.person)) {
               infVal += (infVal?' ':'') + this.dataMgr.getTermFromID(inflection.person);
               if (inflection.certainty && inflection.certainty[6] == 2) {
-                infVal += '(?)';
-              }
-            }
-            if ((pos == verbID || pos == adjID) && inflection.conj2nd && this.dataMgr.getTermFromID(inflection.conj2nd)) {
-              infVal += (infVal?' ':'') + this.dataMgr.getTermFromID(inflection.conj2nd);
-              if (inflection.certainty && inflection.certainty[7] == 2) {
                 infVal += '(?)';
               }
             }

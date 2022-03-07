@@ -484,6 +484,10 @@ if (count($errors) == 0) {
                 $tokInflection->setVerbalPerson((!$propval || $propval == "")?null:$propval);
 //                addUpdateEntityReturnData('inf',$tokInflection->getID(),'person',$tokInflection->getVerbalPerson());
                 break;
+              case 'voice':
+                $tokInflection->setVerbalVoice((!$propval || $propval == "")?null:$propval);
+//                addUpdateEntityReturnData('inf',$tokInflection->getID(),'tense',$tokInflection->getVerbalTense());
+                break;
               case 'tense':
                 $tokInflection->setVerbalTense((!$propval || $propval == "")?null:$propval);
 //                addUpdateEntityReturnData('inf',$tokInflection->getID(),'tense',$tokInflection->getVerbalTense());

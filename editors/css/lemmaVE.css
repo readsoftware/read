@@ -483,12 +483,12 @@ div.phonoUI .valueLabelDiv, div.declUI .valueLabelDiv, div.linkTypeUI .valueLabe
   display:none;
 }
 .showSubVerb .SubVerbUI, .showTense .TenseUI, .showMood .MoodUI, .showNumber .NumberUI,
-.showPerson .PersonUI, .showV2ndConj .V2ndConjUI,
-.showGender .GenderUI, .showCase .CaseUI, .showAdjConj .A2ndConjUI {
+.showPerson .PersonUI, .showVConj .VConjUI, .showV2ndConj .V2ndConjUI, .showVoice .VoiceUI,
+.showGender .GenderUI, .showCase .CaseUI, .showAConj .AConjUI {
   display:flex;
 }
-.SubVerbUI, .TenseUI, .MoodUI, .NumberUI,
-.PersonUI,.V2ndConjUI,.GenderUI,.CaseUI,.A2ndConjUI {
+.SubVerbUI, .TenseUI, .MoodUI, .NumberUI, .VoiceUI, .VConjUI,
+.PersonUI, .V2ndConjUI, .GenderUI, .CaseUI, .AConjUI {
   display:none;
 }
 .buttonDiv{
