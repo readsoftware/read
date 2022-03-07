@@ -786,11 +786,11 @@ EDITORS.WordlistVE.prototype = {
 //      }
       cf = lemma.certainty?lemma.certainty:[3,3,3,3,3];
       pos = this.dataMgr.getTermFromID(lemma.pos);
-      isNoun = pos == 'noun';
-      isPronoun = pos == 'pron.';
-      isAdjective = pos == 'adj.';
-      isNumeral = pos == 'num.';
-      isVerb = pos == 'v.';
+      isNoun = pos == 'noun'; // term dependency
+      isPronoun = pos == 'pron.'; // term dependency
+      isAdjective = pos == 'adj.'; // term dependency
+      isNumeral = pos == 'num.'; // term dependency
+      isVerb = pos == 'v.'; // term dependency
       isInflectable = (isNoun || isPronoun || isAdjective || isNumeral || isVerb);
       //calculate the lemmas POS label
       if (isNoun && lemma.gender) {
@@ -834,6 +834,7 @@ EDITORS.WordlistVE.prototype = {
               curGen=null, curNum=null, curForm=null,
               curCase=null, curPerson=null, cur2ndConj=null;
           //output 'ordered according to inflection' list of unique spelling attested forms
+          infListStarted = false;
           for (k=0; k<infGIDs.length; k++) {
             //ignore any attested forms not assigned to an inflection (non inf entIDS)
             if (!infGIDs[k].match(/inf/)) {
@@ -842,42 +843,77 @@ EDITORS.WordlistVE.prototype = {
             inflection = this.dataMgr.getEntityFromGID(infGIDs[k]);
           //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
             icf = inflection.certainty ? inflection.certainty : [3,3,3,3,3,3,3,3];
+            infSep = false;
             html += '<span class="morphology '+infGIDs[k].replace(":","")+'">';
-            if (inflection.tense && (inflection.tense + (icf[0]==2?'(?)':'')) != curTense) {
-              html += ((k && inflection.tense != curTense)?' ◾ ':' ') +
-                      this.dataMgr.getTermFromID(inflection.tense) + (icf[0]==2?'(?)':'');
-              curTense = inflection.tense + (icf[0]==2?'(?)':'');
-              curVoice=null;
+            if (isVerb && inflection.conj2nd) {
+              new2ndConj = inflection.conj2nd + (icf[7]==2?'(?)':'');
+              if (new2ndConj != cur2ndConj) {
+                html += ((k && infListStarted &&
+                         (inflection.conj2nd != cur2ndConj || cur2ndConj.indexOf('?') == -1 && icf[7]==2))?' ■ ':
+                         (k && infListStarted?'; ':' ')) +
+                        this.dataMgr.getTermFromID(inflection.conj2nd) + (icf[7]==2?'(?)':'');
+                infSep = true;
+                infListStarted = true;
+                cur2ndConj = new2ndConj;
+                curVoice=null;
+                curTense = null;
+                curMood=null;
+                curNum = null;
+                curPerson = null;
+                curForm = null;
+                curGen = null;
+                curCase = null;
+                }
+            }
+            if (inflection.voice && (inflection.voice + (icf[1]==2?'(?)':'')) != curVoice) {
+              html += ((k && infListStarted && !infSep &&
+                       (inflection.voice != curVoice || curVoice.indexOf('?') == -1 && icf[1]==2))?' ◾ ':
+                       (k && infListStarted?'; ':' ')) +
+                      this.dataMgr.getTermFromID(inflection.voice) + (icf[1]==2?'(?)':'');
+              curVoice = inflection.voice + (icf[1]==2?'(?)':'');
+              infSep = true;
+              infListStarted = true;
+              curTense=null;
               curMood=null;
               curNum = null;
               curPerson = null;
-              cur2ndConj=null;
               curForm = null;
               curGen = null;
               curCase = null;
             }
-            if (inflection.voice && (inflection.voice + (icf[1]==2?'(?)':'')) != curVoice) {
-              html += this.dataMgr.getTermFromID(inflection.voice) + (icf[1]==2?'(?)':'');
-              curVoice = ' ' + inflection.voice + (icf[1]==2?'(?)':'');
+            if (inflection.tense && (inflection.tense + (icf[0]==2?'(?)':'')) != curTense) {
+              html += ((k && infListStarted && !infSep &&
+                       (inflection.tense != curTense || curTense.indexOf('?') == -1 && icf[0]==2))?(!curVoice?' ◾ ':'; '):' ') +
+                      this.dataMgr.getTermFromID(inflection.tense) + (icf[0]==2?'(?)':'');
+              curTense = inflection.tense + (icf[0]==2?'(?)':'');
+              infSep = true;
+              infListStarted = true;
               curMood=null;
               curNum = null;
               curPerson = null;
-              cur2ndConj=null;
               curForm = null;
+              curGen = null;
+              curCase = null;
             }
             if (inflection.mood && (inflection.mood + (icf[2]==2?'(?)':'')) != curMood) {
-              html += ((k && inflection.mood != curMood)?' ◾ ':' ') +
+              html += ((k && !infSep &&
+                       (inflection.mood != curMood || curMood.indexOf('?') == -1 && icf[2]==2))?'; ':' ') +
                       this.dataMgr.getTermFromID(inflection.mood) + (icf[2]==2?'(?)':'');
               curMood = inflection.mood + (icf[2]==2?'(?)':'');
+              infSep = true;
+              infListStarted = true;
               curNum = null;
               curPerson = null;
-              cur2ndConj=null;
               curForm = null;
+              curGen = null;
+              curCase = null;
             }
             if (inflection.gender && (inflection.gender + (icf[3]==2?'(?)':'')) != curGen) {
-              html += ((k && inflection.gender != curGen)?' ◾ ':' ') +
+              html += ((k && infListStarted && !infSep && inflection.gender != curGen)?' ◾ ':(k && infListStarted?'; ':' ')) +
                       this.dataMgr.getTermFromID(inflection.gender) + (icf[3]==2?'(?)':'');
               curGen = inflection.gender + (icf[3]==2?'(?)':'');
+              infSep = true;
+              infListStarted = true;
               curNum = null;
               curCase = null;
               cur2ndConj=null;
@@ -887,31 +923,44 @@ EDITORS.WordlistVE.prototype = {
               curMood=null;
               curPerson = null;
             }
+            if (inflection.person && (inflection.person+ (icf[6]==2?'(?)':'')) != curPerson) {
+              html += ((k && !infSep &&
+                (inflection.person != curPerson || curPerson.indexOf('?') == -1 && icf[6] == 2))?'; ':' ') +
+                      this.dataMgr.getTermFromID(inflection.person) + (icf[6]==2?'(?)':'');
+              curPerson = inflection.person + (icf[6]==2?'(?)':'');
+              infSep = true;
+              infListStarted = true;
+              curNum = null;
+              curForm = null;
+            }
             if (inflection.num && (inflection.num + (icf[4]==2?'(?)':'')) != curNum) {
-              html += ' ' + this.dataMgr.getTermFromID(inflection.num) + (icf[4]==2?'(?)':'');
+              html += ((k && !infSep &&
+                      (inflection.num != curNum || curNum.indexOf('?') == -1 && icf[4] == 2))?'; ':' ') +
+                      this.dataMgr.getTermFromID(inflection.num) + (icf[4]==2?'(?)':'');
               curNum = inflection.num + (icf[4]==2?'(?)':'');
-              curCase = null;
-              curPerson = null;
-              cur2ndConj=null;
+              infSep = true;
+              infListStarted = true;
+              if (isNoun || isAdjective) {
+                curCase = null;
+                cur2ndConj=null;
+              }
               curForm = null;
             }
             if (inflection['case'] && (inflection['case']+ (icf[5]==2?'(?)':'')) != curCase) {
-              html += ' ' + this.dataMgr.getTermFromID(inflection['case']) + (icf[5]==2?'(?)':'');
+              html += ((k && !infSep &&
+                      (inflection['case'] != curCase  || curCase.indexOf('?') == -1 && icf[5] == 2))?'; ':' ') +
+                      this.dataMgr.getTermFromID(inflection['case']) + (icf[5]==2?'(?)':'');
               curCase = inflection['case'] + (icf[5]==2?'(?)':'');
               cur2ndConj=null;
               curForm = null;
             }
-            if (inflection.person && (inflection.person+ (icf[6]==2?'(?)':'')) != curPerson) {
-              html += ' ' + this.dataMgr.getTermFromID(inflection.person) + (icf[6]==2?'(?)':'');
-              curPerson = inflection.person + (icf[6]==2?'(?)':'');
-              cur2ndConj=null;
-              curForm = null;
-            }
-            if (inflection.conj2nd && (inflection. conj2nd+ (icf[7]==2?'(?)':'')) != cur2ndConj) {
-              html += ((k && isVerb && inflection.conj2nd != cur2ndConj)?' ◾ ':' ') +
-                      this.dataMgr.getTermFromID(inflection.conj2nd) + (icf[7]==2?'(?)':'');
-              cur2ndConj = inflection.conj2nd + (icf[7]==2?'(?)':'');
-              curForm = null;
+            if ((isNoun || isAdjective) && inflection.conj2nd) {
+              new2ndConj = inflection.conj2nd + (icf[7]==2?'(?)':'');
+              if (new2ndConj != cur2ndConj) {
+                html += ' ' + this.dataMgr.getTermFromID(inflection.conj2nd) + (icf[7]==2?'(?)':'');
+                cur2ndConj = new2ndConj;
+                curForm = null;
+              }
             }
             html += ' </span>';
             wordGIDs = inflection.entityIDs;
@@ -923,7 +972,7 @@ EDITORS.WordlistVE.prototype = {
 //                word = linkedWords[tag];
                 if (!word || !word.value) {
                   DEBUG.log('err',"word not found in linkWords for tag "+tag);
-                  continue;S
+                  continue;
                 }
                 if (word.value == curForm) {// show a particular attested form only once here.
                   continue;
@@ -1288,8 +1337,32 @@ EDITORS.WordlistVE.prototype = {
 */
 
   orderInflections: function (lemma) {
-    var infGIDs = lemma.entityIDs,k,icf,curGen,curCase,curNum,infHash,
-        inflection, infSortedHashes, infMap = {};
+    var infGIDs = lemma.entityIDs,
+        k, icf, infHash, noneFill = '00000',
+        inflection, infSortedHashes,
+        infCategoryOrder, infMap = {},
+        pos = this.dataMgr.getTermFromID(lemma.pos),
+        genTermID = this.dataMgr.getIDFromTermParentTerm("GGrammaticalGender","GrammaticalGender"),
+        genIDOrder = this.dataMgr.getTermListFromID(genTermID);
+        numTermID = this.dataMgr.getIDFromTermParentTerm("GGrammaticalNumber","GrammaticalNumber"),
+        numIDOrder = this.dataMgr.getTermListFromID(numTermID);
+        caseTermID = this.dataMgr.getIDFromTermParentTerm("GCase","Case"),
+        caseIDOrder = this.dataMgr.getTermListFromID(caseTermID);
+        personTermID = this.dataMgr.getIDFromTermParentTerm("GVerbalPerson","VerbalPerson"),
+        personIDOrder = this.dataMgr.getTermListFromID(personTermID);
+        conjTermID = this.dataMgr.getIDFromTermParentTerm("GVerbalSecondaryConjugation","VerbalSecondaryConjugation"),
+        conj2ndIDOrder = this.dataMgr.getTermListFromID(conjTermID);
+        voiceTermID = this.dataMgr.getIDFromTermParentTerm("OIAVerbalVoice","VerbalVoice"),
+        voiceIDOrder = this.dataMgr.getTermListFromID(voiceTermID);
+        moodTermID = this.dataMgr.getIDFromTermParentTerm("GVerbalMood","VerbalMood"),
+        moodIDOrder = this.dataMgr.getTermListFromID(moodTermID);
+        tenseTermID = this.dataMgr.getIDFromTermParentTerm("GVerbalTense","VerbalTense"),
+        tenseIDOrder = this.dataMgr.getTermListFromID(tenseTermID);
+    if (pos == "v.") {
+      infCategoryOrder = ['conj2nd','voice','tense','mood','num','person'];
+    } else {
+      infCategoryOrder = ['gender','number','case', 'conj2nd'];
+    }
     //output 'ordered according to inflection' list of unique spelling attested forms
     for (k=0; k<infGIDs.length; k++) {
       //ignore any attested forms not assigned to an inflection (non inf entIDS)
@@ -1297,48 +1370,63 @@ EDITORS.WordlistVE.prototype = {
         continue;
       }
       inflection = this.dataMgr.getEntityFromGID(infGIDs[k]);
-    //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
+      //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
       icf = inflection.certainty ? inflection.certainty.join('') : '33333333';
-      infHash = "";
-      if (inflection.tense) {
-        infHash += inflection.tense;//map 2 or 3 into 2
-      } else {
-        infHash += 'none';
-      }
-      if (inflection.voice) {
-        infHash += inflection.voice;//map 2 or 3 into 2
-      } else {
-        infHash += 'none';
-      }
-      if (inflection.mood) {
-        infHash += inflection.mood;//map 2 or 3 into 2
-      } else {
-        infHash += '8411';
-      }
-      if (inflection.gender) {
-        infHash += inflection.gender;//map 2 or 3 into 2
-      } else {
-        infHash += 'none';
-      }
-      if (inflection.num) {
-        infHash += inflection.num;//map 2 or 3 into 2
-      } else {
-        infHash += 'none';
-      }
-      if (inflection['case']) {
-        infHash += inflection['case'];//map 2 or 3 into 2
-      } else {
-        infHash += 'none';
-      }
-      if (inflection.person) {
-        infHash += inflection.person;//map 2 or 3 into 2
-      } else {
-        infHash += 'none';
-      }
-      if (inflection.conj2nd) {
-        infHash += inflection.conj2nd;//map 2 or 3 into 2
-      } else {
-        infHash += 'none';
+      infHash = "H";
+      for(i in infCategoryOrder) {
+        prop = infCategoryOrder[i];
+        ord = '00000';
+        switch (prop) {
+          case 'conj2nd':
+            if (inflection.conj2nd && conj2ndIDOrder.indexOf(inflection.conj2nd) > -1) {
+              ord = ((conj2ndIDOrder.indexOf(inflection.conj2nd) + 1) * 11111 + (icf[7]==2?1:0)).toString();
+            }
+            infHash += ord;
+            break;
+          case 'voice':
+            if (inflection.voice && voiceIDOrder.indexOf(inflection.voice) > -1) {
+              ord = ((voiceIDOrder.indexOf(inflection.voice) + 1) * 11111 + (icf[2]==2?1:0)).toString();
+            }
+            infHash += ord;
+            break;
+          case 'tense':
+            if (inflection.tense && tenseIDOrder.indexOf(inflection.tense) > -1) {
+              ord = ((tenseIDOrder.indexOf(inflection.tense) + 1) * 11111 + (icf[0]==2?1:0)).toString();
+            }
+            infHash += ord;
+            break;
+          case 'mood':
+            if (inflection.mood && moodIDOrder.indexOf(inflection.mood) > -1) {
+              ord = ((moodIDOrder.indexOf(inflection.mood) + 1) * 11111 + (icf[2]==2?1:0)).toString();
+            }
+            infHash += ord;
+            break;
+          case 'gender':
+            if (inflection.gender && genIDOrder.indexOf(inflection.gender) > -1) {
+              ord = ((genIDOrder.indexOf(inflection.gender) + 1) * 11111 + (icf[3]==2?1:0)).toString();
+            }
+            infHash += ord;
+            break;
+          case 'num':
+          case 'number':
+            if (inflection.num && numIDOrder.indexOf(inflection.num) > -1) {
+              ord = ((numIDOrder.indexOf(inflection.num) + 1) * 11111 + (icf[4]==2?1:0)).toString();
+            }
+            infHash += ord;
+            break;
+          case 'person':
+            if (inflection.person && personIDOrder.indexOf(inflection.person) > -1) {
+              ord = ((personIDOrder.indexOf(inflection.person) + 1) * 11111 + (icf[6]==2?1:0)).toString();
+            }
+            infHash += ord;
+            break;
+          case 'case':
+            if (inflection['case'] && caseIDOrder.indexOf(inflection['case']) > -1) {
+              ord = ((caseIDOrder.indexOf(inflection['case']) + 1) * 11111 + (icf[5]==2?1:0)).toString();
+            }
+            infHash += ord;
+            break;
+        }
       }
       infHash += icf;
       if (infMap[infHash]) {
