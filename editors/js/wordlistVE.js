@@ -826,7 +826,7 @@ EDITORS.WordlistVE.prototype = {
               (lemma.trans? '<span class="lemmatrans">'+lemma.trans+'</span>':"") +
               (lemmaAnno?' ('+lemmaAnno+')':"");
       if (lemma.entityIDs && lemma.entityIDs.length ) {
-        html += '&nbsp;&nbsp;&nbsp;';
+        html += '<br/>';
         // output all attestations with location info (edition/line no. in sequence order if same line
         if (isInflectable) { //inflection
           infGIDs = this.orderInflections(lemma);
@@ -964,6 +964,7 @@ EDITORS.WordlistVE.prototype = {
             }
             html += ' </span>';
             wordGIDs = inflection.entityIDs;
+            wordForms = {};
             if (wordGIDs.length) {
               html += '<span class="attestedforms">';
               for (j=0; j<wordGIDs.length; j++) {
@@ -974,16 +975,24 @@ EDITORS.WordlistVE.prototype = {
                   DEBUG.log('err',"word not found in linkWords for tag "+tag);
                   continue;
                 }
-                if (word.value == curForm) {// show a particular attested form only once here.
+                if (Object.keys(wordForms).indexOf(word.value) > -1) {// show a particular attested form only once here.
                   continue;
                 }
-                curForm = word.value;
-                html += (j>0?', ':' ') + word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'');
+                wordForms[word.value] = word.sort + word.sort2.substr(2);
+              }
+              wordOrd = Object.values(wordForms).sort();
+              wordsBySort = {};
+              Object.keys(wordForms).map(function(word) { wordsBySort[wordForms[word]] = word;});
+              ordWordForms = wordOrd.map(function(sortCode) { return wordsBySort[sortCode];});
+              if (ordWordForms.length > 0) {
+                for (j=0; j<ordWordForms.length; j++) {
+                  html += (j>0?', ':' ') + ordWordForms[j].replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'');
+                }
               }
               html += '</span>';
             }
           }
-          html += '&nbsp;&nbsp;&nbsp;';
+          html += '<br/>';
           for (k=0; k<infGIDs.length; k++) {
             if (infGIDs[k].match(/inf/)) {
               inflection = this.dataMgr.getEntityFromGID(infGIDs[k]);
