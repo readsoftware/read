@@ -1211,6 +1211,7 @@ createHomographicOrderUI: function() {
   var lemmaVE = this,
       homNum = this.entity.order ? this.entity.order:null;
   this.homographicOrdList = [
+    {'name':"none",'id':""},
     {'name':"1",'id':"1"},
     {'name':"2",'id':"2"},
     {'name':"3",'id':"3"},
@@ -1270,9 +1271,13 @@ createHomographicOrderUI: function() {
     var curHom;
     if (homNum) {
       curHom = this.homList.jqxListBox('getItemByValue', homNum);
-      if (curHom) {
-        this.homList.jqxListBox('selectItem', curHom);
-        this.homList.jqxListBox('ensureVisible', curHom);
+    } else {
+      curHom = this.homList.jqxListBox('getItem', 0);
+    }
+    if (curHom) {
+      this.homList.jqxListBox('selectItem', curHom);
+      this.homList.jqxListBox('ensureVisible', curHom);
+      if (curHom.label != 'none') {
         $('.valueLabelDivEditor',lemmaVE.homUI).html(curHom.label);
       }
     }
@@ -1282,8 +1287,8 @@ createHomographicOrderUI: function() {
       var args = e.args, item = args.item,
           homName = item.label, homNum = item.value,
           lemProp = {};
-      lemProp["order"] = homNum;
-      $('.valueLabelDivEditor',lemmaVE.homUI).html(homName);
+      lemProp["order"] = homNum?homNum:null;
+      $('.valueLabelDivEditor',lemmaVE.homUI).html(homName != 'none'?homName:'');
       lemmaVE.homUI.removeClass("edit");
       lemmaVE.saveLemma(lemProp);
     });

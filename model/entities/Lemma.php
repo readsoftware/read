@@ -602,6 +602,9 @@
     * @param int $ord homographOrder of this lemma
     */
     public function setHomographicOrder($ord) {
+      if($ord === "") {
+        $ord = null;
+      }
       if($this->_homographOrder != $ord) {
         $this->_dirty = true;
         $this->setDataKeyValuePair("lem_homographOrder",$ord);
