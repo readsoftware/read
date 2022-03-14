@@ -826,7 +826,7 @@ EDITORS.WordlistVE.prototype = {
               (lemma.trans? '<span class="lemmatrans">'+lemma.trans+'</span>':"") +
               (lemmaAnno?' ('+lemmaAnno+')':"");
       if (lemma.entityIDs && lemma.entityIDs.length ) {
-        html += '<br/>';
+        infListStarted = false;
         // output all attestations with location info (edition/line no. in sequence order if same line
         if (isInflectable) { //inflection
           infGIDs = this.orderInflections(lemma);
@@ -834,11 +834,16 @@ EDITORS.WordlistVE.prototype = {
               curGen=null, curNum=null, curForm=null,
               curCase=null, curPerson=null, cur2ndConj=null;
           //output 'ordered according to inflection' list of unique spelling attested forms
-          infListStarted = false;
           for (k=0; k<infGIDs.length; k++) {
-            //ignore any attested forms not assigned to an inflection (non inf entIDS)
-            if (!infGIDs[k].match(/inf/)) {
+            //ignore Array of uninflected or any attested forms not assigned to an inflection (non inf entIDS)
+            if (infGIDs[k] instanceof Array || !infGIDs[k].match(/inf/)) {
               continue;
+            }
+            // placed this after above test to separate lemma info from morphology
+            //if no inflections then no morphology
+            if (!infListStarted) {
+              html += '<br/>';
+              infListStarted = true;
             }
             inflection = this.dataMgr.getEntityFromGID(infGIDs[k]);
           //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
@@ -991,12 +996,47 @@ EDITORS.WordlistVE.prototype = {
               }
               html += '</span>';
             }
-          }
-          html += '<br/>';
+          }  // end morphology output
+          // start output of attested forms with locations
+          htmlUncertain = "";
+          attestedFormsStarted = false;
           for (k=0; k<infGIDs.length; k++) {
-            if (infGIDs[k].match(/inf/)) {
+            if (infGIDs[k] instanceof Array) {
+              for (j in infGIDs[k]) {
+                word = this.dataMgr.getEntityFromGID(infGIDs[k][j]);
+                if (word) {
+                  wordAnno = "";
+                  if (word.linkedAnoIDsByType && word.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
+                    wordAnnoTag = "ano"+word.linkedAnoIDsByType[this.glossAnnoType][0];
+                    temp = this.dataMgr.getEntityFromGID(wordAnnoTag);
+                    if (temp && temp.text && temp.text.length) {
+                      wordAnno = temp.text;
+                      if (wordAnno.length > 250) {
+                        wordAnno = wordAnno.substring(0,249) + "…";
+                      }
+                    }
+                  }
+                  if (word && word.value && word.transcr && word.locTag) {
+                    htmlUncertain += '<span class="linkedword uncertain '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
+                            word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                            (j>0?', ':' ') + '<span class = "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span>'  +
+                            ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                            (wordAnno?' ('+wordAnno+')':"") + '</span>';
+                  } else {
+                    DEBUG.log('err',"Generating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
+                              (!word.value ? " missing word value":"")+
+                              (!word.transcr ? " missing word trascription":"")+
+                              (!word.locTag ? " missing word location label":""));
+                  }
+                }
+              }
+            } else if (infGIDs[k].match(/inf/)) {
               inflection = this.dataMgr.getEntityFromGID(infGIDs[k]);
               wordGIDs = inflection.entityIDs;
+              if (!attestedFormsStarted && wordGIDs.length > 0) {
+                html += '<br/>';
+                attestedFormsStarted = true;
+              }
               for (j=0; j<wordGIDs.length; j++) {
                 word = this.dataMgr.getEntityFromGID(wordGIDs[j]);
                 if (word) {
@@ -1026,8 +1066,12 @@ EDITORS.WordlistVE.prototype = {
                 }
               }
             } else {
-              word = this.dataMgr.getEntityFromGID(wordGIDs[k]);
+              word = this.dataMgr.getEntityFromGID(infGIDs[k]);
               if (word) {
+                if (!attestedFormsStarted) {
+                  html += '<br/>';
+                  attestedFormsStarted = true;
+                }
                 wordAnno = "";
                 if (word.linkedAnoIDsByType && word.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
                   wordAnnoTag = "ano"+word.linkedAnoIDsByType[this.glossAnnoType][0];
@@ -1046,13 +1090,16 @@ EDITORS.WordlistVE.prototype = {
                           ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
                           (wordAnno?' ('+wordAnno+')':"") + '</span>';
                 } else {
-                  DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
+                  DEBUG.log('err',"Generating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
                             (!word.value ? " missing word value":"")+
                             (!word.transcr ? " missing word trascription":"")+
                             (!word.locTag ? " missing word location label":""));
                 }
               }
             }
+          }
+          if (htmlUncertain.length > 0) {
+            html += '<br/><span class="uncertainheader">Uncertain:&nbsp</span>' + htmlUncertain;
           }
         } else { //no inflections     ?? 2 part display unique spellings followed by attested form links ??
           wordGIDs = lemma.entityIDs;
@@ -1348,7 +1395,7 @@ EDITORS.WordlistVE.prototype = {
   orderInflections: function (lemma) {
     var infGIDs = lemma.entityIDs,
         k, icf, infHash, noneFill = '00000',
-        inflection, infSortedHashes,
+        inflection, infSortedHashes, uninflected = [],
         infCategoryOrder, infMap = {},
         pos = this.dataMgr.getTermFromID(lemma.pos),
         genTermID = this.dataMgr.getIDFromTermParentTerm("GGrammaticalGender","GrammaticalGender"),
@@ -1376,6 +1423,7 @@ EDITORS.WordlistVE.prototype = {
     for (k=0; k<infGIDs.length; k++) {
       //ignore any attested forms not assigned to an inflection (non inf entIDS)
       if (!infGIDs[k].match(/inf/)) {
+        uninflected.push(infGIDs[k]);
         continue;
       }
       inflection = this.dataMgr.getEntityFromGID(infGIDs[k]);
@@ -1449,6 +1497,9 @@ EDITORS.WordlistVE.prototype = {
     for (infHash in infSortedHashes) {
 //    for (infHash in infMap) {
       infGIDs.push(infMap[infSortedHashes[infHash]]);
+    }
+    if (uninflected.length > 0) {
+      infGIDs.push(uninflected);
     }
     return infGIDs;
   },
