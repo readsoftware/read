@@ -38,6 +38,9 @@
   padding-left: 1em;
   text-indent: -1em;
 }
+.uncertainheader {
+  color: brown!important;
+}
 .wordlistentry span.lemma {
   color: #2F5597!important;
   font-weight: bold;
