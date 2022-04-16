@@ -817,6 +817,7 @@ EDITORS.WordlistVE.prototype = {
       } else {
         displayValue = '';
       }
+      // lemma article
       html += '<span class="lemma '+lemma.tag+" "+(lemma.readonly?"readonly":"")+'"'+
               ' srch="'+displayValue.replace(/ʔ/g,'')+'">' + 
               (lemma.order?'<sup class="lemmahom">'+lemma.order + ' </sup>':"") + 
@@ -825,14 +826,15 @@ EDITORS.WordlistVE.prototype = {
               '<span class="POS">'+ tempLabel + ' </span>' +
               (lemma.trans? '<span class="lemmatrans">'+lemma.trans+'</span>':"") +
               (lemmaAnno?' ('+lemmaAnno+')':"");
+      //lemma forms
       if (lemma.entityIDs && lemma.entityIDs.length ) {
         infListStarted = false;
-        // output all attestations with location info (edition/line no. in sequence order if same line
         if (isInflectable) { //inflection
           infGIDs = this.orderInflections(lemma);
           var curTense=null, curVoice=null, curMood=null,
               curGen=null, curNum=null, curForm=null,
               curCase=null, curPerson=null, cur2ndConj=null;
+          //morphology 
           //output 'ordered according to inflection' list of unique spelling attested forms
           for (k=0; k<infGIDs.length; k++) {
             //ignore Array of uninflected or any attested forms not assigned to an inflection (non inf entIDS)
@@ -998,6 +1000,7 @@ EDITORS.WordlistVE.prototype = {
             }
           }  // end morphology output
           // start output of attested forms with locations
+          // (edition/line no. in sequence order if same line)
           htmlUncertain = "";
           attestedFormsStarted = false;
           for (k=0; k<infGIDs.length; k++) {

@@ -577,7 +577,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (587,'en=>"LemmaGrammaticalOptions"',1,780,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}'),
 (588,'en=>"adv."',587,777,NULL,NULL,'Adverb',NULL,NULL,NULL,1,'{2}'),
 (589,'en=>"ind."',587,777,NULL,NULL,'Indeclinable',NULL,NULL,NULL,1,'{2}'),
-(590,'en=>"ptc."',587,777,NULL,NULL,'Indeclinable',NULL,NULL,NULL,1,'{2}'),
+(590,'en=>"ptc."',587,777,NULL,NULL,'Particle',NULL,NULL,NULL,1,'{2}'),
 (591,'en=>"Akṣara"',587,777,NULL,NULL,'Akṣara',NULL,NULL,NULL,1,'{2}'),
 (592,'en=>"Error"',587,777,NULL,NULL,'Error',NULL,NULL,NULL,1,'{2}'),
 (593,'en=>"Punctuation"',587,777,NULL,NULL,'Punctuation',NULL,NULL,NULL,1,'{2}'),

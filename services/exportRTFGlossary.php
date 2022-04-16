@@ -212,13 +212,13 @@
               $vmood = $inflection->getVerbalMood();
               $conj2 = $inflection->getSecondConjugation();
               $infString = '';
-              if ($isVerb) { //term dependency
+              if ($isVerb) {
                 if ($vmood) {
                   $vmood = $termLookup[$vmood];
                 }
                 if ($vtense) {
                   $vtense = $termLookup[$vtense];
-                  if (strtolower($vtense) == "pres." && strtolower($vmood) == "indic.") {
+                  if (strtolower($vtense) == "pres." && strtolower($vmood) == "ind.") { //term dependency
                     $vmood = null;
                   }
                 }
@@ -326,7 +326,6 @@
                     }
                   }
                 }
-                //$loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
                 $loc = $inflectionComponent->getLocation().($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
                 //accumulate locations
                 if (!array_key_exists($sc,$node)) {
@@ -414,10 +413,10 @@
             $displayOrder3 = array('1st','1st(?)','2nd','2nd(?)','3rd','3rd(?)','?');
             $displayOrder4 = array('inf.','inf.(?)','abs.','abs.(?)','?');
           } else {
-            $displayOrder1 = array('m.','m.(?)','mn.','mn.(?)','n.','n.(?)','mnf.','mnf.(?)','nf.','nf.(?)','f.','f.(?)','mf.','mf.(?)','?');
+            $displayOrder1 = array('m.','m.(?)','mn.','mn.(?)','n.','n.(?)','nf.','nf.(?)','f.','f.(?)','mf.','mf.(?)','mnf.','mnf.(?)','?');
             $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
             $displayOrder3 = array('nom.','nom.(?)','acc.','acc.(?)','instr.','instr.(?)','dat.','dat.(?)','dat/gen.','dat/gen.(?)','abl.','abl.(?)','gen.','gen.(?)','loc.','loc.(?)','voc.','voc.(?)','?');
-            $displayOrder4 = array('desid.','desid.(?)','intens.','intens.(?)','?');
+            $displayOrder4 = array('des.','des.(?)','int.','int.(?)','?');
           }
           $firstComponent = true;
           foreach ($displayOrder1 as $key1) {
