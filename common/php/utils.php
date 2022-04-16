@@ -2483,7 +2483,7 @@ $hlthtokGID2CtxLabel = array();
 * @param boolean $verbose indicate the level of output information.
 */
 
-function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false) {
+function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false, $continuousOut = false) {
   global $hltherrors, $hlthwarnings, $hlthgra2TokGID, $hlthtokGID2CtxLabel, $hlthtokGraphemeIDs;
 
   $retStr = "";
@@ -2572,6 +2572,10 @@ function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false) {
         if ($verbose) {
           array_push($hltherrors,"**************** Processing Line Physical Sequences ***************************");
         }
+        if ($continuousOut) {
+          echo $hltherrors;
+          $hltherrors = array();
+        }
         if ($linePhysSeqIDs && count($linePhysSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$linePhysSeqIDs).")";
           $sequences = new Sequences($condition,null,null,null);
@@ -2606,6 +2610,10 @@ function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false) {
         }
         if ($verbose) {
           array_push($hltherrors,"**************** Processing SyllableClusters ***************************");
+        }
+        if ($continuousOut) {
+          echo $hltherrors;
+          $hltherrors = array();
         }
         //process syllables
         if ($sclIDs && count($sclIDs) > 0) {
@@ -2747,6 +2755,10 @@ function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false) {
         if ($verbose) {
           array_push($hltherrors,"**************** Processing Text Division Sequences ***************************");
         }
+        if ($continuousOut) {
+          echo $hltherrors;
+          $hltherrors = array();
+        }
         if ($txtDivSeqIDs && count($txtDivSeqIDs) > 0) {
           $condition = "seq_id in (".join(",",$txtDivSeqIDs).")";
           $sequences = new Sequences($condition,null,null,null);
@@ -2784,6 +2796,10 @@ function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false) {
         if ($verbose) {
           array_push($hltherrors,"**************** Processing Tokens and Compounds ***************************");
         }
+        if ($continuousOut) {
+          echo $hltherrors;
+          $hltherrors = array();
+        }
         if ($tokCmpGIDs && count($tokCmpGIDs) > 0) {
           foreach ($tokCmpGIDs as $tokCmpGID) {
             $txtDivSeqGID = $gid2SeqMap[$tokCmpGID];
@@ -2798,6 +2814,10 @@ function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false) {
         //check syllable vs token graIDs
         if ($verbose) {
           array_push($hltherrors,"**************** Checking graIDs match for syllable and tokens ***************************");
+        }
+        if ($continuousOut) {
+          echo $hltherrors;
+          $hltherrors = array();
         }
         while ($graID = array_shift($sclGraphemeIDs)) {
           $index = array_search($graID,$hlthtokGraphemeIDs);
@@ -2826,6 +2846,10 @@ function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false) {
         //process structure sequences
         if ($verbose) {
           array_push($hltherrors,"**************** Processing Structural Analysis Sequences ***************************");
+        }
+        if ($continuousOut) {
+          echo $hltherrors;
+          $hltherrors = array();
         }
         if ($structuralSeqIDs && count($structuralSeqIDs) > 0) {
           $processedSeqIDs = array();
