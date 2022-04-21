@@ -9,7 +9,7 @@ statReadConnConfig = rqc.readConnConfig.copy()
 statReadUserConfig = rqc.readUserConfig.copy()
 
 # static member functions for managing defaults
-def setStatReadConnection(key = None, value = None):
+def setReadStatsConnParameter(key = None, value = None):
   if key in statReadConnConfig.keys():
     statReadConnConfig[key] = value
   else:
