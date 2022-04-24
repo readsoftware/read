@@ -1,5 +1,6 @@
 import os, sys
-import numpy as np
+import pandas as pd
+
 #add parent dir to module search path to find readQueryCursor module
 sys.path.append(os.path.dirname(os.getcwd()))
 import module.readQueryCursor as rqc
@@ -7,6 +8,8 @@ import module.readQueryCursor as rqc
 # static data members used for setting default connection and preferences for the library 
 statReadConnConfig = rqc.readConnConfig.copy()
 statReadUserConfig = rqc.readUserConfig.copy()
+statOutputDir = "output" #default directory for outputting results from statistic queries
+statDupFilenameLimit = 10
 
 # static member functions for managing defaults
 def setReadStatsConnParameter(key = None, value = None):
@@ -21,16 +24,67 @@ def getOwnerID():
 def getVisibilityIDs():
   return statReadUserConfig['visibility']
 
+def getNextOutputFilename(path = "log", ext="txt", limit = statDupFilenameLimit):
+  i = 0
+  filepath = path + "." + ext
+  while os.path.exists(filepath) and i < limit:
+    i += 1
+    filepath = path + f"({1})" + "." + ext
+  return filepath
+
+'''
+## TODO:
+- Create library with functions that select output type HTML, json, xslx, csv, ... and return as stream to browser or download as file.
+- Add total column for multi column counts.
+'''
 class ReadStatisticsHelper:
   '''
     This class abstract a statistics package for a READ database corpus.
     It is designed to be connect to one database at a time and maintains the connection.
   '''
-  def __init__(self, statRQC = None, statconf = statReadConnConfig, statUserPref = statReadUserConfig):
+  def __init__(self, statRQC = None, statconf = statReadConnConfig, /
+               statUserPref = statReadUserConfig, dirOutput = statOutputDir):
     if statRQC == None:
       self._RQC = rqc.ReadQueryCursor(conf=statconf, userPref=statUserPref)
     elif statRQC.isinstance(rqc.ReadQueryCursor):
       self._RQC = statRQC
+    if dirOutput == None:
+      self._outputDir = "./"
+    elif os.path.isdir(dirOutput):
+      self._outputDir = dirOutput
+
+  def saveStatisticDataFrame(self, statDataTable = None, extType = "csv", filename = "ReadStatData", outdir = None):
+    '''
+      helper function to output statistic DataFrame data to a file 
+    '''
+    outputFormats = ["csv","pkl","xml","json","xlsx"]
+    if outdir == None:
+      outdir = self._outputDir
+    elif not os.path.isdir(outdir):
+      outdir = os.path.curdir
+    if outdir[-1] != os.path.sep:
+      outdir += os.path.sep
+    if not extType in outputFormats:
+      print(f"extension {extType} is not a supported format")
+      return False
+    if isinstance(statDataTable, pd.DataFrame):
+      print(f"data must be a pandas Dataframe {type(statDataTable)} is not a supported")
+      return False
+    if statDataTable.empty:
+      print(f"Dataframe is empty nothing to output, skipping request")
+      return False
+    outputPath = getNextOutputFilename(path = outdir + filename, ext = extType)
+    if extType == "csv":
+      statDataTable.to_csv(outputPath)
+    elif extType == "pkl":
+      statDataTable.to_pickle(outputPath)
+    elif extType == "xml":
+      statDataTable.to_xml(outputPath)
+    elif extType == "json":
+      statDataTable.to_json(outputPath)
+    elif extType == "xlsx":
+      statDataTable.to_excel(outputPath)
+    return True
 
   def getGraphemeCountsByText(self, txtinv):
     ret = {}
@@ -71,9 +125,10 @@ class ReadStatisticsHelper:
         "left join grapheme on gra_id = scl_grapheme_ids[1] "+\
       "where bln_owner_id != 1 and seg_owner_id != 1 "+\
         "and gra_grapheme is not null and img_title is not null "+\
-      f"and bln_type_id = {imageBaselineTermID} "
+       f"and bln_type_id = {imageBaselineTermID} "
     if anoTagID != None:
-      query += "and scl_id in (select distinct(a.sclid::int) "+\
+      query += "and scl_id in "+\
+               "(select distinct(a.sclid::int) "+\
                 "from (select  replace(unnest(ano_linkto_ids),'scl:','') as sclid "+\
                       f"from annotation where ano_type_id = {anoTagID}) a "+\
                 "order by a.sclid::int ASC) "
