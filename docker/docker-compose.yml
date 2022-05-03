@@ -5,10 +5,9 @@ services:
     build: ./pg
     restart: always
     environment: 
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: gandhari
       PGDATA: /var/lib/postgresql/data
+    env_file:
+      - ../.env
     volumes:
       - sharebin:/usr/lib/postgresql/10/bin #make postgres tools available to other services
       - db-data:/var/lib/postgresql/data #create named volume and add to volumes to persist container data
@@ -19,9 +18,9 @@ services:
     image: dpage/pgadmin4:4.18
     restart: always
     environment: 
-      PGADMIN_DEFAULT_EMAIL: xx@xx.uu.com # login id for browser interface
-      PGADMIN_DEFAULT_PASSWORD: gandhari # password for the same
       PGADMIN_LISTEN_PORT: 80
+    env_file:
+      - ../.env
     ports:
       - "81:80" # "host_port:container_port". pgadmin can be found from host browser as localhost:81
     volumes: 
@@ -37,6 +36,8 @@ services:
       - "80:80" # map container port 80 to host port 80. This will allow the use of localhost directly
 #    environment: 
 #      - SHARE_PATH:/usr/lib/postgresql/bin
+    env_file:
+      - ../.env
     volumes: 
       - sharebin:/usr/lib/postgresql/bin # share postgres tools with php server to help maintain databases
       - ../..:/var/www/html/ # path_to_workspaceroot:absolute path in apache container for document root
