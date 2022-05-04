@@ -9,14 +9,22 @@
 psycopg2  READ SQL QueryCursor
 '''
 import psycopg2
+import os
 
+dbAdminUsername = os.getenv('POSTGRES_USER')
+dbAdminPassword = os.getenv('POSTGRES_PASSWORD')
+
+if dbAdminUsername == None:
+  dbAdminUsername = 'unknownName'
+if dbAdminPassword == None:
+  dbAdminPassword = 'unknownPassword'
 
 readConnConfig = {
              'host':'localhost',
              'port':'5432',
              'database':'testdb',
-             'user': 'adminUsername',
-             'password':'adminUserPassword'
+             'user': dbAdminUsername,
+             'password':dbAdminPassword
             }
 
 readUserConfig = {
@@ -64,7 +72,7 @@ class ReadQueryCursor:
             if (self._cursor):
                 print("connected to db",conf['database'])
 
-    def __del(self):
+    def __del__(self):
       self.close()
 
     def __iter__(self):
