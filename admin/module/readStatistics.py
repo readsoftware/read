@@ -42,18 +42,18 @@ class ReadStatisticsHelper:
     This class abstract a statistics package for a READ database corpus.
     It is designed to be connect to one database at a time and maintains the connection.
   '''
-  def __init__(self, statRQC = None, statconf = statReadConnConfig, /
+  def __init__(self, statRQC = None, statconf = statReadConnConfig,
                statUserPref = statReadUserConfig, dirOutput = statOutputDir):
     if statRQC == None:
       self._RQC = rqc.ReadQueryCursor(conf=statconf, userPref=statUserPref)
-    elif statRQC.isinstance(rqc.ReadQueryCursor):
+    elif isinstance(statRQC,rqc.ReadQueryCursor):
       self._RQC = statRQC
     if dirOutput == None:
       self._outputDir = "./"
     elif os.path.isdir(dirOutput):
       self._outputDir = dirOutput
 
-  def saveStatisticDataFrame(self, statDataTable = None, extType = "csv", filename = "ReadStatData", outdir = None):
+  def saveDataFrame(self, statDataTable = None, extType = "csv", filename = "ReadStatData", outdir = None):
     '''
       helper function to output statistic DataFrame data to a file 
     '''
@@ -67,7 +67,7 @@ class ReadStatisticsHelper:
     if not extType in outputFormats:
       print(f"extension {extType} is not a supported format")
       return False
-    if isinstance(statDataTable, pd.DataFrame):
+    if not isinstance(statDataTable, pd.DataFrame):
       print(f"data must be a pandas Dataframe {type(statDataTable)} is not a supported")
       return False
     if statDataTable.empty:
