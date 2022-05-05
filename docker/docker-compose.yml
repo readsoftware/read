@@ -1,4 +1,4 @@
-version: '3'
+version: '3.1'
 
 services: 
   db:
@@ -63,6 +63,8 @@ services:
         "wsgi:application"
     environment:
       PYTHONUNBUFFERED: 'true'
+    env_file:
+      - ../.env
     volumes:
       - '../admin:/readadmin'
       - sharebin:/usr/lib/postgresql/bin # share postgres tools with php server to help maintain databases
