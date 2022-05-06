@@ -26,6 +26,7 @@ pandas
 parso==0.7.1
 pickleshare==0.7.5
 prompt-toolkit==3.0.8
+python-dotenv
 psycopg2-binary
 pycodestyle==2.6.0
 pyflakes==2.2.0
