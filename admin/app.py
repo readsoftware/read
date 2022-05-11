@@ -17,6 +17,10 @@ from extensions import (
 #    login_manager,
 )
 from ORM.readFlaskModel import db
+import os
+
+dbAdminUsername = os.getenv('POSTGRES_USER')
+dbAdminPassword = os.getenv('POSTGRES_PASSWORD')
 
 
 def default_app():
@@ -61,7 +65,7 @@ def create_dbAdmin(dbname=None):
     if dbname is None or dbname == '':
         return None # not using Admin for db, signal default startup
     app.config['SQLALCHEMY_DATABASE_URI'] = \
-        f'postgresql+psycopg2://postgres:gandhari@db/{str(dbname)}'
+        f'postgresql+psycopg2://{dbAdminUsername}:{dbAdminPassword}@db/{str(dbname)}'
     print(app.config['SQLALCHEMY_DATABASE_URI'])
     print("key",app.config['SECRET_KEY'])
     try:
@@ -94,7 +98,7 @@ def extensions(app):
     """
     csrf.init_app(app)
     db.init_app(app)
-    login_manager.init_app(app)
+#    login_manager.init_app(app)
 
     return None
 
