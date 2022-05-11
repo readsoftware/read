@@ -1,4 +1,4 @@
-FROM python:3.7.5-slim-buster
+FROM python:3.7-slim-buster
 # MAINTAINER Stephen White <stephenawhite57@gmail.com>
 
 ENV INSTALL_PATH /readadmin
