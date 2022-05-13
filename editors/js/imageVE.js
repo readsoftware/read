@@ -47,7 +47,7 @@ var EDITORS = EDITORS || {};
 */
 
 EDITORS.ImageVE =  function(imgVECfg) {
-  var imgVE = this, imgFilename,imgSrc, entGID,
+  var imgVE = this, imgTitle,imgSrc, entGID,
       imgContainerDiv = $('<div id="imgContainerDiv" />');
   //read configuration and set defaults
   this.config = imgVECfg;
@@ -170,8 +170,17 @@ EDITORS.ImageVE =  function(imgVECfg) {
   }
   if (this.blnEntity && this.blnEntity.url) {
     imgSrc = this.blnEntity.url;
+    if (this.blnEntity.imageID) {
+      imgEntity = this.dataMgr.getEntityFromGID("img:"+this.blnEntity.imageID);
+      if (imgEntity && imgEntity.title) {
+        imgTitle = imgEntity.title;
+      }
+    }
   } else if (this.imgEntity && this.imgEntity.url) {
     imgSrc = this.imgEntity.url;
+    if (this.imgEntity && this.imgEntity.title) {
+      imgTitle = this.imgEntity.title;
+    }
   }
   //setup canvas and context
   this.imgCanvas.className = "imgCanvas";
@@ -189,15 +198,17 @@ EDITORS.ImageVE =  function(imgVECfg) {
   this.zoomDIV = $('<div class="zoomUI"><div id="zoomOut" class="zoomButton">-</div><div id="zoomIn" class="zoomButton">+</div></div>').get(0);
   this.navDIV.appendChild(this.zoomDIV);
   if (imgSrc) {
-    imgFilename = imgSrc.substring(imgSrc.lastIndexOf("/")+1);
-    this.imgNameDiv = $('<div class="imgNameDiv">'+imgFilename+'</div>').get(0);
+    if (!imgTitle) {
+      imgTitle = imgSrc.substring(imgSrc.lastIndexOf("/")+1);
+    }
+    this.imgNameDiv = $('<div class="imgNameDiv">'+imgTitle+'</div>').get(0);
     this.navDIV.appendChild(this.imgNameDiv);
   }
   if (!this.image) {
     this.image = new Image();
-  }
-//  this.image.crossOrigin = 'anonymous';//allow cross origin images
+    this.image.crossOrigin = "Anonymous";
 // CORS issue which affects getImageData for smooth and fast redraw and clipping of images
+  }
   this.crossSize = 10;
   if (this.image.width == 0 || this.image.height == 0) { // image not loaded
     this.image.onload = function(e) {

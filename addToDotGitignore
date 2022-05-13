@@ -1,0 +1,32 @@
+# below are listed the directories and files to 
+# ignore in git
+# these are configuration files and output directories
+# used by READ where content should be ignores.
+package.json
+.eslintrc.json
+.vscode/launch.json
+.vscode/settings.json
+.env
+model/migration
+model/migration/.gitignore
+model/migration/*.php
+model/migration/*.txt
+model/migration/*.sh
+model/allLastTermInfo.txt
+model/allTermInfo.txt
+model/allTermInfoForDB.txt
+model/maintTermTypeUsage.txt
+plugins
+viewer/*.html
+images
+readfilestore
+config.php
+.idea
+dev/traces
+dev/profiles
+admin/__pycache__
+admin/ORM/__pycache__
+admin/config/__pycache__
+admin/data_stats/__pycache__
+admin/data_tools/__pycache__
+admin/module/__pycache__

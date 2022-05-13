@@ -5899,14 +5899,14 @@ mergeLine: function (direction,cbError) {
     //recalc grapheme's preTCM
     delete this.lookup.gra[graID].preTCM;
     brackets = tcmBracketsLookup[prevCommon][curState];
-    if (brackets.length) {
+    if (brackets && brackets.length) {
       this.lookup.gra[graID].preTCM = '<span class="TCM scl'+sclID+' ord'+ord+'"' +
                                         ' state="'+prevDiff+'">'+brackets+'</span>' ;
     }
     //recalc grapheme's postTCM
     delete this.lookup.gra[graID].postTCM;
     brackets = tcmBracketsLookup[curState][nextCommon];
-    if (brackets.length) {
+    if (brackets && brackets.length) {
       this.lookup.gra[graID].postTCM = '<span class="TCM scl'+sclID+'"' +
                                         ' state="-'+postDiff+'">'+brackets+'</span>' ;
     }
