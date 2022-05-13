@@ -1779,6 +1779,8 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false, $isMultiTe
               $dirname = $info['dirname'];
               if (strpos($dirname,'full/full') > -1) { //assume iiif
                 $fullpath = str_replace('full/full','full/pct:5',$dirname).'/'.$info['basename'];
+              } else if (strpos($dirname,'iiif') > -1 && strpos($dirname,'/full/0') > -1 ) { //assume iiif     
+                $fullpath = str_replace('/full/0','/pct:5/0',$dirname).'/'.$info['basename'];
               } else {
                 $fullpath =  $dirname."/th".$info['basename'];
               }
