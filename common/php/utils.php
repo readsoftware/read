@@ -3984,6 +3984,8 @@ function getEdnLookupInfo($edition, $fnTypeIDs = null, $useInlineLabel = true, $
             $dirname = $info['dirname'];
             if (strpos($dirname,'full/full') > -1) { //assume iiif
               $fullpath = str_replace('full/full','full/pct:5',$dirname).'/'.$info['basename'];
+            } else if (strpos($dirname,'iiif') > -1 && strpos($dirname,'/full/0') > -1 ) { //assume iiif
+              $fullpath = str_replace('/full/0','/pct:5/0',$dirname).'/'.$info['basename'];
             } else {
               $fullpath =  $dirname."/th".$info['basename'];
             }
@@ -4437,6 +4439,8 @@ function createThumb($srcPath, $srcFilename, $ext, $targetPath, $thumbBaseURL, $
   $sourcefile = $srcPath.$srcFilename;
   if (strpos($sourcefile,'full/full') > -1) { //assume iiif
     return str_replace('full/full','full/pct:5',$sourcefile);
+  } else if (strpos($sourcefile,'iiif') > -1 && strpos($sourcefile,'/full/0') > -1 ) { //assume iiif
+    return str_replace('/full/0','/pct:5/0',$sourcefile);
   }
 
   $thumbfile = $targetPath.getThumbFromFilename($srcFilename);
