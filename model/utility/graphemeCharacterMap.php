@@ -110,7 +110,7 @@ $graphemeCharacterMap = array(
 		"̂"=>array("srt"=>"171","typ"=>"A"),
 		"srt"=>"170","typ"=>"A"),
 	"Ĥ"=>array("srt"=>"171","typ"=>"A"),
-	"A"=>array(
+	"I"=>array(
 		"̂"=>array("srt"=>"181","typ"=>"A"),
 		"srt"=>"180","typ"=>"A"),
 	"Î"=>array("srt"=>"181","typ"=>"A"),
@@ -142,7 +142,8 @@ $graphemeCharacterMap = array(
       "̂"=>array("srt"=>"108","csrt"=>"a","typ"=>"A"),
       "srt"=>"105","csrt"=>"a","typ"=>"A"),
   "á"=>array("srt"=>"109","csrt"=>"a","typ"=>"A"),
-	"ạ"=>array("srt"=>"106","csrt"=>"a","typ"=>"A"),
+  "à"=>array("srt"=>"109","csrt"=>"a","typ"=>"A"),
+  "ạ"=>array("srt"=>"106","csrt"=>"a","typ"=>"A"),
 	"â"=>array("srt"=>"108","csrt"=>"a","typ"=>"A"),
 	"b"=>array(
 		"̣"=>array("srt"=>"116","csrt"=>"b","typ"=>"A"),
@@ -187,8 +188,8 @@ $graphemeCharacterMap = array(
 	"i"=>array(
 		"͞"=>array("srt"=>"187","csrt"=>"i","typ"=>"A"),
     "̣"=>array("srt"=>"186","csrt"=>"i","typ"=>"A"),
-		"̲"=>array("srt"=>"186","csrt"=>"f","typ"=>"A"),
-		"͟"=>array("srt"=>"186","csrt"=>"f","typ"=>"A"),
+		"̲"=>array("srt"=>"186","csrt"=>"i","typ"=>"A"),
+		"͟"=>array("srt"=>"186","csrt"=>"i","typ"=>"A"),
     "srt"=>"185","csrt"=>"i","typ"=>"A"),
 	"ị"=>array("srt"=>"186","csrt"=>"i","typ"=>"A"),
 	"í"=>array("srt"=>"189","csrt"=>"i","typ"=>"A"),
@@ -386,7 +387,7 @@ $graphemeCharacterMap = array(
 "Ρ"=>array("srt"=>"560","typ"=>"A"),
 "Ῥ"=>array("srt"=>"560","typ"=>"A"),
 "Σ"=>array("srt"=>"570","typ"=>"A"),
-"Σ"=>array("srt"=>"580","typ"=>"A"), #same as above
+"Ϲ"=>array("srt"=>"580","typ"=>"A"), #Lunate Sigma
 "Τ"=>array("srt"=>"590","typ"=>"A"),
 "Υ"=>array("srt"=>"600","typ"=>"A"),
 "Ὑ"=>array("srt"=>"600","typ"=>"A"),
@@ -581,6 +582,174 @@ $graphemeCharacterMap = array(
 "ῶ"=>array("srt"=>"645","typ"=>"A"),
 "ῷ"=>array("srt"=>"645","typ"=>"A"),
 "ὠ"=>array("srt"=>"645","typ"=>"A"),
+
+//coptic
+"ⲁ"=>array(
+  "͞"=>array("srt"=>"406","typ"=>"A"),
+  "̄"=>array("srt"=>"406","typ"=>"A"),
+  "̅"=>array("srt"=>"406","typ"=>"A"),
+  "srt"=>"406","typ"=>"A"),
+"ⲃ"=>array(
+  "͞"=>array("srt"=>"416","typ"=>"A"),
+  "̄"=>array("srt"=>"416","typ"=>"A"),
+  "̅"=>array("srt"=>"416","typ"=>"A"),
+  "srt"=>"416","typ"=>"A"),
+"ⲅ"=>array(
+  "͞"=>array("srt"=>"426","typ"=>"A"),
+  "̄"=>array("srt"=>"426","typ"=>"A"),
+  "̅"=>array("srt"=>"426","typ"=>"A"),
+  "srt"=>"426","typ"=>"A"),
+"ⲇ"=>array(
+  "͞"=>array("srt"=>"436","typ"=>"A"),
+  "̄"=>array("srt"=>"436","typ"=>"A"),
+  "̅"=>array("srt"=>"436","typ"=>"A"),
+  "srt"=>"436","typ"=>"A"),
+"ⲉ"=>array(
+  "͞"=>array("srt"=>"446","typ"=>"A"),
+  "̄"=>array("srt"=>"446","typ"=>"A"),
+  "̅"=>array("srt"=>"446","typ"=>"A"),
+  "srt"=>"446","typ"=>"A"),
+"ⲋ"=>array(
+  "͞"=>array("srt"=>"447","typ"=>"A"),
+  "̄"=>array("srt"=>"447","typ"=>"A"),
+  "̅"=>array("srt"=>"447","typ"=>"A"),
+  "srt"=>"447","typ"=>"A"),
+"ⲍ"=>array(
+  "͞"=>array("srt"=>"456","typ"=>"A"),
+  "̄"=>array("srt"=>"456","typ"=>"A"),
+  "̅"=>array("srt"=>"456","typ"=>"A"),
+  "srt"=>"456","typ"=>"A"),
+"ⲏ"=>array(
+  "͞"=>array("srt"=>"466","typ"=>"A"),
+  "̄"=>array("srt"=>"466","typ"=>"A"),
+  "̅"=>array("srt"=>"466","typ"=>"A"),
+  "srt"=>"466","typ"=>"A"),
+"ⲑ"=>array(
+  "͞"=>array("srt"=>"476","typ"=>"A"),
+  "̄"=>array("srt"=>"476","typ"=>"A"),
+  "̅"=>array("srt"=>"476","typ"=>"A"),
+  "srt"=>"476","typ"=>"A"),
+"ⲓ"=>array(
+  "͞"=>array("srt"=>"486","typ"=>"A"),
+  "̄"=>array("srt"=>"486","typ"=>"A"),
+  "̅"=>array("srt"=>"486","typ"=>"A"),
+  "srt"=>"486","typ"=>"A"),
+"ⲕ"=>array(
+  "͞"=>array("srt"=>"496","typ"=>"A"),
+  "̄"=>array("srt"=>"496","typ"=>"A"),
+  "̅"=>array("srt"=>"496","typ"=>"A"),
+  "srt"=>"496","typ"=>"A"),
+"ⲗ"=>array(
+  "͞"=>array("srt"=>"506","typ"=>"A"),
+  "̄"=>array("srt"=>"506","typ"=>"A"),
+  "̅"=>array("srt"=>"506","typ"=>"A"),
+  "srt"=>"506","typ"=>"A"),
+"ⲙ"=>array(
+  "͞"=>array("srt"=>"516","typ"=>"A"),
+  "̄"=>array("srt"=>"516","typ"=>"A"),
+  "̅"=>array("srt"=>"516","typ"=>"A"),
+  "srt"=>"516","typ"=>"A"),
+"ⲛ"=>array(
+  "͞"=>array("srt"=>"526","typ"=>"A"),
+  "̄"=>array("srt"=>"526","typ"=>"A"),
+  "̅"=>array("srt"=>"526","typ"=>"A"),
+  "srt"=>"526","typ"=>"A"),
+"ⲝ"=>array(
+  "͞"=>array("srt"=>"536","typ"=>"A"),
+  "̄"=>array("srt"=>"536","typ"=>"A"),
+  "̅"=>array("srt"=>"536","typ"=>"A"),
+  "srt"=>"536","typ"=>"A"),
+"ⲟ"=>array(
+  "͞"=>array("srt"=>"546","typ"=>"A"),
+  "̄"=>array("srt"=>"546","typ"=>"A"),
+  "̅"=>array("srt"=>"546","typ"=>"A"),
+  "srt"=>"546","typ"=>"A"),
+"ⲡ"=>array(
+  "͞"=>array("srt"=>"556","typ"=>"A"),
+  "̄"=>array("srt"=>"556","typ"=>"A"),
+  "̅"=>array("srt"=>"556","typ"=>"A"),
+  "srt"=>"556","typ"=>"A"),
+"ⲣ"=>array(
+  "͞"=>array("srt"=>"566","typ"=>"A"),
+  "̄"=>array("srt"=>"566","typ"=>"A"),
+  "̅"=>array("srt"=>"566","typ"=>"A"),
+  "srt"=>"566","typ"=>"A"),
+"ⲥ"=>array(
+  "͞"=>array("srt"=>"576","typ"=>"A"),
+  "̄"=>array("srt"=>"576","typ"=>"A"),
+  "̅"=>array("srt"=>"576","typ"=>"A"),
+  "srt"=>"576","typ"=>"A"),
+"ⲧ"=>array(
+  "͞"=>array("srt"=>"596","typ"=>"A"),
+  "̄"=>array("srt"=>"596","typ"=>"A"),
+  "̅"=>array("srt"=>"596","typ"=>"A"),
+  "srt"=>"596","typ"=>"A"),
+"ⲩ"=>array(
+  "͞"=>array("srt"=>"606","typ"=>"A"),
+  "̄"=>array("srt"=>"606","typ"=>"A"),
+  "̅"=>array("srt"=>"606","typ"=>"A"),
+  "srt"=>"606","typ"=>"A"),
+"ⲫ"=>array(
+  "͞"=>array("srt"=>"616","typ"=>"A"),
+  "̄"=>array("srt"=>"616","typ"=>"A"),
+  "̅"=>array("srt"=>"616","typ"=>"A"),
+  "srt"=>"616","typ"=>"A"),
+"ⲭ"=>array(
+  "͞"=>array("srt"=>"626","typ"=>"A"),
+  "̄"=>array("srt"=>"626","typ"=>"A"),
+  "̅"=>array("srt"=>"626","typ"=>"A"),
+  "srt"=>"626","typ"=>"A"),
+"ⲯ"=>array(
+  "͞"=>array("srt"=>"636","typ"=>"A"),
+  "̄"=>array("srt"=>"636","typ"=>"A"),
+  "̅"=>array("srt"=>"636","typ"=>"A"),
+  "srt"=>"636","typ"=>"A"),
+"ⲱ"=>array(
+  "͞"=>array("srt"=>"646","typ"=>"A"),
+  "̄"=>array("srt"=>"646","typ"=>"A"),
+  "̅"=>array("srt"=>"646","typ"=>"A"),
+  "srt"=>"646","typ"=>"A"),
+"ϣ"=>array(
+  "͞"=>array("srt"=>"650","typ"=>"A"),
+  "̄"=>array("srt"=>"650","typ"=>"A"),
+  "̅"=>array("srt"=>"650","typ"=>"A"),
+  "srt"=>"650","typ"=>"A"),
+"ϥ"=>array(
+  "͞"=>array("srt"=>"655","typ"=>"A"),
+  "̄"=>array("srt"=>"655","typ"=>"A"),
+  "̅"=>array("srt"=>"655","typ"=>"A"),
+  "srt"=>"655","typ"=>"A"),
+"ϧ"=>array(
+  "͞"=>array("srt"=>"660","typ"=>"A"),
+  "̄"=>array("srt"=>"660","typ"=>"A"),
+  "̅"=>array("srt"=>"660","typ"=>"A"),
+  "srt"=>"660","typ"=>"A"),
+"ϩ"=>array(
+  "͞"=>array("srt"=>"670","typ"=>"A"),
+  "̄"=>array("srt"=>"670","typ"=>"A"),
+  "̅"=>array("srt"=>"670","typ"=>"A"),
+  "srt"=>"670","typ"=>"A"),
+"ϫ"=>array(
+  "͞"=>array("srt"=>"680","typ"=>"A"),
+  "̄"=>array("srt"=>"680","typ"=>"A"),
+  "̅"=>array("srt"=>"680","typ"=>"A"),
+  "srt"=>"680","typ"=>"A"),
+"ϭ"=>array(
+  "͞"=>array("srt"=>"685","typ"=>"A"),
+  "̄"=>array("srt"=>"685","typ"=>"A"),
+  "̅"=>array("srt"=>"685","typ"=>"A"),
+  "srt"=>"685","typ"=>"A"),
+"ϯ"=>array(
+  "͞"=>array("srt"=>"690","typ"=>"A"),
+  "̄"=>array("srt"=>"690","typ"=>"A"),
+  "̅"=>array("srt"=>"690","typ"=>"A"),
+  "srt"=>"690","typ"=>"A"),
+"ⳁ"=>array(
+  "͞"=>array("srt"=>"695","typ"=>"A"),
+  "̄"=>array("srt"=>"695","typ"=>"A"),
+  "̅"=>array("srt"=>"695","typ"=>"A"),
+  "srt"=>"695","typ"=>"A"),
+
 // Hebrew
 	"א"=>array("srt"=>"365","typ"=>"A"), //ALEF
 	"ב"=>array("srt"=>"365","typ"=>"A"), //BET
@@ -609,6 +778,91 @@ $graphemeCharacterMap = array(
 	"ר"=>array("srt"=>"365","typ"=>"A"), //RESH
 	"ש"=>array("srt"=>"365","typ"=>"A"), //SHIN
 	"ת"=>array("srt"=>"365","typ"=>"A"), //TAV
+
+// Arabic
+"ا"=>array(
+  "ٔ"=>array("srt"=>"110","typ"=>"A"),
+  "ٕ"=>array("srt"=>"120","typ"=>"A"),
+  "ٓ"=>array("srt"=>"130","typ"=>"A"),
+  "srt"=>"100","typ"=>"A"),
+"أ"=>array(
+  "َ"=>array("srt"=>"111","typ"=>"A"),
+  "ُ"=>array("srt"=>"112","typ"=>"A"),
+  "srt"=>"110","typ"=>"A"),
+"إ"=>array(
+  "ِ"=>array("srt"=>"121","typ"=>"A"),
+  "srt"=>"120","typ"=>"A"),
+"آ"=>array("srt"=>"130","typ"=>"A"),
+"ب"=>array("srt"=>"140","typ"=>"A"),
+"ت"=>array(
+  "َ"=>array(
+    "ّ"=>array("srt"=>"151","typ"=>"A")),
+  "ّ"=>array(
+    "َ"=>array("srt"=>"151","typ"=>"A")),
+  "srt"=>"150","typ"=>"A"),
+"ث"=>array("srt"=>"160","typ"=>"A"),
+"پ"=>array("srt"=>"170","typ"=>"A"),
+"ٮ"=>array("srt"=>"180","typ"=>"A"),
+"ج"=>array("srt"=>"190","typ"=>"A"),
+"ح"=>array("srt"=>"200","typ"=>"A"),
+"خ"=>array("srt"=>"210","typ"=>"A"),
+//"ي"=>array("srt"=>"365","typ"=>"A"),
+//"ئ"=>array("srt"=>"365","typ"=>"A"),
+"د"=>array("srt"=>"220","typ"=>"A"),
+"ذ"=>array("srt"=>"230","typ"=>"A"),
+"ر"=>array("srt"=>"240","typ"=>"A"),
+"ز"=>array("srt"=>"250","typ"=>"A"),
+"س"=>array("srt"=>"260","typ"=>"A"),
+"ش"=>array("srt"=>"270","typ"=>"A"),
+"ص"=>array("srt"=>"280","typ"=>"A"),
+"ض"=>array("srt"=>"290","typ"=>"A"),
+"ط"=>array("srt"=>"300","typ"=>"A"),
+"ظ"=>array("srt"=>"310","typ"=>"A"),
+"ع"=>array("srt"=>"320","typ"=>"A"),
+"غ"=>array("srt"=>"330","typ"=>"A"),
+"ڤ"=>array("srt"=>"340","typ"=>"A"),
+"ف"=>array("srt"=>"350","typ"=>"A"),
+"ق"=>array("srt"=>"360","typ"=>"A"),
+"ڡ"=>array("srt"=>"370","typ"=>"A"),
+"ك"=>array("srt"=>"380","typ"=>"A"),
+"ل"=>array("srt"=>"390","typ"=>"A"),
+"م"=>array("srt"=>"400","typ"=>"A"),
+"ن"=>array("srt"=>"410","typ"=>"A"),
+"ه"=>array("srt"=>"420","typ"=>"A"),
+"و"=>array(
+  "ٔ"=>array("srt"=>"440","typ"=>"A"),
+  "srt"=>"430","typ"=>"A"),
+"ؤ"=>array("srt"=>"440","typ"=>"A"),
+"ى"=>array(
+  "ٔ"=>array("srt"=>"470","typ"=>"A"),
+  "srt"=>"450","typ"=>"A"),
+"ي"=>array("srt"=>"460","typ"=>"A"),
+"ئ"=>array("srt"=>"470","typ"=>"A"),
+"ے"=>array("srt"=>"480","typ"=>"A"),
+"ـ"=>array("srt"=>"911","typ"=>"A"),
+"ء"=>array("srt"=>"930","typ"=>"A"),
+"٠"=>array("srt"=>"701","typ"=>"N"),
+"١"=>array("srt"=>"711","typ"=>"N"),
+"٢"=>array("srt"=>"721","typ"=>"N"),
+"٣"=>array("srt"=>"731","typ"=>"N"),
+"٤"=>array("srt"=>"741","typ"=>"N"),
+"٥"=>array("srt"=>"751","typ"=>"N"),
+"٦"=>array("srt"=>"761","typ"=>"N"),
+"٧"=>array("srt"=>"771","typ"=>"N"),
+"٨"=>array("srt"=>"781","typ"=>"N"),
+"٩"=>array("srt"=>"791","typ"=>"N"),
+"ً"=>array("srt"=>"365","typ"=>"D"),
+"ٌ"=>array("srt"=>"365","typ"=>"D"),
+"ٍ"=>array("srt"=>"365","typ"=>"D"),
+"َ"=>array("srt"=>"365","typ"=>"D"),
+"ُ"=>array("srt"=>"365","typ"=>"D"),
+"ِ"=>array("srt"=>"365","typ"=>"D"),
+"ّ"=>array("srt"=>"365","typ"=>"D"),
+"ْ"=>array("srt"=>"365","typ"=>"D"),
+"ٓ"=>array("srt"=>"365","typ"=>"D"),
+"ٔ"=>array("srt"=>"365","typ"=>"D"),
+"ٕ"=>array("srt"=>"365","typ"=>"D"),
+"ٖ"=>array("srt"=>"365","typ"=>"D"),
 
 	// Logographic signs
 	// "☧"=>array("srt"=>"430","typ"=>"L") //chi rho (Christogram)
