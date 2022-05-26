@@ -1463,12 +1463,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1502,'en=>"7"',1399,778,NULL,NULL,'ft7',NULL,NULL,NULL,1,'{2}'),
 (1503,'en=>"8"',1399,778,NULL,NULL,'ft8',NULL,NULL,NULL,1,'{2}'),
 (1504,'en=>"9"',1399,778,NULL,NULL,'ft9',NULL,NULL,NULL,1,'{2}'),
-<<<<<<< HEAD
-+(1505,'en=>"bv."',674,778,NULL,NULL,'Bahuvrīhi',NULL,NULL,NULL,1,'{2}');
-
-=======
 (1505,'en=>"bv."',674,778,NULL,NULL,'Bahuvrīhi',NULL,NULL,NULL,1,'{2}');
 
 
->>>>>>> 8a7a11c9 (Morphology corrections, READQueryCursor update)
 ALTER SEQUENCE term_trm_id_seq RESTART WITH 1506;
