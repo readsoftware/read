@@ -29,7 +29,7 @@ def getNextOutputFilename(path = "log", ext="txt", limit = statDupFilenameLimit)
   filepath = path + "." + ext
   while os.path.exists(filepath) and i < limit:
     i += 1
-    filepath = path + f"({1})" + "." + ext
+    filepath = path + f"({i})" + "." + ext
   return filepath
 
 '''
@@ -75,15 +75,15 @@ class ReadStatisticsHelper:
       return False
     outputPath = getNextOutputFilename(path = outdir + filename, ext = extType)
     if extType == "csv":
-      statDataTable.to_csv(outputPath)
+      statDataTable.to_csv(outputPath, encoding='utf-8')
     elif extType == "pkl":
-      statDataTable.to_pickle(outputPath)
+      statDataTable.to_pickle(outputPath, encoding='utf-8')
     elif extType == "xml":
-      statDataTable.to_xml(outputPath)
+      statDataTable.to_xml(outputPath, encoding='utf-8')
     elif extType == "json":
-      statDataTable.to_json(outputPath)
+      statDataTable.to_json(outputPath, encoding='utf-8')
     elif extType == "xlsx":
-      statDataTable.to_excel(outputPath)
+      statDataTable.to_excel(outputPath, encoding='utf-8')
     return True
 
   def getGraphemeCountsByText(self, txtinv):
@@ -92,7 +92,7 @@ class ReadStatisticsHelper:
     textPhysSeqTermID = myRQC.getTermIDStrict('textphysical','sequencetype')
     linePhysSeqTermID = myRQC.getTermIDStrict('linephysical','textphysical')
     query = \
-      "select gra_grapheme as grapheme, count(gra_id) as cnt "+\
+      "select gra_uppercase as uppercase, gra_grapheme as grapheme, count(gra_id) as cnt "+\
       "from edition "+\
         "left join text on edn_text_id = txt_id "+\
         "left join sequence tp on tp.seq_id = ANY(edn_sequence_ids) "+\
@@ -103,7 +103,7 @@ class ReadStatisticsHelper:
       f"and txt_owner_id != 1 and txt_ckn = '{txtinv}' "+\
       f"and tp.seq_type_id = {textPhysSeqTermID} "+\
       f"and pl.seq_type_id = {linePhysSeqTermID} "+\
-      "group by gra_grapheme order by gra_grapheme"
+      "group by gra_uppercase, gra_grapheme order by gra_uppercase, gra_grapheme"
     myRQC.query(query)
     if myRQC.hasError():
       #error so output message
@@ -112,27 +112,46 @@ class ReadStatisticsHelper:
     ret = myRQC.getRowsAsKVDict(kColumnName='grapheme', vColumnName='cnt')
     return ret
 
-  def getGraphemeCountsByImage(self , anoTagID = None):
+  def getGraphemeCountsByImage(self , anoTagID = None, usergroupNames = None, ugrIDs = None):
     ret = {}
     myRQC = self._RQC
+    if usergroupNames != None:
+      strNames = "','".join(usergroupNames)
+      myRQC.query(f"select ugr_id from usergroup where ugr_name in ('{strNames}');")
+      ids = [id[0] for id in myRQC.getAllResults()]
+      if ugrIDs == None:
+        ugrIDs = [str(x) for x in set(ids)] # list of unique ids as strings
+      else:
+        ugrIDs.extend(ids)
+        ugrIDs = [str(x) for x in set(ugrIDs)] # list of unique ids as strings
     imageBaselineTermID = myRQC.getTermIDStrict('image','baselinetype')
     query = \
-      "select img_title as image, gra_grapheme as grapheme, count(gra_id) as cnt "+\
+      "select concat(txt_ckn,img_title) as image, "+\
+        "case when gra_uppercase is not null then gra_uppercase "+\
+             "else gra_grapheme end as grapheme, "+\
+        "count(gra_id) as cnt "+\
       "from baseline "+\
         "left join image on img_id = bln_image_id "+\
+        "left join text on img_id = ANY(txt_image_ids) "+\
         "left join segment on bln_id = ANY(seg_baseline_ids) "+\
         "left join syllablecluster on scl_segment_id = seg_id "+\
         "left join grapheme on gra_id = scl_grapheme_ids[1] "+\
-      "where bln_owner_id != 1 and seg_owner_id != 1 "+\
+      "where bln_owner_id != 1 and seg_owner_id != 1 and img_owner_id != 1"+\
         "and gra_grapheme is not null and img_title is not null "+\
-       f"and bln_type_id = {imageBaselineTermID} "
+        "and txt_id is not null "+\
+       f"and gra_owner_id != 1 and bln_type_id = {imageBaselineTermID} "
+    if ugrIDs == None or len(ugrIDs) == 0:
+      query +=  "and scl_owner_id != 1 "
+    else:
+      query +=  f"and scl_owner_id in ({','.join(ugrIDs)}) "
     if anoTagID != None:
       query += "and scl_id in "+\
                "(select distinct(a.sclid::int) "+\
                 "from (select  replace(unnest(ano_linkto_ids),'scl:','') as sclid "+\
                       f"from annotation where ano_type_id = {anoTagID}) a "+\
                 "order by a.sclid::int ASC) "
-    query += "group by img_title, gra_grapheme order by img_title, gra_grapheme"
+    query += "group by txt_ckn, img_title, gra_uppercase, gra_grapheme "+\
+             "order by txt_ckn, img_title, gra_uppercase, gra_grapheme"
     myRQC.query(query)
     if myRQC.hasError():
       #error so output message
