@@ -52,11 +52,10 @@
   $entityIDs = array();
   $entities = array('ano' => array(),
                     'atb' => array());
-  // check for cache
-  $dbMgr = new DBManager();
   if ($dbMgr->getError()) {
     exit("Error: ".$dbMgr->getError());
   }
+  // check for cache
   $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Attributions'");
   $jsonCache = null;
   if ($dbMgr->getRowCount() > 0 && USECACHE) {

@@ -162,7 +162,7 @@ CREATE TABLE authtoken
   "aut_id" serial NOT NULL PRIMARY KEY,
   "aut_selector" varchar(32) NOT NULL UNIQUE,
   "aut_hashed_validator" varchar(64) NULL,
-  "aut_expire" int default  now()::abstime::int,
+  "aut_expire" int default 0,
   "modified" timestamp default CURRENT_TIMESTAMP,
   "aut_user_id" int NOT NULL
 )

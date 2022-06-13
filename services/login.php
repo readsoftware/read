@@ -59,56 +59,29 @@ if ($dbMgr->getRowCount() == 0) {
 //  return false;
 } else {
   $user = $dbMgr->fetchResultRow();
-  $ret = setSessionUserLogin($dbMgr,$user["ugr_id"]);
-  $groups = array();
-  if (is_array($ret) && count($ret) == 2) {
-    $groups = $ret[1];
-  }
-  if ($persist){
-    setLoginCookie($dbMgr,"",$user["ugr_id"]);
-  }
-//  $dbMgr->query("SELECT * FROM usergroup WHERE ugr_id != ".$user['ugr_id']." AND ".$user['ugr_id']." = ANY(\"ugr_member_ids\") ");
-
-/*$dbMgr->query("SELECT * FROM usergroup WHERE ".$user['ugr_id']." = ANY(\"ugr_member_ids\") OR ugr_id in (2,3,6)");
-  if ($dbMgr->getRowCount() > 0) {
+  if ($user['ugr_type_id'] != 511) { 
+    $retVal = array("error" => "Invalid username or password.");
+  } else {
+    $ret = setSessionUserLogin($dbMgr,$user["ugr_id"]);
     $groups = array();
-    while ($row = $dbMgr->fetchResultRow(null,false,PGSQL_ASSOC)) {
-      $groups[$row['ugr_id']] = array(
-        "ugr_id"=>$row['ugr_id'],
-        "ugr_name"=>$row['ugr_name'],
-        "ugr_type_id"=>$row['ugr_type_id'],
-        "ugr_given_name"=>$row['ugr_given_name'],
-        "ugr_family_name"=>$row['ugr_family_name'],
-        "ugr_description"=>$row['ugr_description']
-      );
+    if (is_array($ret) && count($ret) == 2) {
+      $groups = $ret[1];
     }
+    if ($persist){
+      setLoginCookie($dbMgr,"",$user["ugr_id"]);
+    }
+    $retVal = array("success" => 1,
+                    "familyName" => $user['ugr_family_name'],
+                    "givenName" => $user['ugr_given_name'],
+                    "fullname" => $user['ugr_given_name']." ".$user['ugr_family_name'],
+                    "description" => $user['ugr_description'],
+                    "groups" => $groups
+                    );
   }
-
-
-  // set the cookie so that we can remember their username
-  if ($expiry) {
-    setcookie ('ka_username_'.DBNAME, $username, $expiry);
-    setcookie ('ka_code_'.DBNAME, md5 ($user['ugr_given_name']." ".$user['ugr_family_name']),$expiry);
-  }
-
-  //  $prefs = explode(";", $data['u_prefs']);
-  //  $edit = $prefs[0];
-  //  $script = $prefs[1];
-  //  $iscols = explode(",", $prefs[2]);
-
-  set_session (session_id (), $user['ugr_id'], $username, $user['ugr_given_name']." ".$user['ugr_family_name'], null, null, (isset($groups)?$groups:null));
-*/
-  $retVal = array("success" => 1,
-                  "familyName" => $user['ugr_family_name'],
-                  "givenName" => $user['ugr_given_name'],
-                  "fullname" => $user['ugr_given_name']." ".$user['ugr_family_name'],
-                  "description" => $user['ugr_description'],
-                  "groups" => $groups
-                  );
-}
 // cleanup any cache that might be user specific
-if (isset($_SESSION['ka_searchAllResults_'.DBNAME])) {
-  unset($_SESSION['ka_searchAllResults_'.DBNAME]);
+  if (isset($_SESSION['ka_searchAllResults_'.DBNAME])) {
+    unset($_SESSION['ka_searchAllResults_'.DBNAME]);
+  }
 }
 if (array_key_exists("callback",$_REQUEST)) {
   $cb = $_REQUEST['callback'];

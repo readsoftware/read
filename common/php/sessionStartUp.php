@@ -152,7 +152,10 @@ function isValidLoginCookie($dbMgr) {
   //validate token
   //check for selector row in DB, ignore on not present
   if ($selector && $validator) {
-    $dbMgr->query("select * from authtoken where aut_selector='$selector' and aut_expire > now()::abstime::int;");
+    $curtime = time();
+    $dbMgr->query("select * from authtoken ".
+                  "where aut_selector='$selector' ".
+                    "and aut_expire > $curtime;");
     if ($dbMgr->getRowCount() == 1) {
       $autTokRow = $dbMgr->fetchResultRow(null,false,PGSQL_ASSOC);
       //compare hashed in db with hash of validator
@@ -178,34 +181,43 @@ function setLoginCookie($dbMgr, $selector = "", $ugrID = null) {
     return false;
   }
   unsetLoginCookie($dbMgr);
-  if (!$selector){
-    $selector = getRandomString(16);
-  }
+  $newselector = getRandomString(16);
   $validator = getRandomString(64);
   $hashedValidator = base64_encode(hash('sha384', $validator, true));
   $expiry = time() + (defined("NONUSECOOKIELIFETIME")?NONUSECOOKIELIFETIME:60*60*24*30);//default 1 month
   if ($selector) {
-    $dbMgr->query("select * from authtoken where aut_selector='$selector'");
+    $condition = "aut_selector='$selector'";
+    if ($ugrID) {
+      $condition .= " aut_user_id=$ugrID";
+    }
+    $dbMgr->query("select * from authtoken where $condition");
     if ($dbMgr->getRowCount() > 0) {//update existing
-      $data = array("aut_hashed_validator"=>$hashedValidator,"aut_expire"=>$expiry);
-      if ($ugrID) {
-        $data["aut_user_id"] = $ugrID;
-      }
-      $dbMgr->update("authtoken",$data,"aut_selector='$selector'");
-    } else if ($ugrID) {//new selector
+      $authtoken = $dbMgr->fetchResultRow(null,false,PGSQL_ASSOC);
+      $expiry = $authtoken['aut_expire'];
+      $authID = $authtoken['aut_id'];
+      $data = array("aut_hashed_validator"=>$hashedValidator, "aut_selector"=>$newselector); //,"aut_expire"=>$expiry);
+      $dbMgr->update("authtoken",$data,"aut_id='$authID'");
+    } else {
+      //can't set authtoken for abort
+      return false;
+    }
+  } else if ($ugrID) {//new selector
       $data = array(
-        "aut_selector"=>$selector,
+        "aut_selector"=>$newselector,
         "aut_hashed_validator"=>$hashedValidator,
         "aut_expire"=>$expiry,
         "aut_user_id"=>$ugrID
       );
       $dbMgr->insert("authtoken",$data,"aut_id");
-    } else {
-      //can't set authtoken for abort
-      return false;
-    }
+      if ($dbMgr->getError()) {
+        error_log("ERROR authtoken insert failed: ".$dbMgr->getError());
+        return false;
+      } 
+  } else {
+    //can't set authtoken for abort
+    return false;
   }
-  setcookie('ka_username_'.$dbMgr->getDBName(),$selector.":".$validator,$expiry,"/");
+  setcookie('ka_username_'.$dbMgr->getDBName(),$newselector.":".$validator,$expiry,"/");
   return true;
 }
 
