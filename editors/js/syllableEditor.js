@@ -1538,6 +1538,7 @@ EDITORS.sclEditor.prototype = {
           } else if (keyType == 'N' && posStart == this.state.length - 2 && posEnd == this.state.length - 1){
             var chrs = (this.curSyl + key).split(""), len = chrs.length;
             if (
+                len == 5 && this._graphemeMap[chrs[0]][chrs[1]][chrs[2]][chrs[3]][chrs[4]] ||
                 len == 4 && this._graphemeMap[chrs[0]][chrs[1]][chrs[2]][chrs[3]] ||
                 len == 3 && this._graphemeMap[chrs[0]][chrs[1]][chrs[2]] ||
                 len == 2 && this._graphemeMap[chrs[0]][chrs[1]]){
@@ -2205,7 +2206,7 @@ EDITORS.sclEditor.prototype = {
     this.curSyl = this.computeSyllable();
     if (this.curSyl && this.curSyl.length) {
       this.graStrings = [];
-      var i = 0, inc, chr,chr2,chr3,chr4,typ,
+      var i = 0, inc, chr,chr2,chr3,chr4,chr5,typ,
           cnt = this.curSyl.length,
           splitPositioned = false,
           anchorPositioned = false,
@@ -2240,7 +2241,21 @@ EDITORS.sclEditor.prototype = {
               }
               if (this._graphemeMap[chr][chr2][chr3][chr4]){ // another char for grapheme
                 inc++;
-                if (!this._graphemeMap[chr][chr2][chr3][chr4]["srt"]){ // invalid sequence
+                if (i+4 < cnt){
+                  chr5 = this.curSyl[i+4].toLowerCase();
+                }
+                if (this._graphemeMap[chr][chr2][chr3][chr4][chr5]){ // another char for grapheme
+                  if (!this._graphemeMap[chr][chr2][chr3][chr4][chr5]["srt"]){ // invalid sequence
+                    DEBUG.log("warn","scl" + this.sclID + " has incomplete sequence starting at character " + i+ " " +chr + chr2 + chr3 + chr4 + chr5 +" has no sort code");
+                    break;
+                  }else{//found valid grapheme, save it
+                    this.graStrings.push( chr + chr2 + chr3 + chr4 + chr5);
+                    typ = this._graphemeMap[chr][chr2][chr3][chr4][chr5]['typ'];
+                    this.charPosGraStrMap[i] = this.charPosGraStrMap[1+ i] = //map all 4 chars to the same grapheme position
+                      this.charPosGraStrMap[2 + i] = this.charPosGraStrMap[3 + i] = 
+                      this.charPosGraStrMap[4 + i] = -1 + this.graStrings.length;
+                  }
+                } else if (!this._graphemeMap[chr][chr2][chr3][chr4]["srt"]){ // invalid sequence
                   DEBUG.log("warn","scl" + this.sclID + " has incomplete sequence starting at character " + i+ " " +chr + chr2 + chr3 + chr4 +" has no sort code");
                   break;
                 }else{//found valid grapheme, save it
@@ -2609,11 +2624,11 @@ EDITORS.sclEditor.prototype = {
   _graphemeMap : {
     "0": { "srt": "700", "typ": "N" },
     "½": { "srt": "705", "typ": "N" },
-    "1": {
+    "1": { "srt": "710", "typ": "N",
       "0": { "srt": "760", "typ": "N",
         "0": { "srt": "780", "typ": "N",
-          "0": { "srt": "790", "typ": "N" }}},
-      "srt": "710", "typ": "N" },
+          "0": { "srt": "790", "typ": "N",
+            "0": { "srt": "791", "typ": "N" }}}}},
     "2": {"srt": "720", "typ": "N" ,
       "0": { "srt": "770", "typ": "N" }},
     "3": { "srt": "730", "typ": "N" ,

@@ -150,6 +150,15 @@
     }
 
     /**
+    * Get Annotation's value
+    *
+    * @return string text of this annotation
+    */
+    public function getValue() {
+      return $this->_text;
+    }
+
+    /**
     * Get Annotation's linked from entity unique global IDs
     *
     * @param boolean $asString determines where to return as a string (default = false)

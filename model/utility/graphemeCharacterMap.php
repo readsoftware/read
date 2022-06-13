@@ -53,11 +53,11 @@ GLOBAL $graphemeCharacterMap;
 $graphemeCharacterMap = array(
 "0"=>array("srt"=>"700","ssrt"=>"700","typ"=>"N"),
 "½"=>array("srt"=>"705","ssrt"=>"705","typ"=>"N"),
-"1"=>array(
-    "srt"=>"710","ssrt"=>"710","typ"=>"N",
+"1"=>array("srt"=>"710","ssrt"=>"710","typ"=>"N",
     "0"=>array( "srt"=>"760","ssrt"=>"760","typ"=>"N",
         "0"=>array( "srt"=>"780","ssrt"=>"780","typ"=>"N",
-            "0"=>array("srt"=>"790","ssrt"=>"790","typ"=>"N")))),
+           "0"=>array( "srt"=>"790","ssrt"=>"790","typ"=>"N",
+              "0"=>array("srt"=>"791","ssrt"=>"791","typ"=>"N"))))),
 "2"=>array("srt"=>"720","ssrt"=>"720","typ"=>"N",
     "0"=>array("srt"=>"770","ssrt"=>"770","typ"=>"N")),
 "3"=>array("srt"=>"730","ssrt"=>"730","typ"=>"N",

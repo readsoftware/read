@@ -1243,7 +1243,23 @@ class Parser {
                     $char4 = mb_substr($script,$i+3,1);
                     if (array_key_exists($char4,$graphemeCharacterMap[$char][$char2][$char3])){ // another char for grapheme
                       $inc++;
-                      if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4])){ // invalid sequence
+                      $char5 = mb_substr($script,$i+4,1);
+                      if (array_key_exists($char5,$graphemeCharacterMap[$char][$char2][$char3][$char4])){ // another char for grapheme
+                        $inc++;
+                        if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4][$char5])){ // invalid sequence
+                          array_push($this->_errors,"incomplete transcription at character $i line $lineMask, grapheme $char$char2$char3$char4$char5 has no sort code"." cfg line # $cfgLnCnt");
+                          return false;
+                        } else {//found valid grapheme, save it
+                          $str = $char.$char2.$char3.$char4.$char5;
+                          $ustr = $testChar.$char2.$char3.$char4.$char5;
+                          $typ = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5]['typ'];
+                          if (defined("USESKTSORT") && USESKTSORT && array_key_exists("ssrt",$graphemeCharacterMap[$char][$char2][$char3][$char4])) {
+                            $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5]['ssrt'];
+                          } else {
+                            $srt = $graphemeCharacterMap[$char][$char2][$char3][$char4][$char5]['srt'];
+                          }
+                        }
+                      } else if ((!defined("USESKTSORT")|| !USESKTSORT) && !array_key_exists("srt",$graphemeCharacterMap[$char][$char2][$char3][$char4])){ // invalid sequence
                         array_push($this->_errors,"incomplete transcription at character $i line $lineMask, grapheme $char$char2$char3$char4 has no sort code"." cfg line # $cfgLnCnt");
                         return false;
                       } else {//found valid grapheme, save it
