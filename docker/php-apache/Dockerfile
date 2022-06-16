@@ -81,7 +81,7 @@ RUN echo "" >> xdebug.ini \
  && echo "[xdebug]" >> xdebug.ini \
  && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" >> xdebug.ini \
  && echo "xdebug.mode = debug" >> xdebug.ini \
- && echo "xdebug.start_with_request = yes" >> xdebug.ini \
+ && echo "xdebug.start_with_request = trigger" >> xdebug.ini \
 #profile setting
 # && echo "xdebug.profiler_enable = 0" >> xdebug.ini \
 # use url param XDEBUG_PROFILE nothing or secret found in profile_enable_trigger_value
@@ -101,7 +101,7 @@ RUN echo "" >> xdebug.ini \
 # && echo "xdebug.remote_connect_back=0" >> xdebug.ini \
  # change line below for your favorite editor
  && echo "xdebug.idekey=VSCODE" >> xdebug.ini \
- && echo "xdebug.remote_log=/usr/local/etc/php/xdebug.log" >> xdebug.ini \
+ && echo "xdebug.log=/usr/local/etc/php/xdebug.log" >> xdebug.ini \
  && mv xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
  && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
