@@ -1879,7 +1879,7 @@ createDeclensionUI: function() {
         inflection, sverb = '686', gen, num, infcase, per, tense , mood, conj2nd, icf = [3,3,3,3,3,3,3,3],
         infEdit = this.inflectionEditUI, lemmaShowInf = [], posSelectedBtns,
         listSubVerb = [{label: "Finite",trmID:'686',showSub:"showSubVerb showVConj showVoice showTense showMood showNumber showPerson"},
-                       {label: "Non-Finite",trmID:'687',showSub:"showSubVerb showV2ndConj"}],
+                       {label: "Non-Finite",trmID:'687',showSub:"showSubVerb showVConj"}],
         listGen = [{label: "m.",trmID:491},//change from 485 check data!!!
                    {label: "mn.",trmID:494},
                    {label: "n.",trmID:492},//change from 486 check data!!!
