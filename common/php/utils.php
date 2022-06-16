@@ -405,7 +405,7 @@ class BoundingBox{
 */
 function constructCroppedImageURL($imageURL, $boundary) {
   if ($boundary){
-    $url = CROP_IMAGE_SERVICE_PATH."?url=$imageURL";
+    $url = CROP_IMAGE_SERVICE_PATH."?db=".DBNAME."&url=$imageURL";
     if (is_a($boundary,'BoundingBox') && $boundary->valid()){
       $url .= "&x=".$boundary->getXOffset().
       "&y=".$boundary->getYOffset().
