@@ -585,7 +585,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (595,'en=>"num."',587,777,NULL,NULL,'Numeral',NULL,NULL,NULL,1,'{2}'),
 (596,'en=>"Unknown"',587,777,NULL,NULL,'Unknown',NULL,NULL,NULL,1,'{2}'),
 (597,'en=>"noun"',587,777,NULL,NULL,'Noun',NULL,NULL,NULL,1,'{2}'),
-(598,'en=>"common"',587,777,NULL,NULL,'Common Noun',NULL,NULL,NULL,1,'{2}'),
+(598,'en=>"noun"',587,777,NULL,NULL,'Common Noun',NULL,NULL,NULL,1,'{2}'),
 (599,'en=>"proper"',587,777,NULL,NULL,'Proper Noun',NULL,NULL,NULL,1,'{2}'),
 (600,'en=>"pron."',587,777,NULL,NULL,'Pronoun',NULL,NULL,NULL,1,'{2}'),
 (601,'en=>"pers."',587,777,NULL,NULL,'Personal Pronoun',NULL,NULL,NULL,1,'{2}'),
