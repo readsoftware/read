@@ -89,9 +89,12 @@ EDITORS.EditionVE.prototype = {
     this.trmIDtoLabel = this.dataMgr.termInfo.labelByID;
     this.splitterDiv = $('<div id="'+this.id+'splitter"/>');
     this.contentDiv = $('<div id="'+this.id+'textContent" class = "ednveContentDiv" contenteditable="true" spellcheck="false" ondragstart="return false;" />');
+    this.messageDiv = $('<div class="top-message-overlay">Select constituents from edition (double click on individual constituents OR drag for a continuous selection). Select another sequence to exit link mode.</div>');
     this.propertyMgrDiv = $('<div id="'+this.id+'propManager" class="propertyManager" />');
     this.splitterDiv.append(this.contentDiv);
     this.splitterDiv.append(this.propertyMgrDiv);
+    // Add message overlay to the Edit Div, containerdiv content gets overwritten.
+    $(this.editDiv).append(this.messageDiv);
     $(this.editDiv).append(this.splitterDiv);
     this.splitterDiv.jqxSplitter({ width: '100%',
                                       height: '100%',
@@ -100,8 +103,6 @@ EDITORS.EditionVE.prototype = {
                                       showSplitBar:false,
                                       panels: [{ size: '60%', min: '250', collapsible: false},
                                                { size: '40%', min: '150', collapsed: true, collapsible: true}] });
-    // Add message overlay to the container.
-    this.splitterDiv.append('<div class="top-message-overlay">Select constituents from edition (double click on individual constituents OR drag for a continuous selection). Select another sequence to exit link mode.</div>');
     this.propMgr = new MANAGERS.PropertyManager({id: this.id,
                                                  propertyMgrDiv: this.propertyMgrDiv,
                                                  editor: ednVE,
@@ -3072,7 +3073,7 @@ mergeLine: function (direction,cbError) {
     }
     DEBUG.log("event", "Structure link mode started in editionVE " + ednVE.id + " by " + senderID + " with edntion tag " + structEdnTag +
         "linking to " + linkTargetTag);
-    ednVE.splitterDiv.find('.top-message-overlay').show();
+    ednVE.messageDiv.show();
   }
 
   $(this.editDiv).unbind('structureLinkModeStart').bind('structureLinkModeStart', structureLinkModeStartHandler);
@@ -3088,7 +3089,7 @@ mergeLine: function (direction,cbError) {
       return;
     }
     DEBUG.log("event", "Structure link mode ended in editionVE " + ednVE.id + " by " + senderID);
-    ednVE.splitterDiv.find('.top-message-overlay').hide();
+    ednVE.messageDiv.hide();
   }
 
   $(this.editDiv).unbind('structureLinkModeEnd').bind('structureLinkModeEnd', structureLinkModeEndHandler);
