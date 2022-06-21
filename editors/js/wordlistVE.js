@@ -793,11 +793,11 @@ EDITORS.WordlistVE.prototype = {
       isVerb = pos == 'v.'; // term dependency
       isInflectable = (isNoun || isPronoun || isAdjective || isNumeral || isVerb);
       //calculate the lemmas POS label
-      if (isNoun && lemma.gender) {
+      if (isNoun && lemma.gender) {// nouns show gender classification
         tempLabel = this.dataMgr.getTermFromID(lemma.gender) + (cf[2]==2?'(?)':'');
-      } else if (lemma.spos && this.dataMgr.getTermFromID(lemma.spos)) {
+      } else if (lemma.spos && this.dataMgr.getTermFromID(lemma.spos)) {// if sub POS show it
         tempLabel = this.dataMgr.getTermFromID(lemma.spos) + (cf[1]==2?'(?)':'');
-      } else {
+      } else { // show POS
         tempLabel = pos + (cf[0]==2?'(?)':'');
       }
       //output lemma header with gloss and POS
@@ -828,8 +828,10 @@ EDITORS.WordlistVE.prototype = {
               (lemmaAnno?' ('+lemmaAnno+')':"");
       //lemma forms
       if (lemma.entityIDs && lemma.entityIDs.length ) {
+        // mark inflection list not started to skip separators
         infListStarted = false;
         if (isInflectable) { //inflection
+          //sort by defined group order and category value order
           infGIDs = this.orderInflections(lemma);
           var curTense=null, curVoice=null, curMood=null,
               curGen=null, curNum=null, curForm=null,
@@ -872,7 +874,7 @@ EDITORS.WordlistVE.prototype = {
                 curCase = null;
                 }
             }
-            if (inflection.voice && (inflection.voice + (icf[1]==2?'(?)':'')) != curVoice) {
+            if (isVerb && inflection.voice && (inflection.voice + (icf[1]==2?'(?)':'')) != curVoice) {
               html += ((k && infListStarted && !infSep &&
                        (inflection.voice != curVoice || curVoice.indexOf('?') == -1 && icf[1]==2))?' ◾ ':
                        (k && infListStarted?'; ':' ')) +
@@ -880,6 +882,7 @@ EDITORS.WordlistVE.prototype = {
               curVoice = inflection.voice + (icf[1]==2?'(?)':'');
               infSep = true;
               infListStarted = true;
+              //voice changed so reset subgroups to start
               curTense=null;
               curMood=null;
               curNum = null;
@@ -888,13 +891,14 @@ EDITORS.WordlistVE.prototype = {
               curGen = null;
               curCase = null;
             }
-            if (inflection.tense && (inflection.tense + (icf[0]==2?'(?)':'')) != curTense) {
+            if (isVerb && inflection.tense && (inflection.tense + (icf[0]==2?'(?)':'')) != curTense) {
               html += ((k && infListStarted && !infSep &&
                        (inflection.tense != curTense || curTense.indexOf('?') == -1 && icf[0]==2))?(!curVoice?' ◾ ':'; '):' ') +
                       this.dataMgr.getTermFromID(inflection.tense) + (icf[0]==2?'(?)':'');
               curTense = inflection.tense + (icf[0]==2?'(?)':'');
               infSep = true;
               infListStarted = true;
+              //tense changed so reset subgroups to start
               curMood=null;
               curNum = null;
               curPerson = null;
@@ -902,13 +906,14 @@ EDITORS.WordlistVE.prototype = {
               curGen = null;
               curCase = null;
             }
-            if (inflection.mood && (inflection.mood + (icf[2]==2?'(?)':'')) != curMood) {
+            if (isVerb && inflection.mood && (inflection.mood + (icf[2]==2?'(?)':'')) != curMood) {
               html += ((k && !infSep &&
                        (inflection.mood != curMood || curMood.indexOf('?') == -1 && icf[2]==2))?'; ':' ') +
                       this.dataMgr.getTermFromID(inflection.mood) + (icf[2]==2?'(?)':'');
               curMood = inflection.mood + (icf[2]==2?'(?)':'');
               infSep = true;
               infListStarted = true;
+              //mood changed so reset subgroups to start
               curNum = null;
               curPerson = null;
               curForm = null;
@@ -1102,9 +1107,10 @@ EDITORS.WordlistVE.prototype = {
             }
           }
           if (htmlUncertain.length > 0) {
-            html += '<br/><span class="uncertainheader">Uncertain:&nbsp</span>' + htmlUncertain;
+            html += '<br/><span class="uncertainheader">Unclear:&nbsp</span>' + htmlUncertain;
           }
         } else { //no inflections     ?? 2 part display unique spellings followed by attested form links ??
+          html += '<br/>'; //linebreak for the wordlist
           wordGIDs = lemma.entityIDs;
           for (j=0; j<wordGIDs.length; j++) {
             wordGID = wordGIDs[j];
