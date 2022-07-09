@@ -119,6 +119,7 @@ class Polygon implements JsonSerializable{
   *
   * @return array of members for serialization
   */
+  #[\ReturnTypeWillChange]
   public function jsonSerialize() {
 
     return $this->_points;
