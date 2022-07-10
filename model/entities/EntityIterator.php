@@ -112,6 +112,7 @@
     /**
     * Reset to beginning of result set.
     */
+    #[\ReturnTypeWillChange]
     public function rewind( ) {
       $this->_position = 0;
     }
@@ -121,6 +122,7 @@
     *
     * @return int returns id of the Entity at the current position
     */
+    #[\ReturnTypeWillChange]
     public function key( ) {
       if ($this->_keyMap) {
        return array_key_exists($this->_position,$this->_keyMap) ? $this->_keyMap[$this->_position]:null;
@@ -133,6 +135,7 @@
     *
     * @return Entity|NULL  returns the current Entity in the results or NULL if invalid
     */
+    #[\ReturnTypeWillChange]
     public function current( ) {
       if ($this->valid()){
         if ($this->_keyMap) {
@@ -149,6 +152,7 @@
     *
     * @return int|NULL  returns the position or NULL if at the end
     */
+    #[\ReturnTypeWillChange]
     public function next( ) {
       if (!$this->_keyMap && $this->_autoAdvancePage && ($this->_position + 1) >= count($this->_entities)){
           $this->_offset += $this->_pageSize;
@@ -163,6 +167,7 @@
     * @return true|false  returns true if the position has an Entity or false if not
     * @todo extend this to validate entity
     */
+    #[\ReturnTypeWillChange]
     public function valid() {
       if ($this->_keyMap) {
        return array_key_exists($this->_position,$this->_keyMap) &&

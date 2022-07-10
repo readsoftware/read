@@ -83,6 +83,7 @@
     /**
     * Reset to first element of set.
     */
+    #[\ReturnTypeWillChange]
     public function rewind() {
       $this->_position = 0;
     }
@@ -92,6 +93,7 @@
     *
     * @return int|string returns id of the Entity at the current position
     */
+    #[\ReturnTypeWillChange]
     public function key() {
       return array_key_exists($this->_position,$this->_keys) ? $this->_keys[$this->_position]:null;
     }
@@ -101,6 +103,7 @@
     *
     * @return Entity|NULL  returns the current Entity in the results or NULL if invalid
     */
+    #[\ReturnTypeWillChange]
     public function current() {
       if ($this->valid()){
         return $this->_entities[$this->_position];
@@ -113,6 +116,7 @@
     * Move position to next index in array of entities in the results set.
     *
     */
+    #[\ReturnTypeWillChange]
     public function next() {
       ++$this->_position;
     }
@@ -123,6 +127,7 @@
     * @return true|false  returns true if the position has an Entity or false if not
     * @todo extend this to validate entity
     */
+    #[\ReturnTypeWillChange]
     public function valid() {
       return isset($this->_entities[$this->_position]);
     }

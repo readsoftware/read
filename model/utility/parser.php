@@ -2020,7 +2020,10 @@ class Parser {
 * @param $ednDescrip string describing the edition
 * @return array of parser configuration metadata
 */
-function createParserConfig($ownerID = 4,$vis,$attr,$ckn,$trid,$ktxtid,$textid,$mask,$order,$scribe,$translit,$side = null,$part = null,$fragment = null,$ednDescrip = null) {
+function createParserConfig($ownerID,$vis,$attr,$ckn,$trid,$ktxtid,$textid,$mask,$order,$scribe,$translit,$side = null,$part = null,$fragment = null,$ednDescrip = null) {
+  if (!$ownerID) {
+    $ownerID = 4;
+  }
   $parseConfig = array();
   $parseConfig["ownerID"] =$ownerID;
   $parseConfig["visibilityIDs"] =$vis;
