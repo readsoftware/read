@@ -164,9 +164,13 @@
       }else{
         $labels = $this->_labels;
       }
-      if (array_key_exists($lang,$labels)){
-        return $labels[$lang];
-      }else{
+      if (is_array($labels)) {
+        if (array_key_exists($lang,$labels)){
+          return $labels[$lang];
+        }else{
+          return $labels["en"];
+        }
+      } else {
         return $labels["en"];
       }
     }
