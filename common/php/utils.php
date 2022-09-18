@@ -2645,9 +2645,9 @@ function checkEditionHealth($ednID, $verbose = true, $errorsOnly = false, $conti
                 //ToDo:  add code to add <a> for a service to correct the issue.
               } else {
                 $sclGraIDs = $syllable->getGraphemeIDs();
-                if (count($dups = array_intersect($sclGraphemeIDs,$sclGraIDs))) {
-                  array_push($hltherrors,"Error $ctxMessage with duplicate graIDs (".join(',',$dups).").");
-                }
+//               if (count($dups = array_intersect($sclGraphemeIDs,$sclGraIDs))) {
+//                  array_push($hltherrors,"Error $ctxMessage with duplicate graIDs (".join(',',$dups).").");
+//                }
                 $sclGraphemeIDs = array_unique(array_merge($sclGraphemeIDs,$sclGraIDs));
                 foreach ($sclGraIDs as $sclGraID) {
                   $gra2SclGID[$sclGraID] = "scl:$sclID";
@@ -3090,26 +3090,26 @@ function checkGlossaryHealth($catID, $verbose = true) {
         if ($infIDs && count($infIDs) > 0) {
           foreach ($infIDs as $infGID => $lemTag) {
             $inflection = new Inflection(substr($infGID,4));
+            $infTag = $inflection->getEntityTag();
             if (!$inflection || $inflection->hasError()) {
               array_push($hltherrors,"Error Unable to create inflection ($infGID) for lemma $lemTag.".
                           (($inflection && $inflection->hasError())?"Errors: ".$inflection->getErrors(true):""));
               continue;
             }
             if ($inflection->isMarkedDelete()) {
-              array_push($hltherrors,"Lemma ($lemValue/$lemTag) has inflection $entGID that is marked for delete.");
+              array_push($hlthwarnings,"Warning glossary (cat:$catID) Lemma ($lemValue/$lemTag) has inflection $infTag that is marked for delete.");
               continue;
             }
-            $infTag = $inflection->getEntityTag();
             $entGIDs = $inflection->getComponentIDs();
             if (!$entGIDs || count($entGIDs) == 0) {
-              array_push($hltherrors,"Lemma ($lemTag) has inflection $infTag that has no attested forms.");
+              array_push($hltherrors,"Error glossary (cat:$catID) Lemma ($lemTag) has inflection $infTag that has no attested forms.");
               continue;
             }
             foreach ($entGIDs as $entGID) {
               if (!@$tokCmpGIDs[$entGID]) {
                 $tokCmpGIDs[$entGID] = $infTag;
               } else {
-                array_push($hltherrors,"Processing Token/Compound $entGID for $infTag (of $lemTag) which is already a component of ".$tokCmpGIDs[$entGID]);
+                array_push($hltherrors,"Error glossary (cat:$catID) Token/Compound $entGID of $infTag (of $lemTag) is already a component of ".$tokCmpGIDs[$entGID]);
               }
             }
           }
@@ -3373,7 +3373,8 @@ function validateTokCmp ($tokCmpGID, $ctxMessage, $topTokCmpGID) {
                 (($entity && $entity->hasError())?"Errors: ".$entity->getErrors(true):EntityFactory::$error));
   } else {
      if (!$entity->getID()) { //failed to create entity
-      array_push($hltherrors,"Error Unable to create tok/cmp ($tokCmpGID) -> invalid attestation located in $ctxMessage.");
+      $getIDRet = $entity->getID();
+      array_push($hltherrors,"Error Unable to create tok/cmp ($tokCmpGID) id is ($getIDRet)-> invalid attestation located in $ctxMessage.");
       return;
     }
     if ($entity->isMarkedDelete()) {
