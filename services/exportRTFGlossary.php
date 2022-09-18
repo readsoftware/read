@@ -53,7 +53,10 @@
   $catID = (array_key_exists('catID',$_REQUEST)? $_REQUEST['catID']:null);
   $ednID = (array_key_exists('ednID',$_REQUEST)? $_REQUEST['ednID']:null);
   $isDownload = (array_key_exists('download',$_REQUEST)? $_REQUEST['download']:null);
-  $refreshWordMap = ((array_key_exists('refreshWordMap',$_REQUEST) || array_key_exists('refreshLookUps',$_REQUEST))? true:false);
+  $refresh = (array_key_exists('refreshWordMap',$_REQUEST) ? $_REQUEST['refreshWordMap']:
+              ((array_key_exists('refreshLookUps',$_REQUEST))? $_REQUEST['refreshLookUps']:
+               ((array_key_exists('refresh',$_REQUEST))? $_REQUEST['refresh']:
+                (defined('DEFAULTHTMLGLOSSARYREFRESH')?DEFAULTHTMLGLOSSARYREFRESH:0))));
   $useTranscription = (!array_key_exists('usevalue',$_REQUEST)? true:false);
   $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
   $termInfo = getTermInfoForLangCode('en');
@@ -69,7 +72,6 @@
   if (!$catalog || $catalog->hasError()) {//no catalog or unavailable so warn
     array_push($warnings,"Warning need valid catalog id $catID.");
   } else {
-//    $cmpTokTag2LocLabel = getWordTagToLocationLabelMap($catalog,$refreshWordMap);
     $tcmSrchStrings = array("⟨","⟩","⟪","⟫","\{","\}");
     $tcmRtfRplcStrings = array("\\u10216\\'3f","\\u10217\\'3f","\\u10218\\'3f","\\u10219\\'3f","\\'7b","\\'7d");
     $rtf ='{\rtf1\adeflang1025\ansi\ansicpg10000\uc1\adeff0\deff0'."\n".
@@ -125,29 +127,44 @@
           $softReturn = '{\line}';
           $hardReturn = '{\par}';
           $eol = "";//this helps readability of raw RTF in a basic line editor and does not affect layout in Word import
+    //output glossary title
     if ($glossaryTitle = $catalog->getTitle()) {
       $rtf .= $titleStyle.utf8ToRtf($glossaryTitle).$endStyle.$eol.$hardReturn.$eol;
     }
 
     $glossaryCommentTypeID = Entity::getIDofTermParentLabel('Glossary-CommentaryType');//warning!!! term dependency
-    $lemmas = new Lemmas("lem_catalog_id = $catID and not lem_owner_id = 1","lem_sort_code,lem_sort_code2");
+    //get all lemmas for this catalog in sorted order then by homographic order
+    $lemmas = new Lemmas("lem_catalog_id = $catID and not lem_owner_id = 1","lem_sort_code,lem_sort_code2,lem_homographorder");
+    //Get glossary Lemmas
     if ($lemmas->getCount() > 0) {
       $lemIDs = array();
+      //iterate through the lemmas
       foreach($lemmas as $lemma) {
+        if ($lemma->isMarkedDelete()) {
+          continue;
+        }
+        //initialize control variables
+        $isNoun = $isPronoun = $isAdjective = $isNumeral = $isVerb = $isInflectable = false;
         $hasAttestations = false;
         $lemGID = $lemma->getGlobalID();
         $lemTag = 'lem'.$lemma->getID();
+        //output homograph order if exist
         if ($lemmaOrder = $lemma->getHomographicOrder()) {
           $rtf .= $homStyle.$lemmaOrder.$endStyle.$eol;
         }
+        //output lemma value
         $lemmaValue = utf8ToRtf(preg_replace('/ʔ/','',$lemma->getValue()));
         $rtf .= $lemStyle.$lemmaValue.$endStyle.$eol;
-        $lemmaGender = $lemma->getGender();
         $lemmaPosID = $lemma->getPartOfSpeech();
-        $lemmaPos = $lemmaPosID && array_key_exists($lemmaPosID,$termLookup) ? $termLookup[$lemmaPosID] : '';
-        $isVerb = false;
-        if ($lemmaPos) {
-          $isVerb = ($lemmaPos == 'v.');
+        $lemmaPos = null;
+        if ($lemmaPosID && array_key_exists($lemmaPosID,$termLookup)) {
+          $lemmaPos = $termLookup[$lemmaPosID];
+          $isNoun = $lemmaPos == 'noun'; // term dependency
+          $isPronoun = $lemmaPos == 'pron.'; // term dependency
+          $isAdjective = $lemmaPos == 'adj.'; // term dependency
+          $isNumeral = $lemmaPos == 'num.'; // term dependency
+          $isVerb = $lemmaPos == 'v.'; // term dependency
+          $isInflectable = ($isNoun || $isPronoun || $isAdjective || $isNumeral || $isVerb);
         }
         $lemmaSposID = $lemma->getSubpartOfSpeech();
         $lemmaSpos = $lemmaSposID && array_key_exists($lemmaSposID,$termLookup) ? $termLookup[$lemmaSposID] : '';
@@ -155,21 +172,29 @@
           $lemmaSpos = "adj.";
         }
         $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
-        if ($lemmaGender) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
-          $rtf .= $space.$eol.$posStyle.$termLookup[$lemmaGender].($lemmaCF[2]==2?'(?)':'').$endStyle.$eol;
+        $lemmaGenderID = $lemma->getGender();
+        //output lemma POS
+        $lemmaGender = $lemmaGenderID && is_numeric($lemmaGenderID) && Entity::getTermFromID($lemmaGenderID) ? Entity::getTermFromID($lemmaGenderID) : null;
+        $posNode = null;
+        //calculate the lemmas POS label
+        if ($isNoun && $lemmaGender) {//warning Order Dependency for display code lemma gender (like for nouns) hides subPOS hides POS
+          $rtf .= $space.$eol.$posStyle.$lemmaGender.($lemmaCF[2]==2?'(?)':'').$endStyle.$eol;
         } else if ($lemmaSpos) {
           $rtf .= $space.$eol.$posStyle.$lemmaSpos.($lemmaCF[1]==2?'(?)':'').$endStyle.$eol;
         }else if ($lemmaPos) {
           $rtf .= $space.$eol.$posStyle.$lemmaPos.($lemmaCF[0]==2?'(?)':'').$endStyle.$eol;
         }
+        // output Etymology
         if ($lemmaEtym = $lemma->getDescription()) {
           //replace embedded HTML markup
           $rtf .= $space.$eol.$etymStyle.htmlToRTF(utf8ToRtf($lemmaEtym)).$endStyle.$eol;
         }
+        // output Translation
         if ($lemmaGloss = $lemma->getTranslation()) {
           //replace embedded HTML markup
           $rtf .= $comma.$eol.$space.$eol.$prequote.$eol.$glossStyle.htmlToRTF(utf8ToRtf($lemmaGloss)).$endStyle.$eol.$fullstop.$eol.$postquote.$eol;
         }
+        // output any lemma notes
         if ( $linkedAnoIDsByType = $lemma->getLinkedAnnotationsByType()) {
           if (array_key_exists($glossaryCommentTypeID,$linkedAnoIDsByType)) {
             $lemmaCommentary = "";
@@ -188,14 +213,30 @@
             }
           }
         }
+        // tranforms for attest form value
         $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/","/◈/","/◯/");
         $replacement = array("aï","aü","","","","","","","");
+
+        // Start calculation for displaying morphology and attested forms for this lemma
         $lemmaComponents = $lemma->getComponents(true);
-        if ($lemmaComponents && $lemmaComponents->getCount()) {
+        if ($lemmaComponents && $lemmaComponents->getCount() && !$lemmaComponents->getError()) {
           $rtf .= $softReturn.$eol;
           $hasAttestations = true; // signal see also
-          $groupedForms = array();
+          //init tree to show attested word inflection groups for the current lemma
+          $morphGroupTreeRoot = array();
+          $uncertainBranchNode = &$morphGroupTreeRoot;
+          $uncertainBranchNeedsInit = true;
+          // categories used and display ordering is determined by the lemma POS
+          list($catNames,$catDisplayOrders) = getPOSInfCategoryDisplayInfo($lemmaPos,$lemmaSpos);
+          $cntCatNames = 0;
+          if ($catNames && is_array($catNames)) {
+            $cntCatNames = count($catNames);
+          }
+          //process each component and create keyed groups for the atteseted forms including uninflected
           foreach ($lemmaComponents as $lemmaComponent) {
+            if ($lemmaComponent->isMarkedDelete()) {
+              continue;
+            }
             $entPrefix = $lemmaComponent->getEntityTypeCode();
             $entID = $lemmaComponent->getID();
             if ($entPrefix == 'inf') {//inflections
@@ -203,97 +244,93 @@
               //calculate inflection string
               //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
               $ingCF = $inflection->getCertainty();
-              $case = $inflection->getCase();
-              $gen = $inflection->getGender();
-              $num = $inflection->getGramaticalNumber();
-              $vper = $inflection->getVerbalPerson();
-              $vvoice = $inflection->getVerbalVoice();
-              $vtense = $inflection->getVerbalTense();
-              $vmood = $inflection->getVerbalMood();
-              $conj2 = $inflection->getSecondConjugation();
-              $infString = '';
-              if ($isVerb) {
-                if ($vmood) {
-                  $vmood = $termLookup[$vmood];
+              $case = $gen = $num = $vper = $vvoice = $vmood = $conj2 = null;
+              //transform morphology codes of categories used into text form
+              // build a sparse tree of display ordered category values
+              // set reference to morphology branch for this inflection
+              $curInflBranchNode = &$morphGroupTreeRoot;
+              foreach ($catNames as $catName) {
+                switch ($catName) {
+                  case 'case':
+                    $case = $inflection->getCase();
+                    if ($case && is_numeric($case)) {
+                      $curKey = $termLookup[$case].($ingCF[5]==2?'(?)':'');
+                    } else {
+                      $curKey = '?';
+                    }
+                    break;
+                  case 'gen':
+                    $gen = $inflection->getGender();
+                    if ($gen && is_numeric($gen)) {
+                      $curKey = $termLookup[$gen].($ingCF[3]==2?'(?)':'');
+                    } else {
+                      $curKey = '?';
+                    }
+                    break;
+                  case 'num':
+                    $num = $inflection->getGramaticalNumber();
+                    if ($num && is_numeric($num)) {
+                      $curKey = $termLookup[$num].($ingCF[4]==2?'(?)':'');
+                    } else {
+                      $curKey = '?';
+                    }
+                    break;
+                  case 'pers':
+                    $vper = $inflection->getVerbalPerson();
+                    if ($vper && is_numeric($vper)) {
+                      $curKey = $termLookup[$vper].($ingCF[6]==2?'(?)':'');
+                    } else {
+                      $curKey = '?';
+                    }
+                    break;
+                  case 'voice':
+                    $vvoice = $inflection->getVerbalVoice();
+                    if ($vvoice && is_numeric($vvoice)) {
+                      $curKey = $termLookup[$vvoice].($ingCF[1]==2?'(?)':'');
+                    } else {
+                      $curKey = '?';
+                    }
+                    break;
+                  case 'tense':
+                    $vtense = $inflection->getVerbalTense();
+                    if ($vtense && is_numeric($vtense)) {
+                      $curKey = $termLookup[$vtense].($ingCF[0]==2?'(?)':'');
+                    } else {
+                      $curKey = '?';
+                    }
+                    break;
+                  case 'mood':
+                    $vmood = $inflection->getVerbalMood();
+                    if ($vmood && is_numeric($vmood)) {
+                      $curKey = $termLookup[$vmood].($ingCF[2]==2?'(?)':'');
+                    } else {
+                      $curKey = '?';
+                    }
+                    break;
+                  case 'conj':
+                    $conj2 = $inflection->getSecondConjugation();
+                    if ($conj2 && is_numeric($conj2)) {
+                      $curKey = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
+                    } else {
+                      $curKey = '?';
+                    }
+                    break;
+                  default:
+                  $curKey = 'err?';
                 }
-                if ($vtense) {
-                  $vtense = $termLookup[$vtense];
-                  if (strtolower($vtense) == "pres." && strtolower($vmood) == "ind.") { //term dependency
-                    $vmood = null;
-                  }
+                if (!array_key_exists($curKey,$curInflBranchNode)) {
+                  $curInflBranchNode[$curKey] = array();
                 }
-                if ($vmood) {
-                  $vtensemood = $vmood.($ingCF[2]==2?'(?)':'');
-                } else if ($vtense) {
-                  $vtensemood = $vtense.($ingCF[0]==2?'(?)':'');
-                } else {
-                  $vtensemood = '?';
-                }
-                if (!array_key_exists($vtensemood,$groupedForms)) {
-                  $groupedForms[$vtensemood] = array();
-                }
-                if ($num) {
-                  $num = $termLookup[$num].($ingCF[4]==2?'(?)':'');
-                } else {
-                  $num = '?';
-                }
-                if (!array_key_exists($num,$groupedForms[$vtensemood])) {
-                  $groupedForms[$vtensemood][$num] = array();
-                }
-                if ($vper) {
-                  $vper = $termLookup[$vper].($ingCF[6]==2?'(?)':'');
-                } else {
-                  $vper = '?';
-                }
-                if (!array_key_exists($vper,$groupedForms[$vtensemood][$num])) {
-                  $groupedForms[$vtensemood][$num][$vper] = array();
-                }
-                if ($conj2) {
-                  $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
-                } else {
-                  $conj2 = '?';
-                }
-                if (!array_key_exists($conj2,$groupedForms[$vtensemood][$num][$vper])) {
-                  $groupedForms[$vtensemood][$num][$vper][$conj2] = array();
-                }
-                $node = &$groupedForms[$vtensemood][$num][$vper][$conj2];
-              } else {
-                if ($gen) {
-                  $gen = $termLookup[$gen].($ingCF[3]==2?'(?)':'');
-                } else {
-                  $gen = '?';
-                }
-                if (!array_key_exists($gen,$groupedForms)) {
-                  $groupedForms[$gen] = array();
-                }
-                if ($num) {
-                  $num = $termLookup[$num].($ingCF[4]==2?'(?)':'');
-                } else {
-                  $num = '?';
-                }
-                if (!array_key_exists($num,$groupedForms[$gen])) {
-                  $groupedForms[$gen][$num] = array();
-                }
-                if ($case) {
-                  $case = $termLookup[$case].($ingCF[5]==2?'(?)':'');
-                } else {
-                  $case = '?';
-                }
-                if (!array_key_exists($case,$groupedForms[$gen][$num])) {
-                  $groupedForms[$gen][$num][$case] = array();
-                }
-                if ($conj2) {
-                  $conj2 = $termLookup[$conj2].($ingCF[7]==2?'(?)':'');
-                } else {
-                  $conj2 = '?';
-                }
-                if (!array_key_exists($conj2,$groupedForms[$gen][$num][$case])) {
-                  $groupedForms[$gen][$num][$case][$conj2] = array();
-                }
-                $node = &$groupedForms[$gen][$num][$case][$conj2];
+                // advance morphology branch node pointer
+                $curInflBranchNode = &$curInflBranchNode[$curKey];
               }
+              $node = &$curInflBranchNode;
               $inflectionComponents = $inflection->getComponents(true);
+              //process this inflection's attestations
               foreach ($inflectionComponents as $inflectionComponent) {
+                if ($inflectionComponent->isMarkedDelete()) {
+                  continue;
+                }
                 //guard code
                 if (!$inflectionComponent->getID()){ //skip unreadable links
                   continue;
@@ -326,8 +363,14 @@
                     }
                   }
                 }
+                if (is_numeric($refresh) && $refresh > 1) {//ensure location label is current
+                  $inflectionComponent->updateLocationLabel();
+                }
+                //attach attested comment to location this will sort out separately
                 $loc = $inflectionComponent->getLocation().($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
-                //accumulate locations
+                //accumulate locations for this inflection node as json ld 
+                // {'65792432'=> {'value'=> {'bhagava' => {'loc' => {'4r11'=> 1}}}}}
+                //this allows sorting at each level in hierarchy and counts for multiple forms at same line location
                 if (!array_key_exists($sc,$node)) {
                   $node[$sc] = array('value'=>
                                        array($value =>
@@ -343,7 +386,7 @@
                   $node[$sc]['value'][$value]['loc'][$loc] = 1;
                 }
               }
-            } else { //un-inflected form
+            } else { //un-inflected inflectible form
               if ($useTranscription) {
                 $value = $lemmaComponent->getTranscription();
               } else {
@@ -375,22 +418,22 @@
                   }
                 }
               }
-              //$loc = $cmpTokTag2LocLabel[$entTag].($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
+              if (is_numeric($refresh) && $refresh > 1) {//ensure label is current
+                $lemmaComponent->updateLocationLabel();
+              }
               $loc = $lemmaComponent->getLocation().($attestedCommentary?$attestedAnoStyle." (".htmlToRTF(utf8ToRtf($attestedCommentary)).")".$endStyle.$eol:"");
-              if (! array_key_exists('?',$groupedForms)) {
-                $groupedForms['?'] = array();
+              if ($uncertainBranchNeedsInit) {
+                $uncertainBranchNeedsInit = false;
+                for ($i = 0; $i < $cntCatNames; $i++) {
+                  if (!array_key_exists('?',$uncertainBranchNode)) {
+                    $uncertainBranchNode['?'] = array();
+                  }
+                  // advance morphology branch node pointer
+                  $uncertainBranchNode = &$uncertainBranchNode['?'];
+                }
               }
-              if (! array_key_exists('?',$groupedForms['?'])) {
-                $groupedForms['?']['?'] = array();
-              }
-              if (! array_key_exists('?',$groupedForms['?']['?'])) {
-                $groupedForms['?']['?']['?'] = array();
-              }
-              if (! array_key_exists('?',$groupedForms['?']['?']['?'])) {
-                $groupedForms['?']['?']['?']['?'] = array();
-              }
-              $node = &$groupedForms['?']['?']['?']['?'];
-              // accumulate locations
+              $node = &$uncertainBranchNode;
+              // accumulate sort codes and locations
               if (! array_key_exists($sc,$node)) {
                 $node[$sc] = array('value'=>
                                      array($value =>
@@ -407,18 +450,203 @@
               }
             }
           }
-          if ($isVerb) {
-            $displayOrder1 = array('pres.','pres.(?)','Indic.','Indic.(?)','opt.','opt.(?)','impv.','impv.(?)','fut.','fut.(?)','perf.','perf.(?)','pret.','pret.(?)','?');
-            $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
-            $displayOrder3 = array('1st','1st(?)','2nd','2nd(?)','3rd','3rd(?)','?');
-            $displayOrder4 = array('inf.','inf.(?)','abs.','abs.(?)','?');
-          } else {
-            $displayOrder1 = array('m.','m.(?)','mn.','mn.(?)','n.','n.(?)','nf.','nf.(?)','f.','f.(?)','mf.','mf.(?)','mnf.','mnf.(?)','?');
-            $displayOrder2 = array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?');
-            $displayOrder3 = array('nom.','nom.(?)','acc.','acc.(?)','instr.','instr.(?)','dat.','dat.(?)','dat/gen.','dat/gen.(?)','abl.','abl.(?)','gen.','gen.(?)','loc.','loc.(?)','voc.','voc.(?)','?');
-            $displayOrder4 = array('des.','des.(?)','int.','int.(?)','?');
+          //now grouping is complete, order for display by group by walking tree
+          //according to the display orderings
+
+          //calculate html for attestforms
+          if ($catDisplayOrders) {
+            $cntCategories = count($catDisplayOrders);
+            $isFirstInflectionHeader = true;
+            $catCnts = array();
+            $catPtr = array();
+            $prevCatPtr = array();
+            foreach ($catDisplayOrders as $catOrder) {
+              array_push($catCnts, count($catOrder));
+              array_push($catPtr, 0);
+              array_push($prevCatPtr, -1);
+            }
+            //find all group nodes in display order
+            while ($catPtr[0] < $catCnts[0]) {
+              $nodePtr = &$morphGroupTreeRoot;
+              //from low to high index test pointer group key exist in grouped attested forms
+              $i = 0;
+              for ($i; $i < $cntCategories; $i++) {
+                //if when non existent break
+                if (!isset($nodePtr[$catDisplayOrders[$i][$catPtr[$i]]])) {
+                  break;
+                }
+                //walk the branch
+                $nodePtr = &$nodePtr[$catDisplayOrders[$i][$catPtr[$i]]];
+              }
+              //if all index find valid group process group
+              if ($i == $cntCategories) {
+                //process node
+                //output header
+                if ($isFirstInflectionHeader) { //first inflection Header so no separator
+                  $isFirstInflectionHeader = false;
+                } else { //output inflection separator
+                  $rtf .= "; ";
+                }
+                $rtf .= $infStyle;
+                //calc header using previous found node indicies low to high output non matching
+                $inflectionHeaderRTF = "";
+                $inflValsInsync = true;
+                for ($j = 0; $j < $cntCategories; $j++) {
+                  //if prevPtr index value is the same as the catPtr then skip
+                  if ($inflValsInsync && $catPtr[$j] == $prevCatPtr[$j]) {
+                    continue;
+                  } else {
+                    $inflValsInsync = false;
+                  }
+                  //get inflection category value
+                  $inflCatVal = $catDisplayOrders[$j][$catPtr[$j]];
+                  if ($inflCatVal == '?') {
+                    continue;
+                  }
+                  //add html element string
+                  $inflectionHeaderRTF .= $inflCatVal." ";
+                }
+                //if no inflection header then we must be unclear values
+                if ($inflectionHeaderRTF == '') {
+                  $inflectionHeaderRTF = "unclear: ";
+                }
+                $rtf .= $inflectionHeaderRTF.$endStyle;
+                ksort($nodePtr);
+                $isFirstNode = true;
+                foreach ($nodePtr as $sc => $formInfo) {
+                  if ($isFirstNode) {
+                    $isFirstNode = false;
+                  } else {
+                    $rtf .= ", ";
+                  }
+                  $isFirstForm = true;
+                  foreach ($formInfo['value'] as $formTranscr => $locInfo) {
+                    if ($isFirstForm) {
+                      $isFirstForm = false;
+                    } else {
+                      $rtf .= ", ";
+                    }
+                    $rtf .= $attestedStyle.$formTranscr.$endStyle;
+                    $sortedLocs = array_keys($locInfo['loc']);
+                    usort($sortedLocs,"compareWordLocations");
+                    $isFirstLoc = true;
+                    foreach ($sortedLocs as $formLoc) {
+                      $cntLoc = $locInfo['loc'][$formLoc];
+                      if ($isFirstLoc) {
+                        $rtf .= $space.$eol.$linRefStyle;
+                        $isFirstLoc = false;
+                      } else {
+                        $rtf .= ", ";
+                      }
+                      //remove internal ordinal
+                      $locParts = explode(":",$formLoc);
+                      if ($locParts && count($locParts) == 3) {
+                        if (strpos(trim($locParts[0]),"sort") === 0) {
+                          $formLoc = $locParts[2];
+                        } else {
+                          $formLoc = $locParts[0].$locParts[2];
+                        }
+                      } else if ($locParts && count($locParts) == 2) {
+                        $formLoc = $locParts[1];
+                      }
+                      if (strpos($formLoc,"–")) {//replace en dash with \'96
+                        $formLoc = preg_replace("/–/","\\\'96",$formLoc);
+                      }
+                      $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
+/*
+                      //remove internal ordinal
+                      $locParts = explode(":",$formLoc);
+                      if (count($locParts) == 3) {
+                        if (strpos($locParts[0],"sort") === 0) {//special sort tagging
+                          $formLoc = $locParts[2];
+                        } else {//if label separator is defined then prepend text label
+                          $formLoc = ($sepLabel !== null?$locParts[0].$sepLabel:'').$locParts[2];
+                        }
+                      } else if (count($locParts) == 2) {
+                        $formLoc = $locParts[1];
+                      }
+                      if ($isFirstLoc) {
+                        $isFirstLoc = false;
+                        $attestedHtml .= "<span class=\"attestedformloc\">".html_entity_decode($formLoc).($cntLoc>1?" [".$cntLoc."×]":"");
+                      } else {
+                        $attestedHtml .= ",</span><span class=\"attestedformloc\">".html_entity_decode($formLoc).($cntLoc>1?" [".$cntLoc."×]":"");
+                      }
+*/
+                    }
+                    $rtf .= $endStyle.$eol;
+                  }
+                }
+                //set cat index to last category index
+                $i = $cntCategories - 1;
+                //save current catPtr
+                $prevCatPtr = $catPtr;
+              }
+              //from high to low starting at current $i index increment pointer[index]
+              for ($k = $i; $k>=0; $k--) {
+                //increment ith pointer value
+                $catPtr[$k]++;
+                //if value is less than ith count then break else set to zero
+                if ($catPtr[$k] < $catCnts[$k] || $k == 0) {
+                  break;
+                }
+                $catPtr[$k] = 0;
+              }
+            }
+          } else { //uninflectibles
+            $nodePtr = $uncertainBranchNode;
+            ksort($nodePtr);
+            $isFirstNode = true;
+            foreach ($nodePtr as $sc => $formInfo) {
+              if ($isFirstNode) {
+                $isFirstNode = false;
+              } else {
+                $rtf .= ", ";
+              }
+              $isFirstForm = true;
+              if (! array_key_exists('value',$formInfo)) {
+                error_log(print_r($formInfo));
+              }
+              foreach ($formInfo['value'] as $formTranscr => $locInfo) {
+                if ($isFirstForm) {
+                  $isFirstForm = false;
+                } else {
+                  $rtf .= ", ";
+                }
+                $rtf .= $attestedStyle.$formTranscr.$endStyle;
+                $sortedLocs = array_keys($locInfo['loc']);
+                usort($sortedLocs,"compareWordLocations");
+                $isFirstLoc = true;
+                foreach ($sortedLocs as $formLoc) {
+                  $cntLoc = $locInfo['loc'][$formLoc];
+                  if ($isFirstLoc) {
+                    $rtf .= $space.$eol.$linRefStyle;
+                    $isFirstLoc = false;
+                  } else {
+                    $rtf .= ", ";
+                  }
+                  //remove internal ordinal
+                  $locParts = explode(":",$formLoc);
+                  if ($locParts && count($locParts) == 3) {
+                    if (strpos(trim($locParts[0]),"sort") === 0) {
+                      $formLoc = $locParts[2];
+                    } else {
+                      $formLoc = $locParts[0].$locParts[2];
+                    }
+                  } else if ($locParts && count($locParts) == 2) {
+                    $formLoc = $locParts[1];
+                  }
+                  if (strpos($formLoc,"–")) {//replace en dash with \'96
+                    $formLoc = preg_replace("/–/","\\\'96",$formLoc);
+                  }
+                  $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
+                }
+                $rtf .= $endStyle.$eol;
+              }
+            }
           }
-          $firstComponent = true;
+          $rtf .= $fullstop.$eol;
+/* 
+            $firstComponent = true;
           foreach ($displayOrder1 as $key1) {
             if (!array_key_exists($key1,$groupedForms)){
               continue;
@@ -438,13 +666,11 @@
                   }
                   if ($firstComponent) {
                     $firstComponent = false;
-//                  } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?'){
-//                    $rtf .= "; ";
                   } else {
                     $rtf .= "; ";
                   }
                   $rtf .= $infStyle;
-                  if ($isFirstKey1) {
+                  if ($isFirstKey1) {// ensure none repeating labels
                     $isFirstKey1 = false;
                     if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {
                       if ($lemmaPos != 'adv.' && $lemmaPos != 'ind.'){ //term dependency
@@ -452,7 +678,7 @@
                       }
                     } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 != '?') {
                       $rtf .= $key4." ";
-                    } else if (!$lemmaGender && $lemmaSpos != 'pers.'){//handle noun supress infection gender output
+                    } else if (!$lemmaGenderID && $lemmaSpos != 'pers.'){//handle noun supress infection gender output
                       $rtf .= $key1." ";
                     }
                   } else if ($key1 == '?' && $key2 == '?' && $key3 == '?' && $key4 == '?') {
@@ -517,6 +743,9 @@
             }
           }
           $rtf .= $fullstop.$eol;
+        } else {
+          $rtf .= $space;
+*/
         } else {
           $rtf .= $space;
         }
@@ -632,7 +861,8 @@
             }
           }
           $rtf .= $fullstop.$eol;
-        }        $rtf .= $hardReturn.$eol;//end paragraph
+        }
+        $rtf .= $hardReturn.$eol;//end paragraph
       }
       $rtf .= '}';
     } // else
@@ -656,179 +886,4 @@
     return $strWithRTF;
   }
 
-  function getWordTagToLocationLabelMap($catalog, $refreshWordMap) {
-    global $term_parentLabelToID;
-    $catID = $catalog->getID();
-    if (!$refreshWordMap && array_key_exists("cache-cat$catID".DBNAME,$_SESSION) &&
-          array_key_exists('wrdTag2LocLabel',$_SESSION["cache-cat$catID".DBNAME])) {
-      return $_SESSION["cache-cat$catID".DBNAME]['wrdTag2LocLabel'];
-    }
-    $editionIDs = $catalog->getEditionIDs();
-    $wrdTag2LocLabel = array();
-    $sclTagToLabel = array();
-    $ednLblBySeqTag = array();
-    $seqTag2EdnTag = array();
-    foreach ($editionIDs as $ednID) {
-      $txtSeqGIDs = array();
-      $physSeqGIDs = array();
-      $ednLabel = '';
-      $ednTag = 'edn'.$ednID;
-      $edition = new Edition($ednID);
-      if (!$edition->hasError()) {
-        $text = $edition->getText(true);
-        if ($text && !$text->hasError()) {
-          $ednLabel = $text->getRef();
-          if (!$ednLabel) {
-//            $ednLabel='sort'.$text->getID();
-          }
-        }
-        $ednSequences = $edition->getSequences(true);
-        //for edition find token sequences and find physical sequences and create sclID to label
-        foreach ($ednSequences as $ednSequence) {
-          if ($ednSequence->getTypeID() == $term_parentLabelToID['text-sequencetype']) {//term dependency
-            $txtSeqGIDs = array_merge($txtSeqGIDs,$ednSequence->getEntityIDs());
-          }
-          if ($ednSequence->getTypeID() == $term_parentLabelToID['textphysical-sequencetype']) {//term dependency
-            $physSeqGIDs = array_merge($physSeqGIDs,$ednSequence->getEntityIDs());
-          }
-        }
-      } else {
-        error_log("error loading edition $ednID : ".$edition->getErrors(true));
-        continue;
-      }
-      if ($txtSeqGIDs && count($txtSeqGIDs)) {// capture each text token sequence once
-        foreach ($txtSeqGIDs as $txtSeqGID) {
-          $tag = preg_replace("/:/","",$txtSeqGID);
-          if (array_key_exists($tag,$ednLblBySeqTag)) {// use label from first edition found with this sequence tag, should never happened if single edition per text
-            continue;
-          }
-          $ednLblBySeqTag[$tag] = $ednLabel;//todo: this overwrites the edition, ?? do we need to associate a line sequence with a primary edition for the reuse case??
-          $seqTag2EdnTag[$tag] = $ednTag;
-        }
-      }
-      if ($physSeqGIDs && count($physSeqGIDs)) {// capture each physical line sequence once
-        $ord = 1;
-        foreach ($physSeqGIDs as $physSeqGID) {
-          $sequence = new Sequence(substr($physSeqGID,4));
-          $label = $sequence->getSuperScript();
-          if (!$label) {
-            $label = $sequence->getLabel();
-          }
-          if (!$label) {
-            $label = 'seq'.$sequence->getID();
-          }
-          $sclGIDs = $sequence->getEntityIDs();
-          if ($label && $sclGIDs && count($sclGIDs)) {//create lookup for location of word span B11-B12
-            $label = "$ord:".$label; //save ordinal of line for sorting later.
-            foreach ($sclGIDs as $sclGID) {
-              $tag = preg_replace("/:/","",$sclGID);
-              $sclTagToLabel[$tag] = $label;
-            }
-          }
-          $ord++;
-        }
-      }
-      if ($ednLblBySeqTag && count($ednLblBySeqTag) > 0) {
-        //for each token sequence
-        foreach ($ednLblBySeqTag as $ednSeqTag => $ednLabel) {
-          if ($ednLabel) {
-            $ednLabel .= ":";
-          }
-          $ednTag = $seqTag2EdnTag[$ednSeqTag];
-          $sequence = new Sequence(substr($ednSeqTag,3));
-          $defLabel = $ednLabel . ($sequence->getSuperScript()?$sequence->getSuperScript():($sequence->getLabel()?$sequence->getLabel():$ednSeqTag));
-          $words = $sequence->getEntities(true);
-          if ($words->getCount() == 0) {
-            error_log("no words for sequence $ednSeqTag having edition label $ednLabel");
-            continue;
-          }else{
-            //error_log("words for sequence $ednSeqTag having edition label $ednLabel include ".join(',',$words->getKeys()));
-          }
-          //calculate a location label for each word and add to $wrdTag2LocLabel
-          foreach ($words as $word) {
-            $fSclID = $lSclID = null;
-            $prefix = $word->getEntityTypeCode();
-            $id = $word->getID();
-            $wtag = $prefix.$id;
-            if ($word->getSortCode() >= 0.7) {
-               continue;
-            }
-            // find first and last SclID for word to calc attested form location
-            if ($prefix == 'cmp') {
-              $tokenSet = $word->getTokens();
-              $tokens = $tokenSet->getEntities();
-              $fToken = $tokens[0];
-              $sclIDs = $fToken->getSyllableClusterIDs();
-              if ($sclIDs && count($sclIDs) > 0) {
-                $fSclID = $sclIDs[0];
-                $sclTag = 'scl'.$fSclID;
-                if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                  $label = $sclTagToLabel[$sclTag];
-                } else {
-                  $tokID = $fToken->getID();
-                  error_log("no start label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                  $label = null;
-                }
-              }
-              if ($label) {
-                $lToken = $tokens[count($tokens)-1];
-                $sclIDs = $lToken->getSyllableClusterIDs();
-                if ($sclIDs && count($sclIDs) > 0) {
-                  $lSclID = $sclIDs[count($sclIDs)-1];
-                  $sclTag = 'scl'.$lSclID;
-                  if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                    $label2 = $sclTagToLabel[$sclTag];
-                  } else {
-                    $tokID = $lToken->getID();
-                    error_log("no end label founds for $sclTag of tok$tokID from $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                    $label2 = null;
-                  }
-                  if($label2 && $label2 != $label) {
-                    $label .= "-" . $label2;
-                  }
-                }
-                $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
-              } else {
-                $wrdTag2LocLabel[$wtag] = $defLabel;
-              }
-            } else if ($prefix == 'tok') {
-              $sclIDs = $word->getSyllableClusterIDs();
-              if ($sclIDs && count($sclIDs) > 0) {
-                $fSclID = $sclIDs[0];
-                $sclTag = 'scl'.$fSclID;
-                if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                  $label = $sclTagToLabel[$sclTag];
-                } else {
-                  error_log("no start label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                  $label = null;
-                }
-              } else {
-                error_log("no syllable IDs found for ".$word->getGlobalID()." processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                $label = null;
-              }
-              if ($label) {
-                $lSclID = $sclIDs[count($sclIDs)-1];
-                $sclTag = 'scl'.$lSclID;
-                if ( array_key_exists($sclTag,$sclTagToLabel)) {
-                  $label2 = $sclTagToLabel[$sclTag];
-                } else {
-                  error_log("no end label founds for $sclTag processing $prefix$id for sequence $ednSeqTag having label $ednLabel");
-                  $label2 = null;
-                }
-                if($label2 && $label2 != $label) {
-                  $posColon = strpos($label2,':');
-                  $label .= "–" . ($posColon !== false?substr($label2, $posColon+1):$label2);
-                }
-                $wrdTag2LocLabel[$wtag] = $ednLabel . $label;
-              } else {
-                $wrdTag2LocLabel[$wtag] = $defLabel;
-              }
-            }
-          }
-        }
-      }
-    }
-    $_SESSION["cache-cat$catID"]['wrdTag2LocLabel'] = $wrdTag2LocLabel;
-    return $wrdTag2LocLabel;
-  }
 ?>

@@ -2566,125 +2566,6 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
   }
 }
 
-global $catLookupKeys;
-$catLookupKeys = array('conj:0','conj:1','voice','tense','mood','num','pers','gen','case');
-
-function setCategoryKeys( $keysList ) {
-  global $catLookupKeys;
-  $catLookupKeys = $keysList;
-}
-
-global $infCategoryValueDisplayOrdersLookup;
-$infCategoryValueDisplayOrdersLookup = array(
-  'conj' => array(
-              array('?','caus.','caus.(?)','des.','des.(?)','int.','int.(?)','den.','den.(?)','abs.','abs.(?)','inf.','inf.(?)'),
-              array('?','abs.','abs.(?)','inf.','inf.(?)')
-            ),
-  'voice' => array('?','P.','P.(?)','Ā.','Ā.(?)','pass.','pass.(?)'),
-  'tense' => array('pres.','pres.(?)','fut.','fut.(?)','p.fut.','p.fut.(?)','cond.','cond.(?)','perf.','perf.(?)','imp.','imp.(?)','aor.','aor.(?)','pret.','pret.(?)','?'),
-  'mood' => array('?','ind.','ind.(?)','opt.','opt.(?)','impv.','impv.(?)'),
-  'pers' => array('1st','1st(?)','2nd','2nd(?)','3rd','3rd(?)','?'),
-  'gen' => array('m.','m.(?)','mn.','mn.(?)','n.','n.(?)','f.','f.(?)','mf.','mf.(?)','nf.','nf.(?)','mnf.','mnf.(?)','?'),
-  'num' => array('sg.','sg.(?)','du.','du.(?)','pl.','pl.(?)','?'),
-  'case' => array('nom.','nom.(?)','acc.','acc.(?)','instr.','instr.(?)','dat.','dat.(?)','dat/gen.','dat/gen.(?)','abl.','abl.(?)','gen.','gen.(?)','loc.','loc.(?)','voc.','voc.(?)','?')
-);
-
-function setCategoryValueDisplayOrdersLookup( $infCatValDisplayOrdLookup ) {
-  global $infCategoryValueDisplayOrdersLookup;
-  $infCategoryValueDisplayOrdersLookup = $infCatDisplayOrdLookup;
-}
-
-global $infCategoryDisplayOrderLookup;
-$infCategoryDisplayOrderLookup = array(
-  'adj.' => array(
-    'default' => array('gen','num','case','conj:0'),
-    'adj.' => array('gen','num','case','conj:0'),
-    'gdv.' => array('gen','num','case','conj:0'),
-    'bv.' => array('gen','num','case','conj:0'),
-    'pp.' => array('gen','num','case','conj:0'),
-    'pres. part.' => array('gen','num','case','conj:0'),
-    'des.' => array('gen','num','case','conj:0'),
-    'int.' => array('gen','num','case','conj:0'),
-  ),
-  'adp.' => array(),
-  'adv.' => array(),
-  'ind.' => array(),
-  'noun' => array(
-    'default' => array('gen','num','case','conj:0'),
-    'noun' => array('gen','num','case','conj:0'),
-    'proper' => array('gen','num','case'),
-  ),
-  'num.' => array(
-    'default' => array('gen','num','case'),
-    'card.' => array('gen','num','case'),
-    'ord.' => array('gen','num','case'),
-    'sgpl.' => array('gen','num','case'),
-  ),
-  'pron.' => array(
-    'default' => array('gen','num','case','pers'),
-    'dem.' => array('gen','num','case','pers'),
-    'indef.' => array('gen','num','case'),
-    'interr.' => array('gen','num','case'),
-    'rel.' => array('gen','num','case'),
-    'pers.' => array('num','case'),
-    'refl.' => array('num','case'),
-  ),
-  'v.' => array(
-    'default' => array('conj:0','voice','tense','mood','pers','num'),
-    'finite' => array('conj:0','voice','tense','mood','pers','num'),
-    'non-finite' => array('conj:1'),
-  ),
-);
-
-function setCategoryValueDisplayOrders( $infCatDisplayOrdLookup ) {
-  global $infCategoryDisplayOrderLookup;
-  $infCategoryDisplayOrderLookup = $infCatDisplayOrdLookup;
-}
-
-function getPOSInfCategoryDisplayInfo ($POS, $subPOS = null) {
-  global $infCategoryDisplayOrderLookup, $infCategoryValueDisplayOrdersLookup;
-  $infCategoryNameList = null;
-  $infCategoryDisplayList = null;
-  $infCatValueDisplayOrdersList = null;
-  if (isset($infCategoryDisplayOrderLookup[$POS]) && count($infCategoryDisplayOrderLookup[$POS]) > 0) {
-    if ($subPOS) {
-      if (isset($infCategoryDisplayOrderLookup[$POS][$subPOS])) {
-        $infCategoryDisplayList = $infCategoryDisplayOrderLookup[$POS][$subPOS];
-      }
-    }
-    if (!$infCategoryDisplayList) {
-      if (isset($infCategoryDisplayOrderLookup[$POS]['default'])) {
-        $infCategoryDisplayList = $infCategoryDisplayOrderLookup[$POS]['default'];
-      }
-    }
-  }
-  //we have valid namelist so construct the display order array
-  if ($infCategoryDisplayList) {
-    $infCategoryNameList = array();
-    $infCatValueDisplayOrdersList = array();
-    foreach ($infCategoryDisplayList as $infCategoryName) {
-      $index = false;
-      if (strpos($infCategoryName,':') !== false) { // check for sublist indexing conj:1
-        list($infCategoryName, $index) = explode(':',$infCategoryName);
-      }
-      if (isset($infCategoryValueDisplayOrdersLookup[$infCategoryName])) { 
-        $infCatValueDisplayOrder = $infCategoryValueDisplayOrdersLookup[$infCategoryName];
-        $cntOrders = count($infCatValueDisplayOrder);
-        if ($cntOrders > 1 && is_array($infCatValueDisplayOrder[0])) {
-          if (is_numeric($index) && $index < $cntOrders) {
-            $infCatValueDisplayOrder = $infCatValueDisplayOrder[$index];
-          } else { // multiple list for category without defined index, default to first
-            $infCatValueDisplayOrder = $infCatValueDisplayOrder[0];
-          }
-        }
-        array_push($infCategoryNameList, $infCategoryName);
-        array_push($infCatValueDisplayOrdersList, $infCatValueDisplayOrder);
-      }
-    }
-  }
-  return array($infCategoryNameList, $infCatValueDisplayOrdersList);
-}
-
 function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscription = false, $hideHyphens = false) {
   global $termLookup,$cmpTokTag2LocLabel,$term_parentLabelToID, $infCategoryDisplayOrderLookup,$catNameList;
   $termInfo = getTermInfoForLangCode('en');
@@ -2800,8 +2681,12 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
         }
         $lemmaSposID = $lemma->getSubpartOfSpeech();
         $lemmaSpos = $lemmaSposID && is_numeric($lemmaSposID) && Entity::getTermFromID($lemmaSposID) ? Entity::getTermFromID($lemmaSposID) : null;
+        if ($lemmaSpos  == "common adj.") {//warning term dependency
+          $lemmaSpos = "adj.";
+        }
         $lemmaCF = $lemma->getCertainty();//[3,3,3,3,3],//posCF,sposCF,genCF,classCF,declCF
         $lemmaGenderID = $lemma->getGender();
+        //output lemma POS
         $lemmaGender = $lemmaGenderID && is_numeric($lemmaGenderID) && Entity::getTermFromID($lemmaGenderID) ? Entity::getTermFromID($lemmaGenderID) : null;
         $posNode = null;
         //calculate the lemmas POS label
@@ -2988,6 +2873,10 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
               //process this inflection's attestations
               foreach ($inflectionComponents as $inflectionComponent) {
                 if ($inflectionComponent->isMarkedDelete()) {
+                  continue;
+                }
+                //guard code
+                if (!$inflectionComponent->getID()){ //skip unreadable links
                   continue;
                 }
                 if ($useTranscription) {
