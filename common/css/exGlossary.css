@@ -44,7 +44,8 @@
   text-decoration: none;
 }
 .lemmaLinksHeader {
-  color: black;
+  color: green;
+  font-weight: bolder;
 }
 span.etym:before{
   content: ", ";
@@ -57,9 +58,14 @@ span.gloss:after{
 }
 .inflectdescript{
   padding-right: 5px;
+  color: blue;
+}
+.inflectdescript.unclear{
+  padding-right: 5px;
+  color: red;
 }
 .inflectsep{
-  padding-right: 5px;
+  padding-right: 10px;
 }
 .attestedformloc{
   padding-left: 5px;

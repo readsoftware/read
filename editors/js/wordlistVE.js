@@ -952,7 +952,7 @@ EDITORS.WordlistVE.prototype = {
               curNum = inflection.num + (icf[4]==2?'(?)':'');
               infSep = true;
               infListStarted = true;
-              if (isNoun || isAdjective) {
+              if (isNoun || isAdjective || isPronoun) {
                 curCase = null;
                 cur2ndConj=null;
               }

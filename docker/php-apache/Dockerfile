@@ -100,7 +100,7 @@ RUN echo "" >> xdebug.ini \
  && echo "xdebug.client_port=9003" >> xdebug.ini \
 # && echo "xdebug.remote_connect_back=0" >> xdebug.ini \
  # change line below for your favorite editor
- && echo "xdebug.idekey=VSCODE" >> xdebug.ini \
+ && echo "xdebug.idekey=vsc" >> xdebug.ini \
  && echo "xdebug.log=/usr/local/etc/php/xdebug.log" >> xdebug.ini \
  && mv xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
  && echo "ServerName localhost" >> /etc/apache2/apache2.conf
