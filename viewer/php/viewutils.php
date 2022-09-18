@@ -2760,7 +2760,6 @@ function getCatalogHTML($catID, $isStaticView = false, $refresh = 0, $useTranscr
     if ($lemmas->getCount() > 0) {
       $lemIDs = array();
       //iterate through the lemmas
-      xdebug_break();
       foreach($lemmas as $lemma) {
         if ($lemma->isMarkedDelete()) {
           continue;
