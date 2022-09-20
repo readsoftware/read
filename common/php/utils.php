@@ -5289,8 +5289,8 @@ $infCategoryDisplayOrderLookup = array(
     'refl.' => array('num','case'),
   ),
   'v.' => array(
-    'default' => array('conj:0','voice','tense','mood','pers','num'),
-    'finite' => array('conj:0','voice','tense','mood','pers','num'),
+    'default' => array('conj:0','voice','tense','mood','num','pers'),
+    'finite' => array('conj:0','voice','tense','mood','num','pers'),
     'non-finite' => array('conj:1'),
   ),
 );

@@ -1460,7 +1460,7 @@ EDITORS.LemmaVE.prototype = {
           ctxDiv.find('.uncertain').removeClass('uncertain');
           $('.radioGroupUI', ctxDiv).each(function (index, elem) {
             var radioGroup2 = $(elem);
-            if (radioGroup2 != radioGroup) { // not current group
+            if (radioGroup2 != radioGroup && radioGroup[0] != radioGroup2[0]) { // not current group
               if (radioGroup2.prop('origCF') || radioGroup2.prop('origID')) { // is dirty
                 if (!radioGroup2.hasClass("dirty")) {
                   radioGroup2.addClass("dirty");
@@ -1535,7 +1535,7 @@ EDITORS.LemmaVE.prototype = {
       { label: "noun", trmID: 664, showSub: "showSubNoun showGramGender", showInfl: "showCase showGender showNumber" },
       { label: "num.", trmID: 662, showSub: "showSubNum" },
       { label: "pron.", trmID: 667, showSub: "showSubPron" },
-      { label: "v.", trmID: 685, showSub: "", showInfl: "showSubVerb" }],
+      { label: "v.", trmID: 685, showSub: "showSubVerb"}],
       listSubAdj = [{ label: "common", trmID: 675, showInfl: "showCase showAdjGender showNumber" },
       { label: "gdv.", trmID: 676, showInfl: "showCase showAdjGender showNumber showAConj" },
       { label: "bv.", trmID: 1505,  showInfl: "showCase showAdjGender showNumber showAConj" },
@@ -1548,6 +1548,8 @@ EDITORS.LemmaVE.prototype = {
       { label: "sgpl.", trmID: 684, showInfl: "showCase showGender showNumber" }],
       listSubNoun = [{ label: "common", trmID: 665, showInfl: "showCase showGender showNumber showAConj" },
       { label: "proper", trmID: 666, showInfl: "showCase showGender showNumber" }],
+      listSubVerb = [{label: "Finite", trmID:686, showInfl:"showVConj showVoice showTense showMood showNumber showPerson"},
+      {label: "Non-Finite", trmID:687, showInfl:"showV2ndConj"}],
       listSubPron = [{ label: "dem.", trmID: 669, showInfl: "showCase showPerson showAdjGender showNumber" },
       { label: "indef.", trmID: 670, showInfl: "showCase showAdjGender showNumber" },
       { label: "interr.", trmID: 671, showInfl: "showCase showAdjGender showNumber" },
@@ -1575,6 +1577,7 @@ EDITORS.LemmaVE.prototype = {
     posEdit.append(this.createRadioGroupUI("spos", "SubAdjectiveUI", listSubAdj, spos, 675, cf[1] == 2));
     posEdit.append(this.createRadioGroupUI("class", "ClassUI", listClass, vclass, null, cf[3] == 2));
     posEdit.append(this.createRadioGroupUI("spos", "SubPronUI", listSubPron, spos, 669, cf[1] == 2));
+    posEdit.append(this.createRadioGroupUI("spos", "SubVerbUI", listSubVerb, spos, 686, cf[1] == 2));
     posEdit.append(this.createRadioGroupUI(null, null, listCtrl));
     showSub = $('.PosUI button.buttonDiv.selected', posEdit).prop('showSub');
     if (showSub && showSub.length) {// ensure sub groups are shown
@@ -1656,6 +1659,17 @@ EDITORS.LemmaVE.prototype = {
               subPosButtonDiv = $('.SubPronUI button.buttonDiv.default', posEdit);
             }
             if (subPosButtonDiv.length) {// subPOS for pronoun selected so calc all the rest
+              //read selected values and uncertain values
+              sposVal = subPosButtonDiv.text();
+              sposID = subPosButtonDiv.prop('trmID');
+              sposCF = subPosButtonDiv.hasClass('uncertain') ? 2 : 1;
+            }
+          } else if (posID == verbID) {// if verb check for spos
+            subPosButtonDiv = $('.SubVerbUI button.buttonDiv.selected', posEdit);
+            if (!subPosButtonDiv || subPosButtonDiv.length == 0) {// subPOS for verb selected so calc all the rest
+              subPosButtonDiv = $('.SubVerbUI button.buttonDiv.default', posEdit);
+            }
+            if (subPosButtonDiv.length) {// subPOS for verb selected so calc all the rest
               //read selected values and uncertain values
               sposVal = subPosButtonDiv.text();
               sposID = subPosButtonDiv.prop('trmID');
@@ -1887,10 +1901,8 @@ EDITORS.LemmaVE.prototype = {
       pos = this.isLemma && this.entity.pos ? this.entity.pos : null,
       spos = this.isLemma && this.entity.spos ? this.entity.spos : null,
       vclass = this.isLemma && this.entity['class'] ? this.entity['class'] : null,
-      inflection, sverb = '686', gen, num, infcase, per, tense, mood, conj2nd, icf = [3, 3, 3, 3, 3, 3, 3, 3],
+      inflection, sverb , gen, num, infcase, per, tense, mood, conj2nd, icf = [3, 3, 3, 3, 3, 3, 3, 3],
       infEdit = this.inflectionEditUI, lemmaShowInf = [], posSelectedBtns,
-      listSubVerb = [{ label: "Finite", trmID: '686', showSub: "showSubVerb showVConj showVoice showTense showMood showNumber showPerson" },
-                     { label: "Non-Finite", trmID: '687', showSub: "showSubVerb showV2ndConj" }],
       listGen = [{ label: "m.", trmID: 491 },//change from 485 check data!!!
                   { label: "mn.", trmID: 494 },
                   { label: "n.", trmID: 492 },//change from 486 check data!!!
@@ -1975,26 +1987,28 @@ EDITORS.LemmaVE.prototype = {
       voice = inflection.voice;
       mood = inflection.mood;
       conj2nd = inflection.conj2nd;
-      if (conj2nd == 860 || conj2nd == 861) {
-        sverb = '687';
-      } else {
-        sverb = '686';
+      if (pos == verbID) {
+        if (!sverb) { //change this code to create a lookup conj2ndID to subVerbID
+          if (conj2nd == 860 || conj2nd == 861) {
+            sverb = '687';
+          } else if (!conj2nd && (tense || mood || per || num) || [856,857,858,859].indexOf(conj2nd) > -1) {
+            sverb = '686';
+          } else if (spos) {
+            sverb = spos;
+          }
+        }
       }
     }
     infEdit.html('');
     //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
-    if (lemmaShowInf.indexOf('showSubVerb') > -1) {
-      infEdit.append(this.createRadioGroupUI("spos", "SubVerbUI", listSubVerb, sverb, null, null, 1));
-      if (sverb == '686') {
-        infEdit.append(this.createRadioGroupUI("conj2nd", "VConjUI", listVConj, conj2nd, null, icf[7] == 2));
-        infEdit.append(this.createRadioGroupUI("voice", "VoiceUI", listVoice, voice, null, icf[1] == 2));
-        infEdit.append(this.createRadioGroupUI("tense", "TenseUI", listTense, tense, null, icf[0] == 2));
-        infEdit.append(this.createRadioGroupUI("mood", "MoodUI", listMood, mood, null, icf[2] == 2));
-        infEdit.append(this.createRadioGroupUI("num", "NumberUI", listNum, num, null, icf[4] == 2));
-        infEdit.append(this.createRadioGroupUI("person", "PersonUI", listPerson, per, null, icf[6] == 2));
-      } else {
-        infEdit.append(this.createRadioGroupUI("conj2nd", "V2ndConjUI", listV2ndConj, conj2nd, null, icf[7] == 2));
-      }
+    if (pos == verbID) {
+      infEdit.append(this.createRadioGroupUI("conj2nd", "V2ndConjUI", listV2ndConj, conj2nd, null, icf[7] == 2));
+      infEdit.append(this.createRadioGroupUI("vconj2nd", "VConjUI", listVConj, conj2nd, null, icf[7] == 2));
+      infEdit.append(this.createRadioGroupUI("voice", "VoiceUI", listVoice, voice, null, icf[1] == 2));
+      infEdit.append(this.createRadioGroupUI("tense", "TenseUI", listTense, tense, null, icf[0] == 2));
+      infEdit.append(this.createRadioGroupUI("mood", "MoodUI", listMood, mood, null, icf[2] == 2));
+      infEdit.append(this.createRadioGroupUI("num", "NumberUI", listNum, num, null, icf[4] == 2));
+      infEdit.append(this.createRadioGroupUI("person", "PersonUI", listPerson, per, null, icf[6] == 2));
     } else {// other inflectables use a subset of the following
       if (lemmaShowInf.indexOf('showGender') > -1) {
         infEdit.append(this.createRadioGroupUI("gender", "GenderUI", listGen, gen, null, icf[3] == 2));
@@ -2016,12 +2030,51 @@ EDITORS.LemmaVE.prototype = {
       }
     }
     infEdit.append(this.createRadioGroupUI(null, null, listCtrl));
-    infEdit.addClass(lemmaShowInf.join(" "));
     if (pos == verbID) {
-      showSub = $('.SubVerbUI button.buttonDiv.selected', infEdit).prop('showSub');
-      if (showSub.length) {// ensure sub groups are shown
-        infEdit.addClass(showSub);
+      subVerbBtns = $('.SubVerbUI button.buttonDiv', lemmaVE.posUI);
+      if (subVerbBtns.length) {// found subverb buttons
+        var $selectSubVerbBtn, $defaultSubVerbBtn, $subVerbMatchIDBtn, showInfl;
+        subVerbBtns.each(function (index, elem) {
+          var subVerbID = $(elem).prop('trmID'),
+              classes =$(elem).attr('class');
+          if (sverb && sverb == subVerbID) { // try to match subVerb id selected for inflection
+            if ($(elem).prop('showInfl')) {
+              $subVerbMatchIDBtn = $(elem);
+            }
+          }
+          if (classes.indexOf('selected') > -1) {
+            if ($(elem).prop('showInfl')) {
+              $selectSubVerbBtn = $(elem);
+            }
+          }
+          if (classes.indexOf('default') > -1) {
+            if ($(elem).prop('showInfl')) {
+              $defaultSubVerbBtn = $(elem);
+            }
+          }
+        });
+        if ($subVerbMatchIDBtn) {
+          showInfl = $subVerbMatchIDBtn.prop('showInfl');
+          if ($selectSubVerbBtn) {
+            $selectSubVerbBtn.removeClass('selected');
+          }
+          if (!$subVerbMatchIDBtn.hasClass('selected')) {
+            $subVerbMatchIDBtn.addClass('selected');
+          }
+        } else if ($selectSubVerbBtn) {
+          showInfl = $selectSubVerbBtn.prop('showInfl');
+        } else if ($defaultSubVerbBtn) {
+          showInfl = $defaultSubVerbBtn.prop('showInfl');
+        }
+        if (showInfl && showInfl.length) {
+          //remove existing showInfl values
+          infEdit.attr('class',infEdit.attr('class').replace(/show[^\s]+/g, "").trim());
+          //add new showInfl classes
+          infEdit.addClass(showInfl);
+        }
       }
+    } else {
+      infEdit.addClass(lemmaShowInf.join(" "));
     }
     if (infID) { //link direct UI for inflecting tokens with the current inflection values.
       infEdit.append('<div class="linkLikeFormsDiv"><span class="linkAttestedFormButton"><u>Link Attested Form</u></span></div>');
