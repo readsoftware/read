@@ -473,21 +473,21 @@ div.phonoUI .valueLabelDiv, div.declUI .valueLabelDiv, div.linkTypeUI .valueLabe
   flex-wrap: wrap;
   justify-content: space-between;
 }
-.showSubAdj .SubAdjectiveUI, .showSubNoun .SubNounUI,
+.showSubVerb .SubVerbUI, .showSubAdj .SubAdjectiveUI, .showSubNoun .SubNounUI,
 .showGramGender .GramGenderUI, .showSubNum .SubNumeralUI,
 .showClass .ClassUI, .showSubPron .SubPronUI {
   display:flex;
 }
-.GramGenderUI, .SubNumeralUI, .ClassUI,
+.SubVerbUI, .GramGenderUI, .SubNumeralUI, .ClassUI,
 .SubNounUI, .SubPronUI, .SubAdjectiveUI {
   display:none;
 }
-.showSubVerb .SubVerbUI, .showTense .TenseUI, .showMood .MoodUI, .showNumber .NumberUI,
+.showTense .TenseUI, .showMood .MoodUI, .showNumber .NumberUI,
 .showPerson .PersonUI, .showVConj .VConjUI, .showV2ndConj .V2ndConjUI, .showVoice .VoiceUI,
 .showGender .GenderUI, .showCase .CaseUI, .showAConj .AConjUI {
   display:flex;
 }
-.SubVerbUI, .TenseUI, .MoodUI, .NumberUI, .VoiceUI, .VConjUI,
+.TenseUI, .MoodUI, .NumberUI, .VoiceUI, .VConjUI,
 .PersonUI, .V2ndConjUI, .GenderUI, .CaseUI, .AConjUI {
   display:none;
 }
