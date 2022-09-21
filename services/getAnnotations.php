@@ -46,7 +46,7 @@ if (USECACHE && $refresh < 1) {
   if ($dbMgr->getError()) {
     exit("Error: ".$dbMgr->getError());
   }
-  $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Annotations'");
+  $dbMgr->query("SELECT * FROM jsoncache WHERE jsc_label = 'Annotations' AND jsc_owner_id != 1 ORDER BY jsc_id DESC");
   if ($dbMgr->getRowCount() > 0 && USECACHE) {
     $row = $dbMgr->fetchResultRow();
     $jsonCache = new JsonCache($row);

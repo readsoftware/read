@@ -177,6 +177,7 @@ if (count($errors) == 0) {
           addUpdatedTagsInfo();
         }
       }
+      invalidateCache('Annotations');
       break;
     case "createAno":
       if (!$linkedFromEntity && !$url && !$text) {
@@ -216,6 +217,7 @@ if (count($errors) == 0) {
           //update $linked from entity
         }
       }
+      invalidateCache('Annotations');
       break;
     case "removeAno":
       if (!$linkedFromEntity && !$anoTag) {
@@ -266,6 +268,7 @@ if (count($errors) == 0) {
           addUpdateEntityReturnData($linkedFromEntity->getEntityTypeCode(),$linkedFromEntity->getID(),'linkedAnoIDsByType', $linkedFromEntity->getLinkedAnnotationsByType());
         }
       }
+      invalidateCache('Annotations');
       break;
     case "updateAno":
       if ($vis){
@@ -302,6 +305,7 @@ if (count($errors) == 0) {
         $annotation = new Annotation($annotation->getID());//reread anotation from DB
         addUpdateEntityReturnData('ano',$annotation->getID(),'modStamp',$annotation->getModificationStamp());
       }
+      invalidateCache('Annotations');
       break;
     default:
       array_push($errors,"unknown command");
@@ -370,6 +374,7 @@ if (array_key_exists("callback",$_REQUEST)) {
 } else {
   print json_encode($retVal);
 }
+
 function clearEntityAnnoCache ($entity) {
   if ($entity->getScratchProperty('fnTextByAnoTag') ||
       $entity->getScratchProperty('fnHtml')) {
