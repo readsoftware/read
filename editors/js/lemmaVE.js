@@ -1395,10 +1395,10 @@ EDITORS.LemmaVE.prototype = {
   * @param clearsAll
   */
 
-  createRadioGroupUI: function (grpName, uiClass, list, initTermID, defTermID, isUncertain, clearsAll) {
-    var lemmaVE = this,
-      radioGroup = $('<div class="radioGroupUI' + (uiClass ? ' ' + uiClass : '') + '"></div>'),
-      i, listDef, buttonDiv;
+  createRadioGroupUI: function (grpName, uiClass, list, initTermID, defTermID, isUncertain, clearsAll, isHeader) {
+    var lemmaVE = this, radioGroup, i, listDef, buttonDiv;
+    //create button group
+    radioGroup = $('<div class="radioGroupUI' + (uiClass ? ' ' + uiClass : '') + '"></div>');
     if (grpName) {
       radioGroup.prop('grpName', grpName);
     }
@@ -1411,6 +1411,10 @@ EDITORS.LemmaVE.prototype = {
     if (clearsAll) {
       radioGroup.prop('clearsAll', clearsAll);
     }
+    if (isHeader) {
+      radioGroup.prop('isHeader', isHeader);
+    }
+    //create buttons for this group
     for (i in list) {
       listDef = list[i];
       buttonDiv = $('<button class="' +
@@ -1434,62 +1438,70 @@ EDITORS.LemmaVE.prototype = {
       }
       radioGroup.append(buttonDiv);
     }
-    if (defTermID && $('.buttonDiv.selected', radioGroup).length == 0 && $('.buttonDiv.default', radioGroup).length == 1) {
-      //      $('.buttonDiv.default',radioGroup).addClass('selected');
-      //since there is not initial value selected it must be null or out of range
-      //so default represents a change in value, need to mark dirty
-      //      radioGroup.addClass("dirty");
-    }
     //click to select
     $('.buttonDiv', radioGroup).unbind("click").bind("click", function (e) {
       var ctxDiv = $(this).parent().parent(), showSub = $(this).prop('showSub'),
-        classes = ctxDiv.attr('class').replace(/show[^\s]+/g, "").trim();//get all non show classes
-      if (showSub || showSub == "") {//showSub can be blank to remove submenus
-        classes += showSub ? " " + showSub : "";
+        showInfl = $(this).prop('showInfl'), classes, showClasses = '';
+      classes = ctxDiv.attr('class').replace(/show[^\s]+/g, "").trim();//get all non show classes
+      if (showSub && showSub.length > 0) {//showSub classes so add these
+        showClasses += showClasses.length > 0 ? " " + showSub : showSub;
+      }
+      if (showInfl && showInfl.length > 0) {//showInfl classes so add these
+        showClasses += showClasses.length ? " " + showInfl : showInfl;
+      }
+      if (showClasses && showClasses.length > 0) {//showInfl classes so add these
+        classes += classes.length > 0? " " + showClasses : showClasses;
         ctxDiv.attr('class', classes);
       }
-      //if button selected and uncertainty remove both
-      if ($(this).hasClass('uncertain')) {
-        $(this).removeClass('uncertain');
-        $(this).removeClass('selected');
-      } else if ($(this).hasClass('selected')) {//if button selected add uncertainty
-        $(this).addClass('uncertain');
+      if (radioGroup.prop('isHeader')) { // header groups select subset of groups to show
+        radioGroup.find('.selected').removeClass('selected');
+        if (!$(this).hasClass('selected')) {
+          $(this).addClass('selected');
+        }
       } else {
-        if (radioGroup.prop('clearsAll')) {//reset all buttons and update dirty flags
-          ctxDiv.find('.selected').removeClass('selected');
-          ctxDiv.find('.uncertain').removeClass('uncertain');
-          $('.radioGroupUI', ctxDiv).each(function (index, elem) {
-            var radioGroup2 = $(elem);
-            if (radioGroup2 != radioGroup && radioGroup[0] != radioGroup2[0]) { // not current group
-              if (radioGroup2.prop('origCF') || radioGroup2.prop('origID')) { // is dirty
-                if (!radioGroup2.hasClass("dirty")) {
-                  radioGroup2.addClass("dirty");
-                }
-              } else { // not dirty so remove flags
-                if (radioGroup2.hasClass("dirty")) {
-                  radioGroup2.removeClass("dirty");
+        //if button selected and uncertainty remove both
+        if ($(this).hasClass('uncertain')) {
+          $(this).removeClass('uncertain');
+          $(this).removeClass('selected');
+        } else if ($(this).hasClass('selected')) {//if button selected add uncertainty
+          $(this).addClass('uncertain');
+        } else {
+          if (radioGroup.prop('clearsAll')) {//reset all buttons and update dirty flags
+            ctxDiv.find('.selected').removeClass('selected');
+            ctxDiv.find('.uncertain').removeClass('uncertain');
+            $('.radioGroupUI', ctxDiv).each(function (index, elem) {
+              var radioGroup2 = $(elem);
+              if (radioGroup2 != radioGroup && radioGroup[0] != radioGroup2[0]) { // not current group
+                if (radioGroup2.prop('origCF') || radioGroup2.prop('origID')) { // is dirty
+                  if (!radioGroup2.hasClass("dirty")) {
+                    radioGroup2.addClass("dirty");
+                  }
+                } else { // not dirty so remove flags
+                  if (radioGroup2.hasClass("dirty")) {
+                    radioGroup2.removeClass("dirty");
+                  }
                 }
               }
-            }
-          });
-        } else {//remove selected and uncertainty from all group buttons
-          $(this).parent().find('.selected').removeClass('selected');
-          $(this).parent().find('.uncertain').removeClass('uncertain');
+            });
+          } else {//remove selected and uncertainty from all group buttons
+            $(this).parent().find('.selected').removeClass('selected');
+            $(this).parent().find('.uncertain').removeClass('uncertain');
+          }
+          //add selected to this button and force refresh
+          $(this).addClass('selected');
         }
-        //add selected to this button and force refresh
-        $(this).addClass('selected');
-      }
-      //check value against original and update dirty flag for group
-      if ((radioGroup.prop('origCF') && !$(this).hasClass('uncertain')) ||
-        (!radioGroup.prop('origCF') && $(this).hasClass('uncertain')) ||
-        (!$(this).hasClass('selected') && radioGroup.prop('origID')) ||
-        ($(this).hasClass('selected') && radioGroup.prop('origID') != $(this).prop('trmID'))) { // is dirty
-        if (!radioGroup.hasClass("dirty")) {
-          radioGroup.addClass("dirty");
-        }
-      } else { // not dirty so remove flags
-        if (radioGroup.hasClass("dirty")) {
-          radioGroup.removeClass("dirty");
+        //check value against original and update dirty flag for group
+        if ((radioGroup.prop('origCF') && !$(this).hasClass('uncertain')) ||
+            (!radioGroup.prop('origCF') && $(this).hasClass('uncertain')) ||
+            !radioGroup.prop('origID') || 
+            radioGroup.prop('origID') != $(this).prop('trmID')) { // is dirty
+          if (!radioGroup.hasClass("dirty")) {
+            radioGroup.addClass("dirty");
+          }
+        } else { // not dirty so remove flags
+          if (radioGroup.hasClass("dirty")) {
+            radioGroup.removeClass("dirty");
+          }
         }
       }
       //check dirty flag of all groups and update UI dirty flag for save button.
@@ -1535,7 +1547,7 @@ EDITORS.LemmaVE.prototype = {
       { label: "noun", trmID: 664, showSub: "showSubNoun showGramGender", showInfl: "showCase showGender showNumber" },
       { label: "num.", trmID: 662, showSub: "showSubNum" },
       { label: "pron.", trmID: 667, showSub: "showSubPron" },
-      { label: "v.", trmID: 685, showSub: "showSubVerb"}],
+      { label: "v.", trmID: 685, showSub: "", showInfl: "showVInflGroups"}],
       listSubAdj = [{ label: "common", trmID: 675, showInfl: "showCase showAdjGender showNumber" },
       { label: "gdv.", trmID: 676, showInfl: "showCase showAdjGender showNumber showAConj" },
       { label: "bv.", trmID: 1505,  showInfl: "showCase showAdjGender showNumber showAConj" },
@@ -1548,8 +1560,6 @@ EDITORS.LemmaVE.prototype = {
       { label: "sgpl.", trmID: 684, showInfl: "showCase showGender showNumber" }],
       listSubNoun = [{ label: "common", trmID: 665, showInfl: "showCase showGender showNumber showAConj" },
       { label: "proper", trmID: 666, showInfl: "showCase showGender showNumber" }],
-      listSubVerb = [{label: "Finite", trmID:686, showInfl:"showVConj showVoice showTense showMood showNumber showPerson"},
-      {label: "Non-Finite", trmID:687, showInfl:"showV2ndConj"}],
       listSubPron = [{ label: "dem.", trmID: 669, showInfl: "showCase showPerson showAdjGender showNumber" },
       { label: "indef.", trmID: 670, showInfl: "showCase showAdjGender showNumber" },
       { label: "interr.", trmID: 671, showInfl: "showCase showAdjGender showNumber" },
@@ -1577,7 +1587,6 @@ EDITORS.LemmaVE.prototype = {
     posEdit.append(this.createRadioGroupUI("spos", "SubAdjectiveUI", listSubAdj, spos, 675, cf[1] == 2));
     posEdit.append(this.createRadioGroupUI("class", "ClassUI", listClass, vclass, null, cf[3] == 2));
     posEdit.append(this.createRadioGroupUI("spos", "SubPronUI", listSubPron, spos, 669, cf[1] == 2));
-    posEdit.append(this.createRadioGroupUI("spos", "SubVerbUI", listSubVerb, spos, 686, cf[1] == 2));
     posEdit.append(this.createRadioGroupUI(null, null, listCtrl));
     showSub = $('.PosUI button.buttonDiv.selected', posEdit).prop('showSub');
     if (showSub && showSub.length) {// ensure sub groups are shown
@@ -1659,17 +1668,6 @@ EDITORS.LemmaVE.prototype = {
               subPosButtonDiv = $('.SubPronUI button.buttonDiv.default', posEdit);
             }
             if (subPosButtonDiv.length) {// subPOS for pronoun selected so calc all the rest
-              //read selected values and uncertain values
-              sposVal = subPosButtonDiv.text();
-              sposID = subPosButtonDiv.prop('trmID');
-              sposCF = subPosButtonDiv.hasClass('uncertain') ? 2 : 1;
-            }
-          } else if (posID == verbID) {// if verb check for spos
-            subPosButtonDiv = $('.SubVerbUI button.buttonDiv.selected', posEdit);
-            if (!subPosButtonDiv || subPosButtonDiv.length == 0) {// subPOS for verb selected so calc all the rest
-              subPosButtonDiv = $('.SubVerbUI button.buttonDiv.default', posEdit);
-            }
-            if (subPosButtonDiv.length) {// subPOS for verb selected so calc all the rest
               //read selected values and uncertain values
               sposVal = subPosButtonDiv.text();
               sposID = subPosButtonDiv.prop('trmID');
@@ -1903,6 +1901,8 @@ EDITORS.LemmaVE.prototype = {
       vclass = this.isLemma && this.entity['class'] ? this.entity['class'] : null,
       inflection, sverb , gen, num, infcase, per, tense, mood, conj2nd, icf = [3, 3, 3, 3, 3, 3, 3, 3],
       infEdit = this.inflectionEditUI, lemmaShowInf = [], posSelectedBtns,
+      listVInflGroups = [{label: "Finite", trmID:686, showInfl:"showVInflGroups showVConj showVoice showTense showMood showNumber showPerson"},
+                         {label: "Non-Finite", trmID:687, showInfl:"showVInflGroups showV2ndConj"}],
       listGen = [{ label: "m.", trmID: 491 },//change from 485 check data!!!
                   { label: "mn.", trmID: 494 },
                   { label: "n.", trmID: 492 },//change from 486 check data!!!
@@ -1991,17 +1991,18 @@ EDITORS.LemmaVE.prototype = {
         if (!sverb) { //change this code to create a lookup conj2ndID to subVerbID
           if (conj2nd == 860 || conj2nd == 861) {
             sverb = '687';
-          } else if (!conj2nd && (tense || mood || per || num) || [856,857,858,859].indexOf(conj2nd) > -1) {
+          } else  { //if (!conj2nd && (tense || mood || per || num) || [856,857,858,859].indexOf(conj2nd) > -1) {
             sverb = '686';
-          } else if (spos) {
-            sverb = spos;
           }
         }
       }
     }
-    infEdit.html('');
+    infEdit.html(''); //clear all inflection edit UI
     //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
     if (pos == verbID) {
+      if (lemmaShowInf.indexOf('showVInflGroups') > -1) {
+        infEdit.append(this.createRadioGroupUI("vgroup", "VInflGroupUI", listVInflGroups, null, sverb,null,null,true));
+      }
       infEdit.append(this.createRadioGroupUI("conj2nd", "V2ndConjUI", listV2ndConj, conj2nd, null, icf[7] == 2));
       infEdit.append(this.createRadioGroupUI("vconj2nd", "VConjUI", listVConj, conj2nd, null, icf[7] == 2));
       infEdit.append(this.createRadioGroupUI("voice", "VoiceUI", listVoice, voice, null, icf[1] == 2));
@@ -2031,40 +2032,40 @@ EDITORS.LemmaVE.prototype = {
     }
     infEdit.append(this.createRadioGroupUI(null, null, listCtrl));
     if (pos == verbID) {
-      subVerbBtns = $('.SubVerbUI button.buttonDiv', lemmaVE.posUI);
-      if (subVerbBtns.length) {// found subverb buttons
-        var $selectSubVerbBtn, $defaultSubVerbBtn, $subVerbMatchIDBtn, showInfl;
-        subVerbBtns.each(function (index, elem) {
+      subVInflGroupBtns = $('.VInflGroupUI button.buttonDiv', infEdit);
+      if (subVInflGroupBtns.length) {// found VInflGroup buttons
+        var $selectVInflGroupBtn, $defaultVInflGroupBtn, $subVInflGroupMatchIDBtn, showInfl;
+        subVInflGroupBtns.each(function (index, elem) {
           var subVerbID = $(elem).prop('trmID'),
               classes =$(elem).attr('class');
           if (sverb && sverb == subVerbID) { // try to match subVerb id selected for inflection
             if ($(elem).prop('showInfl')) {
-              $subVerbMatchIDBtn = $(elem);
+              $subVInflGroupMatchIDBtn = $(elem);
             }
           }
           if (classes.indexOf('selected') > -1) {
             if ($(elem).prop('showInfl')) {
-              $selectSubVerbBtn = $(elem);
+              $selectVInflGroupBtn = $(elem);
             }
           }
           if (classes.indexOf('default') > -1) {
             if ($(elem).prop('showInfl')) {
-              $defaultSubVerbBtn = $(elem);
+              $defaultVInflGroupBtn = $(elem);
             }
           }
         });
-        if ($subVerbMatchIDBtn) {
-          showInfl = $subVerbMatchIDBtn.prop('showInfl');
-          if ($selectSubVerbBtn) {
-            $selectSubVerbBtn.removeClass('selected');
+        if ($subVInflGroupMatchIDBtn) {
+          showInfl = $subVInflGroupMatchIDBtn.prop('showInfl');
+          if ($selectVInflGroupBtn) { // remove any selected from group buttons
+            $selectVInflGroupBtn.removeClass('selected');
           }
-          if (!$subVerbMatchIDBtn.hasClass('selected')) {
-            $subVerbMatchIDBtn.addClass('selected');
+          if (!$subVInflGroupMatchIDBtn.hasClass('selected')) {
+            $subVInflGroupMatchIDBtn.addClass('selected');
           }
-        } else if ($selectSubVerbBtn) {
-          showInfl = $selectSubVerbBtn.prop('showInfl');
-        } else if ($defaultSubVerbBtn) {
-          showInfl = $defaultSubVerbBtn.prop('showInfl');
+        } else if ($selectVInflGroupBtn) {
+          showInfl = $selectVInflGroupBtn.prop('showInfl');
+        } else if ($defaultVInflGroupBtn) {
+          showInfl = $defaultVInflGroupBtn.prop('showInfl');
         }
         if (showInfl && showInfl.length) {
           //remove existing showInfl values
