@@ -197,9 +197,13 @@ var UTILITY = UTILITY || {};
 */
 
   UTILITY.beep = function (typ, dur, freq, vol,  cb) {
-    var audioCtx = UTILITY.audioCtx,
-        objGain = audioCtx.createGain(),
-        osc = audioCtx.createOscillator();
+    var audioCtx, objGain, osc;
+    if (!UTILITY.audioCtx) {
+      UTILITY.audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
+    }
+    audioCtx = UTILITY.audioCtx;
+    objGain = audioCtx.createGain();
+    osc = audioCtx.createOscillator();
     osc.connect(objGain);
     objGain.connect(audioCtx.destination);
     dur = dur?dur:50;
