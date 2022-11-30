@@ -114,6 +114,7 @@ $graphemeCharacterMap = array(
 "°"=>array("srt"=>"195","ssrt"=>"195","typ"=>"C"),
 //"'"=>array("srt"=>"194","ssrt"=>"194","typ"=>"C"),// for vp2sk, need to check if this is for general sanskrit
 "?"=>array("srt"=>"990","ssrt"=>"990","typ"=>"O"),
+","=>array("srt"=>"995","ssrt"=>"990","typ"=>"O"),
 "+"=>array("srt"=>"953","ssrt"=>"953","typ"=>"O"),
 "="=>array("srt"=>"957","ssrt"=>"957","typ"=>"O"),//added for grantha
 "/"=>array(
@@ -318,7 +319,8 @@ $graphemeCharacterMap = array(
         "̄"=>array("srt"=>"161","ssrt"=>"171","typ"=>"V",
             "̆"=>array("srt"=>"161","ssrt"=>"171","typ"=>"V"),
             "́"=>array("srt"=>"162","ssrt"=>"172","typ"=>"V"),
-            "̃"=>array("srt"=>"164","ssrt"=>"174","typ"=>"V")),
+            "̃"=>array("srt"=>"164","ssrt"=>"174","typ"=>"V"),
+            "srt"=>"170","ssrt"=>"170","typ"=>"V"),
         "̂"=>array("srt"=>"164","ssrt"=>"164","typ"=>"V"),
         "͡"=>array("i"=>array("srt"=>"167","ssrt"=>"167","typ"=>"V"))
         ),
