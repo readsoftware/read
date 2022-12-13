@@ -490,7 +490,7 @@ showProperties: function (bShow) {
           .data(syntaxVE.data.nodegrps)
           .enter()
           .append('svg')
-          // .attr("width", 600)
+            //.attr("width", 600)
             //.style("overflow-x","auto")
             .style("min-height", '200px')
             .attr("id", nodegrp => nodegrp.id)
@@ -598,7 +598,7 @@ showProperties: function (bShow) {
                                     .attr('tabindex', "0") //nextLineTabIndex++)
                                     .attr('y', wLoc.y)
                                     .text(syntaxVE.linemarkerPrefix + word.linemarker.text + syntaxVE.linemarkerSuffix);
-                  tWidth = Math.max(tWidth,parseInt(lineMarkerSpan.node().scrollWidth));
+                  tWidth = Math.max(tWidth,parseInt(lineMarkerSpan.node().textLength.baseVal.value));
                 }
                 wordTSpan = wordTObj.append('tspan')
                                   .attr('class',`word ${word.id}`)
@@ -606,7 +606,7 @@ showProperties: function (bShow) {
                                   .attr('x',0)
                                   .attr('y', wLoc.y + 20)
                                   .text(word.text.replace(/ʔ/g,''));
-                tWidth = parseInt(wordTSpan.node().scrollWidth);
+                tWidth = parseInt(wordTSpan.node().textLength.baseVal.value);
                 wordStartOffsetX = -tWidth/2;
                 if (word.linemarker) {
                   lineMarkerSpan.attr('x', word.linemarker.offset*8 + wordStartOffsetX + syntaxVE.wordSpacing)
@@ -618,7 +618,7 @@ showProperties: function (bShow) {
                                     .attr('x', 0)
                                     .attr('y', wLoc.y + 40)
                                     .text(word.sub1);
-                  tWidth = Math.max(tWidth,parseInt(posTSpan.node().scrollWidth));
+                  tWidth = Math.max(tWidth,parseInt(posTSpan.node().textLength.baseVal.value));
                 }
                 if (word.sub2) {
                   infTSpan = wordTObj.append('tspan')
@@ -628,7 +628,7 @@ showProperties: function (bShow) {
                                     .attr('y', wLoc.y + 55)
                                     .attr('font', 'bold 8px Verdana, Helvetica, Arial, sans-serif')
                                     .text(word.sub2);
-                  tWidth = Math.max(tWidth,parseInt(infTSpan.node().scrollWidth));
+                  tWidth = Math.max(tWidth,parseInt(infTSpan.node().textLength.baseVal.value));
                 }
                 if (word.sub1) {
                   linkPt = wordGObj.append('circle')
