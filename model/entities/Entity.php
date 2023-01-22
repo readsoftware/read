@@ -341,8 +341,10 @@
     */
     protected function stringOfStringsToArray($stringsString){
       if (is_array($stringsString)) return $stringsString;
-      preg_match_all("/([^\"\'\{\},]+)/",$stringsString,$matches);
-      return @$matches[1]? $matches[1]:null;
+      if ($stringsString) {
+        preg_match_all("/([^\"\'\{\},]+)/",$stringsString,$matches);
+        return @$matches[1]? $matches[1]:null;
+      }
     }
 
     /**
