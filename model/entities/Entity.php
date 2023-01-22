@@ -162,8 +162,11 @@
     * @return NULL|array of int ids
     */
     public static function idsStringToArray($idsString){
+      $matches = array();
       if (is_array($idsString)) return $idsString;
-      preg_match_all("/([^\"\'\{\},]+)/",$idsString,$matches);
+      if ($idsString) {
+        preg_match_all("/([^\"\'\{\},]+)/",$idsString,$matches);
+      }
       return @$matches[1]? $matches[1]:null;
     }
 
