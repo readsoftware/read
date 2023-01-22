@@ -115,6 +115,7 @@ $graphemeCharacterMap = array(
 //"'"=>array("srt"=>"194","ssrt"=>"194","typ"=>"C"),// for vp2sk, need to check if this is for general sanskrit
 "?"=>array("srt"=>"990","ssrt"=>"990","typ"=>"O"),
 "+"=>array("srt"=>"953","ssrt"=>"953","typ"=>"O"),
+"="=>array("srt"=>"957","ssrt"=>"957","typ"=>"O"),//added for grantha
 "/"=>array(
     "/"=>array(
         "/"=>array("srt"=>"954","ssrt"=>"954","typ"=>"I")),

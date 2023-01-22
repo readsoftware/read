@@ -47,7 +47,7 @@ var EDITORS = EDITORS || {};
 */
 
 EDITORS.ImageVE =  function(imgVECfg) {
-  var imgVE = this, imgTitle,imgSrc, entGID,
+  var imgVE = this, imgTitle, imgSrc, entGID,
       imgContainerDiv = $('<div id="imgContainerDiv" />');
   //read configuration and set defaults
   this.config = imgVECfg;
@@ -168,6 +168,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
             return false;
     });
   }
+
   if (this.blnEntity && this.blnEntity.url) {
     imgSrc = this.blnEntity.url;
     if (this.blnEntity.imageID) {
@@ -182,6 +183,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
       imgTitle = this.imgEntity.title;
     }
   }
+
   //setup canvas and context
   this.imgCanvas.className = "imgCanvas";
   this.imgContext = this.imgCanvas.getContext('2d');
@@ -207,7 +209,7 @@ EDITORS.ImageVE =  function(imgVECfg) {
   if (!this.image) {
     this.image = new Image();
     this.image.crossOrigin = "Anonymous";
-// CORS issue which affects getImageData for smooth and fast redraw and clipping of images
+    // CORS issue which affects getImageData for smooth and fast redraw and clipping of images
   }
   this.crossSize = 10;
   if (this.image.width == 0 || this.image.height == 0) { // image not loaded
