@@ -13,4 +13,4 @@ COPY . .
 # requires setup.py for setup of tools ignore for now
 # RUN pip install --editable .
 
-CMD gunicorn -b 0.0.0.0:8001 --access-logfile - "wsgi:application"
+CMD gunicorn -b 0.0.0.0:8001 --access-logfile - "wsgi:application" --timeout 180
