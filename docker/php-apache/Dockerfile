@@ -16,9 +16,10 @@ RUN apt-get update -y --fix-missing \
     libjpeg62-turbo-dev \
     libpng-dev
 
-# Install php extension like XDebug to debug php files 
-RUN pecl install xdebug-2.7.2 \
-  && docker-php-ext-enable xdebug
+# Install php extension like XDebug to debug php files
+# RUN pecl install -f xdebug\
+#   && docker-php-ext-enable xdebug
+
 
 RUN docker-php-ext-configure gd \
     --with-jpeg-dir=/usr/include/ \

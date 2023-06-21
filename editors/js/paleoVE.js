@@ -110,8 +110,8 @@ EDITORS.PaleoVE.prototype = {
 */
 
   createStaticToolbar: function () {
-    var paleoVE = this;
-    var btnEditModeName = this.id+'editmode',
+    var paleoVE = this,
+        btnEditModeName = this.id+'editmode',
         btnShowPropsName = this.id+'showprops',
         btnDownloadSegName = this.id+'downloadseg',
         ddbtnCurTagName = this.id+'curtagbutton',
@@ -132,9 +132,10 @@ EDITORS.PaleoVE.prototype = {
     });
 
     if (this.dataMgr && this.dataMgr.getPaleographyTags()) {
-      this.curTagBtnDiv = $('<div class="toolbuttondiv">' +
-        '<div id="'+ ddbtnCurTagName+'"><div id="'+ treeCurTagName+'"></div></div>'+
-        '<div class="toolbuttonlabel">Current Tag</div>'+
+      this.curTagBtnDiv = $(
+        '<div class="toolbuttondiv">' +
+          '<div id="'+ ddbtnCurTagName+'"><div id="'+ treeCurTagName+'"></div></div>'+
+          '<div class="toolbuttonlabel">Current Tag</div>'+
         '</div>');
       this.tagTree = $('#'+treeCurTagName,this.curTagBtnDiv);
       this.tagDdBtn = $('#'+ddbtnCurTagName,this.curTagBtnDiv);
@@ -531,7 +532,7 @@ EDITORS.PaleoVE.prototype = {
         catType = keys[index];
         //create row
         //add header cell
-        curRow = $('<div class="taggingGroupRow">' +
+        curRow = $('<div class="taggingGroupRow">' + 
           '<div class="taggingRowHeader">'+catType+'</div>' +
           '</div>' );
         this.pTaggingDiv.append(curRow);
@@ -613,6 +614,8 @@ EDITORS.PaleoVE.prototype = {
         segDiv.addClass("defaultSeg");
       }
       segDiv.append('<img class="taggingSegImg" alt="'+syllable.value.replace('ʔ','')+'" src="'+url+'"/>');
+    } else {
+      console.log("syllable: "  + syllable)
     }
     return segDiv;
   },
@@ -1004,6 +1007,7 @@ EDITORS.PaleoVE.prototype = {
 
     //assign handler for all word elements
     $(".segDiv,.tagSegDiv", this.editDiv).unbind('click').bind('click',segClickHandler);
+    // paleoVE.NextCell;
 
 
 /**
@@ -1068,9 +1072,10 @@ EDITORS.PaleoVE.prototype = {
           paleoVE.displaySclCell(sclCell,gSort);
         }
       }//trigger selection change
-      $(this).addClass("selectedd");
+      $(this).addClass("selectedGlyph");
       $('.editContainer').trigger('updateselection',[paleoVE.id,[],null]);
       e.stopImmediatePropagation();
+
       return false;
     };
 
@@ -1135,13 +1140,13 @@ EDITORS.PaleoVE.prototype = {
     */
 
     function btnNextCellClickHandler(paleoVE){
-      var curPaleoCell = $('div.selectedd', paleoVE.contentDiv);
+      var curPaleoCell = $('div.selectedGlyph', paleoVE.contentDiv);
 
       // if you are on the last syllable and click next button, beep for feedback
       if(curPaleoCell.parent().next(".paleoChartRow").length==0 && curPaleoCell.next(".paleoChartCell").length==0){
         UTILITY.beep();
       }else{
-        curPaleoCell.removeClass('selectedd');
+        curPaleoCell.removeClass('selectedGlyph');
         // if there is another syllable on the current row, go to that
         if(curPaleoCell.next(".paleoChartCell").length!=0){
           curPaleoCell.next(".paleoChartCell").trigger("dblclick");
@@ -1151,8 +1156,8 @@ EDITORS.PaleoVE.prototype = {
         }
       }
       // if at the current cell there isn't any pictures, and you are not at the last cell, then go to the next cell
-      if (($('div.selectedd .noglyphs', paleoVE.contentDiv).length!==0 ||
-           $('div.selectedd', paleoVE.contentDiv).children().length===0) &&
+      if (($('div.selectedGlyph .noglyphs', paleoVE.contentDiv).length!==0 ||
+           $('div.selectedGlyph', paleoVE.contentDiv).children().length===0) &&
           !curPaleoCell.hasClass('lastChartCell')){
         btnNextCellClickHandler(paleoVE);
       }
@@ -1170,10 +1175,10 @@ EDITORS.PaleoVE.prototype = {
     */
 
     function btnPrevCellClickHandler(paleoVE) {
-      var curPaleoCell = $('div.selectedd', paleoVE.contentDiv);
+      var curPaleoCell = $('div.selectedGlyph', paleoVE.contentDiv);
       // if there is another cell in the row, go to the prev cell of the same row
       if(curPaleoCell.prev().hasClass("paleoChartCell")){
-        curPaleoCell.removeClass('selectedd');
+        curPaleoCell.removeClass('selectedGlyph');
         curPaleoCell.prev().trigger('dblclick');
       }
       // if you are on the first syllable and click previous button, beep for feedback
@@ -1182,13 +1187,13 @@ EDITORS.PaleoVE.prototype = {
       }
       else{
         // go to the previous row
-        curPaleoCell.removeClass('selectedd');
+        curPaleoCell.removeClass('selectedGlyph');
         curPaleoCell.parent().prev(".paleoChartRow").children(".paleoChartCell").last().trigger('dblclick');
       }
 
       // if at the current cell there isn't any pictures, and you are not at the first cell, then go to the previous cell
-      if (($('div.selectedd .noglyphs', paleoVE.contentDiv).length!==0 ||
-           $('div.selectedd', paleoVE.contentDiv).children().length===0) &&
+      if (($('div.selectedGlyph .noglyphs', paleoVE.contentDiv).length!==0 ||
+           $('div.selectedGlyph', paleoVE.contentDiv).children().length===0) &&
           !curPaleoCell.hasClass('firstChartCell')){
         btnPrevCellClickHandler(paleoVE);
       }
@@ -1199,11 +1204,76 @@ EDITORS.PaleoVE.prototype = {
 
   },
 
+
+
 /**
 * tag the entity identiied with the surrent selected tag term.
 *
 * @param entGID string that represents the Global ID of the entity
 */
+
+
+
+
+/** ---------------------- **/
+/** ---------------------- **/
+  NextCell: function(){
+    paleoChart = $(this).parents(".paleoContentDiv").children(".paleoFrameDiv")[0];
+    paleoTaggingTable = $(this).parents(".paleoTaggingTable")[0];
+    temp = $('div.currentChar', paleoChart);
+    paleoTaggingTable = $('div.taggingDiv', paleoTaggingTable);
+
+    // if you are on the last syllable and click next button, beep for feedback
+    if(temp.parent().next(".paleoChartRow").length==0 && temp.next(".paleoChartCell").length==0){
+      UTILITY.beep();
+    }
+    else{
+      temp.removeClass('currentChar');
+      // if there is another syllable on the current row, go to that
+      if(temp.next(".paleoChartCell").length!=0){
+        temp.next(".paleoChartCell").trigger("dblclick");
+      }
+      else{
+        // go to the next row
+        temp.parent().next(".paleoChartRow").children(".paleoChartCell").first().trigger("dblclick");
+      }
+    }
+
+    // if at the current cell there isn't any pictures, and you are not at the last cell, then go to the next cell
+    if(paleoTaggingTable.children().length===0 && temp[0]!=temp.parent().parent().children().last(".paleoChartRow").children(".paleoChartCell").last()[0]){
+      $(this).click();
+    }
+  },
+
+  PrevCell: function(){
+    paleoChart = $(this).parents(".paleoContentDiv").children(".paleoFrameDiv")[0];
+    paleoTaggingTable = $(this).parents(".paleoTaggingTable")[0];
+    temp = $('div.currentChar', paleoChart);
+    paleoTaggingTable = $('div.taggingDiv', paleoTaggingTable);
+
+    // if there is another cell in the row, go to the prev cell of the same row
+    if(temp.prev().hasClass("paleoChartCell")){
+      temp.removeClass('currentChar');
+      temp.prev().trigger('dblclick');
+    }
+    // if you are on the first syllable and click previous button, beep for feedback
+    else if(temp.parent().prev(".paleoChartRow").length==0){
+      UTILITY.beep();
+    }
+    else{
+      // go to the previous row
+      temp.removeClass('currentChar');
+      temp.parent().prev(".paleoChartRow").children(".paleoChartCell").last().trigger('dblclick');
+    }
+
+    // if at the current cell there isn't any pictures, and you are not at the first cell, then go to the previous cell
+    if(paleoTaggingTable.children().length===0 && temp.parent().prev(".paleoChartRow").length!=0){
+      $(this).click();
+    }
+  },
+/** ---------------------- **/
+/** ---------------------- **/
+
 
   tagEntity: function(entGID) {
     var paleoVE = this, savedata = {}, curLabel = this.curTagLabel,

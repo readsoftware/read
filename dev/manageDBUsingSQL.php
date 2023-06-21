@@ -116,6 +116,8 @@ if (!$cmd && !$dbname && !$sqlfilename) {
         $info = new SplFileInfo("$sqlFilePath"."snapshot$sqlfilename");
         if ($info && $info->isFile()) {
           $size = $info->getSize();
+//           $size += 130;
+//           echo $size;
           error_log("snapshot size - $size");
           header("Pragma: public");
           header("Expires: 0");
@@ -125,10 +127,10 @@ if (!$cmd && !$dbname && !$sqlfilename) {
           header("Content-type: application/sql");
           header("Content-Disposition: attachment; filename=\"snapshot$sqlfilename\"");
           header("Content-Transfer-Encoding: binary");
-          header("Content-Length: $size");
+//           header("Content-Length: $size");
           // ob_end_clean();
           // ob_end_flush();
-          //echo file_get_contents("$sqlFilePath"."snapshot$sqlfilename");
+          // echo file_get_contents("$sqlFilePath"."snapshot$sqlfilename");
           $file = "$sqlFilePath"."snapshot$sqlfilename";
           $chunkSize = 50 * 1024 * 1024;
           $handle = fopen($file, 'rb');
