@@ -42,3 +42,5 @@ configreadDev.php
 tests/config.php
 config.php
 .idea
+__pycache__
+.env
