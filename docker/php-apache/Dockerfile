@@ -1,4 +1,4 @@
-FROM php:7.4-apache
+FROM php:8.0-apache
 
 RUN apt-get update -y --fix-missing \
     && apt-get upgrade -y \
