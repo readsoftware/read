@@ -132,7 +132,7 @@ class ReadQueryCursor:
             self._columnnames = [desc[0] for desc in self._cursor.description]
             #print(self._columnnames)
             self._resultrows = self._cursor.fetchall()
-#            print(len(self._resultrows))
+            #print(len(self._resultrows))
         except (Exception, psycopg2.Error) as error :
             msg = "Error while querying : " + str(error)
             self._error = msg
@@ -371,5 +371,6 @@ class ReadQueryCursor:
             return self._resultrows[self._index][self._columnnames.index(columnName)]
 
     def close(self):
-      self._conn.close()
-      print("connection to READ closed")
+        if self._conn != None:
+            self._conn.close()
+        print("connection to READ closed")
