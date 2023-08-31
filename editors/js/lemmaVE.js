@@ -1895,11 +1895,11 @@ EDITORS.LemmaVE.prototype = {
   */
 
   createInflectionEditUI: function (infID, attestedGID, btnDiv) {
-    var lemmaVE = this, showSub, nounID = 664, pronID = 667, verbID = 685,
+    var lemmaVE = this, showSub, nounID = 664, pronID = 667, verbID = 685, sverbDefault = 686,
       pos = this.isLemma && this.entity.pos ? this.entity.pos : null,
       spos = this.isLemma && this.entity.spos ? this.entity.spos : null,
       vclass = this.isLemma && this.entity['class'] ? this.entity['class'] : null,
-      inflection, sverb , gen, num, infcase, per, tense, mood, conj2nd, icf = [3, 3, 3, 3, 3, 3, 3, 3],
+      inflection, sverb , gen, num, infcase, per, tense, mood, voice, conj2nd, icf = [3, 3, 3, 3, 3, 3, 3, 3],
       infEdit = this.inflectionEditUI, lemmaShowInf = [], posSelectedBtns,
       listVInflGroups = [{label: "Finite", trmID:686, showInfl:"showVInflGroups showVConj showVoice showTense showMood showNumber showPerson"},
                          {label: "Non-Finite", trmID:687, showInfl:"showVInflGroups showV2ndConj"}],
@@ -2001,10 +2001,10 @@ EDITORS.LemmaVE.prototype = {
     //inflection certainty order = {'tense'0,'voice'1,'mood'2,'gender':3,'num'4,'case'5,'person'6,'conj2nd'7};
     if (pos == verbID) {
       if (lemmaShowInf.indexOf('showVInflGroups') > -1) {
-        infEdit.append(this.createRadioGroupUI("vgroup", "VInflGroupUI", listVInflGroups, null, sverb,null,null,true));
+        infEdit.append(this.createRadioGroupUI("vgroup", "VInflGroupUI", listVInflGroups, null, sverb || sverbDefault,null,null,true));
       }
       infEdit.append(this.createRadioGroupUI("conj2nd", "V2ndConjUI", listV2ndConj, conj2nd, null, icf[7] == 2));
-      infEdit.append(this.createRadioGroupUI("vconj2nd", "VConjUI", listVConj, conj2nd, null, icf[7] == 2));
+      infEdit.append(this.createRadioGroupUI("conj2nd", "VConjUI", listVConj, conj2nd, null, icf[7] == 2));
       infEdit.append(this.createRadioGroupUI("voice", "VoiceUI", listVoice, voice, null, icf[1] == 2));
       infEdit.append(this.createRadioGroupUI("tense", "TenseUI", listTense, tense, null, icf[0] == 2));
       infEdit.append(this.createRadioGroupUI("mood", "MoodUI", listMood, mood, null, icf[2] == 2));
@@ -2117,7 +2117,7 @@ EDITORS.LemmaVE.prototype = {
       e.stopImmediatePropagation();
       return false;
     });
-    //save inflection data
+    //cancel inflection change
     $('.cancelBtnDiv', infEdit).unbind("click").bind("click", function (e) {
       lemmaVE.attestedUI.removeClass("edit");
       if (lemmaVE.linkToInfID) {
@@ -2135,9 +2135,11 @@ EDITORS.LemmaVE.prototype = {
       if (infEdit.hasClass('dirty')) {
         //for each radio group find name and value of selected
         $('.buttonDiv.selected', infEdit).each(function (index, elem) {
-          var propname = $(elem).parent().prop('grpName'),
+          var $parent = $(elem).parent(),
+            isVisible = $parent.css('display') != 'none',
+            propname = $parent.prop('grpName'),
             propval = $(elem).prop('trmID');
-          if (infPropNames.indexOf(propname) > -1) {
+          if (isVisible && infPropNames.indexOf(propname) > -1) {
             infProps[propname] = propval;
             certainty[propname] = $(elem).hasClass('uncertain') ? 2 : 1;
             value += (value != '' ? ' ' : '') + $(elem).text();
