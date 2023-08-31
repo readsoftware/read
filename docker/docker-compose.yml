@@ -34,7 +34,7 @@ services:
   read:
     build: ./php-apache
     ports:
-      - "83:80" # map container port 80 to host port 80. This will allow the use of localhost directly
+      - "80:80" # map container port 80 to host port 80. This will allow the use of localhost directly
 #    environment: 
 #      - SHARE_PATH:/usr/lib/postgresql/bin
     env_file:
