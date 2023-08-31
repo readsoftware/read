@@ -192,7 +192,7 @@
         $entityInfo['entities'][$prefix]['count'] = $entityCountByTableName[$row['tname']];
         $entityInfo['entities'][$prefix]['nameToIndex'] = array($column['name']=>0);
         $entityInfo['entities'][$prefix]['columns'] = array($column);
-      }else{
+      }else if (array_key_exists('nameToIndex',$entityInfo['entities'][$prefix])){
         $entityInfo['entities'][$prefix]['nameToIndex'][$column['name']] = count($entityInfo['entities'][$prefix]['nameToIndex']);
         array_push($entityInfo['entities'][$prefix]['columns'],$column);
       }

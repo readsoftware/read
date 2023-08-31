@@ -1062,7 +1062,7 @@
     * @return iterator that contains attribuation objects for this Entity or NULL
     */
     public function getAttributions($autoExpand = false) {
-      if (!$this->_attributions && $autoExpand && count($this->getAttributionIDs())>0) {
+      if (!$this->_attributions && $this->_attribution_ids && $autoExpand && count($this->getAttributionIDs())>0) {
         $this->_attributions = new Attributions("atb_id in (".join(",",$this->getAttributionIDs()).")",'atb_id',null,null,false);
       }
       return $this->_attributions;
