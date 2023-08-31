@@ -12,10 +12,7 @@ from flask import Flask, redirect
 from flask_admin import Admin, AdminIndexView
 import ORM.readFlaskModel as rfm
 import ORM.readFlaskView as rfv
-from extensions import (
-    csrf,
-#    login_manager,
-)
+from extensions import csrf
 from ORM.readFlaskModel import db
 import os
 
