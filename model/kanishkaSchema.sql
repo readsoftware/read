@@ -292,6 +292,7 @@ CREATE TABLE langsort
   "srt_name" text NULL,
   "srt_description" text NULL,
   "srt_lang_weight" text NULL,
+  "srt_type_map" text[] NULL,
   "modified" TIMESTAMP default CURRENT_TIMESTAMP
 ) WITH (
   OIDS=FALSE

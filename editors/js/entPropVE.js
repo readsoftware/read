@@ -234,7 +234,9 @@ EDITORS.EntityPropVE.prototype = {
       if (this.prefix == "txt" && this.entity ) {
         this.createTextInvDisplay();
         this.createTextRefDisplay();
-        this.create3DModelInfoUI();
+        if (EDITORS.config.enable3DViewer) {
+          this.create3DModelInfoUI();
+        }
         this.createImageUI();
         if (this.entity.blnIDs && this.entity.blnIDs.length) {
           this.createBaselineUI();

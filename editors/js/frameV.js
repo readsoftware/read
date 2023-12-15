@@ -157,10 +157,15 @@ EDITORS.FrameV.prototype = {
           frameV.frameElem.attr("src",url);
         } else if (prefix == 'seg' && frameV.dictionary && isGlyphary){//seg link to  Maya Glyphary
           entity = frameV.dataMgr.getEntity(prefix,id);
-          type = 'O';
+          type = 'O'; //default search type to 'other'
           value = null;
-          if (entity.pcat){
-            value = entity.pcat;
+          if (entity.code && entity != ""){
+            if (entity.code.indexOf('v')==3) { // check for doing a lemma search
+              value = entity.code;
+              type = 'F';
+            } else { // else default to ML
+              value = 'ml' + entity.code;
+            }
           } else if (entity.mlc){
             value = 'ml' + entity.mlc;
           } else if (entity.mvc){
@@ -177,6 +182,8 @@ EDITORS.FrameV.prototype = {
             value = 'gates' + entity.gates;
           } else if (entity.zimm){
             value = 'zimm' + entity.zimm;
+          } else if (entity.pcat){
+            value = entity.pcat;
           }
           resLabel = frameV.dictionary;
           //reset src with value of word
