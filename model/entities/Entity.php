@@ -1036,7 +1036,7 @@
       if (!$this->_annotations && $autoExpand) {
         $anoIDs = $this->getAnnotationIDs();
         if ($anoIDs && count($anoIDs) > 0) {
-          $this->_annotations = new Annotations("ano_id in (".join(",",$anoIDs.")",null,null,false));
+          $this->_annotations = new Annotations("ano_id in (".join(",",$anoIDs).")",null,null,false);
         }
       }
       return $this->_annotations;

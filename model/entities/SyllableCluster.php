@@ -161,15 +161,22 @@
       $graphemes = $this->getGraphemes(true);
       if (@$graphemes){
         $typeVowel = Entity::getIDofTermParentLabel("vowel-graphemetype");//term dependency
-        $sort = $sort2 = "0.";
+        $sort = $sort2 = "";
         $last = $graphemes->getCount() - 1;
         foreach ($graphemes as $grapheme){
           if (!$grapheme->getSortCode()){
             $grapheme->calculateSort();
           }
           $graSort = $grapheme->getSortCode();
+          if ($graSort == "") continue;
           $sort .= substr($graSort,0,2);
           $sort2 .= substr($graSort,2,1);
+        }
+        if ($sort != "" && strlen($sort) > 0){
+          $sort = "0.".$sort;
+        }
+        if ($sort2 != "" && strlen($sort2) > 0){
+          $sort2 = "0.".$sort2;
         }
         $this->setSortCode($sort);
         $this->setSortCode2($sort2);
@@ -190,22 +197,30 @@
       if (!$this->_value || $this->_graphemes_unsynched) {//calculate syllable value
         $this->_value = "";
         $this->_sort_code = "";
+        $this->_sort_code2 = "";
         $graphemes = $this->getGraphemes(true);
         if (@$graphemes){
-          $sort = $sort2 = "0.";
+          $sort = $sort2 = "";
           $value = '';
           foreach ($graphemes as $grapheme){
             if (!$grapheme->getSortCode()){
               $grapheme->calculateSort();
             }
             $graSort = $grapheme->getSortCode();
-            $sort .= substr($graSort,0,2);
-            $sort2 .= substr($graSort,2,1);
+            if ($graSort == "") continue;
+            $sort .= substr($graSort,0,2); //todo: add configure for num of chars
+            $sort2 .= substr($graSort,2,1); //todo: add configure for num of chars
             if (!$raw) {
               $value .= $grapheme->getValue();
             } else {
               $value .= $grapheme->getGrapheme();
             }
+          }
+          if ($sort != "" && strlen($sort) > 0){
+            $sort = "0.".$sort;
+          }
+          if ($sort2 != "" && strlen($sort2) > 0){
+            $sort2 = "0.".$sort2;
           }
           $this->setSortCode($sort);
           $this->setSortCode2($sort2);

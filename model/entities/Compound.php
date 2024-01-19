@@ -273,7 +273,7 @@
         $tcms = "";
         $typeVowel = Entity::getIDofTermParentLabel("vowel-graphemetype");//term dependency
         $typeNumber = Entity::getIDofTermParentLabel("numbersign-graphemetype");//term dependency
-        $sort = $sort2 = "0.";
+        $sort = $sort2 = "";
         $j = 0;
         $lastT = $tokens->getCount() - 1;
         $prevTokenLastGraphemeID = 0;
@@ -334,6 +334,12 @@
           $transcription .= getTCMTransitionBrackets($tcms,"");
         }
       }
+      if ($sort != "" && strlen($sort) > 0){
+        $sort = "0.".$sort;
+      }
+      if ($sort2 != "" && strlen($sort2) > 0){
+        $sort2 = "0.".$sort2;
+      }
       $this->setSortCode($sort);
       $this->setSortCode2($sort2);
       $this->setCompound($value);
@@ -348,7 +354,7 @@
     public function calculateSortCodes(){
       $tokens = $this->getTokens();
       if (@$tokens && $tokens->getCount()){
-        $sort = $sort2 = "0.";
+        $sort = $sort2 = "";
         foreach ($tokens as $token) {
           if (!$token->getSortCode() ){
             $token->calculateSortCodes();
@@ -357,6 +363,12 @@
           $tokSort2 = $token->getSortCode2();
           $sort .= substr($tokSort,2);
           $sort2 .= substr($tokSort2,2);
+        }
+        if ($sort != "" && strlen($sort) > 0){
+          $sort = "0.".$sort;
+        }
+        if ($sort2 != "" && strlen($sort2) > 0){
+          $sort2 = "0.".$sort2;
         }
         $this->setSortCode($sort);
         $this->setSortCode2($sort2);

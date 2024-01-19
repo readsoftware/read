@@ -111,6 +111,11 @@ EDITORS.WordlistVE.prototype = {
     if (this.dataMgr) {
       this.glossAnnoType = this.dataMgr.termInfo.idByTerm_ParentLabel["glossary-commentarytype"];// warning!! term dependency
     }
+    this.regai = /a([\{\}\*\[\]\(\)◈◊]*)ʔi/g;
+    this.airepl = 'a$1ï'
+    this.regau = /a([\{\}\*\[\]\(\)◈◊]*)ʔu/g;
+    this.aurepl = 'a$1ü';
+
     this.propMgr = new MANAGERS.PropertyManager(propMgrCfg);
     this.displayProperties = this.propMgr.displayProperties;
     this.splitterDiv.unbind('focusin').bind('focusin',this.layoutMgr.focusHandler);
@@ -550,7 +555,7 @@ EDITORS.WordlistVE.prototype = {
             }
           }
           if (lemma.value) {
-            val = lemma.value.replace(/ʔ/g,'');
+            val = lemma.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'');
             if (this.lemLookup[val]) {
               if (this.lemLookup[val].indexOf(lemma.id) == -1) {
                 this.lemLookup[val].push(lemma.id);
@@ -759,7 +764,7 @@ EDITORS.WordlistVE.prototype = {
     var word = this.dataMgr.getEntityFromGID(wordTag), wordHTML = "";
     if (word && word.value) {
       wordHTML = '<div class="wordlistentry"><span class="word '+word.tag+(word.edn?' '+word.edn:"") +'" srch="'+
-                      word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                      word.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'')+'">' +
                       (!word.transcr?'MISSING':word.transcr.replace(/ʔ/g,'').replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨')) +
                       ' <span class= "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span></span></div>';
     }
@@ -803,7 +808,7 @@ EDITORS.WordlistVE.prototype = {
       //output lemma header with gloss and POS
       if (lemma && lemma.value) {
         lemmaAnno = '';
-        displayValue = lemma.value.replace(/ʔ/g,'');//.replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨');
+        displayValue = lemma.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'');//.replace(/\(\*/g,'(').replace(/⟨\*/g,'⟨');
         if (lemma.linkedAnoIDsByType && lemma.linkedAnoIDsByType[this.glossAnnoType]) { //has a glossary annotation
           lemmaAnnoTag = "ano"+lemma.linkedAnoIDsByType[this.glossAnnoType][0];
           temp = this.dataMgr.getEntityFromGID(lemmaAnnoTag);
@@ -998,7 +1003,7 @@ EDITORS.WordlistVE.prototype = {
               ordWordForms = wordOrd.map(function(sortCode) { return wordsBySort[sortCode];});
               if (ordWordForms.length > 0) {
                 for (j=0; j<ordWordForms.length; j++) {
-                  html += (j>0?', ':' ') + ordWordForms[j].replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'');
+                  html += (j>0?', ':' ') + ordWordForms[j].replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'');
                 }
               }
               html += '</span>';
@@ -1026,9 +1031,9 @@ EDITORS.WordlistVE.prototype = {
                   }
                   if (word && word.value && word.transcr && word.locTag) {
                     htmlUncertain += '<span class="linkedword uncertain '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
-                            word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                            word.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'')+'">' +
                             (j>0?', ':' ') + '<span class = "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span>'  +
-                            ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                            ' ' + word.transcr.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'') +
                             (wordAnno?' ('+wordAnno+')':"") + '</span>';
                   } else {
                     DEBUG.log('err',"Generating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
@@ -1061,9 +1066,9 @@ EDITORS.WordlistVE.prototype = {
                   }
                   if (word && word.value && word.transcr && word.locTag) {
                     html += '<span class="linkedword'+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +
-                            '" srch="'+word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                            '" srch="'+word.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'')+'">' +
                             ((k>0 || j>0)?', ':' ') + '<span class = "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span>' +
-                            ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                            ' ' + word.transcr.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'') +
                             (wordAnno?' ('+wordAnno+')':"") + '</span>';
                   } else {
                     DEBUG.log('err',"Genreating html for inflection found incomplete word data "+word.tag?word.tag+" ":""+
@@ -1093,9 +1098,9 @@ EDITORS.WordlistVE.prototype = {
                 }
                 if (word && word.value && word.transcr && word.locTag) {
                   html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
-                          word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                          word.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'')+'">' +
                           (k>0?', ':' ') + '<span class = "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span>'  +
-                          ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                          ' ' + word.transcr.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'') +
                           (wordAnno?' ('+wordAnno+')':"") + '</span>';
                 } else {
                   DEBUG.log('err',"Generating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
@@ -1139,9 +1144,9 @@ EDITORS.WordlistVE.prototype = {
               }
               if (word && word.value && word.transcr && word.locTag) {
                 html += '<span class="linkedword '+(word.tag?' '+word.tag:"")+(word.edn?' '+word.edn:"") +'" srch="'+
-                        word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
+                        word.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'')+'">' +
                         (j?', ':' ') + '<span class = "wordloclabel' + (word.edn?" edndraghandle":"") +'">'+word.locTag+'</span>' +
-                        ' ' + word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                        ' ' + word.transcr.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'') +
                         (wordAnno?' ('+wordAnno+')':"") + '</span>';
               } else if (word){
                 DEBUG.log('err',"Genreating html for uninflected word found incomplete word data "+word.tag?word.tag+" ":""+
@@ -1174,7 +1179,7 @@ EDITORS.WordlistVE.prototype = {
       this.lemLookup[lemma.compAnalysis] = [lemma.id];
     }
     if (lemma.value) {
-      val = lemma.value.replace(/ʔ/g,'');
+      val = lemma.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'');
       if (this.lemLookup[val]) {
         if (this.lemLookup[val].indexOf(lemma.id) == -1) {
           this.lemLookup[val].push(lemma.id);
@@ -1711,8 +1716,8 @@ EDITORS.WordlistVE.prototype = {
       word = entities[i];
       if (word && word.tag && word.value && word.transcr && word.locTag) {
         html += '<div class="wordlistentry"><span class="word '+word.tag+'" srch="'+
-                word.value.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'')+'">' +
-                word.transcr.replace(/aʔi/g,'aï').replace(/aʔu/g,'aü').replace(/ʔ/g,'') +
+                word.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'')+'">' +
+                word.transcr.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g,'') +
                 ' ' + word.locTag + '</span></div>';
       } else {
         DEBUG.log('err',"Genreating html for wordlist found incomplete word data "+word.tag+

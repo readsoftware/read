@@ -131,7 +131,7 @@ if (!$data) {
 if (count($errors) == 0) {
   $lemmaAnnoIDs = $lemma->getAnnotationIDs();
   $lemmaAnnotations = $lemma->getAnnotations(true);
-  if ($lemmaAnnotations && $lemmaAnnotations->getCount()) {
+  if ($lemmaAnnoIDs && count($lemmaAnnoIDs) > 0 && $lemmaAnnotations && $lemmaAnnotations->getCount()) {
     foreach ($lemmaAnnotations as $annotation) {
       if (!$annotation->isReadonly()) {
         $annotation->markForDelete();
@@ -141,7 +141,7 @@ if (count($errors) == 0) {
       }
     }
   }
-  if (count($lemmaAnnoIDs)) {
+  if (is_array($lemmaAnnoIDs) && count($lemmaAnnoIDs) > 0) {
     array_push($warnings,"readonly annotaions found for lemma id $lemID : ".join(',',$lemmaAnnoIDs));
   }
   addUpdateEntityReturnData('lem',$lemID,'annotationIDs',$lemmaAnnoIDs);
@@ -152,15 +152,17 @@ if (count($errors) == 0) {
     foreach ($tagAnnotations as $annotation) {
       if (!$annotation->isReadonly()) {
         $tagLinkToIDs = $annotation->getLinkToIDs();
-        $index = array_search($lemGID,$tagLinkToIDs);
-        array_splice($tagLinkToIDs,$index,1);
-        if (count($tagLinkToIDs)) {
-          $annotation->setLinkToIDs($tagLinkToIDs);
-          $annotation->save();
-          addUpdateEntityReturnData('ano',$annotation->getID(),'linkedToIDs',$tagLinkToIDs);
-        }else{
-          $annotation->markForDelete();
-          addRemoveEntityReturnData('ano',$annotation->getID());
+        if ($tagLinkToIDs && count($tagLinkToIDs) > 0) {
+          $index = array_search($lemGID,$tagLinkToIDs);
+          array_splice($tagLinkToIDs,$index,1);
+          if ($tagLinkToIDs and count($tagLinkToIDs)) {
+            $annotation->setLinkToIDs($tagLinkToIDs);
+            $annotation->save();
+            addUpdateEntityReturnData('ano',$annotation->getID(),'linkedToIDs',$tagLinkToIDs);
+          }else{
+            $annotation->markForDelete();
+            addRemoveEntityReturnData('ano',$annotation->getID());
+          }
         }
       } else {
         array_push($warnings,"readonly tag annotaion".$annotation->getID()." found for lemma id $lemID ");
@@ -202,19 +204,23 @@ if (count($errors) == 0) {
       if (!$annotation->isReadonly()) {
         $anoID = $annotation->getID();
         $linkToGIDs = $annotation->getLinkToIDs();
-        $index = array_search($lemGID,$linkToGIDs);
-        if ($index !== false) {
-          array_splice($linkToGIDs,$index,1);
-          $updateLinkFromRelatedLinks = true;
-        } else {
-          $updateLinkFromRelatedLinks = false;
+        if ($linkToGIDs && count($linkToGIDs) > 0) {
+          $index = array_search($lemGID,$linkToGIDs);
+          if ($index !== false) {
+            array_splice($linkToGIDs,$index,1);
+            $updateLinkFromRelatedLinks = true;
+          } else {
+            $updateLinkFromRelatedLinks = false;
+          }
         }
         $linkFromGIDs = $annotation->getLinkFromIDs();
-        $index = array_search($lemGID,$linkFromGIDs);
-        if ($index !== false) {
-          array_splice($linkFromGIDs,$index,1);
+        if ($linkFromGIDs && count($linkFromGIDs) > 0) {
+          $index = array_search($lemGID,$linkFromGIDs);
+          if ($index !== false) {
+            array_splice($linkFromGIDs,$index,1);
+          }
         }
-        if (count($linkToGIDs) and count($linkFromGIDs)) {
+        if ($linkToGIDs and count($linkToGIDs) and $linkFromGIDs and count($linkFromGIDs)) {
           $annotation->setLinkToIDs($linkToGIDs);
           $annotation->setLinkFromIDs($linkFromGIDs);
           $annotation->save();
@@ -229,12 +235,14 @@ if (count($errors) == 0) {
             $subLemma = new Lemma(substr($linkFromGID,4));
             if (!$subLemma->hasError()) {
               $lemAnnoIDs = $subLemma->getAnnotationIDs();
-              $index = array_search($anoID,$lemAnnoIDs);
-              if ($index !== false) {
-                array_splice($lemAnnoIDs,$index,1);
-                $subLemma->setAnnotationIDs($lemAnnoIDs);
-                addUpdateEntityReturnData('lem',$subLemma->getID(),'annotationIDs',$subLemma->getAnnotationIDs());
-                $subLemma->save();
+              if ($lemAnnoIDs && count($lemAnnoIDs) > 0) {
+                $index = array_search($anoID,$lemAnnoIDs);
+                if ($index !== false) {
+                  array_splice($lemAnnoIDs,$index,1);
+                  $subLemma->setAnnotationIDs($lemAnnoIDs);
+                  addUpdateEntityReturnData('lem',$subLemma->getID(),'annotationIDs',$subLemma->getAnnotationIDs());
+                  $subLemma->save();
+                }
               }
               addUpdateEntityReturnData('lem',$subLemma->getID(),'relatedEntGIDsByType',$subLemma->getRelatedEntitiesByLinkType());
             }
