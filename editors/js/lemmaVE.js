@@ -112,6 +112,11 @@ EDITORS.LemmaVE.prototype = {
         }
       }
     });
+    this.regai = /a([\{\}\*\[\]\(\)◈◊]*)ʔi/g;
+    this.airepl = 'a$1ï'
+    this.regau = /a([\{\}\*\[\]\(\)◈◊]*)ʔu/g;
+    this.aurepl = 'a$1ü';
+
     DEBUG.traceExit("init", "init lemma editor");
   },
 
@@ -126,8 +131,8 @@ EDITORS.LemmaVE.prototype = {
   setEntity: function (gid) {
     DEBUG.traceEntry("setEntity");
     if (gid) {
-      var tag = gid.replace(":", "");
-      prefix = tag.substring(0, 3),
+      var tag = gid.replace(":", ""),
+        prefix = tag.substring(0, 3),
         id = tag.substring(3);
       this.showLemma(prefix, id);
     } else {
@@ -231,45 +236,48 @@ EDITORS.LemmaVE.prototype = {
 
   createValueUI: function () {
     var lemmaVE = this,
-      value = this.isLemma ? this.entity.value.replace(/aʔi/g, 'aï').replace(/aʔu/g, 'aü').replace(/ʔ/g, '') : this.entity.transcr.replace(/aʔi/g, 'aï').replace(/aʔu/g, 'aü').replace(/ʔ/g, '');
+//      regai = /a([\{\}\*\[\]\(\)◈◊]*)ʔi/g,
+//      regau = /a([\{\}\*\[\]\(\)◈◊]*)ʔu/g,
+      value = this.isLemma ? this.entity.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g, '') : 
+                             this.entity.transcr.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g, '');
     DEBUG.traceEntry("createValueUI");
     //create UI container
-    this.valueUI = $('<div class="valueUI"></div>');
-    this.editDiv.append(this.valueUI);
+    lemmaVE.valueUI = $('<div class="valueUI"></div>');
+    lemmaVE.editDiv.append(lemmaVE.valueUI);
     //create label with navigation
-    this.valueUI.append($('<div class="propDisplayUI">' +
+    lemmaVE.valueUI.append($('<div class="propDisplayUI">' +
       '<div class="propFlipNavDiv propDisplayElement"><div class="med-flip lemmaNavButton"><span/></div></div>' +
       '<div class="valueLabelDiv propDisplayElement">' + value + '</div>' +
       '<div class="lemmaNavDiv propDisplayElement"><div class="med-prevword lemmaNavButton"><span/></div><div class="med-nextword lemmaNavButton"><span/></div></div>' +
       '</div>'));
     //create input with save button
-    this.valueUI.append($('<div class="propEditUI">' +
+    lemmaVE.valueUI.append($('<div class="propEditUI">' +
       '<div class="valueInputDiv propEditElement"><input class="valueInput" value="' + value + '"/></div>' +
       '<button class="saveDiv propEditElement">Save</button>' +
       '</div>'));
     //attach event handlers
     //click to edit
-    $('div.valueLabelDiv', this.valueUI).unbind("click").bind("click", function (e) {
+    $('div.valueLabelDiv', lemmaVE.valueUI).unbind("click").bind("click", function (e) {
       $('div.edit', lemmaVE.editDiv).removeClass("edit");
       lemmaVE.valueUI.addClass("edit");
-      $('div.valueInputDiv input', this.valueUI).focus();
-      //        $('div.valueInputDiv input',this.valueUI).select();
+      $('div.valueInputDiv input', lemmaVE.valueUI).focus();
+      //        $('div.valueInputDiv input',lemmaVE.valueUI).select();
       e.stopImmediatePropagation();
       return false;
     });
-    $('div.valueInputDiv input', this.valueUI).unbind("click").bind("click", function (e) {
+    $('div.valueInputDiv input', lemmaVE.valueUI).unbind("click").bind("click", function (e) {
       e.stopImmediatePropagation();
       return false;
     });
     //blur to cancel
-    $('div.valueInputDiv input', this.valueUI).unbind("blur").bind("blur", function (e) {
-      if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-        !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
+    $('div.valueInputDiv input', lemmaVE.valueUI).unbind("blur").bind("blur", function (e) {
+      if (!$(e.originalEvent.relatedTarget).hasClass('saveDiv') &&
+        !$(e.originalEvent.relatedTarget).parent().hasClass('saveDiv')) {//all but save button
         lemmaVE.valueUI.removeClass("edit");
       }
     });
     //mark dirty on input
-    $('div.valueInputDiv input', this.valueUI).unbind("input").bind("input", function (e) {
+    $('div.valueInputDiv input', lemmaVE.valueUI).unbind("input").bind("input", function (e) {
       var curInput = $(this).val(), btnText = $('.saveDiv', lemmaVE.valueUI).html();
       if ($('div.valueLabelDiv', lemmaVE.valueUI).html() != $(this).val()) {
         if (!$(this).parent().parent().hasClass("dirty")) {
@@ -285,7 +293,7 @@ EDITORS.LemmaVE.prototype = {
       }
     });
     //flip prop display
-    $('.med-flip', this.valueUI).unbind("click").bind("click", function (e) {
+    $('.med-flip', lemmaVE.valueUI).unbind("click").bind("click", function (e) {
       if (lemmaVE.propMgr && lemmaVE.propMgr.showVE) {
         lemmaVE.propMgr.showVE("tabPropVE", lemmaVE.propMgr.currentVE.tag);
       }
@@ -293,7 +301,7 @@ EDITORS.LemmaVE.prototype = {
       return false;
     });
     //previous lemma
-    $('.med-prevword', this.valueUI).unbind("click").bind("click", function (e) {
+    $('.med-prevword', lemmaVE.valueUI).unbind("click").bind("click", function (e) {
       if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.prevWord) {
         lemmaVE.wordlistVE.prevWord();
       }
@@ -301,7 +309,7 @@ EDITORS.LemmaVE.prototype = {
       return false;
     });
     //next lemma
-    $('.med-nextword', this.valueUI).unbind("click").bind("click", function (e) {
+    $('.med-nextword', lemmaVE.valueUI).unbind("click").bind("click", function (e) {
       if (lemmaVE.wordlistVE && lemmaVE.wordlistVE.nextWord) {
         lemmaVE.wordlistVE.nextWord();
       }
@@ -309,7 +317,7 @@ EDITORS.LemmaVE.prototype = {
       return false;
     });
     //save data
-    $('.saveDiv', this.valueUI).unbind("click").bind("click", function (e) {
+    $('.saveDiv', lemmaVE.valueUI).unbind("click").bind("click", function (e) {
       var lemProp = {}, isSave = ($(this).html() == 'Save'),
         origText = $('div.valueLabelDiv', lemmaVE.valueUI).html();
       if (isSave) {
@@ -745,7 +753,7 @@ EDITORS.LemmaVE.prototype = {
   createCompoundAnalysisUI: function () {
     var lemmaVE = this,
       value = (this.entity.compAnalysis ? this.entity.compAnalysis : "Compound Analysis"),
-      editValue = (this.entity.compAnalysis ? this.entity.compAnalysis : this.entity.value.replace(/aʔi/g, 'aï').replace(/aʔu/g, 'aü').replace(/ʔ/g, ''));
+      editValue = (this.entity.compAnalysis ? this.entity.compAnalysis : this.entity.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g, ''));
     DEBUG.traceEntry("createCompoundAnalysisUI");
     //create UI container
     this.compUI = $('<div class="compUI"></div>');
@@ -2336,7 +2344,7 @@ EDITORS.LemmaVE.prototype = {
         attestedEntry = $('<div class="attestedentry">' +
           '<span class="attestedformloc ' + attested.tag + '">' + (attested.locTag ? attested.locTag : "$nbsp;") + '</span>' +
           '<span class="attestedform ' + attested.tag + '">' +
-          attested.transcr.replace(/aʔi/g, 'aï').replace(/aʔu/g, 'aü').replace(/ʔ/g, '') + '</span>' +
+          attested.transcr.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g, '') + '</span>' +
           (infVal ? '<span class="inflection ' + attested.tag + '">' + infVal + '</span>' : '') +
           '<span class="attestedui ' + attested.tag + '">' +
           '<span class="attestedannoui"><span class="attestedannobtn ' + attested.tag + '"' + ' title="' + attestedAnno + '"' + '>' +

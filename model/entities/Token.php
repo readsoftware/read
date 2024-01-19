@@ -227,34 +227,30 @@
         $transcription = "";
         $tcms = "";
         $typeVowel = Entity::getIDofTermParentLabel("vowel-graphemetype");//term dependency
-        $sort = $sort2 = "0.";
+        $sort = $sort2 = "";
         $i = 0;
         $last = $graphemes->getCount() - 1;
-        $vowelCarrier = false;
+//        $vowelCarrier = false;
         foreach ($graphemes as $grapheme){
           $decomp = $grapheme->getDecomposition();
           if (!$grapheme->getSortCode()){
             $grapheme->calculateSort();
           }
           $graSort = $grapheme->getSortCode();
-          if ($decomp && ($i === 0 || $i == $last) ) {// handle sandhi vowels
+          if ($decomp && ($i === 0) ) {// handle sandhi vowels for second word
             $sandhi = explode(":",$decomp);
             $str = $i?$sandhi[0]:$sandhi[2];
-//            $str = $i?$sandhi[0]:"ʔ".$sandhi[1];
             $sort .= ($i?"19":"19").substr($graSort,0,2);//ensure that vowel sandhi sorts like token starting with a vowel by faking a vowel carrier.
             $sort2 .= ($i?"5":"5").substr($graSort,2,1);
-          }else{
-//            if($i===0 || $i === 1 && $vowelCarrier){
-              $str = $grapheme->getValue();// be sure to get uppercase if it exist
-//            } else {
-//              $str = $grapheme->getGrapheme();
+          } else {
+            $str = $grapheme->getValue();// be sure to get uppercase if it exist
+//            if($i===0 && $str == "ʔ"){
+//              $vowelCarrier = true;
 //            }
-            if($i===0 && $str == "ʔ"){
-              $vowelCarrier = true;
-            }
             if ($grapheme->getType()==$typeVowel && $i == 0) {
               $sort .= "19";
               $sort2 .= "5";
+              error_log("token id: $this->_id has no decomp and beginning vowel and no carrier");
             }
             $sort .= substr($graSort,0,2);
             $sort2 .= substr($graSort,2,1);
@@ -273,12 +269,14 @@
           $transcription .= getTCMTransitionBrackets($tcms,"");
         }
       }
-      if(isset($sort)) {
-        $this->setSortCode($sort);
+      if ($sort != "" && strlen($sort) > 0){
+        $sort = "0.".$sort;
       }
-      if(isset($sort2)) {
-        $this->setSortCode2($sort2);
+      if ($sort2 != "" && strlen($sort2) > 0){
+        $sort2 = "0.".$sort2;
       }
+      $this->setSortCode($sort);
+      $this->setSortCode2($sort2);
       $this->setToken($value);
       $this->setTranscription($transcription);
     }
@@ -292,7 +290,7 @@
       $graphemes = $this->getGraphemes(true);
       if (@$graphemes){
         $typeVowel = Entity::getIDofTermParentLabel("vowel-graphemetype");//term dependency
-        $sort = $sort2 = "0.";
+        $sort = $sort2 = "";
         $i = 0;
         $last = $graphemes->getCount() - 1;
         foreach ($graphemes as $grapheme){
@@ -301,11 +299,11 @@
             $grapheme->calculateSort();
           }
           $graSort = $grapheme->getSortCode();
-          if ($decomp && ($i === 0 || $i == $last) && $grapheme->getType()==$typeVowel) {// handle sandhi vowels
+          if ($decomp && ($i === 0 ) && $grapheme->getType()==$typeVowel) {// handle sandhi vowels
             $sort .= ($i?"19":"19").substr($graSort,0,2);
             $sort2 .= ($i?"5":"5").substr($graSort,2,1);
           }else{
-            if ($grapheme->getType()==$typeVowel && $i == 0) {
+            if ($grapheme->getType()==$typeVowel && $i == 0) { //first grapheme is vowel so prepend vowel carrier
               $sort .= "19";
               $sort2 .= "5";
             }
@@ -313,6 +311,12 @@
             $sort2 .= substr($graSort,2,1);
           }
           $i++;
+        }
+        if ($sort != "" && strlen($sort) > 0){
+          $sort = "0.".$sort;
+        }
+        if ($sort2 != "" && strlen($sort2) > 0){
+          $sort2 = "0.".$sort2;
         }
         $this->setSortCode($sort);
         $this->setSortCode2($sort2);

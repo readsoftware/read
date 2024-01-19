@@ -78,8 +78,8 @@ $graphemeCharacterMap = array(
 "×"=>array("srt"=>"801","ssrt"=>"801","typ"=>"P"),
 "∈"=>array("srt"=>"830","ssrt"=>"830","typ"=>"P"),
 "⌇"=>array("srt"=>"880","ssrt"=>"880","typ"=>"P"),
-"◊"=>array("srt"=>"885","ssrt"=>"885","typ"=>"I"),
-"◈"=>array("srt"=>"885","ssrt"=>"885","typ"=>"I"),//bark obstruction =>space
+"◊"=>array("srt"=>"","ssrt"=>"","typ"=>"I"),
+"◈"=>array("srt"=>"","ssrt"=>"","typ"=>"I"),//bark obstruction =>space
 "○"=>array("srt"=>"820","ssrt"=>"820","typ"=>"P"),
 "⊗"=>array("srt"=>"822","ssrt"=>"822","typ"=>"P"),
 "◎"=>array("srt"=>"823","ssrt"=>"823","typ"=>"P"),
@@ -343,7 +343,7 @@ $graphemeCharacterMap = array(
 "ṣ"=>array(
     "̂"=>array("srt"=>"619","ssrt"=>"619","typ"=>"C"),
     "̈"=>array("srt"=>"614","ssrt"=>"614","typ"=>"C"),
-    "̄"=>array(        
+    "̄"=>array(
         "̱"=>array("srt"=>"613","ssrt"=>"613","typ"=>"C"),
         "srt"=>"612","ssrt"=>"612","typ"=>"C"),
     "̱"=>array(

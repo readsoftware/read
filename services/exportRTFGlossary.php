@@ -138,6 +138,10 @@
     //Get glossary Lemmas
     if ($lemmas->getCount() > 0) {
       $lemIDs = array();
+      // tranforms for attest form value
+      //$pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/","/◈/","/◯/");
+      $pattern = array("/a([\{\}\*\[\]\(\)◈◊]*)ʔi/","/a([\{\}\*\[\]\(\)◈◊]*)ʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/","/◈/","/◯/");
+      $replacement = array("a$1ï","a$1ü","","","","","","","");
       //iterate through the lemmas
       foreach($lemmas as $lemma) {
         if ($lemma->isMarkedDelete()) {
@@ -148,12 +152,13 @@
         $hasAttestations = false;
         $lemGID = $lemma->getGlobalID();
         $lemTag = 'lem'.$lemma->getID();
+//        if ($lemma->getID() == 476) error_log($lemTag);
         //output homograph order if exist
         if ($lemmaOrder = $lemma->getHomographicOrder()) {
           $rtf .= $homStyle.$lemmaOrder.$endStyle.$eol;
         }
         //output lemma value
-        $lemmaValue = utf8ToRtf(preg_replace('/ʔ/','',$lemma->getValue()));
+        $lemmaValue = utf8ToRtf(preg_replace($pattern,$replacement,$lemma->getValue()));
         $rtf .= $lemStyle.$lemmaValue.$endStyle.$eol;
         $lemmaPosID = $lemma->getPartOfSpeech();
         $lemmaPos = null;
@@ -213,9 +218,6 @@
             }
           }
         }
-        // tranforms for attest form value
-        $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/","/◈/","/◯/");
-        $replacement = array("aï","aü","","","","","","","");
 
         // Start calculation for displaying morphology and attested forms for this lemma
         $lemmaComponents = $lemma->getComponents(true);
@@ -386,6 +388,7 @@
                   $node[$sc]['value'][$value]['loc'][$loc] = 1;
                 }
               }
+              //if ($lemma->getID() == 476) error_log("nodeinfo:\n".print_r($node,true));
             } else { //un-inflected inflectible form
               if ($useTranscription) {
                 $value = $lemmaComponent->getTranscription();
@@ -511,7 +514,8 @@
                   $inflectionHeaderRTF = "unclear: ";
                 }
                 $rtf .= $inflectionHeaderRTF.$endStyle;
-                ksort($nodePtr);
+                //sort by form's sort code
+                ksort($nodePtr, SORT_STRING);
                 $isFirstNode = true;
                 foreach ($nodePtr as $sc => $formInfo) {
                   if ($isFirstNode) {
@@ -594,7 +598,7 @@
             }
           } else { //uninflectibles
             $nodePtr = $uncertainBranchNode;
-            ksort($nodePtr);
+            ksort($nodePtr, SORT_STRING);
             $isFirstNode = true;
             foreach ($nodePtr as $sc => $formInfo) {
               if ($isFirstNode) {
@@ -602,45 +606,68 @@
               } else {
                 $rtf .= ", ";
               }
-              $isFirstForm = true;
               if (! array_key_exists('value',$formInfo)) {
                 error_log(print_r($formInfo));
+                continue;
               }
+              $locSortedForms = array();
               foreach ($formInfo['value'] as $formTranscr => $locInfo) {
-                if ($isFirstForm) {
-                  $isFirstForm = false;
-                } else {
-                  $rtf .= ", ";
-                }
-                $rtf .= $attestedStyle.$formTranscr.$endStyle;
-                $sortedLocs = array_keys($locInfo['loc']);
+                $locs = $locInfo['loc'];
+                $sortedLocs = array_keys($locs);
                 usort($sortedLocs,"compareWordLocations");
-                $isFirstLoc = true;
-                foreach ($sortedLocs as $formLoc) {
-                  $cntLoc = $locInfo['loc'][$formLoc];
-                  if ($isFirstLoc) {
-                    $rtf .= $space.$eol.$linRefStyle;
-                    $isFirstLoc = false;
-                  } else {
-                    $rtf .= ", ";
-                  }
-                  //remove internal ordinal
-                  $locParts = explode(":",$formLoc);
-                  if ($locParts && count($locParts) == 3) {
-                    if (strpos(trim($locParts[0]),"sort") === 0) {
-                      $formLoc = $locParts[2];
-                    } else {
-                      $formLoc = $locParts[0].$locParts[2];
-                    }
-                  } else if ($locParts && count($locParts) == 2) {
-                    $formLoc = $locParts[1];
-                  }
-                  if (strpos($formLoc,"–")) {//replace en dash with \'96
-                    $formLoc = preg_replace("/–/","\\\'96",$formLoc);
-                  }
-                  $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
+                $srtKey = "".substr($sortedLocs[0],0,3);
+                if (! array_key_exists($srtKey,$locSortedForms)) {
+                  $locSortedForms[$srtKey] = array(
+                                               array('value'=>
+                                                 array($formTranscr =>
+                                                   array('srtloc'=>$sortedLocs,
+                                                         'loc'=>$locs))));
+                } else {  
+                  array_push($locSortedForms[$srtKey], array('value'=>
+                                                         array($formTranscr =>
+                                                           array('srtloc'=>$sortedLocs,
+                                                                 'loc'=>$locs))));
                 }
-                $rtf .= $endStyle.$eol;
+              }
+              $isFirstForm = true;
+              ksort($locSortedForms);
+              foreach($locSortedForms as $srtKey => $formInfos) {
+                foreach( $formInfos as $formInfo) {
+                  foreach ($formInfo['value'] as $formTranscr => $srtLocInfo) {
+                    if ($isFirstForm) {
+                      $isFirstForm = false;
+                    } else {
+                      $rtf .= ", ";
+                    }
+                    $rtf .= $attestedStyle.$formTranscr.$endStyle;
+                    $isFirstLoc = true;
+                    foreach ($srtLocInfo['srtloc'] as $formLoc) {
+                      $cntLoc = 1;//$srtLocInfo['loc'][$formLoc];
+                      if ($isFirstLoc) {
+                        $rtf .= $space.$eol.$linRefStyle;
+                        $isFirstLoc = false;
+                      } else {
+                        $rtf .= ", ";
+                      }
+                      //remove internal ordinal
+                      $locParts = explode(":",$formLoc);
+                      if ($locParts && count($locParts) == 3) {
+                        if (strpos(trim($locParts[0]),"sort") === 0) {
+                          $formLoc = $locParts[2];
+                        } else {
+                          $formLoc = $locParts[0].$locParts[2];
+                        }
+                      } else if ($locParts && count($locParts) == 2) {
+                        $formLoc = $locParts[1];
+                      }
+                      if (strpos($formLoc,"–")) {//replace en dash with \'96
+                        $formLoc = preg_replace("/–/","\\\'96",$formLoc);
+                      }
+                      $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
+                    }
+                    $rtf .= $endStyle.$eol;
+                  }
+                }
               }
             }
           }

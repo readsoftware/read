@@ -57,7 +57,7 @@
   */
   define('ISSERVICE',1);
   ini_set("zlib.output_compression_level", 5);
-  ob_start('');
+  ob_start();
 
   header("Content-type: text/javascript");
   header('Cache-Control: no-cache');
@@ -313,8 +313,8 @@
         } else {
           $adjSlcGraphemes = $refSyllable->getGraphemes(true);
           $refSlcGraIDs = $refSyllable->getGraphemeIDs();
-          $indexTCM = ($insPos == 'before' ? 0 : count($adjSlcGraphemes)-1);
-          $prevTCM = $adjSlcGraphemes->searchKey($refSlcGraIDs[$indexTCM])->getTextCriticalMark();
+          $indexTCM = ($insPos == 'before' ? 0 : (!is_null($adjSlcGraphemes)? $adjSlcGraphemes->getCount()-1:null));
+          $prevTCM = (!is_null($indexTCM)?$adjSlcGraphemes->searchKey($refSlcGraIDs[$indexTCM])->getTextCriticalMark():null);
         }
         //create new graphemes
         foreach ($parsedGraData as $graData) {

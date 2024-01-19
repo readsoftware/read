@@ -1529,6 +1529,7 @@ INSERT INTO term ("trm_id", "trm_labels","trm_parent_id","trm_type_id","trm_list
 (1568,'en=>"7"',1561,778,NULL,NULL,'c67',NULL,NULL,NULL,1,'{2}'),
 (1569,'en=>"8"',1561,778,NULL,NULL,'c68',NULL,NULL,NULL,1,'{2}'),
 (1570,'en=>"9"',1561,778,NULL,NULL,'c69',NULL,NULL,NULL,1,'{2}'),
-(1571,'en=>"0"',1561,778,NULL,NULL,'c60',NULL,NULL,NULL,1,'{2}');
+(1571,'en=>"0"',1561,778,NULL,NULL,'c60',NULL,NULL,NULL,1,'{2}'),
+(1572,'en=>"Glyph"',2,778,NULL,NULL,NULL,NULL,NULL,NULL,1,'{2}');
 
-ALTER SEQUENCE term_trm_id_seq RESTART WITH 1572;
+ALTER SEQUENCE term_trm_id_seq RESTART WITH 1573;
