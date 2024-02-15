@@ -509,12 +509,12 @@
                   //add html element string
                   $inflectionHeaderRTF .= $inflCatVal." ";
                 }
-                //if no inflection header then we must be unclear values
+                //if no inflection header then we must have unclear values
                 if ($inflectionHeaderRTF == '') {
                   $inflectionHeaderRTF = "unclear: ";
                 }
                 $rtf .= $inflectionHeaderRTF.$endStyle;
-                //sort by form's sort code
+                //sort by the attested form's sort code string
                 ksort($nodePtr, SORT_STRING);
                 $isFirstNode = true;
                 foreach ($nodePtr as $sc => $formInfo) {
@@ -523,61 +523,89 @@
                   } else {
                     $rtf .= ", ";
                   }
-                  $isFirstForm = true;
+                  if (! array_key_exists('value',$formInfo)) {
+                    error_log(print_r($formInfo));
+                    continue;
+                  }
+                  $locSortedForms = array();
+                  //for every diplomatic transciption unique form place locations
+                  // into an array and sort, then extract first loacation as key
                   foreach ($formInfo['value'] as $formTranscr => $locInfo) {
-                    if ($isFirstForm) {
-                      $isFirstForm = false;
-                    } else {
-                      $rtf .= ", ";
-                    }
-                    $rtf .= $attestedStyle.$formTranscr.$endStyle;
-                    $sortedLocs = array_keys($locInfo['loc']);
+                    $locs = $locInfo['loc'];
+                    $sortedLocs = array_keys($locs);
                     usort($sortedLocs,"compareWordLocations");
-                    $isFirstLoc = true;
-                    foreach ($sortedLocs as $formLoc) {
-                      $cntLoc = $locInfo['loc'][$formLoc];
-                      if ($isFirstLoc) {
-                        $rtf .= $space.$eol.$linRefStyle;
-                        $isFirstLoc = false;
-                      } else {
-                        $rtf .= ", ";
-                      }
-                      //remove internal ordinal
-                      $locParts = explode(":",$formLoc);
-                      if ($locParts && count($locParts) == 3) {
-                        if (strpos(trim($locParts[0]),"sort") === 0) {
-                          $formLoc = $locParts[2];
-                        } else {
-                          $formLoc = $locParts[0].$locParts[2];
-                        }
-                      } else if ($locParts && count($locParts) == 2) {
-                        $formLoc = $locParts[1];
-                      }
-                      if (strpos($formLoc,"–")) {//replace en dash with \'96
-                        $formLoc = preg_replace("/–/","\\\'96",$formLoc);
-                      }
-                      $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
-/*
-                      //remove internal ordinal
-                      $locParts = explode(":",$formLoc);
-                      if (count($locParts) == 3) {
-                        if (strpos($locParts[0],"sort") === 0) {//special sort tagging
-                          $formLoc = $locParts[2];
-                        } else {//if label separator is defined then prepend text label
-                          $formLoc = ($sepLabel !== null?$locParts[0].$sepLabel:'').$locParts[2];
-                        }
-                      } else if (count($locParts) == 2) {
-                        $formLoc = $locParts[1];
-                      }
-                      if ($isFirstLoc) {
-                        $isFirstLoc = false;
-                        $attestedHtml .= "<span class=\"attestedformloc\">".html_entity_decode($formLoc).($cntLoc>1?" [".$cntLoc."×]":"");
-                      } else {
-                        $attestedHtml .= ",</span><span class=\"attestedformloc\">".html_entity_decode($formLoc).($cntLoc>1?" [".$cntLoc."×]":"");
-                      }
-*/
+                    //grab the lowest location code as a key
+                    //$srtKey = "".$sortedLocs[0];
+                    $srtKey = "".explode(":",$sortedLocs[0])[1];
+                    if (strpos($srtKey,"–")) {
+                      $srtKey = "".explode("–",$srtKey)[0];
                     }
-                    $rtf .= $endStyle.$eol;
+                    if (strpos($srtKey,"-")) {
+                      $srtKey = "".explode("-",$srtKey)[0];
+                    }
+                    //add attested form to keyed array
+                    if (strlen($srtKey)) {
+                      if (!array_key_exists($srtKey,$locSortedForms)) {
+                        $locSortedForms[$srtKey] =
+                                array(
+                                  array('value'=>
+                                    array($formTranscr =>
+                                      array('srtloc'=>$sortedLocs,
+                                            'loc'=>$locs))));
+                      } else {
+                        array_push($locSortedForms[$srtKey],
+                                array('value'=>
+                                  array($formTranscr =>
+                                    array('srtloc'=>$sortedLocs,
+                                          'loc'=>$locs))));
+                      }
+                    }
+                  }
+                  $isFirstForm = true;
+                  //key sort so lowest location form is first
+                  ksort($locSortedForms, SORT_NUMERIC);
+                  //output the forms in asc first location order
+                  foreach($locSortedForms as $srtKey => $formInfos) {
+                    //may have to sort similar diplomatic forms that are on the same line
+                    //$formTrans = array_keys($formInfos['values']);
+                    //arsort($formTrans,SORT_STRING);
+                    //foreach ($formTrans as $formTranscr) {
+                    foreach( $formInfos as $formInfo) {
+                      foreach ($formInfo['value'] as $formTranscr => $srtLocInfo) {
+                        if ($isFirstForm) {
+                          $isFirstForm = false;
+                        } else {
+                          $rtf .= ", ";
+                        }
+                        $rtf .= $attestedStyle.$formTranscr.$endStyle;
+                        $isFirstLoc = true;
+                        foreach ($srtLocInfo['srtloc'] as $formLoc) {
+                          $cntLoc = $srtLocInfo['loc'][$formLoc];
+                          if ($isFirstLoc) {
+                            $rtf .= $space.$eol.$linRefStyle;
+                            $isFirstLoc = false;
+                          } else {
+                            $rtf .= ", ";
+                          }
+                          //remove internal ordinal
+                          $locParts = explode(":",$formLoc);
+                          if ($locParts && count($locParts) == 3) {
+                            if (strpos(trim($locParts[0]),"sort") === 0) {
+                              $formLoc = $locParts[2];
+                            } else {
+                              $formLoc = $locParts[0].$locParts[2];
+                            }
+                          } else if ($locParts && count($locParts) == 2) {
+                            $formLoc = $locParts[1];
+                          }
+                          if (strpos($formLoc,"–")) {//replace en dash with \'96
+                            $formLoc = preg_replace("/–/","\\\'96",$formLoc);
+                          }
+                          $rtf .= $formLoc.($cntLoc>1?" [".$cntLoc.utf8ToRtf("×]"):"");
+                        }
+                        $rtf .= $endStyle.$eol;
+                      }
+                    }
                   }
                 }
                 //set cat index to last category index
@@ -598,6 +626,7 @@
             }
           } else { //uninflectibles
             $nodePtr = $uncertainBranchNode;
+            //sort by the attested form's sort code string
             ksort($nodePtr, SORT_STRING);
             $isFirstNode = true;
             foreach ($nodePtr as $sc => $formInfo) {
@@ -611,27 +640,48 @@
                 continue;
               }
               $locSortedForms = array();
+              //for every diplomatic transciption unique form place locations
+              // into an array and sort, then extract first loacation as key
               foreach ($formInfo['value'] as $formTranscr => $locInfo) {
                 $locs = $locInfo['loc'];
                 $sortedLocs = array_keys($locs);
                 usort($sortedLocs,"compareWordLocations");
-                $srtKey = "".substr($sortedLocs[0],0,3);
-                if (! array_key_exists($srtKey,$locSortedForms)) {
-                  $locSortedForms[$srtKey] = array(
-                                               array('value'=>
-                                                 array($formTranscr =>
-                                                   array('srtloc'=>$sortedLocs,
-                                                         'loc'=>$locs))));
-                } else {  
-                  array_push($locSortedForms[$srtKey], array('value'=>
-                                                         array($formTranscr =>
-                                                           array('srtloc'=>$sortedLocs,
-                                                                 'loc'=>$locs))));
+                //grab the lowest location code as a key
+                //$srtKey = "".explode("-",explode(":",$sortedLocs[0])[0])[0];
+                $srtKey = "".explode(":",$sortedLocs[0])[1];
+                if (strpos($srtKey,"–")) {
+                  $srtKey = "".explode("–",$srtKey)[0];
+                }
+                if (strpos($srtKey,"-")) {
+                  $srtKey = "".explode("-",$srtKey)[0];
+                }
+                //add attested form to keyed array
+                if (strlen($srtKey)) {
+                  if (!array_key_exists($srtKey,$locSortedForms)) {
+                    $locSortedForms[$srtKey] =
+                            array(
+                              array('value'=>
+                                array($formTranscr =>
+                                  array('srtloc'=>$sortedLocs,
+                                        'loc'=>$locs))));
+                  } else {
+                    array_push($locSortedForms[$srtKey],
+                            array('value'=>
+                              array($formTranscr =>
+                                array('srtloc'=>$sortedLocs,
+                                      'loc'=>$locs))));
+                  }
                 }
               }
               $isFirstForm = true;
-              ksort($locSortedForms);
+              //key sort so lowest location form is first
+              ksort($locSortedForms,SORT_NUMERIC);
+              //output the forms in asc first location order
               foreach($locSortedForms as $srtKey => $formInfos) {
+                //may have to sort similar diplomatic forms that are on the same line
+                //$formTrans = array_keys($formInfos['values']);
+                //arsort($formTrans,SORT_STRING);
+                //foreach ($formTrans as $formTranscr) {
                 foreach( $formInfos as $formInfo) {
                   foreach ($formInfo['value'] as $formTranscr => $srtLocInfo) {
                     if ($isFirstForm) {
@@ -642,7 +692,7 @@
                     $rtf .= $attestedStyle.$formTranscr.$endStyle;
                     $isFirstLoc = true;
                     foreach ($srtLocInfo['srtloc'] as $formLoc) {
-                      $cntLoc = 1;//$srtLocInfo['loc'][$formLoc];
+                      $cntLoc = $srtLocInfo['loc'][$formLoc];
                       if ($isFirstLoc) {
                         $rtf .= $space.$eol.$linRefStyle;
                         $isFirstLoc = false;
