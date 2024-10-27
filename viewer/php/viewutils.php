@@ -2123,8 +2123,8 @@ function getWrdTag2GlossaryPopupHtmlLookup($catID,$scopeEdnID = null,$refresh = 
             if ($lemmaComponents && $lemmaComponents->getCount()) {
               $hasAttestations = true; // signal see also
               $groupedForms = array();
-              $pattern = array("/aʔi/","/aʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/","/◈/","/◯/");
-              $replacement = array("aï","aü","","","","","","","");//display as replacements  separate a followed by vowel i is displayed as aï
+              $pattern = array("/a([\{\}\*\[\]\(\)◈◊]*)ʔi/","/a([\{\}\*\[\]\(\)◈◊]*)ʔu/","/ʔ/","/°/","/\/\/\//","/#/","/◊/","/◈/","/◯/");
+              $replacement = array("a$1ï","a$1ü","","","","","","","");//display as replacements  separate a followed by vowel i is displayed as aï
               foreach ($lemmaComponents as $lemmaComponent) {
                 $entPrefix = $lemmaComponent->getEntityTypeCode();
                 $entID = $lemmaComponent->getID();

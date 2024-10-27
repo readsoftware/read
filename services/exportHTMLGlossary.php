@@ -55,9 +55,10 @@
   $isStaticView = (array_key_exists('staticView',$_REQUEST)? ($_REQUEST['staticView']==0?false:true):false);
   $useTranscription = (!array_key_exists('usevalue',$_REQUEST)? true:false);
   $hideHyphens = (!array_key_exists('showhyphens',$_REQUEST)? true:false);
-  $refresh = ((array_key_exists('refreshWordMap',$_REQUEST) ? $_REQUEST['refreshWordMap']:
-                      (array_key_exists('refreshLookUps',$_REQUEST))? $_REQUEST['refreshLookUps']:
-                       (defined('DEFAULTHTMLGLOSSARYREFRESH')?DEFAULTHTMLGLOSSARYREFRESH:0)));
+  $refresh = (array_key_exists('refreshWordMap',$_REQUEST) ? $_REQUEST['refreshWordMap']:
+              (array_key_exists('refreshLookUps',$_REQUEST)? $_REQUEST['refreshLookUps']:
+               (array_key_exists('refresh',$_REQUEST)? $_REQUEST['refresh']:
+                 (defined('DEFAULTHTMLGLOSSARYREFRESH')?DEFAULTHTMLGLOSSARYREFRESH:0))));
 
 
   list($result,$text) = getCatalogHTML($catID,$isStaticView,$refresh,$useTranscription,$hideHyphens);

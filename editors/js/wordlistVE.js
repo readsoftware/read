@@ -922,8 +922,8 @@ EDITORS.WordlistVE.prototype = {
                 tag = wordGIDs[j].replace(":","");
 //                word = linkedWords[tag];
                 if (!word || !word.value) {
-                  DEBUG.log('err',"word not found in linkWords for tag "+tag);
-                  continue;S
+                  DEBUG.log('err',"word not found in linkWords for tag "+tag+" for inf:"+ inflection.id);
+                  continue;
                 }
                 if (word.value == curForm) {// show a particular attested form only once here.
                   continue;

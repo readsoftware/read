@@ -126,8 +126,8 @@ if (count($errors) == 0) {
             if ($annotation->hasError()) {
               array_push($errors,"error creating annotation '".$annotation->getValue()."' - ".$annotation->getErrors(true));
             }else{
-              addNewEntityReturnData('ano',$annotation);
-//              addUpdateEntityReturnData("ano",$annotation->getID(),'linkedToIDs', $annotation->getLinkToIDs());
+//              addNewEntityReturnData('ano',$annotation);
+              addUpdateEntityReturnData("ano",$annotation->getID(),'linkedToIDs', $annotation->getLinkToIDs());
               $tagsInfoChanged = true;
             }
           }
@@ -143,9 +143,9 @@ if (count($errors) == 0) {
           $annos = new Annotations("ano_type_id = $id and ano_owner_id = $defOwnerID",null,null,null);
 //          $annos = new Annotations("ano_type_id = $id and ano_owner_id = ".getUserID(),null,null,null);
           if ($annos->getCount() > 0) {//out of synch so translate to ano id
-            $annoTag = $annos->current();
+            $tagAnno = $annos->current();
             $prefix = "ano";
-            $id = $annoTag->getID();
+            $id = $tagAnno->getID();
           }
         }
         if ($prefix == "ano") {//existing anno representation of tag so update

@@ -641,12 +641,16 @@
 
   if ($isDownload) {
     ob_clean();
-    header("Content-type: text/rtf;  charset=UTF-8");
     header("Content-Disposition: attachment; filename=readGlossary.rtf");
-    header("Expires: 0");
+    header("Content-type: application/rtf;  charset=UTF-8");
+//    header("Content-type: text/rtf;  charset=UTF-8");
+//    header('Content-Length: ' . strlen($rtf));
+//    header('Connection: close');
+//    header("Expires: 0");
   }
 
   echo $rtf;
+  ob_flush();
   return;
 
   function htmlToRTF($strWithHTML) {

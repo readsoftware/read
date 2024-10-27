@@ -595,7 +595,7 @@
       $jsonCache->clearDirtyBit();
       $jsonCache->save();
     } else {
-      error_log("warning!!! edition $catID cached info not saved because caching is off");
+      error_log("warning!!! catalog $catID cached info not saved because caching is off");
     }
   }
 

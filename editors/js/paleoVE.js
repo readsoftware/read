@@ -1204,7 +1204,7 @@ EDITORS.PaleoVE.prototype = {
   },
 
 /**
-* tag the entity identiied with the surrent selected tag term.
+* tag the entity identiied with the current selected tag term.
 *
 * @param entGID string that represents the Global ID of the entity
 */
@@ -1213,6 +1213,7 @@ EDITORS.PaleoVE.prototype = {
     var paleoVE = this, savedata = {}, curLabel = this.curTagLabel,
     syllable = this.dataMgr.getEntityFromGID(entGID);
     //setup data
+    savedata['entGID'] = entGID;
     //check if syllable has existing tag in cur category
     if (syllable) {
       if (this.curTagLabel.match(/^BT/) && syllable.bt) {
@@ -1237,10 +1238,10 @@ EDITORS.PaleoVE.prototype = {
           savedata['tagRemoveFromGIDs'] = [syllable.def.value.replace(":","")];
           delete syllable.def;
         }
+      } else {
+        savedata['tagAddToGIDs'] = [paleoVE.curTagID];
       }
     }
-    savedata['entGID'] = entGID;
-    savedata['tagAddToGIDs'] = [paleoVE.curTagID];
     $.ajax({
       type:"POST",
       dataType: 'json',

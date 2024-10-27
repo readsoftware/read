@@ -196,7 +196,7 @@ if (count($errors) == 0) {
       }
       if ($edition && strpos($removeEntityGID,'seq')!== false && !$isSeqMove){//removing a sequence so if substructure add back to edition sequenceIDs
         $removedSequence = new Sequence(substr($removeEntityGID,4));
-        if (count($removedSequence->getEntityIDs())) {
+        if ($removedSequence->getEntityIDs() && count($removedSequence->getEntityIDs())) {
           $seqIDs = array_unique($edition->getSequenceIDs());
           $removeSeqID = substr($removeEntityGID,4);
           array_push($seqIDs,$removeSeqID);
