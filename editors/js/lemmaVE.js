@@ -353,39 +353,39 @@ EDITORS.LemmaVE.prototype = {
       editValue = (this.entity.phonetics ? this.entity.phonetics : '');
     DEBUG.traceEntry("createPhoneticUI");
     //create UI container
-    this.phonUI = $('<div class="phonUI"></div>');
-    this.editDiv.append(this.phonUI);
+    lemmaVE.phonUI = $('<div class="phonUI"></div>');
+    lemmaVE.editDiv.append(lemmaVE.phonUI);
     //create label
-    this.phonUI.append($('<div class="propDisplayUI">' +
+    lemmaVE.phonUI.append($('<div class="propDisplayUI">' +
       '<div class="valueLabelDiv propDisplayElement">' + value + '</div>' +
       '</div>'));
     //create input with save button
-    this.phonUI.append($('<div class="propEditUI">' +
+    lemmaVE.phonUI.append($('<div class="propEditUI">' +
       '<div class="valueInputDiv propEditElement"><input class="valueInput" value="' + editValue + '"/></div>' +
       '<button class="saveDiv propEditElement">Save</button>' +
       '</div>'));
     //attach event handlers
     //click to edit
-    $('div.valueLabelDiv', this.phonUI).unbind("click").bind("click", function (e) {
+    $('div.valueLabelDiv', lemmaVE.phonUI).unbind("click").bind("click", function (e) {
       $('div.edit', lemmaVE.editDiv).removeClass("edit");
       lemmaVE.phonUI.addClass("edit");
       $('div.valueInputDiv input', this.phonUI).focus();
       e.stopImmediatePropagation();
       return false;
     });
-    $('div.valueInputDiv input', this.phonUI).unbind("click").bind("click", function (e) {
+    $('div.valueInputDiv input', lemmaVE.phonUI).unbind("click").bind("click", function (e) {
       e.stopImmediatePropagation();
       return false;
     });
     //blur to cancel
-    $('div.valueInputDiv input', this.phonUI).unbind("blur").bind("blur", function (e) {
+    $('div.valueInputDiv input', lemmaVE.phonUI).unbind("blur").bind("blur", function (e) {
       if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
         !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
         lemmaVE.phonUI.removeClass("edit");
       }
     });
     //mark dirty on input
-    $('div.valueInputDiv input', this.phonUI).unbind("input").bind("input", function (e) {
+    $('div.valueInputDiv input', lemmaVE.phonUI).unbind("input").bind("input", function (e) {
       var curInput = $(this).val(), btnText = $('.saveDiv', lemmaVE.phonUI).html();
       if ($('div.valueLabelDiv', lemmaVE.phonUI).html() != $(this).val()) {
         if (!$(this).parent().parent().hasClass("dirty")) {
@@ -401,7 +401,7 @@ EDITORS.LemmaVE.prototype = {
       }
     });
     //save data
-    $('.saveDiv', this.phonUI).unbind("click").bind("click", function (e) {
+    $('.saveDiv', lemmaVE.phonUI).unbind("click").bind("click", function (e) {
       var lemProp = {};
       if ($('.propEditUI', lemmaVE.phonUI).hasClass('dirty')) {
         val = $('div.valueInputDiv input', lemmaVE.phonUI).val();
@@ -533,14 +533,14 @@ EDITORS.LemmaVE.prototype = {
       lPhonoCnt = " (" + lemmaPhono.split('-').length + ")";
     }
     //create UI container
-    this.phonoUI = $('<div class="phonoUI"></div>');
-    this.editDiv.append(this.phonoUI);
+    lemmaVE.phonoUI = $('<div class="phonoUI"></div>');
+    lemmaVE.editDiv.append(lemmaVE.phonoUI);
     //create label
-    this.phonoUI.append($('<div class="propDisplayUI">' +
+    lemmaVE.phonoUI.append($('<div class="propDisplayUI">' +
       '<div class="valueLabelDiv propDisplayElement">' + labelValue + '</div>' +
       '</div>'));
     //create input with save button
-    this.phonoUI.append($(
+    lemmaVE.phonoUI.append($(
       '<div class="propEditUI phonology">' +
       '<div class="valueInputDiv propEditElement etymphono">' +
       '<span class="etymphonoDisplay">' + etymPhono + ePhonoCnt + '</span>' +
@@ -554,14 +554,14 @@ EDITORS.LemmaVE.prototype = {
       '</div>' +
       '</div>'
     ));
-    $phonoDisplay = $('div.valueLabelDiv', this.phonoUI);
-    $lemmaphonoDisplay = $('.lemmaphonoDisplay', this.phonoUI);
-    $lemmaphonoInput = $('.lemmaphono input', this.phonoUI);
-    $etymphonoDisplay = $('.etymphonoDisplay', this.phonoUI);
-    $etymphonoInput = $('.etymphono input', this.phonoUI);
-    $generateBtn = $('.genButton', this.phonoUI);
-    $validateBtn = $('.validateButton', this.phonoUI);
-    $commitBtn = $('.commitButton', this.phonoUI);
+    $phonoDisplay = $('div.valueLabelDiv', lemmaVE.phonoUI);
+    $lemmaphonoDisplay = $('.lemmaphonoDisplay', lemmaVE.phonoUI);
+    $lemmaphonoInput = $('.lemmaphono input', lemmaVEis.phonoUI);
+    $etymphonoDisplay = $('.etymphonoDisplay', lemmaVE.phonoUI);
+    $etymphonoInput = $('.etymphono input', thlemmaVEis.phonoUI);
+    $generateBtn = $('.genButton', lemmaVE.phonoUI);
+    $validateBtn = $('.validateButton', lemmaVE.phonoUI);
+    $commitBtn = $('.commitButton', lemmaVE.phonoUI);
     //attach event handlers
     //click to edit
     $phonoDisplay.unbind("click").bind("click", function (e) {
@@ -756,40 +756,40 @@ EDITORS.LemmaVE.prototype = {
       editValue = (this.entity.compAnalysis ? this.entity.compAnalysis : this.entity.value.replace(this.regai,this.airepl).replace(this.regau,this.aurepl).replace(/ʔ/g, ''));
     DEBUG.traceEntry("createCompoundAnalysisUI");
     //create UI container
-    this.compUI = $('<div class="compUI"></div>');
-    this.editDiv.append(this.compUI);
+    lemmaVE.compUI = $('<div class="compUI"></div>');
+    lemmaVE.editDiv.append(lemmaVE.compUI);
     //create label with navigation
-    this.compUI.append($('<div class="propDisplayUI">' +
+    lemmaVE.compUI.append($('<div class="propDisplayUI">' +
       '<div class="valueLabelDiv propDisplayElement">' + value + '</div>' +
       '</div>'));
     //create input with save button
-    this.compUI.append($('<div class="propEditUI">' +
+    lemmaVE.compUI.append($('<div class="propEditUI">' +
       '<div class="valueInputDiv propEditElement"><input class="valueInput" value="' + editValue + '"/></div>' +
       '<button class="saveDiv propEditElement">Save</button>' +
       '</div>'));
     //attach event handlers
     //click to edit
-    $('div.valueLabelDiv', this.compUI).unbind("click").bind("click", function (e) {
+    $('div.valueLabelDiv', lemmaVE.compUI).unbind("click").bind("click", function (e) {
       $('div.edit', lemmaVE.editDiv).removeClass("edit");
       lemmaVE.compUI.addClass("edit");
-      $('div.valueInputDiv input', this.compUI).focus();
+      $('div.valueInputDiv input', lemmaVE.compUI).focus();
       e.stopImmediatePropagation();
       return false;
     });
-    $('div.valueInputDiv input', this.compUI).unbind("click").bind("click", function (e) {
-      e.stopImmediatePropagation();
-      return false;
-    });
+//    $('div.valueInputDiv input', lemmaVE.compUI).unbind("click").bind("click", function (e) {
+//      e.stopImmediatePropagation();
+//      return false;
+//    });
     //blur to cancel
-    $('div.valueInputDiv input', this.compUI).unbind("blur").bind("blur", function (e) {
-      if (!$(e.originalEvent.explicitOriginalTarget).hasClass('saveDiv') &&
-        !$(e.originalEvent.explicitOriginalTarget).parent().hasClass('saveDiv')) {//all but save button
-        lemmaVE.compUI.removeClass("edit");
-      }
-    });
+//    $('div.valueInputDiv input', lemmaVE.compUI).unbind("blur").bind("blur", function (e) {
+//      if (!$(e.relatedTarget).hasClass('saveDiv') &&
+//        !$(e.relatedTarget).parent().hasClass('saveDiv')) {//all but save button
+//        lemmaVE.compUI.removeClass("edit");
+//      }
+//    });
     //mark dirty on input
-    $('div.valueInputDiv input', this.compUI).unbind("input").bind("input", function (e) {
-      if ($('div.valueLabelDiv', this.compUI).text() != $(this).val()) {
+    $('div.valueInputDiv input', lemmaVE.compUI).unbind("input").bind("input", function (e) {
+      if ($('div.valueLabelDiv', lemmaVE.compUI).text() != $(this).val()) {
         if (!$(this).parent().parent().hasClass("dirty")) {
           $(this).parent().parent().addClass("dirty");
         }
@@ -798,7 +798,7 @@ EDITORS.LemmaVE.prototype = {
       }
     });
     //save data
-    $('.saveDiv', this.compUI).unbind("click").bind("click", function (e) {
+    $('div.propEditUI  button', lemmaVE.compUI).unbind("click").bind("click", function (e) {
       var lemProp = {}, compAnalysis, nodeKey, rootKey = null, rootNode, compKeys;
 
       /**

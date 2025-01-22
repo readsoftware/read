@@ -182,7 +182,7 @@
     * @return OrderedSet iterator for the entities of this sequence or NULL
     */
     public function getEntities($autoExpand = false) {
-      if (!$this->_entities && $autoExpand && count($this->getEntityIDs())>0) {
+      if (!$this->_entities && $autoExpand && is_array($this->getEntityIDs()) && count($this->getEntityIDs())>0) {
         $this->_entities = new OrderedSet();
         $this->_entities->loadEntities($this->getEntityIDs());
       }

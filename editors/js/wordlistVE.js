@@ -265,7 +265,7 @@ EDITORS.WordlistVE.prototype = {
                              '</div>');
       this.viewToolbar.append(this.downloadRTFBtnDiv);
     }
-    this.searchInput = $('<input type="text" id="searchInput" />'),
+    this.searchInput = $('<input type="text" id="wordSearchInput" />'),
     this.searchInput.jqxInput({placeHolder: "Enter Word Search Here"});
     this.searchInput.unbind('change').bind('change', function(e) {
                                                      wordlistVE.searchChangeHandler(e);

@@ -222,7 +222,7 @@ button.res-report {
  color: white;
 }
 
-#searchInput {
+#searchInput, #wordSearchInput {
   height: 30px;
   width: 96%;
   padding: 4px 4px 0px 4px;
