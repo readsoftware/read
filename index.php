@@ -47,7 +47,7 @@
     <meta http-equiv="Cache-Control" content="no-cache">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="Lang" content="en">
-    <title><?=defined("PROJECT_TITLE")?PROJECT_TITLE:"Set PROJECT_TITLE in config.php"?></title>
+    <title><?=defined("PROJECT_TITLE")?PROJECT_TITLE.(defined("ADD_DB_TO_TITLE")?" - ".DBNAME:""):"Set PROJECT_TITLE in config.php"?></title>
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.base.css" type="text/css" />
     <link rel="stylesheet" href="/jqwidget/jqwidgets/styles/jqx.energyblue.css" type="text/css" />
     <link rel="stylesheet" href="./common/css/kanishka.css" type="text/css" />

@@ -4,7 +4,9 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
     define("DBNAME",$_REQUEST['db']);
   }
   // set the html title used in this installation
-  if(!defined("PROJECT_TITLE")) define("PROJECT_TITLE","DEFAULT PROJECT TITLE");
+  if(!defined("PROJECT_TITLE")) define("PROJECT_TITLE","DEFAULT PROJECT TITLE"." - ".DBNAME);
+  // signal to append DBName to Webpage Title
+  if(!defined("ADD_DB_TO_TITLE")) define("ADD_DB_TO_TITLE", true);
   // the sub path from the document root directory where READ is located
   if(!defined("READ_DIR")) define("READ_DIR","/READ");
   // the default database name used if not given in the request URL
@@ -55,9 +57,9 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   // String character used in the terminal to separate commands
   if(!defined("CMDSEPARATOR")) define("CMDSEPARATOR",';');//for windows bash use '&'
   // String representing the path to the directory used for store READ database snapshot/restore .sql files
-  //if(!defined("READ_FILE_STORE")) define("READ_FILE_STORE",'\\xampp\\readfilestore');//simple script for managing db snapshot and restore
+  //if(!defined("READ_FILE_STORE")) define("READ_FILE_STORE",'/var/www/readfilestore');//simple script for managing db snapshot and restore
   // String of path to psql.exe command line executable for database management
-  //if(!defined("PSQL_PATH")) define("PSQL_PATH",'\\xampp\\PostgreSQL\\9.3\\bin');////simple script for managing db snapshot and restore
+  //if(!defined("PSQL_PATH")) define("PSQL_PATH",'');////simple script for managing db snapshot and restore
 
   // Calculate maximum size for successful upload based on system parameters
   if(!defined("MAX_UPLOAD_SIZE")) {
