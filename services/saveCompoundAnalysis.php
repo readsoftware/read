@@ -242,7 +242,7 @@ if (count($errors) == 0) {
             addNewEntityReturnData('ano',$annoLink);
             if (!$lemma->isReadOnly()) {
               $annoIDs = $lemma->getAnnotationIDs();
-              if (count($annoIDs)) {
+              if (is_array($annoIDs) && count($annoIDs)) {
                 if (!in_array($annoLink->getID(),$annoIDs)) {
                   array_push($annoIDs,$annoLink->getID());
                 }
@@ -275,7 +275,7 @@ if (count($errors) == 0) {
               addNewEntityReturnData('ano',$annoLink);
               if (!$subLemma->isReadOnly()) {
                 $annoIDs = $subLemma->getAnnotationIDs();
-                if (count($annoIDs)) {
+                if (is_array($annoIDs) && count($annoIDs)) {
                   if (!in_array($annoLink->getID(),$annoIDs)) {
                     array_push($annoIDs,$annoLink->getID());
                   } else {
