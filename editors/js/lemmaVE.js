@@ -556,9 +556,9 @@ EDITORS.LemmaVE.prototype = {
     ));
     $phonoDisplay = $('div.valueLabelDiv', lemmaVE.phonoUI);
     $lemmaphonoDisplay = $('.lemmaphonoDisplay', lemmaVE.phonoUI);
-    $lemmaphonoInput = $('.lemmaphono input', lemmaVEis.phonoUI);
+    $lemmaphonoInput = $('.lemmaphono input', lemmaVE.phonoUI);
     $etymphonoDisplay = $('.etymphonoDisplay', lemmaVE.phonoUI);
-    $etymphonoInput = $('.etymphono input', thlemmaVEis.phonoUI);
+    $etymphonoInput = $('.etymphono input', lemmaVE.phonoUI);
     $generateBtn = $('.genButton', lemmaVE.phonoUI);
     $validateBtn = $('.validateButton', lemmaVE.phonoUI);
     $commitBtn = $('.commitButton', lemmaVE.phonoUI);
