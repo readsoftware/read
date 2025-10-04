@@ -802,7 +802,7 @@ function getEditionsStructuralTranslationHtml($ednIDs, $annoTypeID = null, $forc
     }
   }
   $sourceHtml = "";
-  if ($sourceNameLookup && count($sourceNameLookup) > 0) {
+  if (false && $sourceNameLookup && count($sourceNameLookup) > 0) {
     $isFrist = true;
     $sourceHtml = "<div class=\"source edn1\"><span class=\"sourcelabel\">Source: </span>";
     foreach ($sourceNameLookup as $atbID => $title) {
@@ -1751,8 +1751,8 @@ function getEditionsStructuralViewHtml($ednIDs, $forceRecalc = false, $isMultiTe
       if ($text && !$text->hasError()) {
         $images = $text->getImages(true);
         if ($images && $images->getCount() > 0) {
-          $sourceLookup = array();
           foreach ($images as $image) {
+            $sourceLookup = array();
             $tag = $image->getEntityTag();
             $attributions = $image->getAttributions(true);
             if ($attributions && !$attributions->getError() && $attributions->getCount() > 0) {
