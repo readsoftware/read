@@ -7237,6 +7237,7 @@ var tcmBracketsLookup = {
       "S" : "}}⟫"},
     "IU" : {
       "IU" : "",
+      "IA" : "]⟨*",
       "I" : "]",
       "S" : "]⟫"},
     "SdA" : {
