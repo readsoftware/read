@@ -21,7 +21,39 @@
     echo "no filename supplied";
     exit;
   }
-  include_once dirname(__FILE__) . '/'.$_REQUEST['txtImportFilename'];
+
+  // SECURITY: Validate and sanitize import filename to prevent path traversal
+  $txtImportFilename = $_REQUEST['txtImportFilename'];
+  
+  // Input validation: only allow safe filenames
+  if (!preg_match('/^[a-zA-Z0-9._-]{1,100}\.php$/', $txtImportFilename)) {
+    echo "Invalid import filename format. Only alphanumeric characters, dots, hyphens, underscores and .php extension allowed.";
+    error_log("Path traversal attempt blocked - invalid txt import filename: " . var_export($txtImportFilename, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+    exit;
+  } else if (strpos($txtImportFilename, '..') !== false || strpos($txtImportFilename, '/') !== false || strpos($txtImportFilename, '\\') !== false) {
+    echo "Invalid import filename format. Path traversal characters not allowed.";
+    error_log("Path traversal attempt blocked - traversal characters in txt filename: " . var_export($txtImportFilename, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+    exit;
+  } else {
+    // Construct safe file path
+    $importDir = dirname(__FILE__);
+    $safePath = realpath($importDir . '/' . $txtImportFilename);
+    
+    // Verify the resolved path is within the allowed directory
+    if ($safePath === false || strpos($safePath, realpath($importDir)) !== 0) {
+      echo "Import file not found or not in allowed directory.";
+      error_log("Path traversal attempt blocked - txt file outside allowed directory: " . var_export($txtImportFilename, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+      exit;
+    } else if (!file_exists($safePath)) {
+      echo "Import file does not exist.";
+      error_log("Import txt file not found: " . $safePath);
+      exit;
+    } else {
+      // Safe to include the file
+      include_once $safePath;
+      error_log("Successfully included txt import file: " . $safePath);
+    }
+  }
 
   if (!isset($textCKN)) {
     echo "invalid import file supplied";

@@ -17,6 +17,13 @@
 */
 /**
 * jsonImportItem.php
+*
+* SECURITY ENHANCEMENTS:
+* - File inclusion path traversal vulnerability fixed
+* - Input validation for import filenames 
+* - Restricted to allowed directory only
+* - Enhanced logging for security monitoring
+*
 * This service imports or updates READs upper model metadata and returns json data READ client objects for 
 * all modified entities 
 * 
@@ -59,7 +66,34 @@
 	$warnings = array();
 	
   if (isset($_REQUEST['importFilename'])) {
-    include_once dirname(__FILE__) . '/'.$_REQUEST['importFilename'];
+    // SECURITY: Validate and sanitize import filename to prevent path traversal
+    $importFilename = $_REQUEST['importFilename'];
+    
+    // Input validation: only allow safe filenames
+    if (!preg_match('/^[a-zA-Z0-9._-]{1,100}\.php$/', $importFilename)) {
+      $errors[] = "Invalid import filename format. Only alphanumeric characters, dots, hyphens, underscores and .php extension allowed.";
+      error_log("Path traversal attempt blocked - invalid import filename: " . var_export($importFilename, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+    } else if (strpos($importFilename, '..') !== false || strpos($importFilename, '/') !== false || strpos($importFilename, '\\') !== false) {
+      $errors[] = "Invalid import filename format. Path traversal characters not allowed.";
+      error_log("Path traversal attempt blocked - traversal characters in filename: " . var_export($importFilename, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+    } else {
+      // Construct safe file path
+      $importDir = dirname(__FILE__);
+      $safePath = realpath($importDir . '/' . $importFilename);
+      
+      // Verify the resolved path is within the allowed directory
+      if ($safePath === false || strpos($safePath, realpath($importDir)) !== 0) {
+        $errors[] = "Import file not found or not in allowed directory.";
+        error_log("Path traversal attempt blocked - file outside allowed directory: " . var_export($importFilename, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+      } else if (!file_exists($safePath)) {
+        $errors[] = "Import file does not exist.";
+        error_log("Import file not found: " . $safePath);
+      } else {
+        // Safe to include the file
+        include_once $safePath;
+        error_log("Successfully included import file: " . $safePath);
+      }
+    }
   } else if (isset($_REQUEST['data'])) {
     $data = json_decode($_REQUEST['data']);
     if (isset($data['itemIdNo'])) {
