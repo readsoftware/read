@@ -55,10 +55,13 @@ $retVal = array();
 $errors = array();
 $warnings = array();
 
-if (mb_strtolower(getUserName(), 'UTF-8') == "guest") {
-  echo "Error: Insufficient permissions for image upload.";
+// SECURITY: Require authentication for image upload operations
+if (!isLoggedIn()) {
+  echo "Error: Authentication required for image upload operations.";
+  error_log("uploadImage.php: Unauthorized access attempt from IP: " . $_SERVER['REMOTE_ADDR']);
   exit;
 }
+
 if (!defined("DBNAME")) {
   echo "Error: must specify a dbname to associate the image with";
   exit;
@@ -87,6 +90,42 @@ if (!$data) {
   } else {
     $fileInfo = $_FILES['file'];
   }
+  
+  // Check for PHP upload errors first
+  if (isset($fileInfo['error']) && $fileInfo['error'] !== UPLOAD_ERR_OK) {
+    $uploadMaxFilesize = ini_get('upload_max_filesize');
+    $postMaxSize = ini_get('post_max_size');
+    
+    switch ($fileInfo['error']) {
+      case UPLOAD_ERR_INI_SIZE:
+        echo "Error: File exceeds the maximum size allowed by server configuration. Maximum allowed: {$uploadMaxFilesize}";
+        break;
+      case UPLOAD_ERR_FORM_TOO_LARGE:
+        echo "Error: File exceeds the maximum upload size. Maximum allowed: {$uploadMaxFilesize}";
+        break;
+      case UPLOAD_ERR_PARTIAL:
+        echo "Error: File was only partially uploaded. Please try again.";
+        break;
+      case UPLOAD_ERR_NO_FILE:
+        echo "Error: No file was uploaded.";
+        break;
+      case UPLOAD_ERR_NO_TMP_DIR:
+        echo "Error: Missing temporary upload directory on server.";
+        break;
+      case UPLOAD_ERR_CANT_WRITE:
+        echo "Error: Failed to write file to disk.";
+        break;
+      case UPLOAD_ERR_EXTENSION:
+        echo "Error: Upload stopped by PHP extension.";
+        break;
+      default:
+        echo "Error: Unknown upload error occurred (code: {$fileInfo['error']}).";
+        break;
+    }
+    error_log("uploadImage.php: Upload error " . $fileInfo['error'] . " for file: " . $fileInfo['name'] . " (size: " . (isset($fileInfo['size']) ? $fileInfo['size'] : 'unknown') . " bytes)");
+    exit;
+  }
+  
   if(!is_uploaded_file($fileInfo['tmp_name']) ) {
     echo "Error: File info seems to be fake, aborting upload. Nothing uploaded.";
     exit;
@@ -109,16 +148,59 @@ if (!$data) {
   $path = (array_key_exists('subpath',$_REQUEST)? $_REQUEST['subpath']:null);
 //  $thumbDir = (array_key_exists('thumbDir',$_REQUEST)? $_REQUEST['thumbDir']:THUMBNAIL_SUB_PATH);
   $entTag = (array_key_exists('entTag',$_REQUEST)? $_REQUEST['entTag']:null);
+  
+  // SECURITY: Sanitize input parameters to prevent path traversal attacks
+  if ($path) {
+    // Remove any directory traversal sequences and normalize path
+    $path = str_replace(array('..', '\\'), '', $path);
+    $path = trim($path, '/');
+    // Only allow alphanumeric characters, hyphens, underscores, and forward slashes
+    if (!preg_match('/^[a-zA-Z0-9\/_-]*$/', $path)) {
+      echo "Error: Invalid characters in path parameter.";
+      error_log("uploadImage.php: Invalid path parameter rejected: " . $_REQUEST['subpath']);
+      exit;
+    }
+  }
+  
+  if ($entTag) {
+    // Sanitize entTag to prevent path traversal
+    $entTag = str_replace(array('..', '\\', '/'), '', $entTag);
+    // Only allow alphanumeric characters, hyphens, and underscores
+    if (!preg_match('/^[a-zA-Z0-9_-]*$/', $entTag)) {
+      echo "Error: Invalid characters in entTag parameter.";
+      error_log("uploadImage.php: Invalid entTag parameter rejected: " . $_REQUEST['entTag']);
+      exit;
+    }
+  }
+  
   if (!$path && !$entTag) {
     array_push($warnings,"Neither path or entTag data supplied, file(s) will be upload to '".DBNAME."' image root");
   } else if ($path) {
-    //todo add code to clean $path
-    $path = IMAGE_ROOT."/".DBNAME.$path;
-    $url = IMAGE_SITE_BASE_URL."/".DBNAME.$path;
+    $path = IMAGE_ROOT."/".DBNAME."/".$path;
+    $url = IMAGE_SITE_BASE_URL."/".DBNAME."/".$path;
   } else {
-    //todo add code to check entity access
     $path = IMAGE_ROOT."/".DBNAME."/".$entTag;
     $url = IMAGE_SITE_BASE_URL."/".DBNAME."/".$entTag;
+  }
+  
+  // SECURITY: Verify the final path is within the allowed directory
+  $allowedBasePath = realpath(IMAGE_ROOT."/".DBNAME);
+  $resolvedPath = realpath(dirname($path));
+  
+  // If realpath returns false, the path doesn't exist yet, so check if parent path is safe
+  if ($resolvedPath === false) {
+    // Check if we can create this path safely by checking each parent directory
+    $checkPath = $path;
+    while ($resolvedPath === false && dirname($checkPath) !== $checkPath) {
+      $checkPath = dirname($checkPath);
+      $resolvedPath = realpath($checkPath);
+    }
+  }
+  
+  if ($resolvedPath === false || strpos($resolvedPath, $allowedBasePath) !== 0) {
+    echo "Error: Invalid upload path.";
+    error_log("uploadImage.php: Path traversal attempt blocked. Attempted path: " . $path);
+    exit;
   }
   //check path exist if not try to create it
   $info = new SplFileInfo($path);
