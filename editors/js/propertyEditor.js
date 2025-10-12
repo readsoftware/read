@@ -273,6 +273,7 @@ EDITORS.propEditor.prototype = {
       //calculate save data
       this.data[prefix+"_id"] = id;
       savedata[prefix] = [this.data];
+      
       //jqAjax synch save
       $.ajax({
         type: 'POST',
@@ -285,6 +286,12 @@ EDITORS.propEditor.prototype = {
           var entity = entityInfo.entities[prefix].name;
           // add record suceeded.
           if (data) {
+            // Check for authentication errors
+            if (data.error) {
+              alert("Save failed: " + data.error);
+              return;
+            }
+            
             /*              if (data[entity].columns &&
             data[entity].records[0] &&
             data[entity].columns.indexOf(prefix + "_id") > -1) {
@@ -301,17 +308,18 @@ EDITORS.propEditor.prototype = {
             propVE.data = {};
             $(propVE.editDiv).removeClass('dirty');
             $('.dirty',$(propVE.editDiv)).removeClass('dirty');
-            if (data[entityName].errors && data[entityName].errors.length) {
+            
+            if (data[entityName] && data[entityName].errors && data[entityName].errors.length) {
               alert("An error occurred while trying to retrieve a record. Error: " + data[entityName].errors.join());
             }
-            if (data.error) {
-              alert("An error occurred while trying to retrieve a record. Error: " + data.error);
-            }
+          } else {
+            alert("Save failed: No response data received");
           }
         },
         error: function (xhr,status,error) {
           // add record failed.
-          alert("An error occurred while trying to retrieve a record. Error: " + error);
+          alert("An error occurred while trying to save the record. Status: " + status + ", Error: " + error + 
+                (xhr.responseText ? ", Response: " + xhr.responseText : ""));
         }
       });
     }
@@ -423,6 +431,12 @@ EDITORS.createSelectFieldVE = function(container,prefix,id,label,datafield,value
       if (!container.parent().hasClass('dirty')) {
         container.parent().addClass('dirty');
       }
+      
+      // Ensure the main property editor container gets the dirty class for save button visibility
+      if (!$(propEd.editDiv).hasClass('dirty')) {
+        $(propEd.editDiv).addClass('dirty');
+      }
+      
       propEd.data[datafield] = editor.val();
       propEd.dirty = true;
       viewer.text(trmIDtoLabel[editor.val()]);
@@ -460,6 +474,12 @@ EDITORS.createInputFieldVE = function a(container,prefix,id,label,datafield,valu
       if (!container.parent().hasClass('dirty')) {
         container.parent().addClass('dirty');
       }
+      
+      // Ensure the main property editor container gets the dirty class for save button visibility
+      if (!$(propEd.editDiv).hasClass('dirty')) {
+        $(propEd.editDiv).addClass('dirty');
+      }
+      
       propEd.data[datafield] = editor.val();
       propEd.dirty = true;
       viewer.text(editor.val());

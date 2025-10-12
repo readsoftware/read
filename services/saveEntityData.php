@@ -106,6 +106,15 @@
             "era" => "era");
 
   $dbMgr = new DBManager();
+  
+  // SECURITY: Require authentication for data modification operations
+  if (!isLoggedIn()) {
+    $retVal = array("error" => "Authentication required for data modification operations.");
+    error_log("Unauthorized saveEntityData access attempt from IP: " . $_SERVER['REMOTE_ADDR']);
+    print json_encode($retVal);
+    exit;
+  }
+  
   $retVal = array();
   $errors = array();
   $data = (array_key_exists('data',$_REQUEST)? json_decode($_REQUEST['data'],true):null);
@@ -128,7 +137,16 @@
     //get columnNames
     $columnNames = array();
     $records = array();
-    $dbMgr->query("select column_name from INFORMATION_SCHEMA.COLUMNS where table_name = '$table' order by ordinal_position");
+    
+    // SECURITY: Validate table name against whitelist and escape for SQL injection prevention
+    if (!in_array($table, array_values($prefixToTableName))) {
+      array_push($errors,"Invalid table name '$table', data ignored");
+      continue;
+    }
+    
+    // SECURITY: Use parameterized query to prevent SQL injection
+    $escapedTable = pg_escape_identifier($dbMgr->getConnection(), $table);
+    $dbMgr->query("select column_name from INFORMATION_SCHEMA.COLUMNS where table_name = $escapedTable order by ordinal_position");
     while($row = $dbMgr->fetchResultRow()){
       array_push($columnNames,$row[0]);
     }
@@ -189,7 +207,10 @@
           } else {//check to see if entity is part of any seq and if so invalidate cache for that sequence.
             $entity = EntityFactory::createEntityFromPrefix($prefix,$recID);
             $gid = $entity->getGlobalID();
-            $sequences = new Sequences("'$gid' = Any(seq_entity_ids)",'seq_id',null,null);
+            
+            // SECURITY: Escape the GID to prevent SQL injection
+            $escapedGid = pg_escape_literal($dbMgr->getConnection(), $gid);
+            $sequences = new Sequences("$escapedGid = Any(seq_entity_ids)",'seq_id',null,null);
             if ($sequences && $sequences->getCount()>0) {
               foreach ($sequences as $sequence) {
                 invalidateCachedSeqEntities($sequence->getID());
