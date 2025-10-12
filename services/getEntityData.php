@@ -18,6 +18,14 @@
   /**
   * getEntityData
   *
+  * SECURITY ENHANCEMENTS:
+  * - Authentication check required for access
+  * - Input validation to prevent SQL injection
+  * - Entity prefix whitelist validation
+  * - GID format validation with regex
+  * - Numeric ID validation and type casting
+  * - Enhanced logging for security monitoring
+  *
   * gets entity data for passed query structure of the form
   *
   * {"tableprefix":{
@@ -69,15 +77,57 @@
 
   require_once (dirname(__FILE__) . '/../common/php/DBManager.php');//get database interface
   require_once (dirname(__FILE__) . '/../common/php/userAccess.php');//get user access control
-  require_once (dirname(__FILE__) . '/../model/entities/EntityFactory.php');//get user access control
+  require_once (dirname(__FILE__) . '/../model/utility/graphemeCharacterMap.php');//get map for valid unicode characters
+  require_once (dirname(__FILE__) . '/../model/entities/SyllableClusters.php');
+  require_once (dirname(__FILE__) . '/../model/entities/JsonCache.php');// get cache management
+  require_once (dirname(__FILE__) . '/../model/entities/Tokens.php');
+  require_once (dirname(__FILE__) . '/../model/entities/Compounds.php');
+  require_once (dirname(__FILE__) . '/../model/entities/Sequences.php');
+  require_once (dirname(__FILE__) . '/../model/entities/EntityFactory.php');
+  
+  // SECURITY: Log access attempts for monitoring
+  $userID = getUserID();
+  $isAuthenticated = isLoggedIn();
+  error_log("Entity data access from IP: " . $_SERVER['REMOTE_ADDR'] . " User ID: " . $userID . " Authenticated: " . ($isAuthenticated ? 'yes' : 'no'));
   require_once (dirname(__FILE__) . '/../common/php/utils.php');//get utilies
+
+  // SECURITY: Add authentication check for this sensitive service
+  if (!isLoggedIn()) {
+    $retVal = array("error" => "Authentication required to access entity data.");
+    error_log("Unauthorized entity data access attempt from IP: " . $_SERVER['REMOTE_ADDR']);
+    print json_encode($retVal);
+    exit;
+  }
+
 //  $userID = 12;
   $dbMgr = new DBManager();
   $labelsToColNames = array();
   $columnNames = array();
   $retVal = array();
+  
+  // SECURITY: Validate and sanitize JSON input to prevent SQL injection
   $qparam = (array_key_exists('q',$_REQUEST)? json_decode($_REQUEST['q'],true):null);
+  
+  if ($qparam === null && array_key_exists('q',$_REQUEST)) {
+      // Invalid JSON
+      $retVal = array("error" => "Invalid JSON format in query parameter");
+      error_log("Invalid JSON in getEntityData from IP: " . $_SERVER['REMOTE_ADDR'] . " - Data: " . var_export($_REQUEST['q'], true));
+      print json_encode($retVal);
+      exit;
+  }
+  
+  // Define allowed prefixes to prevent table injection
+  $allowedPrefixes = array('gra', 'tok', 'cmp', 'seq', 'txt', 'edn', 'seg', 'syl', 'lem', 'cat', 'ano', 'atb', 'img', 'spn', 'run', 'lin', 'sur', 'bln', 'prt', 'fra', 'mcx', 'trm', 'col', 'dgr', 'ugr', 'bib', 'itm');
+  
   foreach (@$qparam as $prefix => $qstruct) {
+    // SECURITY: Validate prefix to prevent table name injection
+    if (!in_array($prefix, $allowedPrefixes)) {
+        $retVal = array("error" => "Invalid entity prefix: " . htmlspecialchars($prefix));
+        error_log("Invalid entity prefix in getEntityData: " . var_export($prefix, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+        print json_encode($retVal);
+        exit;
+    }
+    
     if (array_key_exists('ordered',$qstruct)) {
       $isOrdered = true;
       unset($qstruct['ordered']);
@@ -92,8 +142,25 @@
     }
     if (array_key_exists('aggregate',$qstruct)) {
       $aggrColIDs = true;
+      
+      // SECURITY: Validate aggregate prefix
       $aggPrefix = $qstruct['aggprefix'];
+      if (!in_array($aggPrefix, $allowedPrefixes)) {
+          $retVal = array("error" => "Invalid aggregate prefix: " . htmlspecialchars($aggPrefix));
+          error_log("Invalid aggregate prefix: " . var_export($aggPrefix, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+          print json_encode($retVal);
+          exit;
+      }
+      
+      // SECURITY: Validate aggregate column name
       $aggrColName = $qstruct['aggcol'];
+      if (!preg_match('/^[a-z_]{3,50}$/', $aggrColName)) {
+          $retVal = array("error" => "Invalid aggregate column name");
+          error_log("Invalid aggregate column: " . var_export($aggrColName, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+          print json_encode($retVal);
+          exit;
+      }
+      
       unset($qstruct['aggregate']);
       unset($qstruct['aggprefix']);
       unset($qstruct['aggcol']);
@@ -105,6 +172,18 @@
         preg_match_all("/([a-z]{3}\:\d+)/",$ids,$matches);
         $ids = $matches[0];
       }
+      
+      // SECURITY: Additional validation for IDs array
+      if (is_array($ids)) {
+          foreach ($ids as $index => $gid) {
+              if (!preg_match('/^[a-z]{3}:\d+$/', $gid)) {
+                  error_log("Removing invalid GID from array: " . var_export($gid, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+                  unset($ids[$index]);
+              }
+          }
+          $ids = array_values($ids); // Re-index array
+      }
+      
       $columnNames = array('bld_id','bld_properties');
       if (isset($isOrdered) && $isOrdered) {
         array_push($columnNames,'order');
@@ -112,9 +191,31 @@
       $records = array();
       $order = 1;
       foreach ($ids as $gid) {
+        // SECURITY: Validate GID format to prevent injection
+        if (!preg_match('/^[a-z]{3}:\d+$/', $gid)) {
+            error_log("Invalid GID format in getEntityData: " . var_export($gid, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+            continue; // Skip invalid GIDs
+        }
+        
         list($recPrefix,$recID) = explode(':',$gid);
+        
+        // SECURITY: Double-check prefix is allowed
+        if (!in_array($recPrefix, $allowedPrefixes)) {
+            error_log("Invalid prefix in GID: " . var_export($gid, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+            continue;
+        }
+        
+        // SECURITY: Validate ID is numeric and positive
+        if (!is_numeric($recID) || $recID <= 0) {
+            error_log("Invalid ID in GID: " . var_export($gid, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+            continue;
+        }
+        
         $table = $prefixToTableName[$recPrefix];
-        $dbMgr->query("select * from $table where $recPrefix"."_id = $recID limit 1");
+        
+        // SECURITY: Use proper integer casting for ID
+        $safeRecID = (int)$recID;
+        $dbMgr->query("select * from $table where {$recPrefix}_id = $safeRecID limit 1");
         $row = $dbMgr->fetchResultRow(null,null,PGSQL_ASSOC);
         $kvcontents = "";
         foreach ($row as $colname => $value) {
@@ -223,9 +324,28 @@
           $i = 0;
           foreach ($fKeys as $gid => $val) {
             list($recPrefix,$recID) = explode(':',@$gid);
+            
+            // SECURITY: Validate GID format and components
+            if (!preg_match('/^[a-z]{3}:\d+$/', $gid)) {
+                error_log("Invalid GID format in blended view: " . var_export($gid, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+                continue;
+            }
+            
+            // SECURITY: Validate prefix and ID
+            if (!in_array($recPrefix, $allowedPrefixes)) {
+                error_log("Invalid prefix in blended GID: " . var_export($gid, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+                continue;
+            }
+            
+            if (!is_numeric($recID) || $recID <= 0) {
+                error_log("Invalid ID in blended GID: " . var_export($gid, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+                continue;
+            }
+            
             if (array_key_exists(@$recPrefix,$prefixToTableName)) {
               $table = $prefixToTableName[$recPrefix];
-              $dbMgr->query("select * from $table where $recPrefix"."_id = $recID limit 1");
+              $safeRecID = (int)$recID;
+              $dbMgr->query("select * from $table where {$recPrefix}_id = $safeRecID limit 1");
               $row = $dbMgr->fetchResultRow(null,null,PGSQL_ASSOC);
               $kvcontents = "";
               foreach ($row as $colname => $value) {
@@ -250,11 +370,26 @@
             array_push($columnNames, $row[0]);
           }
           //merge fkey id set into comma separated string
-          $ids = join(',', array_keys($fKeys));
-          //query for records
-          $dbMgr->query("select * from $table where $aggPrefix"."_id in ($ids);");
-          while($row = $dbMgr->fetchResultRow(null,null,PGSQL_NUM)){
-            array_push($records,$row);
+          // SECURITY: Validate all IDs are numeric before joining
+          $safeIds = array();
+          foreach (array_keys($fKeys) as $id) {
+              if (is_numeric($id) && $id > 0) {
+                  $safeIds[] = (int)$id;
+              } else {
+                  error_log("Invalid ID in fKeys: " . var_export($id, true) . " from IP: " . $_SERVER['REMOTE_ADDR']);
+              }
+          }
+          
+          if (empty($safeIds)) {
+              // No valid IDs, return empty result
+              $records = array();
+          } else {
+              $ids = join(',', $safeIds);
+              //query for records
+              $dbMgr->query("select * from $table where {$aggPrefix}_id in ($ids);");
+              while($row = $dbMgr->fetchResultRow(null,null,PGSQL_NUM)){
+                array_push($records,$row);
+              }
           }
         }
         $retVal[$table] = array("total" => count($records),

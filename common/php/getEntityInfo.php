@@ -193,6 +193,13 @@
         $entityInfo['entities'][$prefix]['nameToIndex'] = array($column['name']=>0);
         $entityInfo['entities'][$prefix]['columns'] = array($column);
       }else{
+        // SECURITY: Ensure nameToIndex is initialized before accessing it
+        if (!isset($entityInfo['entities'][$prefix]['nameToIndex'])) {
+          $entityInfo['entities'][$prefix]['nameToIndex'] = array();
+        }
+        if (!isset($entityInfo['entities'][$prefix]['columns'])) {
+          $entityInfo['entities'][$prefix]['columns'] = array();
+        }
         $entityInfo['entities'][$prefix]['nameToIndex'][$column['name']] = count($entityInfo['entities'][$prefix]['nameToIndex']);
         array_push($entityInfo['entities'][$prefix]['columns'],$column);
       }

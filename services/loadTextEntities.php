@@ -1008,7 +1008,8 @@
     }
     $textsSwitchInfo = getSwitchInfoByTextFromEntities($entities,$gra2SclMap,$errors,$warnings);
     $retVal = array("entities" => $entities,
-                    "cknToTextID" => $cknLookup);
+                    "cknToTextID" => $cknLookup,
+                    "termInfo" => $termInfo);
     if ($textsSwitchInfo) {
       $retVal["switchInfoByTextID"] = $textsSwitchInfo;
     }
