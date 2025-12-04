@@ -179,6 +179,8 @@ if( array_key_exists('db',$_REQUEST) && !defined("DBNAME")) {
   define("CKNLINENUMSEPARATOR",":");//separate txt label from line label using a colon
   // boolean when true READ uses a token's verse-pāda location if available
   define("DEFAULTTOVERSELABEL", false); 
+ // boolean when true READ uses a token's line - verse-pāda location if available
+  define("DEFAULTTOLINEVERSELABEL", false); 
 
 //viewer title formatting
   // String for matching used to reformating of text number to calculate title for READViewer

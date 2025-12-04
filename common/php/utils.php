@@ -4204,6 +4204,7 @@ function getWordLocation($wordTag) {
   $prefix = substr($wordTag,0,3);
   $wrdID = substr($wordTag,3);
   $useVLabel = (defined('DEFAULTTOVERSELABEL') && DEFAULTTOVERSELABEL);
+  $useLineVLabel = (defined('DEFAULTTOLINEVERSELABEL') && DEFAULTTOLINEVERSELABEL);
   $txtLabel = null;
   $lineord = null;
   $labels = array();
@@ -4245,7 +4246,7 @@ function getWordLocation($wordTag) {
         return "zzz";
       } else {
         $row = $dbMgr->fetchResultRow($dbMgr->getRowCount()-1);
-        array_push($labels,(($row['vloc'] && $useVLabel)?$row['vloc']:$row['linelabel']));
+        array_push($labels,($row['vloc'] && ($useVLabel || $useLineVLabel))?(($useLineVLabel?$row['linelabel']." ":"" )."(".$row['vloc'].")"):$row['linelabel']);
       }
     }
   } else if ($prefix == 'tok') {
@@ -4263,12 +4264,14 @@ function getWordLocation($wordTag) {
       return "zzz";
     } else {
       $row = $dbMgr->fetchResultRow();
-      array_push($labels,(($row['vloc'] && $useVLabel)?$row['vloc'] : $row['linelabel']));
+      //array_push($labels,(($row['vloc'] && $useVLabel)?$row['vloc'] : $row['linelabel']));
+      array_push($labels,($row['vloc'] && ($useVLabel || $useLineVLabel))?(($useLineVLabel?$row['linelabel']." ":"" )."(".$row['vloc'].")"):$row['linelabel']);
       $txtLabel = $row['txtlabel'];
       $lineord = $row['lineord'];
-      if ($dbMgr->getRowCount() > 1) {
+      if ($dbMgr->getRowCount() > 1) { //assumes word across only 2 lines! cases ?3 ?4
         $row = $dbMgr->fetchResultRow($dbMgr->getRowCount()-1);
-        array_push($labels,(($row['vloc'] && $useVLabel)?$row['vloc'] : $row['linelabel']));
+        //array_push($labels,(($row['vloc'] && $useVLabel)?$row['vloc'] : $row['linelabel']));
+        array_push($labels,($row['vloc'] && ($useVLabel || $useLineVLabel))?(($useLineVLabel?$row['linelabel']." ":"" )."(".$row['vloc'].")"):$row['linelabel']);
       }
     }
   }
