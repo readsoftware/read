@@ -176,8 +176,10 @@ VIEWERS.ImageViewer.prototype = {
       if (this.imgInfo.source && Object.keys(this.imgInfo.source).length) {
         for (atbID in this.imgInfo.source) {
           var sourceName = this.imgInfo.source[atbID];
-          sourceName = sourceName.replace('_',' ');
-          sourceNames.push(sourceName);
+          if (sourceName) {
+            sourceName = sourceName.replace('_',' ');
+            sourceNames.push(sourceName);
+          }
         }
       } else {
         sourceNames.push("unknown");
@@ -348,8 +350,10 @@ VIEWERS.ImageViewer.prototype = {
     if (blnInfo.source && Object.keys(blnInfo.source).length) {
       for (atbID in blnInfo.source) {
         var sourceName = blnInfo.source[atbID];
-        sourceName = sourceName.replace('_',' ');
-        sourceNames.push(sourceName);
+        if (sourceName) {
+          sourceName = sourceName.replace('_',' ');
+          sourceNames.push(sourceName);
+        }
     }
     } else {
       sourceNames.push("unknown");
@@ -375,8 +379,10 @@ VIEWERS.ImageViewer.prototype = {
     if (imgInfo.source && Object.keys(imgInfo.source).length) {
       for (atbID in imgInfo.source) {
         var sourceName = imgInfo.source[atbID];
-        sourceName = sourceName.replace('_',' ');
-        sourceNames.push(sourceName);
+        if (sourceName) {
+          sourceName = sourceName.replace('_',' ');
+          sourceNames.push(sourceName);
+        }
       }
     } else {
       sourceNames.push("unknown");
